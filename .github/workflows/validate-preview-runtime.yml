@@ -1,7 +1,6 @@
 # Runtime QA waits for the same-SHA Cloudflare branch preview before testing.
-# Human-tone gate: the runtime validator compares every live Popcorn Verdict and full review body with the compiled native source.
-# Post-publish gate: rerun after regenerating the sanitized public catalog.
-# Display gate: rerun after removing first-sentence verdict truncation and refreshing verdict typography.
+# Human-tone gate: every live Popcorn Verdict and full review body must match compiled native source.
+# Mobile master gate: phones use the same master renderer as desktop, with an opaque authoritative overlay layer that masks baked demo content.
 name: Validate native preview runtime
 
 on:
@@ -9,6 +8,10 @@ on:
     branches: [wordpress-full-migration]
     paths:
       - 'migration/validate_preview_runtime.py'
+      - 'public/index.html'
+      - 'public/assets/app-v4.js'
+      - 'public/assets/master-background.css'
+      - 'public/assets/mobile-authoritative.css'
       - '.github/workflows/validate-preview-runtime.yml'
   workflow_dispatch:
 
@@ -27,7 +30,6 @@ jobs:
         run: |
           node --check public/assets/app-v4.js
           node --check public/assets/review-data-bridge.js
-          node --check public/assets/mobile-v2.js
       - name: Wait for Cloudflare branch preview deployment
         env:
           GH_TOKEN: ${{ github.token }}
@@ -53,5 +55,16 @@ jobs:
           done
           echo "Cloudflare preview deployment did not complete within the QA polling window."
           exit 1
+      - name: Verify authoritative mobile masking is deployed
+        run: |
+          html=$(curl -fsSL "${PREVIEW_BASE}/")
+          grep -Fq '/assets/mobile-authoritative.css?v=1' <<<"${html}"
+          css=$(curl -fsSL "${PREVIEW_BASE}/assets/mobile-authoritative.css?v=1")
+          grep -Fq '.home-now-copy' <<<"${css}"
+          grep -Fq '.home-recent-card::before' <<<"${css}"
+          grep -Fq '.home-prev-card' <<<"${css}"
+          grep -Fq '.content-info' <<<"${css}"
+          grep -Fq '.content-review-body' <<<"${css}"
+          grep -Fq '.content-related-card::before' <<<"${css}"
       - name: Validate deployed Cloudflare preview runtime
         run: python migration/validate_preview_runtime.py
