@@ -38,6 +38,11 @@
       body.tabIndex=0;
       body.setAttribute('aria-label','Movie review text. Scroll for more.');
     }
+    if(page.classList.contains('content-master')&&matchMedia('(min-width:761px)').matches){
+      const art=page.querySelector('.master-art[data-master-key="content"]');
+      const v3='https://assets.moviereviewbypoorna.com/master/content-desktop.avif?v=3';
+      if(art&&art.src!==v3)art.src=v3;
+    }
   }
   const app=document.getElementById('app');
   if(app)new MutationObserver(apply).observe(app,{childList:true,subtree:true});
