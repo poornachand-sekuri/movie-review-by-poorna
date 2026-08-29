@@ -5,12 +5,13 @@ const R2_MASTER_ASSETS={
   'content-desktop':`${R2_MASTER_BASE}/content-desktop.avif`,
   'content-mobile':`${R2_MASTER_BASE}/content-mobile.avif`
 };
-loadMasterAsset=async function(){
+window.loadMasterAsset=async function(){
   const img=document.querySelector('[data-master-key]');
   if(!img)return;
   const mobile=matchMedia('(max-width:760px)').matches;
   const key=`${img.dataset.masterKey}-${mobile?'mobile':'desktop'}`;
   const url=R2_MASTER_ASSETS[key];
   if(!url)throw new Error(`Unknown master artwork: ${key}`);
-  img.src=url;
+  if(img.src!==url)img.src=url;
 };
+setTimeout(()=>window.loadMasterAsset().catch(e=>console.error(e)),0);
