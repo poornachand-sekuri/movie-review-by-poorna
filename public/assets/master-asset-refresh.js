@@ -1,11 +1,11 @@
 (()=>{
   const BASE='https://assets.moviereviewbypoorna.com/master';
-  const VERSION='9';
+  const VERSION='10';
   const ASSETS={
-    'home-desktop':`${BASE}/home-desktop.avif?v=${VERSION}`,
-    'home-mobile':`${BASE}/home-mobile.avif?v=${VERSION}`,
-    'content-desktop':`${BASE}/content-desktop.avif?v=${VERSION}`,
-    'content-mobile':`${BASE}/content-mobile.avif?v=${VERSION}`
+    'home-desktop':`${BASE}/home_desktop.avif?v=${VERSION}`,
+    'home-mobile':`${BASE}/home_mobile.avif?v=${VERSION}`,
+    'content-desktop':`${BASE}/content_desktop.avif?v=${VERSION}`,
+    'content-mobile':`${BASE}/content_mobile.avif?v=${VERSION}`
   };
   function keyFor(img){
     const mobile=matchMedia('(max-width:760px)').matches;
