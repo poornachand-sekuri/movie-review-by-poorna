@@ -16,18 +16,18 @@ LEGACY = ("wordpress.com", "/wp-content/", "public-api.wordpress.com")
 FORBIDDEN_COPY_DASHES = ("--", "–", "—")
 EXPECTED_TOTAL = 137
 STRICT_SPOTS = {
-    101: 3,   # Khaidi No. 150
-    380: 1,   # Ravanasura
-    461: 2,   # Kantara: Chapter 1
-    459: 3,   # They Call Him OG
-    457: 3,   # Mirai
-    423: 3,   # Hanu-Man
-    413: 3,   # Animal
-    159: 4,   # 2.0
-    67: 3,    # Oopiri
-    69: 5,    # 24
-    415: 4,   # Dunki
-    147: 5,   # Mahanati
+    101: 3,
+    380: 1,
+    461: 2,
+    459: 3,
+    457: 3,
+    423: 3,
+    413: 3,
+    159: 4,
+    67: 3,
+    69: 5,
+    415: 4,
+    147: 5,
 }
 
 
@@ -204,31 +204,56 @@ def main():
         html = get_text(path)
         no_legacy(html, f"HTML {path}")
 
-    # Mobile visual/runtime gate: prove the exact restored Home + Content assets are live.
+    # Unified visual/runtime gate: desktop and mobile must use the same master renderer.
     index_html = get_text("/")
-    require_markers(index_html, ("/assets/mobile-locked.css?v=1", "/assets/mobile-v2.js?v=3"), "homepage asset wiring")
-    mobile_js = get_text("/assets/mobile-v2.js?v=3")
     require_markers(
-        mobile_js,
-        ("m2-admit", "m2-ticket-strip", "m2-previous-strip", "m2-detail-card", "m2-detail-clapper", "/api/reviews/"),
-        "mobile JavaScript",
+        index_html,
+        ("/assets/master-background.css?v=2", "/assets/app-v4.js?v=6", "/assets/desktop-authoritative.js?v=4"),
+        "unified renderer wiring",
     )
-    no_legacy(mobile_js, "mobile JavaScript")
-    mobile_css = get_text("/assets/mobile-locked.css?v=1")
+    if "mobile-v2.js" in index_html or "mobile-locked.css" in index_html or "mobile-cleanup.css" in index_html:
+        raise AssertionError("Separate mobile reconstruction is still wired into the page")
+
+    app_js = get_text("/assets/app-v4.js?v=6")
     require_markers(
-        mobile_css,
+        app_js,
         (
-            ".m2-home-section",
-            ".m2-now-body",
-            ".m2-ticket-strip",
-            ".m2-previous-strip",
-            ".m2-detail-card",
-            ".m2-detail-body",
-            "home-mobile.avif",
-            "content-mobile.avif",
-            "Roboto Slab",
+            "home-mobile",
+            "content-mobile",
+            "home-desktop",
+            "content-desktop",
+            "data-master-key=\"home\"",
+            "data-master-key=\"content\"",
+            "loadMasterAsset",
+            "/api/reviews/",
+            "/data/index.json",
         ),
-        "mobile locked stylesheet",
+        "master renderer JavaScript",
+    )
+    no_legacy(app_js, "master renderer JavaScript")
+
+    master_css = get_text("/assets/master-background.css?v=2")
+    require_markers(
+        master_css,
+        (
+            "@media(max-width:760px)",
+            ".home-latest-poster",
+            ".home-now-copy",
+            ".home-recent-grid",
+            ".home-prev-grid",
+            ".content-poster",
+            ".content-info",
+            ".content-review-body",
+            ".content-related-grid",
+        ),
+        "master responsive overlay stylesheet",
+    )
+
+    verdict_css = get_text("/assets/verdict-layout-fix.css?v=8")
+    require_markers(
+        verdict_css,
+        (".home-master .home-verdict", "Roboto Slab", "#050505", ".content-master .content-info .verdict-value"),
+        "mobile master 6E verdict stylesheet",
     )
 
     comments = get_json("/api/comments?scope=home")
@@ -255,9 +280,11 @@ def main():
         "forbidden_dash_refs_in_verdicts_and_bodies": 0,
         "strict_rating_spot_checks": STRICT_SPOTS,
         "home_reviews_detail_admin_html": "ok",
-        "mobile_home_layout_assets": "ok",
-        "mobile_content_layout_assets": "ok",
+        "unified_desktop_mobile_master_renderer": "ok",
+        "mobile_home_master_asset": "ok",
+        "mobile_content_master_asset": "ok",
         "mobile_6e_verdict_style": "ok",
+        "separate_mobile_v2_renderer": "not_wired",
         "comments_api": "ok",
         "admin_auth_guard": "ok",
     }
