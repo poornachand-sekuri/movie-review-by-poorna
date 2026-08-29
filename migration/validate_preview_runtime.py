@@ -13,6 +13,7 @@ COMPILED = ROOT / "migration" / "compiled" / "native-reviews.json"
 BASE = os.environ.get("PREVIEW_BASE", "https://wordpress-full-migration-movie-review-by-poorna.poornarocks.workers.dev").rstrip("/")
 R2_PREFIX = "https://assets.moviereviewbypoorna.com/reviews/"
 LEGACY = ("wordpress.com", "/wp-content/", "public-api.wordpress.com")
+FORBIDDEN_COPY_DASHES = ("--", "–", "—")
 EXPECTED_TOTAL = 137
 STRICT_SPOTS = {
     101: 3,   # Khaidi No. 150
@@ -53,6 +54,13 @@ def no_legacy(value, label):
         raise AssertionError(f"{label} contains legacy WordPress markers: {hits}")
 
 
+def no_forbidden_copy_dashes(value, label):
+    text = str(value or "")
+    hits = [marker for marker in FORBIDDEN_COPY_DASHES if marker in text]
+    if hits:
+        raise AssertionError(f"{label} contains forbidden dash punctuation: {hits}")
+
+
 def wait_for_native_runtime(expected_ids):
     last = None
     for attempt in range(24):
@@ -88,6 +96,8 @@ def validate_detail(item):
         raise AssertionError(f"Detail native body differs from compiled source for {rid}")
     if not str(detail.get("body") or "").strip():
         raise AssertionError(f"Detail body empty for {rid}")
+    no_forbidden_copy_dashes(detail.get("v"), f"detail verdict {rid}")
+    no_forbidden_copy_dashes(detail.get("body"), f"detail body {rid}")
     return rid, bool(detail.get("managed"))
 
 
@@ -157,6 +167,7 @@ def main():
             raise AssertionError(f"Runtime compact poster differs for review {rid}")
         if not str(live.get("m") or "").startswith(R2_PREFIX):
             raise AssertionError(f"Runtime compact poster is not first-party R2 for review {rid}")
+        no_forbidden_copy_dashes(live.get("v"), f"runtime verdict {rid}")
 
     for rid, rating in STRICT_SPOTS.items():
         if runtime_by_id[rid].get("r") != rating:
@@ -183,7 +194,7 @@ def main():
         if slug:
             no_legacy(get_json(f"/api/reviews/{urllib.parse.quote(str(slug), safe='')}"), f"extra detail {rid}")
 
-    for path in ("/", "/reviews/", "/reviews/dc/", "/admin/"):
+    for path in ("/", "/reviews/", "/reviews/dc/", "/reviews/they-call-him-og/", "/admin/"):
         html = get_text(path)
         no_legacy(html, f"HTML {path}")
 
@@ -208,6 +219,7 @@ def main():
         "managed_archive_overlays": sorted(managed_archive),
         "extra_native_review_ids": extra_ids,
         "legacy_wordpress_refs": 0,
+        "forbidden_dash_refs_in_verdicts_and_bodies": 0,
         "strict_rating_spot_checks": STRICT_SPOTS,
         "home_reviews_detail_admin_html": "ok",
         "comments_api": "ok",
