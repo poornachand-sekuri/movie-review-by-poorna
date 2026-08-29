@@ -1,17 +1,19 @@
 {
-  "version": 1,
+  "version": 2,
   "strategy": "single-master-background-with-live-overlays",
   "source": "Movie_Review_By_Poorna_LOCKED_FINAL.zip",
+  "assetHost": "https://assets.moviereviewbypoorna.com",
   "home": {
-    "desktop": {"width": 1535, "height": 1024, "asset": "/assets/master/home-desktop-locked.png"},
-    "mobile": {"width": 862, "height": 1824, "asset": "/assets/master/home-mobile-locked.png"}
+    "desktop": {"width": 1535, "height": 1024, "asset": "https://assets.moviereviewbypoorna.com/master/home-desktop.avif"},
+    "mobile": {"width": 862, "height": 1824, "asset": "https://assets.moviereviewbypoorna.com/master/home-mobile.avif"}
   },
   "content": {
-    "desktop": {"width": 1536, "height": 1648, "asset": "/assets/master/content-desktop-locked.jpg"},
-    "mobile": {"width": 864, "height": 1840, "asset": "/assets/master/content-mobile-locked.jpg"}
+    "desktop": {"width": 1536, "height": 1648, "asset": "https://assets.moviereviewbypoorna.com/master/content-desktop.avif"},
+    "mobile": {"width": 864, "height": 1840, "asset": "https://assets.moviereviewbypoorna.com/master/content-mobile.avif"}
   },
   "rules": [
     "One continuous visual background per page and breakpoint.",
+    "Master artwork binaries are stored in Cloudflare R2, not GitHub transport chunks.",
     "Navigation, movie metadata, review body, ratings, buttons and links remain real DOM content.",
     "All overlay positions are relative to the master image coordinate system.",
     "Do not import or reuse locked-parity, locked-production or section-geometry CSS.",
