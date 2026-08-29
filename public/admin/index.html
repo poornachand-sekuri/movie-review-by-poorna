@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080604">
+  <title>Movie Reviews by Poorna — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/admin.css?v=1">
+</head>
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <section id="loginView" class="login-shell hidden">
+    <div class="login-card">
+      <div class="brand-mark">★</div>
+      <div class="login-brand">MOVIE REVIEWS</div>
+      <div class="login-sub">★ BY POORNA ★ · ADMIN</div>
+      <h1>Projection Room</h1>
+      <p>Sign in to add, edit and manage movie reviews.</p>
+      <form id="loginForm">
+        <label class="field"><span>Admin Password</span><input id="loginPassword" type="password" autocomplete="current-password" required></label>
+        <button class="primary big" type="submit">ENTER ADMIN →</button>
+        <div id="loginError" class="form-error"></div>
+      </form>
+    </div>
+  </section>
+
+  <div id="adminView" class="admin-shell hidden">
+    <header class="topbar">
+      <a class="admin-brand" href="/" target="_blank" rel="noopener">
+        <strong>MOVIE REVIEWS</strong><span>★ BY POORNA ★</span>
+      </a>
+      <div class="top-actions">
+        <a class="ghost" href="/" target="_blank" rel="noopener">VIEW SITE ↗</a>
+        <button id="logoutBtn" class="ghost">LOG OUT</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="library-panel">
+        <div class="library-head">
+          <div><p class="eyebrow">REVIEW LIBRARY</p><h1>Manage Reviews</h1></div>
+          <button id="newReviewBtn" class="primary">＋ NEW REVIEW</button>
+        </div>
+        <div class="search-wrap"><input id="reviewSearch" type="search" placeholder="Search title, language or year…"><span>⌕</span></div>
+        <div class="list-meta"><span id="reviewCount">0 reviews</span><span>Newest first</span></div>
+        <div id="reviewList" class="review-list"></div>
+      </aside>
+
+      <section class="editor-panel">
+        <div id="emptyState" class="empty-state">
+          <div class="reel">◉</div><h2>Select a review</h2><p>Choose an existing review to edit, or create a new one.</p>
+          <button class="primary" data-new-review>＋ ADD NEW REVIEW</button>
+        </div>
+
+        <form id="reviewForm" class="review-form hidden">
+          <div class="editor-head">
+            <div>
+              <div class="editor-kicker"><span id="sourceBadge" class="badge">NEW</span><span id="reviewIdText"></span></div>
+              <h2 id="editorTitle">New Review</h2>
+            </div>
+            <div class="editor-actions">
+              <a id="previewLink" class="ghost disabled" href="#" target="_blank" rel="noopener">PREVIEW ↗</a>
+              <button id="deleteBtn" class="danger hidden" type="button">DELETE</button>
+              <button class="primary" type="submit">SAVE REVIEW</button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <section class="form-section span-2">
+              <h3>Movie Details</h3>
+              <div class="grid-2">
+                <label class="field"><span>Movie Title *</span><input id="title" name="title" required maxlength="180"></label>
+                <label class="field"><span>URL Slug *</span><input id="slug" name="slug" required maxlength="100"><small>Example: they-call-him-og</small></label>
+                <label class="field"><span>Review / Publish Date *</span><input id="publishDate" name="publish_date" type="date" required></label>
+                <label class="field"><span>Release Date</span><input id="releaseDate" name="release_date" placeholder="To be added or Aug 29, 2026"></label>
+                <label class="field"><span>Language</span><input id="language" name="language" list="languageOptions" placeholder="Telugu"><datalist id="languageOptions"><option>Telugu</option><option>Hindi</option><option>Tamil</option><option>Malayalam</option><option>Kannada</option><option>English</option></datalist></label>
+                <div class="field"><span>Rating</span><div id="starPicker" class="star-picker" role="radiogroup" aria-label="Movie rating"><button type="button" data-rating="1">☆</button><button type="button" data-rating="2">☆</button><button type="button" data-rating="3">☆</button><button type="button" data-rating="4">☆</button><button type="button" data-rating="5">☆</button><button type="button" class="clear-rating" data-rating="">CLEAR</button></div><input id="rating" type="hidden"></div>
+              </div>
+            </section>
+
+            <section class="form-section media-section">
+              <h3>Poster Image</h3>
+              <div class="poster-admin">
+                <div id="posterPreview" class="poster-preview"><span>NO POSTER</span></div>
+                <div class="media-controls">
+                  <label class="upload-btn">UPLOAD POSTER<input id="posterFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif"></label>
+                  <label class="field compact"><span>Image URL</span><input id="posterUrl" name="poster" placeholder="https://…"></label>
+                  <small>JPG, PNG, WebP or AVIF · max 15 MB. Uploaded images are stored in R2.</small>
+                </div>
+              </div>
+            </section>
+
+            <section class="form-section copy-section">
+              <h3>Homepage Copy</h3>
+              <label class="field"><span>Popcorn Verdict</span><textarea id="verdict" name="popcorn_verdict" rows="3" maxlength="260" placeholder="One clear sentence about the movie…"></textarea><small><span id="verdictCount">0</span>/260</small></label>
+              <label class="field"><span>Short Excerpt</span><textarea id="excerpt" name="excerpt" rows="5" maxlength="700" placeholder="Short summary used for search and fallback text…"></textarea><small><span id="excerptCount">0</span>/700</small></label>
+            </section>
+
+            <section class="form-section span-2">
+              <div class="section-title-row"><h3>Full Review</h3><span class="hint">This is the text shown inside the theater Review section.</span></div>
+              <div class="editor-toolbar" aria-label="Review formatting toolbar">
+                <button type="button" data-cmd="bold"><b>B</b></button><button type="button" data-cmd="italic"><i>I</i></button><button type="button" data-cmd="formatBlock" data-value="h2">H2</button><button type="button" data-cmd="insertUnorderedList">• LIST</button><button type="button" data-cmd="insertOrderedList">1. LIST</button><button type="button" id="linkBtn">LINK</button><button type="button" data-cmd="removeFormat">CLEAR FORMAT</button>
+              </div>
+              <div id="reviewEditor" class="rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write your full movie review here…"></div>
+            </section>
+
+            <section class="form-section span-2">
+              <div class="section-title-row"><h3>Review Images</h3><span class="hint">Optional additional images for this review.</span></div>
+              <div class="gallery-upload-row"><label class="upload-btn">＋ ADD IMAGES<input id="galleryFiles" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"></label><span id="pendingGalleryText" class="hint"></span></div>
+              <div id="galleryGrid" class="gallery-grid"></div>
+            </section>
+          </div>
+
+          <div class="mobile-savebar"><button id="mobileDeleteBtn" class="danger hidden" type="button">DELETE</button><button class="primary" type="submit">SAVE REVIEW</button></div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3>Delete this review?</h3><p>This removes the review from the public site. This action can be reversed only by editing the data store manually.</p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">DELETE REVIEW</button></div></form></dialog>
+  <script src="/admin/admin.js?v=1" defer></script>
+</body>
+</html>
