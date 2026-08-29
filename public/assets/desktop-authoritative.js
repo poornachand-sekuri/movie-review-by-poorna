@@ -15,7 +15,11 @@
     layer.appendChild(a);
   }
   let prevBuilt=false;
-  async function buildSixPrevious(page){if(prevBuilt||!page.classList.contains('home-master'))return;const grid=page.querySelector('.home-prev-grid');if(!grid)return;try{const raw=await fetch('/data/index.json').then(r=>r.json());const items=raw.slice(5,11);if(items.length){grid.innerHTML=items.map(q=>{const year=(q.d||'').slice(0,4);const lang=q.l?` · ${esc(String(q.l).toUpperCase())}`:'';return `<a class="home-prev-card" href="/reviews/${encodeURIComponent(q.s||'')}/"><div class="title">${esc(q.t)}</div><div class="master-stars">${stars(q.r)}</div><div class="meta">${esc(year)}${lang}</div><div class="serial">${String(q.i??'').padStart(6,'0')}</div></a>`}).join('');prevBuilt=true}}catch(e){console.error('Previous reviews rebuild failed',e)}}
+  async function buildSixPrevious(page){
+    if(prevBuilt||!page.classList.contains('home-master')||!matchMedia('(min-width:761px)').matches)return;
+    const grid=page.querySelector('.home-prev-grid');if(!grid)return;
+    try{const raw=await fetch('/data/index.json').then(r=>r.json());const items=raw.slice(5,11);if(items.length){grid.innerHTML=items.map(q=>{const year=(q.d||'').slice(0,4);const lang=q.l?` · ${esc(String(q.l).toUpperCase())}`:'';return `<a class="home-prev-card" href="/reviews/${encodeURIComponent(q.s||'')}/"><div class="title">${esc(q.t)}</div><div class="master-stars">${stars(q.r)}</div><div class="meta">${esc(year)}${lang}</div><div class="serial">${String(q.i??'').padStart(6,'0')}</div></a>`}).join('');prevBuilt=true}}catch(e){console.error('Previous reviews rebuild failed',e)}
+  }
   function apply(){const page=document.querySelector('.master-page');if(!page)return;normalizeRatings(page);const layer=page.querySelector('.master-layer');if(layer){addHomeLogoLink(page,layer);if(page.classList.contains('home-master')){addLink(layer,'view-all-recent','View all recent reviews');addLink(layer,'view-all-previous','View all previously reviewed movies')}if(page.classList.contains('content-master'))addLink(layer,'view-all-related','View all reviews')}
     const body=page.querySelector('.content-review-body');if(body){body.classList.add('interactive');body.tabIndex=0;body.setAttribute('aria-label','Movie review text. Scroll for more.')}
     if(page.classList.contains('content-master')&&matchMedia('(min-width:761px)').matches){const art=page.querySelector('.master-art[data-master-key="content"]');const v3='https://assets.moviereviewbypoorna.com/master/content-desktop.avif?v=3';if(art&&art.src!==v3)art.src=v3}
