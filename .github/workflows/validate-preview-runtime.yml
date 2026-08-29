@@ -1,3 +1,4 @@
+# Final runtime pass after the encoded R2 poster URL correction.
 name: Validate native preview runtime
 
 on:
