@@ -1,0 +1,38 @@
+name: Rebuild reviews from original voice
+
+on:
+  push:
+    branches: [wordpress-full-migration]
+    paths:
+      - 'migration/rebuild_human_bodies.py'
+      - '.github/workflows/rebuild-human-bodies.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild review bodies from original posts
+        run: python migration/rebuild_human_bodies.py
+      - name: Recompile native catalog
+        run: python migration/compile_native_catalog.py
+      - name: Validate diff
+        run: git diff --check
+      - name: Commit rebuilt human-tone bodies
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add migration/edited migration/compiled/native-reviews.json migration/compiled/qa-report.json migration/compiled/human-body-rebuild-report.json
+          if git diff --cached --quiet; then
+            echo 'No review body changes.'
+          else
+            git commit -m 'Restore original review voice in migrated bodies'
+            git push
+          fi
