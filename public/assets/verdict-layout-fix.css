@@ -1,11 +1,35 @@
 @media (min-width:761px){
   /* Popcorn Verdict must read as a complete thought. Never force a one-line ellipsis. */
+  .home-verdict{
+    min-width:0!important;
+    margin-top:.16cqw!important;
+    padding-left:.52cqw!important;
+    border-left:.16cqw solid rgba(139,31,22,.78)!important;
+  }
+  .home-verdict>span{
+    display:block!important;
+    margin:0 0 .22cqw!important;
+    color:#8b1f16!important;
+    font-family:Oswald,Arial,sans-serif!important;
+    font-size:.74cqw!important;
+    line-height:1!important;
+    font-weight:700!important;
+    letter-spacing:.09em!important;
+    text-transform:uppercase!important;
+  }
   .home-verdict p{
+    margin:0!important;
+    max-width:100%!important;
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
-    max-width:100%!important;
-    line-height:1.22!important;
+    color:#2c170c!important;
+    font-family:"Source Serif 4",Georgia,serif!important;
+    font-size:.94cqw!important;
+    line-height:1.18!important;
+    font-weight:650!important;
+    letter-spacing:.002em!important;
+    text-shadow:0 1px 0 rgba(255,239,196,.34)!important;
   }
   .content-info .verdict-row{
     align-items:center!important;
@@ -22,7 +46,9 @@
 
 @media (max-width:760px){
   .m2-verdict{
-    -webkit-line-clamp:2!important;
+    -webkit-line-clamp:unset!important;
+    display:block!important;
+    overflow:visible!important;
   }
   .m2-info-row.verdict .m2-info-value{
     white-space:normal!important;
