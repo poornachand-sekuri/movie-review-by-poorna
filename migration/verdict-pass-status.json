@@ -1,8 +1,10 @@
 {
   "total": 137,
   "rewritten": 137,
-  "changed_in_this_run": 0,
+  "changed_in_this_run": 3,
+  "normalized_or_tightened_source_verdicts": 3,
   "double_dash_verdicts": 0,
-  "emdash_verdicts": 0,
+  "en_dash_verdicts": 0,
+  "em_dash_verdicts": 0,
   "status": "complete"
 }
