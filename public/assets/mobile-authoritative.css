@@ -1,0 +1,82 @@
+@media (max-width:760px){
+  /* Mobile parity layer: mirrors the approved desktop behavior without forcing desktop geometry. */
+  .master-page{width:100%;max-width:864px;background:#000}
+  .master-poster{background:#111;border-radius:.55cqw;box-shadow:none;padding:0;overflow:hidden}
+  .master-poster img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+  .master-stars{white-space:nowrap;min-width:0}
+  .rating-stars{color:#a52118!important;letter-spacing:.10em!important;font-weight:800!important}
+
+  /* HOME — NOW REVIEWED */
+  .home-latest-poster{left:8.0%!important;top:32.8%!important;width:27.0%!important;height:18.5%!important;z-index:3!important;border:1px solid #5d3c19!important;box-shadow:0 .55cqw 1.15cqw #0009!important}
+  .home-now-copy{left:36.2%!important;top:32.55%!important;width:36.0%!important;height:20.25%!important;padding:2.2cqw 2.1cqw 2cqw!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;box-sizing:border-box!important;background:radial-gradient(circle at 72% 20%,rgba(255,240,194,.24),transparent 42%),linear-gradient(108deg,#edc77f 0%,#dda95f 58%,#ca9349 100%)!important;color:#28160a!important;z-index:2!important}
+  .home-now-copy>.master-stars{display:none!important}
+  .home-now-copy .kicker{margin:.25cqw 0 1.05cqw!important;line-height:1.1!important}
+  .home-now-copy h1{margin:0 0 1.15cqw!important;max-height:8cqw!important;overflow:hidden!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important}
+  .home-verdict{min-width:0!important;margin-top:.3cqw!important;overflow:hidden!important}
+  .home-verdict>span{display:block!important;color:#8f1d16!important;margin-bottom:.6cqw!important;text-transform:uppercase!important}
+  .home-verdict p{margin:0!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;white-space:normal!important}
+  .home-now-copy .read-review{margin-top:auto!important;align-self:flex-start!important;min-width:22cqw!important;height:5.0cqw!important;padding:0 2.6cqw!important;border:1px solid #7e170f!important;border-radius:.8cqw!important;background:linear-gradient(180deg,#b92b20 0%,#7e120d 100%)!important;box-shadow:0 .55cqw 1cqw #0007,inset 0 1px #e05b45!important;color:#ffe6bd!important;text-decoration:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:1.25cqw!important;box-sizing:border-box!important}
+  .home-now-stub{left:74.9%!important;top:32.75%!important;width:17.0%!important;height:19.7%!important;padding:2.4cqw 1.65cqw!important;box-sizing:border-box!important;background:linear-gradient(100deg,#d7a254 0%,#cc9342 100%)!important;color:#28160a!important;z-index:2!important;overflow:hidden!important}
+  .home-now-stub .label{margin:0 0 .45cqw!important;text-transform:uppercase!important}
+  .home-now-stub .value{margin:0 0 1.35cqw!important;line-height:1.22!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .home-now-stub .rule{height:1px!important;background:#6c461f45!important;margin:.75cqw 0 1.15cqw!important}
+  .home-now-stub .master-stars{margin:0!important;line-height:1.1!important}
+
+  /* HOME — RECENT REVIEWS: portrait poster, title, stars; no baked dates/arrows. */
+  .home-recent-grid{left:4.7%!important;top:58.0%!important;width:90.2%!important;height:13.4%!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:1.45%!important;overflow:visible!important;z-index:2!important}
+  .home-recent-grid::before,.home-recent-grid::after{content:"";position:absolute;z-index:20;top:34%;width:5.4cqw;height:8.4cqw;background:#020202;pointer-events:none}
+  .home-recent-grid::before{left:-5.2cqw}.home-recent-grid::after{right:-5.2cqw}
+  .home-recent-card{position:relative!important;display:block!important;overflow:hidden!important;color:#28160a!important;text-decoration:none!important}
+  .home-recent-card::before{content:"";position:absolute;z-index:0;inset:2.5% 3%;border-radius:.75cqw;background:radial-gradient(circle at 68% 18%,rgba(255,241,194,.3),transparent 38%),linear-gradient(108deg,#edc47e 0%,#dda95f 60%,#ca9144 100%);box-shadow:inset 0 0 1.2cqw rgba(101,57,15,.13);pointer-events:none}
+  .home-recent-card .master-poster{position:absolute!important;z-index:1!important;left:18%!important;top:4.5%!important;width:64%!important;height:61.5%!important;right:auto!important;bottom:auto!important;border:1px solid #5d3c19!important;border-radius:.55cqw!important;box-shadow:0 .45cqw .9cqw #0008!important;background:#1a120b!important}
+  .home-recent-card .master-poster img{object-fit:cover!important;object-position:center top!important}
+  .home-recent-card .copy{position:absolute!important;z-index:2!important;left:7%!important;right:7%!important;top:68%!important;bottom:5%!important;margin:0!important;padding:0!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:center!important;gap:.9cqw!important;overflow:hidden!important;min-width:0!important;text-align:center!important;color:#28160a!important}
+  .home-recent-card .title{display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;max-width:100%!important;max-height:5.5cqw!important;margin:0!important;text-shadow:none!important;overflow-wrap:anywhere!important;color:#28160a!important}
+  .home-recent-card .master-stars{margin-top:auto!important;line-height:1!important;max-width:100%!important;overflow:hidden!important}
+
+  /* HOME — PREVIOUSLY REVIEWED: six premium tickets in a 3×2 grid. */
+  .home-prev-grid{left:3.2%!important;top:76.15%!important;width:93.6%!important;height:9.15%!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:.85cqw!important;padding:.55cqw!important;box-sizing:border-box!important;background:#020202!important;overflow:visible!important;z-index:3!important}
+  .home-prev-card{position:relative!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;overflow:hidden!important;box-sizing:border-box!important;padding:1.25cqw 5.4cqw 1cqw 1.55cqw!important;color:#28160a!important;text-decoration:none!important;border:1px solid #8c5d24!important;border-top:.45cqw solid #8e241b!important;border-radius:.65cqw!important;background:radial-gradient(circle at 22% 15%,rgba(255,244,205,.34) 0,transparent 24%),repeating-linear-gradient(0deg,rgba(92,47,12,.025) 0 1px,transparent 1px 3px),linear-gradient(108deg,#edc47e 0%,#dda95f 58%,#ca9144 100%)!important;box-shadow:inset 0 0 0 1px rgba(255,227,164,.16),inset 0 0 1.2cqw rgba(101,57,15,.13),0 .35cqw .8cqw rgba(0,0,0,.5)!important}
+  .home-prev-card::before,.home-prev-card::after{content:"";position:absolute;top:50%;width:2.2cqw;height:2.2cqw;border-radius:50%;background:#020202;transform:translateY(-50%)}
+  .home-prev-card::before{left:-1.25cqw}.home-prev-card::after{right:-1.25cqw}
+  .home-prev-card .title{max-width:80%!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;min-height:3.7cqw!important;margin:0!important;overflow-wrap:anywhere!important;color:#28160a!important}
+  .home-prev-card .master-stars{margin-top:.55cqw!important;max-width:80%!important;overflow:hidden!important;line-height:1!important}
+  .home-prev-card .meta{margin-top:auto!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:80%!important;color:#3d220d!important;text-transform:uppercase!important}
+  .home-prev-card .serial{position:absolute!important;right:.5cqw!important;top:.7cqw!important;bottom:.7cqw!important;width:3.0cqw!important;display:flex!important;align-items:center!important;justify-content:center!important;border-left:1px dashed rgba(109,55,15,.46)!important;background:linear-gradient(90deg,rgba(130,73,22,.04),rgba(255,237,190,.08))!important;writing-mode:vertical-rl!important;transform:rotate(180deg)!important;color:#8e2118!important;letter-spacing:.08em!important}
+
+  /* CONTENT — flat information panel aligned with poster, with Popcorn Verdict. */
+  .content-poster{left:4.0%!important;top:13.0%!important;width:31.5%!important;height:23.8%!important;z-index:4!important;border:1px solid #826020!important;border-radius:.7cqw!important;box-shadow:0 .7cqw 1.4cqw #0009!important}
+  .content-info{left:35.2%!important;top:12.85%!important;width:57.8%!important;height:24.1%!important;padding:2.8cqw 3.2cqw 2.3cqw 5.0cqw!important;background:radial-gradient(circle at 72% 15%,rgba(255,255,255,.035),transparent 38%),linear-gradient(180deg,#0b0b0a 0%,#050505 100%)!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:#f4efe7!important;overflow:hidden!important;box-sizing:border-box!important;z-index:3!important}
+  .content-info h1{margin:0 0 1.5cqw!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .content-info .row{display:grid!important;grid-template-columns:21cqw minmax(0,1fr)!important;align-items:center!important;min-height:5.8cqw!important;border-top:1px solid #474747!important}
+  .content-info .row:last-child{border-bottom:0!important}
+  .content-info .label{white-space:nowrap!important}
+  .content-info .value{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .content-info .verdict-row{min-height:8.6cqw!important;border-bottom:0!important}
+  .content-info .verdict-value{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;padding-right:.5cqw!important}
+
+  /* CONTENT — live review screen: bigger editorial type, real scrolling, more theater feel. */
+  .content-review-body{left:7.4%!important;top:49.1%!important;width:84.8%!important;height:27.2%!important;padding:3.0cqw 3.4cqw 3.2cqw!important;box-sizing:border-box!important;background:radial-gradient(ellipse at 50% 0,rgba(255,255,255,.035),transparent 28%),linear-gradient(180deg,#0c0c0b 0%,#070707 100%)!important;border:1px solid #332d24!important;border-radius:1.0cqw!important;box-shadow:inset 0 0 2cqw #0007!important;pointer-events:auto!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;overscroll-behavior:contain!important;scrollbar-width:thin!important;scrollbar-color:#b17b23 #111!important;mask-image:none!important;z-index:4!important}
+  .content-review-body.collapsed{height:27.2%!important;mask-image:none!important}
+  .content-review-body::-webkit-scrollbar{width:7px}.content-review-body::-webkit-scrollbar-track{background:#111;border-radius:8px}.content-review-body::-webkit-scrollbar-thumb{background:#b17b23;border-radius:8px;border:1px solid #111}
+  .mobile-readmore{display:none!important}
+  .content-master .master-layer::after{content:"";position:absolute;left:7.5%;top:77.2%;width:84.5%;height:4.7%;z-index:2;pointer-events:none;opacity:.9;background:repeating-radial-gradient(ellipse at 5% 75%,#49090a 0 8px,#190203 9px 13px,transparent 14px 33px),linear-gradient(180deg,transparent,#020202 78%)}
+
+  /* CONTENT — RELATED REVIEWS: same vertical mobile card treatment as Recent Reviews. */
+  .content-related-grid{left:4.6%!important;top:84.45%!important;width:90.4%!important;height:14.9%!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:1.45%!important;overflow:visible!important;z-index:3!important}
+  .content-related-grid::before,.content-related-grid::after{content:"";position:absolute;z-index:20;top:34%;width:5.4cqw;height:8.4cqw;background:#020202;pointer-events:none}
+  .content-related-grid::before{left:-5.1cqw}.content-related-grid::after{right:-5.1cqw}
+  .content-related-card{position:relative!important;display:block!important;overflow:hidden!important;color:#28160a!important;text-decoration:none!important}
+  .content-related-card::before{content:"";position:absolute;z-index:0;inset:2.5% 3%;border-radius:.7cqw;background:radial-gradient(circle at 68% 18%,rgba(255,241,194,.3),transparent 38%),linear-gradient(108deg,#edc47e 0%,#dda95f 60%,#ca9144 100%);box-shadow:inset 0 0 1.2cqw rgba(101,57,15,.13);pointer-events:none}
+  .content-related-card .master-poster{position:absolute!important;z-index:1!important;left:18%!important;top:4.5%!important;width:64%!important;height:61.5%!important;right:auto!important;bottom:auto!important;border:1px solid #5d3c19!important;border-radius:.55cqw!important;box-shadow:0 .45cqw .9cqw #0008!important;background:#1a120b!important}
+  .content-related-card .master-poster img{object-fit:cover!important;object-position:center top!important}
+  .content-related-card .copy{position:absolute!important;z-index:2!important;left:7%!important;right:7%!important;top:68%!important;bottom:5%!important;margin:0!important;padding:0!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:center!important;gap:.8cqw!important;overflow:hidden!important;min-width:0!important;text-align:center!important;color:#28160a!important}
+  .content-related-card .title{display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;max-width:100%!important;max-height:5.3cqw!important;margin:0!important;text-shadow:none!important;overflow-wrap:anywhere!important;color:#28160a!important}
+  .content-related-card .master-stars{margin-top:auto!important;line-height:1!important;max-width:100%!important;overflow:hidden!important}
+
+  /* Mobile VIEW ALL hit areas */
+  .view-all-link{z-index:10!important;cursor:pointer!important}
+  .home-master .view-all-recent{left:79.4%!important;top:54.7%!important;width:14.6%!important;height:3.4%!important}
+  .home-master .view-all-previous{left:79.2%!important;top:73.0%!important;width:14.8%!important;height:3.3%!important}
+  .content-master .view-all-related{left:79.0%!important;top:81.3%!important;width:15.2%!important;height:3.5%!important}
+}
