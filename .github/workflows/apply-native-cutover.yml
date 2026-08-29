@@ -1,4 +1,4 @@
-# Re-run after validated poster-target correction.
+# Re-run after human-tone review and Popcorn Verdict editorial pass.
 name: Apply native review cutover
 
 on:
