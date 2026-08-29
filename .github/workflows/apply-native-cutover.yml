@@ -1,4 +1,4 @@
-# Re-run after human-tone review and Popcorn Verdict editorial pass.
+# Re-publish after dash cleanup and complete-verdict layout fix.
 name: Apply native review cutover
 
 on:
