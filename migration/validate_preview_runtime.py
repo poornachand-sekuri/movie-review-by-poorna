@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+import concurrent.futures
+import json
+import os
+import pathlib
+import time
+import urllib.error
+import urllib.request
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+COMPILED = ROOT / "migration" / "compiled" / "native-reviews.json"
+BASE = os.environ.get("PREVIEW_BASE", "https://wordpress-full-migration-movie-review-by-poorna.poornarocks.workers.dev").rstrip("/")
+R2_PREFIX = "https://assets.moviereviewbypoorna.com/reviews/"
+LEGACY = ("wordpress.com", "/wp-content/", "public-api.wordpress.com")
+EXPECTED_TOTAL = 137
+STRICT_SPOTS = {
+    101: 3,   # Khaidi No. 150
+    380: 1,   # Ravanasura
+    461: 2,   # Kantara: Chapter 1
+    459: 3,   # They Call Him OG
+    457: 3,   # Mirai
+    423: 3,   # Hanu-Man
+    413: 3,   # Animal
+    159: 4,   # 2.0
+    67: 3,    # Oopiri
+    69: 5,    # 24
+    415: 4,   # Dunki
+    147: 5,   # Mahanati
+}
+
+
+def req(path_or_url, method="GET", timeout=20):
+    url = path_or_url if path_or_url.startswith("http") else BASE + path_or_url
+    request = urllib.request.Request(url, method=method, headers={
+        "User-Agent": "movie-review-native-cutover-qa/1.0",
+        "Accept": "application/json,text/html,*/*",
+    })
+    return urllib.request.urlopen(request, timeout=timeout)
+
+
+def get_json(path):
+    with req(path) as response:
+        if response.status != 200:
+            raise RuntimeError(f"{path} returned HTTP {response.status}")
+        return json.loads(response.read().decode("utf-8"))
+
+
+def no_legacy(value, label):
+    text = json.dumps(value, ensure_ascii=False).lower() if not isinstance(value, str) else value.lower()
+    hits = [marker for marker in LEGACY if marker in text]
+    if hits:
+        raise AssertionError(f"{label} contains legacy WordPress markers: {hits}")
+
+
+def wait_for_native_runtime(expected_ids):
+    last = None
+    for attempt in range(24):
+        try:
+            rows = get_json("/api/reviews")
+            ids = {int(r.get("i")) for r in rows if r.get("i") is not None}
+            by_id = {int(r["i"]): r for r in rows if r.get("i") is not None}
+            spot_ok = all(rid in by_id and by_id[rid].get("r") == rating for rid, rating in STRICT_SPOTS.items())
+            poster_ok = all(str(by_id[rid].get("m") or "").startswith(R2_PREFIX) for rid in expected_ids if rid in by_id)
+            if expected_ids.issubset(ids) and spot_ok and poster_ok:
+                return rows
+            last = f"archive_ids={len(expected_ids & ids)}/{len(expected_ids)}, spot_ok={spot_ok}, poster_ok={poster_ok}"
+        except Exception as exc:
+            last = repr(exc)
+        if attempt < 23:
+            time.sleep(5)
+    raise AssertionError(f"Preview alias did not converge to native cutover build: {last}")
+
+
+def validate_detail(item):
+    rid, expected = item
+    detail = get_json(f"/api/reviews/{urllib.parse.quote(str(expected['s']), safe='')}")
+    no_legacy(detail, f"detail {rid}")
+    if int(detail.get("i")) != rid:
+        raise AssertionError(f"Detail ID mismatch for {rid}")
+    if detail.get("s") != expected.get("s"):
+        raise AssertionError(f"Detail slug mismatch for {rid}")
+    if detail.get("m") != expected.get("poster_target"):
+        raise AssertionError(f"Detail poster mismatch for {rid}")
+    if detail.get("r") != expected.get("r"):
+        raise AssertionError(f"Detail rating mismatch for {rid}: runtime={detail.get('r')} compiled={expected.get('r')}")
+    if (detail.get("body") or "") != (expected.get("body") or ""):
+        raise AssertionError(f"Detail native body differs from compiled source for {rid}")
+    if not str(detail.get("body") or "").strip():
+        raise AssertionError(f"Detail body empty for {rid}")
+    return rid, bool(detail.get("managed"))
+
+
+def head_poster(item):
+    rid, url = item
+    try:
+        with req(url, method="HEAD", timeout=20) as response:
+            if response.status != 200:
+                raise AssertionError(f"Poster {rid} returned HTTP {response.status}")
+            ctype = (response.headers.get("content-type") or "").lower()
+            if ctype and not ctype.startswith("image/"):
+                raise AssertionError(f"Poster {rid} has non-image content type {ctype}")
+    except urllib.error.HTTPError as exc:
+        raise AssertionError(f"Poster {rid} returned HTTP {exc.code}") from exc
+    return rid
+
+
+def get_text(path):
+    with req(path) as response:
+        body = response.read().decode("utf-8", errors="replace")
+        if response.status != 200:
+            raise AssertionError(f"{path} returned HTTP {response.status}")
+        return body
+
+
+def main():
+    compiled = json.loads(COMPILED.read_text(encoding="utf-8"))
+    if len(compiled) != EXPECTED_TOTAL:
+        raise AssertionError(f"Compiled count is {len(compiled)}, expected {EXPECTED_TOTAL}")
+    expected = {int(r["i"]): r for r in compiled}
+    expected_ids = set(expected)
+
+    runtime = wait_for_native_runtime(expected_ids)
+    no_legacy(runtime, "runtime compact catalog")
+    runtime_by_id = {int(r["i"]): r for r in runtime if r.get("i") is not None}
+    missing = expected_ids - set(runtime_by_id)
+    if missing:
+        raise AssertionError(f"Runtime missing archive IDs: {sorted(missing)}")
+
+    compact_fields = ("t", "s", "d", "l", "e", "rd", "r", "v")
+    for rid, source in expected.items():
+        live = runtime_by_id[rid]
+        for field in compact_fields:
+            if live.get(field) != source.get(field):
+                raise AssertionError(f"Runtime compact field {field!r} differs for review {rid}")
+        if live.get("m") != source.get("poster_target"):
+            raise AssertionError(f"Runtime compact poster differs for review {rid}")
+        if not str(live.get("m") or "").startswith(R2_PREFIX):
+            raise AssertionError(f"Runtime compact poster is not first-party R2 for review {rid}")
+
+    for rid, rating in STRICT_SPOTS.items():
+        if runtime_by_id[rid].get("r") != rating:
+            raise AssertionError(f"Strict rating spot check failed for {rid}: {runtime_by_id[rid].get('r')} != {rating}")
+
+    managed_archive = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
+        for rid, managed in pool.map(validate_detail, expected.items()):
+            if managed:
+                managed_archive.append(rid)
+
+    poster_items = [(rid, expected[rid]["poster_target"]) for rid in sorted(expected)]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+        list(pool.map(head_poster, poster_items))
+
+    extra_ids = sorted(set(runtime_by_id) - expected_ids)
+    for rid in extra_ids:
+        no_legacy(runtime_by_id[rid], f"extra runtime record {rid}")
+        slug = runtime_by_id[rid].get("s")
+        if slug:
+            no_legacy(get_json(f"/api/reviews/{urllib.parse.quote(str(slug), safe='')}"), f"extra detail {rid}")
+
+    for path in ("/", "/reviews/", "/reviews/dc/", "/admin/"):
+        html = get_text(path)
+        no_legacy(html, f"HTML {path}")
+
+    comments = get_json("/api/comments?scope=home")
+    if not isinstance(comments.get("comments"), list):
+        raise AssertionError("Comments API did not return a comments array")
+
+    try:
+        req("/api/admin/session")
+        raise AssertionError("Unauthenticated admin session endpoint unexpectedly returned success")
+    except urllib.error.HTTPError as exc:
+        if exc.code != 401:
+            raise AssertionError(f"Unauthenticated admin session returned HTTP {exc.code}, expected 401") from exc
+
+    summary = {
+        "preview": BASE,
+        "runtime_review_total": len(runtime),
+        "archive_review_total": len(expected_ids),
+        "archive_detail_bodies_verified": len(expected_ids),
+        "archive_r2_posters_http_verified": len(expected_ids),
+        "managed_archive_overlays": sorted(managed_archive),
+        "extra_native_review_ids": extra_ids,
+        "legacy_wordpress_refs": 0,
+        "strict_rating_spot_checks": STRICT_SPOTS,
+        "home_reviews_detail_admin_html": "ok",
+        "comments_api": "ok",
+        "admin_auth_guard": "ok",
+    }
+    print(json.dumps(summary, indent=2))
+
+
+if __name__ == "__main__":
+    import urllib.parse
+    main()

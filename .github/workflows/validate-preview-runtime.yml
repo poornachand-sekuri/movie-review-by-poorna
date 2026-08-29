@@ -1,0 +1,27 @@
+name: Validate native preview runtime
+
+on:
+  push:
+    branches: [wordpress-full-migration]
+    paths:
+      - 'migration/validate_preview_runtime.py'
+      - '.github/workflows/validate-preview-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-qa:
+    runs-on: ubuntu-latest
+    env:
+      PREVIEW_BASE: https://wordpress-full-migration-movie-review-by-poorna.poornarocks.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check browser JavaScript syntax
+        run: |
+          node --check public/assets/app-v4.js
+          node --check public/assets/review-data-bridge.js
+          node --check public/assets/mobile-v2.js
+      - name: Validate deployed Cloudflare preview runtime
+        run: python migration/validate_preview_runtime.py
