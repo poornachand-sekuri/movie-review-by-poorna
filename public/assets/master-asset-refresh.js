@@ -18,7 +18,14 @@
     });
   }
   const app=document.getElementById('app');
-  if(app)new MutationObserver(m=>m.forEach(x=>x.addedNodes.forEach(n=>{if(n.nodeType===1)apply(n)}))).observe(app,{childList:true,subtree:true});
+  if(app){
+    new MutationObserver(mutations=>{
+      mutations.forEach(m=>{
+        if(m.type==='attributes'&&m.target?.matches?.('img.master-art[data-master-key]'))apply(m.target);
+        m.addedNodes?.forEach(n=>{if(n.nodeType===1)apply(n)});
+      });
+    }).observe(app,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>apply());else apply();
   matchMedia('(max-width:760px)').addEventListener?.('change',()=>apply());
 })();
