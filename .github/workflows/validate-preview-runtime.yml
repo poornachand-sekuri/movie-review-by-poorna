@@ -1,4 +1,5 @@
 # Runtime QA waits for the same-SHA Cloudflare branch preview before testing.
+# Human-tone gate: the runtime validator compares every live Popcorn Verdict and full review body with the compiled native source.
 name: Validate native preview runtime
 
 on:
