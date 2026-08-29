@@ -29,7 +29,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A src/worker.js src/worker-v2.js public/data/index.json public/admin/media-migration.html migration/compiled/cutover-report.json
+          git add -A src/worker.js src/worker-v2.js public/data/index.json public/assets/app-v4.js public/assets/review-data-bridge.js public/assets/mobile-v2.js public/admin/media-migration.html migration/compiled/cutover-report.json
           if git diff --cached --quiet; then
             echo 'Native cutover already applied.'
           else
