@@ -1,0 +1,130 @@
+@media (max-width:760px){
+  /* Mobile equivalent of desktop-authoritative.css: the master artwork is the chrome,
+     while every dynamic data zone is painted opaque before live content is drawn. */
+  .master-page{width:100%!important;max-width:864px!important;background:#000!important}
+  .master-art{display:block!important;width:100%!important;height:auto!important;min-height:0!important;object-fit:contain!important}
+  .master-layer{z-index:2!important}
+  .master-poster{z-index:3!important;background:#090909!important;padding:0!important;box-sizing:border-box!important}
+  .master-poster img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center top!important;display:block!important}
+  .rating-number{display:none!important}
+  .master-stars{letter-spacing:0!important;white-space:nowrap!important}
+  .rating-stars{color:#a52118!important;letter-spacing:.08em!important;font-weight:900!important}
+
+  /* HOME — live Now Reviewed data masks the baked demo copy underneath. */
+  .home-latest-poster{
+    left:8.2%!important;top:32.8%!important;width:26.5%!important;height:18.4%!important;
+    border:1px solid #6f4a22!important;border-radius:.45cqw!important;box-shadow:0 .8cqw 1.6cqw #0008!important;
+  }
+  .home-now-copy{
+    left:36.1%!important;top:32.35%!important;width:37.4%!important;height:20.55%!important;
+    padding:2.0cqw 2.0cqw 1.6cqw!important;box-sizing:border-box!important;overflow:hidden!important;
+    background:linear-gradient(180deg,#f0d394 0%,#ebc980 48%,#e2b76b 100%)!important;
+    color:#211408!important;z-index:2!important;box-shadow:inset 0 0 2.6cqw rgba(107,64,19,.08)!important;
+  }
+  .home-now-copy .kicker{font:900 1.35cqw/1.15 Arial,Helvetica,sans-serif!important;letter-spacing:.1em!important;margin:0 0 1.2cqw!important;color:#4b2d13!important}
+  .home-now-copy h1{font:900 5.2cqw/.92 Georgia,'Times New Roman',serif!important;margin:0 0 1.15cqw!important;color:#211408!important;max-height:9.6cqw!important;overflow:hidden!important}
+  .home-now-copy>.master-stars{display:none!important}
+  .home-verdict{margin:.3cqw 0 0!important;min-width:0!important}
+  .home-verdict>span{
+    display:inline-block!important;margin:0 0 .7cqw!important;padding:.3cqw .65cqw!important;
+    border:1px solid rgba(119,31,22,.72)!important;background:rgba(137,33,24,.035)!important;
+    color:#8f2118!important;font-family:'Roboto Slab',Georgia,serif!important;font-size:1.35cqw!important;
+    line-height:1!important;font-weight:900!important;letter-spacing:.045em!important;text-transform:uppercase!important;
+  }
+  .home-verdict p{
+    margin:0!important;max-width:100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+    color:#050505!important;font-family:'Roboto Slab',Georgia,serif!important;font-size:2.25cqw!important;line-height:1.17!important;
+    font-weight:900!important;font-style:normal!important;letter-spacing:0!important;text-shadow:.04cqw .03cqw 0 rgba(0,0,0,.12)!important;
+  }
+  .home-now-copy .read-review{
+    position:absolute!important;left:2cqw!important;bottom:1.65cqw!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    min-width:22cqw!important;height:5.1cqw!important;padding:0 2cqw!important;border:1px solid #73140e!important;border-radius:.55cqw!important;
+    background:linear-gradient(180deg,#b72b21,#78120d)!important;box-shadow:0 .55cqw 1cqw #0006!important;color:#ffe7c0!important;
+    font:900 1.55cqw/1 Arial,Helvetica,sans-serif!important;letter-spacing:.055em!important;text-decoration:none!important;
+  }
+  .home-now-stub{
+    left:75.0%!important;top:32.55%!important;width:17.4%!important;height:20.1%!important;padding:2.4cqw 1.5cqw!important;box-sizing:border-box!important;
+    background:linear-gradient(180deg,#efd18e 0%,#e8c379 55%,#dfb467 100%)!important;color:#2b190b!important;z-index:2!important;
+    border-left:1px dashed rgba(92,55,18,.58)!important;overflow:hidden!important;
+  }
+  .home-now-stub .label{font:900 1.2cqw/1.1 Arial,Helvetica,sans-serif!important;letter-spacing:.06em!important;margin-bottom:.45cqw!important;color:#5a3518!important}
+  .home-now-stub .value{font:900 1.65cqw/1.25 Arial,Helvetica,sans-serif!important;margin:0 0 1.3cqw!important;color:#211408!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  .home-now-stub .rule{height:1px!important;background:rgba(100,64,25,.35)!important;margin:.8cqw 0 1.2cqw!important}
+  .home-now-stub .master-stars{font-size:1.6cqw!important}
+
+  /* HOME — Recent Reviews: opaque ticket interiors remove all baked poster/title/rating placeholders. */
+  .home-recent-grid{left:4.7%!important;top:58.0%!important;width:90.2%!important;height:13.4%!important;gap:1.5%!important}
+  .home-recent-card{position:relative!important;display:block!important;overflow:hidden!important;color:#211408!important;text-decoration:none!important}
+  .home-recent-card::before{
+    content:""!important;position:absolute!important;z-index:0!important;inset:1.5%!important;
+    background:linear-gradient(180deg,#efd49a 0%,#e8c47f 58%,#dfb76b 100%)!important;
+    box-shadow:inset 0 0 1.6cqw rgba(104,62,17,.08)!important;pointer-events:none!important;
+  }
+  .home-recent-card .master-poster{
+    left:5%!important;top:4%!important;width:90%!important;height:72%!important;border:1px solid #6d4720!important;border-radius:.3cqw!important;box-shadow:0 .45cqw .9cqw #0007!important;
+  }
+  .home-recent-card .copy{
+    position:absolute!important;z-index:4!important;left:7%!important;right:7%!important;top:78%!important;bottom:3%!important;
+    display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:.35cqw!important;text-align:center!important;overflow:hidden!important;
+  }
+  .home-recent-card .title{font:900 1.85cqw/1.05 Georgia,'Times New Roman',serif!important;color:#28160a!important;text-shadow:none!important;margin:0!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important}
+  .home-recent-card .master-stars{font-size:1.45cqw!important;line-height:1!important;margin:0!important;color:#a52118!important}
+
+  /* HOME — Previously Reviewed: live ticket faces fully cover baked demo tickets. */
+  .home-prev-grid{left:3.4%!important;top:76.4%!important;width:93%!important;height:7.9%!important;gap:1%!important}
+  .home-prev-card{
+    position:relative!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important;overflow:hidden!important;
+    padding:1.8cqw 4.1cqw 1.3cqw 2.1cqw!important;color:#211408!important;text-decoration:none!important;
+    background:linear-gradient(180deg,#efd598 0%,#e7c27b 58%,#ddb268 100%)!important;border:1px solid #9b7136!important;
+  }
+  .home-prev-card::before,.home-prev-card::after{content:""!important;position:absolute!important;top:50%!important;width:2.5cqw!important;height:2.5cqw!important;border-radius:50%!important;background:#020202!important;transform:translateY(-50%)!important}
+  .home-prev-card::before{left:-1.5cqw!important}.home-prev-card::after{right:-1.5cqw!important}
+  .home-prev-card .title{font:900 1.8cqw/1.06 Georgia,'Times New Roman',serif!important;max-width:82%!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;color:#28160a!important}
+  .home-prev-card .master-stars{font-size:1.35cqw!important;margin-top:.65cqw!important;line-height:1!important}
+  .home-prev-card .meta{font:900 1.05cqw/1 Arial,Helvetica,sans-serif!important;margin-top:auto!important;color:#3d220d!important;text-transform:uppercase!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:82%!important}
+  .home-prev-card .serial{position:absolute!important;right:1.3cqw!important;top:1.4cqw!important;bottom:1.4cqw!important;padding-left:.6cqw!important;border-left:1px dashed rgba(109,55,15,.5)!important;writing-mode:vertical-rl!important;color:#8e2118!important;font:900 1cqw/1 Arial,Helvetica,sans-serif!important;letter-spacing:.07em!important}
+
+  /* CONTENT — paint an opaque live information card over the baked demo data. */
+  .content-poster{left:4%!important;top:13.1%!important;width:31.5%!important;height:22.5%!important;border:1px solid #8a632c!important;border-radius:.6cqw!important;box-shadow:0 .8cqw 1.5cqw #0008!important}
+  .content-info{
+    left:36.8%!important;top:12.75%!important;width:56.1%!important;height:25.25%!important;padding:3.1cqw 3.1cqw 2.2cqw!important;box-sizing:border-box!important;
+    background:linear-gradient(180deg,#0d0c0a 0%,#090908 100%)!important;border:1px solid #62451f!important;border-radius:1.2cqw!important;
+    box-shadow:inset 0 0 3cqw #0009!important;color:#f4efe7!important;overflow:hidden!important;z-index:2!important;
+  }
+  .content-info h1{font:800 4.3cqw/1 Arial,Helvetica,sans-serif!important;color:#e2a237!important;margin:0 0 2.2cqw!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .content-info .row{display:grid!important;grid-template-columns:20.5cqw minmax(0,1fr)!important;align-items:center!important;min-height:7.2cqw!important;border-top:1px solid #625a4e!important;gap:1.5cqw!important}
+  .content-info .label{font:800 2.05cqw/1.15 Arial,Helvetica,sans-serif!important;color:#dea33b!important;white-space:nowrap!important}
+  .content-info .value{font:700 2.05cqw/1.28 Arial,Helvetica,sans-serif!important;color:#f2eee7!important;min-width:0!important}
+  .content-info .master-stars{font-size:2.3cqw!important;color:#d99a28!important}
+  .content-info .verdict-row{align-items:start!important;min-height:10.5cqw!important;padding-top:1.5cqw!important}
+  .content-info .verdict-value{font-family:'Roboto Slab',Georgia,serif!important;font-size:1.95cqw!important;line-height:1.27!important;font-weight:800!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;padding-right:.5cqw!important;color:#f2e6cf!important}
+
+  /* CONTENT — opaque review screen prevents baked sample review text from showing through. */
+  .content-review-body{
+    left:7.5%!important;top:50.35%!important;width:82%!important;height:22.7%!important;padding:3.2cqw 3.4cqw 3cqw!important;box-sizing:border-box!important;
+    overflow-y:auto!important;overflow-x:hidden!important;pointer-events:auto!important;touch-action:pan-y!important;overscroll-behavior:contain!important;
+    background:linear-gradient(180deg,#0a0a09 0%,#050505 100%)!important;border:1px solid #72532b!important;border-radius:1cqw!important;
+    box-shadow:0 0 0 1.2cqw #080706,0 0 0 1.4cqw #4a351c,inset 0 0 4cqw #000a!important;
+    color:#f4efe7!important;font-family:'Source Serif 4',Georgia,serif!important;font-size:3.1cqw!important;line-height:1.58!important;z-index:3!important;
+    scrollbar-width:thin!important;scrollbar-color:#ad772b #111!important;
+  }
+  .content-review-body p{margin:0 0 1.15em!important}
+  .content-review-body.collapsed{height:18.8%!important;mask-image:none!important;-webkit-mask-image:none!important}
+  .mobile-readmore{
+    position:absolute!important;z-index:5!important;left:24.5%!important;top:72.6%!important;width:45%!important;height:5.2%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+    background:#080808!important;border:1px solid #8a642f!important;border-radius:1.4cqw!important;color:#fff3dc!important;font:900 2.5cqw/1 Arial,Helvetica,sans-serif!important;letter-spacing:.06em!important;
+    box-shadow:0 0 0 3.2cqw #050505,0 1cqw 2cqw #000b!important;
+  }
+
+  /* CONTENT — Related Reviews: opaque live cards cover baked poster/title/rating examples. */
+  .content-related-grid{left:4.6%!important;top:84.5%!important;width:90.4%!important;height:15%!important;gap:1.5%!important}
+  .content-related-card{position:relative!important;display:block!important;overflow:hidden!important;color:#211408!important;text-decoration:none!important}
+  .content-related-card::before{
+    content:""!important;position:absolute!important;z-index:0!important;inset:1.5%!important;
+    background:linear-gradient(180deg,#efd49a 0%,#e8c47f 58%,#dfb76b 100%)!important;box-shadow:inset 0 0 1.6cqw rgba(104,62,17,.08)!important;
+  }
+  .content-related-card .master-poster{left:5%!important;top:4%!important;width:90%!important;height:72%!important;border:1px solid #6d4720!important;border-radius:.3cqw!important;box-shadow:0 .45cqw .9cqw #0007!important}
+  .content-related-card .copy{position:absolute!important;z-index:4!important;left:7%!important;right:7%!important;top:78%!important;bottom:3%!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:.35cqw!important;text-align:center!important;overflow:hidden!important}
+  .content-related-card .title{font:900 1.85cqw/1.05 Georgia,'Times New Roman',serif!important;color:#28160a!important;text-shadow:none!important;margin:0!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important}
+  .content-related-card .master-stars{font-size:1.45cqw!important;line-height:1!important;margin:0!important;color:#a52118!important}
+}
