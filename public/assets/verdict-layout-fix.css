@@ -1,5 +1,5 @@
 @media (min-width:761px){
-  /* Popcorn Verdict: vintage Indian cinema-ticket letterpress treatment. */
+  /* Popcorn Verdict: Style 6D — vintage fade / aged letterpress. */
   .home-verdict{
     min-width:0!important;
     margin-top:.22cqw!important;
@@ -9,19 +9,21 @@
   .home-verdict>span{
     display:inline-block!important;
     margin:0 0 .28cqw!important;
-    padding:0 0 .14cqw!important;
+    padding:0 0 .13cqw!important;
     border:0!important;
-    border-bottom:1px solid rgba(112,57,19,.42)!important;
+    border-bottom:1px solid rgba(126,45,30,.42)!important;
     border-radius:0!important;
     background:transparent!important;
     box-shadow:none!important;
-    color:#8f2118!important;
+    color:#8a3a2b!important;
     font-family:"Roboto Slab",Georgia,serif!important;
-    font-size:.68cqw!important;
+    font-size:.69cqw!important;
     line-height:1!important;
-    font-weight:900!important;
-    letter-spacing:.065em!important;
+    font-weight:800!important;
+    letter-spacing:.055em!important;
     text-transform:uppercase!important;
+    opacity:.88!important;
+    text-shadow:.015cqw .01cqw 0 rgba(88,39,20,.14)!important;
   }
   .home-verdict p{
     margin:0!important;
@@ -29,14 +31,15 @@
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
-    color:#26170b!important;
+    color:#4b3824!important;
     font-family:"Roboto Slab",Georgia,serif!important;
-    font-size:1.03cqw!important;
-    line-height:1.18!important;
-    font-weight:900!important;
+    font-size:1.02cqw!important;
+    line-height:1.19!important;
+    font-weight:800!important;
     font-style:normal!important;
-    letter-spacing:.002em!important;
-    text-shadow:0 1px 0 rgba(255,235,184,.22)!important;
+    letter-spacing:.006em!important;
+    opacity:.89!important;
+    text-shadow:.02cqw .012cqw 0 rgba(91,61,34,.13),0 1px 0 rgba(255,239,199,.20)!important;
     text-wrap:pretty!important;
   }
   .home-verdict p::before{
