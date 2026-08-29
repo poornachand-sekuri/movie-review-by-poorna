@@ -1,1 +1,8 @@
-{"total":137,"rewritten":0,"status":"in_progress"}
+{
+  "total": 137,
+  "rewritten": 137,
+  "changed_in_this_run": 137,
+  "double_dash_verdicts": 0,
+  "emdash_verdicts": 0,
+  "status": "complete"
+}
