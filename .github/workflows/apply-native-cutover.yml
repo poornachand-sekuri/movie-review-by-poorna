@@ -1,3 +1,4 @@
+# Re-run after validated poster-target correction.
 name: Apply native review cutover
 
 on:
