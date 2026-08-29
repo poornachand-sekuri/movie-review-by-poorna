@@ -52,3 +52,9 @@
   .content-related-card .rating-number{font-size:.62cqw}
   .content-related-card .rating-pending{font-size:.56cqw}
 }
+@media (max-width:760px){
+  .home-verdict>span{display:none}
+  .content-info .verdict-row{display:none}
+  .master-stars .rating-number{display:none}
+  .rating-pending{font-size:inherit;font-weight:700;letter-spacing:0}
+}
