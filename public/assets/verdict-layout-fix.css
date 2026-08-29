@@ -40,12 +40,8 @@
     text-shadow:.018cqw .012cqw 0 rgba(0,0,0,.18),0 1px 0 rgba(255,240,198,.14)!important;
     text-wrap:pretty!important;
   }
-  .home-verdict p::before{
-    content:none!important;
-  }
-  .content-info .verdict-row{
-    align-items:center!important;
-  }
+  .home-verdict p::before{content:none!important}
+  .content-info .verdict-row{align-items:center!important}
   .content-info .verdict-value{
     white-space:normal!important;
     overflow:visible!important;
@@ -57,14 +53,49 @@
 }
 
 @media (max-width:760px){
-  .m2-verdict{
-    -webkit-line-clamp:unset!important;
-    display:block!important;
-    overflow:visible!important;
+  /* Same master-overlay approach on mobile; preserve selected 6E visual treatment. */
+  .home-master .home-verdict{min-width:0!important;margin-top:.7cqw!important;padding:0!important;border:0!important}
+  .home-master .home-verdict>span{
+    display:inline-block!important;
+    margin:0 0 .65cqw!important;
+    padding:.28cqw .7cqw .3cqw!important;
+    border:1px solid rgba(119,31,22,.72)!important;
+    background:rgba(137,33,24,.035)!important;
+    color:#8f2118!important;
+    font-family:"Roboto Slab",Georgia,serif!important;
+    font-size:1.28cqw!important;
+    line-height:1!important;
+    font-weight:900!important;
+    letter-spacing:.05em!important;
+    text-transform:uppercase!important;
+    text-shadow:.04cqw .03cqw 0 rgba(90,24,17,.14)!important;
   }
-  .m2-info-row.verdict .m2-info-value{
+  .home-master .home-verdict p{
+    margin:0!important;
+    max-width:100%!important;
+    max-height:none!important;
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
+    color:#050505!important;
+    font-family:"Roboto Slab",Georgia,serif!important;
+    font-size:2.05cqw!important;
+    line-height:1.22!important;
+    font-weight:900!important;
+    font-style:normal!important;
+    letter-spacing:0!important;
+    opacity:.99!important;
+    text-shadow:.04cqw .025cqw 0 rgba(0,0,0,.16),0 1px 0 rgba(255,240,198,.12)!important;
+    text-wrap:pretty!important;
+  }
+  .home-master .home-verdict p::before{content:none!important}
+  .content-master .content-info .verdict-row{align-items:start!important}
+  .content-master .content-info .verdict-value{
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    display:block!important;
+    line-height:1.28!important;
+    padding-right:0!important;
   }
 }
