@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EDITED = ROOT / 'migration' / 'edited'
 RAW_MANIFEST = ROOT / 'migration' / 'raw' / 'manifest.json'
 RATING_OVERRIDES = ROOT / 'migration' / 'rating-overrides.json'
+POSTER_TARGET_OVERRIDES = ROOT / 'migration' / 'poster-target-overrides.json'
 COMPILED = ROOT / 'migration' / 'compiled'
 CATALOG = COMPILED / 'native-reviews.json'
 REPORT = COMPILED / 'qa-report.json'
@@ -37,9 +38,27 @@ def load_rating_overrides():
     return overrides
 
 
+def load_poster_target_overrides():
+    if not POSTER_TARGET_OVERRIDES.exists():
+        return {}
+    data = load_json(POSTER_TARGET_OVERRIDES)
+    if not isinstance(data, list):
+        raise SystemExit(f'{POSTER_TARGET_OVERRIDES}: expected a JSON array')
+    overrides = {}
+    for item in data:
+        if not isinstance(item, dict) or 'i' not in item or 'from' not in item or 'to' not in item:
+            raise SystemExit(f'{POSTER_TARGET_OVERRIDES}: each override requires i, from and to')
+        ident = int(item['i'])
+        if ident in overrides:
+            raise SystemExit(f'{POSTER_TARGET_OVERRIDES}: duplicate override id {ident}')
+        overrides[ident] = item
+    return overrides
+
+
 def main():
     manifest = load_json(RAW_MANIFEST)
-    overrides = load_rating_overrides()
+    rating_overrides = load_rating_overrides()
+    poster_target_overrides = load_poster_target_overrides()
     errors, warnings = [], []
     batches = []
     for path in sorted(EDITED.glob('*.json')):
@@ -49,13 +68,20 @@ def main():
         for row in data:
             row['_batch'] = path.name
             ident = row.get('i')
-            if ident in overrides:
-                override = overrides[ident]
+            if ident in rating_overrides:
+                override = rating_overrides[ident]
                 if row.get('r') != override['from']:
                     errors.append(
                         f"{path.name}:{ident}: rating override expected source {override['from']!r}, found {row.get('r')!r}"
                     )
                 row['r'] = override['to']
+            if ident in poster_target_overrides:
+                override = poster_target_overrides[ident]
+                if row.get('poster_target') != override['from']:
+                    errors.append(
+                        f"{path.name}:{ident}: poster target override expected source {override['from']!r}, found {row.get('poster_target')!r}"
+                    )
+                row['poster_target'] = override['to']
             batches.append(row)
 
     seen_ids, seen_slugs = {}, {}
@@ -96,11 +122,14 @@ def main():
     edited_ids = {int(x['i']) for x in batches if x.get('i') is not None}
     unknown = sorted(edited_ids - raw_ids)
     missing = sorted(raw_ids - edited_ids)
-    unknown_overrides = sorted(set(overrides) - edited_ids)
+    unknown_rating_overrides = sorted(set(rating_overrides) - edited_ids)
+    unknown_poster_target_overrides = sorted(set(poster_target_overrides) - edited_ids)
     if unknown:
         errors.append(f'Edited records not present in raw archive: {unknown}')
-    if unknown_overrides:
-        errors.append(f'Rating overrides not present in edited archive: {unknown_overrides}')
+    if unknown_rating_overrides:
+        errors.append(f'Rating overrides not present in edited archive: {unknown_rating_overrides}')
+    if unknown_poster_target_overrides:
+        errors.append(f'Poster target overrides not present in edited archive: {unknown_poster_target_overrides}')
 
     clean_rows = []
     for row in sorted(batches, key=lambda x: (str(x.get('d','')), int(x.get('i',0))), reverse=True):
@@ -118,7 +147,8 @@ def main():
         'edited_total': len(clean_rows),
         'remaining_total': len(missing),
         'completion_percent': round((len(clean_rows) / len(manifest) * 100), 2) if manifest else 0,
-        'rating_overrides_total': len(overrides),
+        'rating_overrides_total': len(rating_overrides),
+        'poster_target_overrides_total': len(poster_target_overrides),
         'rating_distribution': rating_distribution,
         'errors': errors,
         'warnings': warnings,
