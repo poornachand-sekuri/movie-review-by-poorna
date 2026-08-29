@@ -1,3 +1,0 @@
-Admin preview build trigger.
-Generated after Cloudflare Admin secrets were configured.
-Production main remains unchanged.
