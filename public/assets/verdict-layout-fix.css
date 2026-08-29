@@ -1,0 +1,32 @@
+@media (min-width:761px){
+  /* Popcorn Verdict must read as a complete thought. Never force a one-line ellipsis. */
+  .home-verdict p{
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    max-width:100%!important;
+    line-height:1.22!important;
+  }
+  .content-info .verdict-row{
+    align-items:center!important;
+  }
+  .content-info .verdict-value{
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    display:block!important;
+    line-height:1.25!important;
+    padding-right:.5cqw!important;
+  }
+}
+
+@media (max-width:760px){
+  .m2-verdict{
+    -webkit-line-clamp:2!important;
+  }
+  .m2-info-row.verdict .m2-info-value{
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+  }
+}
