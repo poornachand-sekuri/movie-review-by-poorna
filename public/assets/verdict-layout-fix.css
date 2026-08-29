@@ -1,20 +1,25 @@
 @media (min-width:761px){
-  /* Popcorn Verdict must read as a complete thought. Never force a one-line ellipsis. */
+  /* Popcorn Verdict: clean, readable ticket-copy treatment. */
   .home-verdict{
     min-width:0!important;
-    margin-top:.16cqw!important;
-    padding-left:.52cqw!important;
-    border-left:.16cqw solid rgba(139,31,22,.78)!important;
+    margin-top:.22cqw!important;
+    padding:0!important;
+    border:0!important;
   }
   .home-verdict>span{
-    display:block!important;
-    margin:0 0 .22cqw!important;
-    color:#8b1f16!important;
+    display:inline-block!important;
+    margin:0 0 .28cqw!important;
+    padding:.12cqw .38cqw .14cqw!important;
+    border:1px solid rgba(108,27,19,.32)!important;
+    border-radius:.14cqw!important;
+    background:linear-gradient(180deg,#a52c22 0%,#842018 100%)!important;
+    box-shadow:inset 0 1px rgba(255,220,158,.22),0 .08cqw .14cqw rgba(68,28,9,.16)!important;
+    color:#f6d696!important;
     font-family:Oswald,Arial,sans-serif!important;
-    font-size:.74cqw!important;
+    font-size:.62cqw!important;
     line-height:1!important;
-    font-weight:700!important;
-    letter-spacing:.09em!important;
+    font-weight:600!important;
+    letter-spacing:.105em!important;
     text-transform:uppercase!important;
   }
   .home-verdict p{
@@ -23,13 +28,14 @@
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
-    color:#2c170c!important;
-    font-family:"Source Serif 4",Georgia,serif!important;
-    font-size:.94cqw!important;
-    line-height:1.18!important;
-    font-weight:650!important;
-    letter-spacing:.002em!important;
-    text-shadow:0 1px 0 rgba(255,239,196,.34)!important;
+    color:#2f180f!important;
+    font-family:Inter,Arial,sans-serif!important;
+    font-size:.88cqw!important;
+    line-height:1.28!important;
+    font-weight:600!important;
+    letter-spacing:-.008em!important;
+    text-shadow:none!important;
+    text-wrap:pretty!important;
   }
   .content-info .verdict-row{
     align-items:center!important;
