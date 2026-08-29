@@ -1,0 +1,27 @@
+name: Validate media migration Worker
+
+on:
+  push:
+    branches:
+      - wordpress-full-migration
+    paths:
+      - 'src/worker.js'
+      - 'src/worker-v2.js'
+      - 'migration/test_media_migration.mjs'
+      - '.github/workflows/validate-media-migration.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: wordpress-full-migration
+
+      - name: Syntax check Worker
+        run: node --check src/worker-v2.js
+
+      - name: Run media migration mock test
+        run: node migration/test_media_migration.mjs
