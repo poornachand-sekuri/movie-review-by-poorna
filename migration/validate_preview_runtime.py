@@ -143,6 +143,12 @@ def get_text(path):
         return body
 
 
+def require_markers(text, markers, label):
+    missing = [marker for marker in markers if marker not in text]
+    if missing:
+        raise AssertionError(f"{label} is missing expected deployed markers: {missing}")
+
+
 def main():
     compiled = json.loads(COMPILED.read_text(encoding="utf-8"))
     if len(compiled) != EXPECTED_TOTAL:
@@ -198,6 +204,33 @@ def main():
         html = get_text(path)
         no_legacy(html, f"HTML {path}")
 
+    # Mobile visual/runtime gate: prove the exact restored Home + Content assets are live.
+    index_html = get_text("/")
+    require_markers(index_html, ("/assets/mobile-locked.css?v=1", "/assets/mobile-v2.js?v=3"), "homepage asset wiring")
+    mobile_js = get_text("/assets/mobile-v2.js?v=3")
+    require_markers(
+        mobile_js,
+        ("m2-admit", "m2-ticket-strip", "m2-previous-strip", "m2-detail-card", "m2-detail-clapper", "/api/reviews/"),
+        "mobile JavaScript",
+    )
+    no_legacy(mobile_js, "mobile JavaScript")
+    mobile_css = get_text("/assets/mobile-locked.css?v=1")
+    require_markers(
+        mobile_css,
+        (
+            ".m2-home-section",
+            ".m2-now-body",
+            ".m2-ticket-strip",
+            ".m2-previous-strip",
+            ".m2-detail-card",
+            ".m2-detail-body",
+            "home-mobile.avif",
+            "content-mobile.avif",
+            "Roboto Slab",
+        ),
+        "mobile locked stylesheet",
+    )
+
     comments = get_json("/api/comments?scope=home")
     if not isinstance(comments.get("comments"), list):
         raise AssertionError("Comments API did not return a comments array")
@@ -222,6 +255,9 @@ def main():
         "forbidden_dash_refs_in_verdicts_and_bodies": 0,
         "strict_rating_spot_checks": STRICT_SPOTS,
         "home_reviews_detail_admin_html": "ok",
+        "mobile_home_layout_assets": "ok",
+        "mobile_content_layout_assets": "ok",
+        "mobile_6e_verdict_style": "ok",
         "comments_api": "ok",
         "admin_auth_guard": "ok",
     }
