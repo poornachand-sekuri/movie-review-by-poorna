@@ -5,6 +5,7 @@ import os
 import pathlib
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -90,18 +91,38 @@ def validate_detail(item):
     return rid, bool(detail.get("managed"))
 
 
-def head_poster(item):
-    rid, url = item
+def probe_poster(url):
     try:
         with req(url, method="HEAD", timeout=20) as response:
-            if response.status != 200:
-                raise AssertionError(f"Poster {rid} returned HTTP {response.status}")
-            ctype = (response.headers.get("content-type") or "").lower()
-            if ctype and not ctype.startswith("image/"):
-                raise AssertionError(f"Poster {rid} has non-image content type {ctype}")
+            return {
+                "status": response.status,
+                "content_type": (response.headers.get("content-type") or "").lower(),
+                "error": None,
+            }
     except urllib.error.HTTPError as exc:
-        raise AssertionError(f"Poster {rid} returned HTTP {exc.code}") from exc
-    return rid
+        return {"status": exc.code, "content_type": "", "error": f"HTTP {exc.code}"}
+    except Exception as exc:
+        return {"status": None, "content_type": "", "error": repr(exc)}
+
+
+def head_poster(item):
+    rid, url = item
+    result = probe_poster(url)
+    alt_url = None
+    alt_result = None
+    if result["status"] != 200 and "%" in url:
+        alt_url = url.replace("%", "%25")
+        alt_result = probe_poster(alt_url)
+    return {
+        "id": rid,
+        "url": url,
+        "status": result["status"],
+        "content_type": result["content_type"],
+        "error": result["error"],
+        "alternate_url": alt_url,
+        "alternate_status": alt_result["status"] if alt_result else None,
+        "alternate_content_type": alt_result["content_type"] if alt_result else "",
+    }
 
 
 def get_text(path):
@@ -149,7 +170,11 @@ def main():
 
     poster_items = [(rid, expected[rid]["poster_target"]) for rid in sorted(expected)]
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
-        list(pool.map(head_poster, poster_items))
+        poster_results = list(pool.map(head_poster, poster_items))
+    poster_failures = [
+        p for p in poster_results
+        if p["status"] != 200 or (p["content_type"] and not p["content_type"].startswith("image/"))
+    ]
 
     extra_ids = sorted(set(runtime_by_id) - expected_ids)
     for rid in extra_ids:
@@ -178,7 +203,8 @@ def main():
         "runtime_review_total": len(runtime),
         "archive_review_total": len(expected_ids),
         "archive_detail_bodies_verified": len(expected_ids),
-        "archive_r2_posters_http_verified": len(expected_ids),
+        "archive_r2_posters_http_verified": len(expected_ids) - len(poster_failures),
+        "poster_failures": poster_failures,
         "managed_archive_overlays": sorted(managed_archive),
         "extra_native_review_ids": extra_ids,
         "legacy_wordpress_refs": 0,
@@ -187,9 +213,10 @@ def main():
         "comments_api": "ok",
         "admin_auth_guard": "ok",
     }
-    print(json.dumps(summary, indent=2))
+    print(json.dumps(summary, indent=2), flush=True)
+    if poster_failures:
+        raise AssertionError(f"{len(poster_failures)} public R2 poster URL(s) failed HTTP verification")
 
 
 if __name__ == "__main__":
-    import urllib.parse
     main()
