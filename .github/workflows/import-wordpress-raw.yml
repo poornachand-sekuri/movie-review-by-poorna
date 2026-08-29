@@ -1,0 +1,38 @@
+name: Import WordPress raw archive
+
+on:
+  push:
+    branches:
+      - wordpress-full-migration
+    paths:
+      - migration/fetch_wordpress_raw.py
+      - .github/workflows/import-wordpress-raw.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: wordpress-full-migration
+
+      - name: Fetch immutable WordPress snapshot
+        run: python migration/fetch_wordpress_raw.py
+
+      - name: Commit snapshot
+        shell: bash
+        run: |
+          if git diff --quiet -- migration/raw && [ -z "$(git status --porcelain -- migration/raw)" ]; then
+            echo "No raw snapshot changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add migration/raw
+          git commit -m "Snapshot WordPress source archive for migration"
+          git push origin HEAD:wordpress-full-migration

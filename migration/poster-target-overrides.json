@@ -1,0 +1,8 @@
+[
+  {
+    "i": 387,
+    "from": "https://assets.moviereviewbypoorna.com/reviews/my-opinion-on-various-opinions-on-adipursh-%f0%9f%98%89/poster.jpg",
+    "to": "https://assets.moviereviewbypoorna.com/reviews/my-opinion-on-various-opinions-on-adipursh-%25f0%259f%2598%2589/poster.jpg",
+    "reason": "The R2 object key contains literal percent characters from the legacy percent-encoded emoji slug. The public R2 custom domain decodes URL paths once, so the percent signs must themselves be URL-escaped for the object to resolve. Runtime QA confirmed the old URL returns 404 and this corrected URL returns 200 image/jpeg."
+  }
+]

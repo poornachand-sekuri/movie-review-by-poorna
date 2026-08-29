@@ -1,0 +1,688 @@
+{
+  "raw_total": 137,
+  "edited_total": 137,
+  "remaining_total": 0,
+  "completion_percent": 100.0,
+  "rating_overrides_total": 28,
+  "poster_target_overrides_total": 1,
+  "rating_distribution": {
+    "1": 19,
+    "2": 15,
+    "3": 45,
+    "4": 31,
+    "5": 27
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "review": "kantara-chapter-1",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#Kantara",
+        "#KantaraChapter1"
+      ]
+    },
+    {
+      "review": "hari-hara-veera-mallu",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#ADIPURUSH",
+        "#KANNAPA"
+      ]
+    },
+    {
+      "review": "crew",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#Kahani",
+        "#Lootcase"
+      ]
+    },
+    {
+      "review": "tillu-square",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#DJTillu"
+      ]
+    },
+    {
+      "review": "guntur-kaaram",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#Agnyaathavaasi"
+      ]
+    },
+    {
+      "review": "jawan",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#Pathaan"
+      ]
+    },
+    {
+      "review": "liger",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#ismartShankar"
+      ]
+    },
+    {
+      "review": "sita-ramam",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#SitaRamam"
+      ]
+    },
+    {
+      "review": "f3",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#F2"
+      ]
+    },
+    {
+      "review": "v",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "uma-maheswara-ugra-roopasya",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "raat-akeli-hai",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "shakuntala-devi",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "gulabo-sitabo",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "kaamyaab",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8220",
+        "#8221"
+      ]
+    },
+    {
+      "review": "shubh-mangal-zyada-saavdhan",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "bheeshma",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "panga",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "disco-raja",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217"
+      ]
+    },
+    {
+      "review": "ala-vaikunthapurramuloo",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217"
+      ]
+    },
+    {
+      "review": "sarileru-neekevvaru",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217"
+      ]
+    },
+    {
+      "review": "chhapaak",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217"
+      ]
+    },
+    {
+      "review": "darbar",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217"
+      ]
+    },
+    {
+      "review": "prathi-roju-pandage",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#SathamanamBhavati"
+      ]
+    },
+    {
+      "review": "amma-rajyam-lo-kadapa-biddalu",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "venky-mama",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "housefull-4",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "sye-raa-narasimha-reddy",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "gangleader",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "chhichhore",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#3Idiots",
+        "#8220",
+        "#8221",
+        "#8230",
+        "#DilChahtaHai",
+        "#ZindagiNaMilegiDobara"
+      ]
+    },
+    {
+      "review": "dream-girl",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#RaajShaandilyaa",
+        "#TumhariSulu"
+      ]
+    },
+    {
+      "review": "ismart-shankar",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "falaknuma-das",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "jersey",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "f2",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "vinaya-vidheya-rama",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "petta",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8230"
+      ]
+    },
+    {
+      "review": "ntr-kathanayakudu",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#Mahanati"
+      ]
+    },
+    {
+      "review": "2-0",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "deva-das",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "c-o-kancharapalem",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "sanju",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "kaala",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "officer",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "mahanati",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "102-not-out",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "bharath-ane-nenu",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "rangasthalam",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221"
+      ]
+    },
+    {
+      "review": "needi-naadi-oke-katha",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "tholiprema",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "awe",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "padmaavat",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217"
+      ]
+    },
+    {
+      "review": "agnyaathavaasi",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "tube-light",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "sarkar-3",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#Sarkar3"
+      ]
+    },
+    {
+      "review": "baahubali-2",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "begum-jaan",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#BegumJaan"
+      ]
+    },
+    {
+      "review": "mister",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#Mister"
+      ]
+    },
+    {
+      "review": "katamarayudu",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "badrinath-ki-dulhania",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#BadrinathkiDulhania"
+      ]
+    },
+    {
+      "review": "nenu-local",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "appatlo-okadundevadu",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#AppatloOkadundevadu"
+      ]
+    },
+    {
+      "review": "shatamanam-bhavati",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#ShatamanamBhavati"
+      ]
+    },
+    {
+      "review": "khaidi-no-150",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#Khaidi150"
+      ]
+    },
+    {
+      "review": "gautamiputra-satakarni",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#GPSK"
+      ]
+    },
+    {
+      "review": "dangal",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#Dangal"
+      ]
+    },
+    {
+      "review": "vangaveeti",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#Vangaveeti"
+      ]
+    },
+    {
+      "review": "dear-zindagi",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "sahasam-swasaga-sagipo",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230"
+      ]
+    },
+    {
+      "review": "premam",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8220",
+        "#8221",
+        "#8230"
+      ]
+    },
+    {
+      "review": "ism",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#ISM"
+      ]
+    },
+    {
+      "review": "mana-oori-ramayanam",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "majnu",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#Majnu"
+      ]
+    },
+    {
+      "review": "pink",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230",
+        "#PINK"
+      ]
+    },
+    {
+      "review": "jyo-achyutananda",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#JyoAchyutananda",
+        "#NagaSourya",
+        "#NaraRohit",
+        "#Regina",
+        "#SrinivasAvasarala"
+      ]
+    },
+    {
+      "review": "janatha-garage",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#DSP",
+        "#JanathaGarage"
+      ]
+    },
+    {
+      "review": "kabali",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#Kabali"
+      ]
+    },
+    {
+      "review": "gentleman",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#Gentleman"
+      ]
+    },
+    {
+      "review": "brahmotsavam",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8221",
+        "#8230",
+        "#MB",
+        "#PK",
+        "#PVP",
+        "#SVSC",
+        "#Srimanthudu"
+      ]
+    },
+    {
+      "review": "24",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8230"
+      ]
+    },
+    {
+      "review": "oopiri",
+      "issue": "hashtags remain in review body",
+      "values": [
+        "#8217",
+        "#8230",
+        "#Guzaarish",
+        "#OOPIRI"
+      ]
+    }
+  ],
+  "remaining_ids": [],
+  "ready_for_cutover": true
+}
