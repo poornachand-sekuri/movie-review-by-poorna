@@ -1,8 +1,8 @@
 {
   "raw_total": 137,
-  "edited_total": 52,
-  "remaining_total": 85,
-  "completion_percent": 37.96,
+  "edited_total": 56,
+  "remaining_total": 81,
+  "completion_percent": 40.88,
   "errors": [],
   "warnings": [],
   "remaining_ids": [
@@ -86,11 +86,7 @@
     254,
     256,
     263,
-    265,
-    267,
-    269,
-    274,
-    276
+    265
   ],
   "ready_for_cutover": false
 }
