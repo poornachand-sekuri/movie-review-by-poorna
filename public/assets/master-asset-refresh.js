@@ -1,6 +1,6 @@
 (()=>{
-  const BASE='https://assets.moviereviewbypoorna.com/movie-review-assets/master';
-  const VERSION='8';
+  const BASE='https://assets.moviereviewbypoorna.com/master';
+  const VERSION='9';
   const ASSETS={
     'home-desktop':`${BASE}/home-desktop.avif?v=${VERSION}`,
     'home-mobile':`${BASE}/home-mobile.avif?v=${VERSION}`,
