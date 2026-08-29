@@ -1,5 +1,5 @@
 @media (min-width:761px){
-  /* Popcorn Verdict: Style 6D — vintage fade / aged letterpress. */
+  /* Popcorn Verdict: Style 6E — stamped ink / rubbed-edge ticket print. */
   .home-verdict{
     min-width:0!important;
     margin-top:.22cqw!important;
@@ -9,21 +9,19 @@
   .home-verdict>span{
     display:inline-block!important;
     margin:0 0 .28cqw!important;
-    padding:0 0 .13cqw!important;
-    border:0!important;
-    border-bottom:1px solid rgba(126,45,30,.42)!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-    color:#8a3a2b!important;
+    padding:.11cqw .34cqw .12cqw!important;
+    border:1px solid rgba(119,31,22,.72)!important;
+    border-radius:.06cqw!important;
+    background:rgba(137,33,24,.035)!important;
+    box-shadow:inset 0 0 0 1px rgba(113,37,24,.08)!important;
+    color:#8f2118!important;
     font-family:"Roboto Slab",Georgia,serif!important;
     font-size:.69cqw!important;
     line-height:1!important;
-    font-weight:800!important;
-    letter-spacing:.055em!important;
+    font-weight:900!important;
+    letter-spacing:.045em!important;
     text-transform:uppercase!important;
-    opacity:.88!important;
-    text-shadow:.015cqw .01cqw 0 rgba(88,39,20,.14)!important;
+    text-shadow:.018cqw .012cqw 0 rgba(90,24,17,.14)!important;
   }
   .home-verdict p{
     margin:0!important;
@@ -31,15 +29,15 @@
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
-    color:#4b3824!important;
+    color:#050505!important;
     font-family:"Roboto Slab",Georgia,serif!important;
-    font-size:1.02cqw!important;
-    line-height:1.19!important;
-    font-weight:800!important;
+    font-size:1.03cqw!important;
+    line-height:1.17!important;
+    font-weight:900!important;
     font-style:normal!important;
-    letter-spacing:.006em!important;
-    opacity:.89!important;
-    text-shadow:.02cqw .012cqw 0 rgba(91,61,34,.13),0 1px 0 rgba(255,239,199,.20)!important;
+    letter-spacing:.002em!important;
+    opacity:.98!important;
+    text-shadow:.018cqw .012cqw 0 rgba(0,0,0,.18),0 1px 0 rgba(255,240,198,.14)!important;
     text-wrap:pretty!important;
   }
   .home-verdict p::before{
