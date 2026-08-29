@@ -10,7 +10,10 @@ EDITED = ROOT / 'migration' / 'edited'
 MANIFEST = RAW / 'manifest.json'
 REPORT = ROOT / 'migration' / 'compiled' / 'human-body-rebuild-report.json'
 
-OPENING_WATCHED = re.compile(r'(<p\b[^>]*>)\s*Watched\s+#?[^:<]{1,100}\s*:\s*', re.I)
+OPENING_WATCHED = re.compile(
+    r'(<p\b[^>]*>)\s*Watched\s+#?[^:<]{1,100}?\s*(?::|[-–—]|&#(?:8211|8212);|&(?:ndash|mdash);)\s*',
+    re.I,
+)
 COMMENTS = re.compile(r'<!--.*?-->', re.S)
 EMPTY_P = re.compile(r'<p\b[^>]*>\s*(?:&nbsp;|\u00a0)?\s*</p>', re.I)
 ANCHOR_OPEN = re.compile(r'<a\b[^>]*>', re.I)
