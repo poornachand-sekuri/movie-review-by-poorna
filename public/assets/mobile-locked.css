@@ -1,0 +1,97 @@
+@media (max-width:760px){
+  /* Mobile composition locked back to the approved cinema-ticket direction. */
+  html,body{background:#000!important;overflow-x:hidden!important}
+  body{padding-bottom:70px!important}
+  .mobile-v2{width:100%!important;max-width:430px!important;margin:0 auto!important;min-height:100vh!important;background:#070706!important;border-left:1px solid #2b1f10!important;border-right:1px solid #2b1f10!important;overflow:hidden!important}
+
+  .mobile-v2 .m2-header{height:98px!important;padding:14px 18px 10px!important;grid-template-columns:42px 1fr 42px!important;background:#060606!important;border-bottom:1px solid #5e3f1d!important}
+  .mobile-v2 .m2-brand strong{font-family:Georgia,'Times New Roman',serif!important;font-size:32px!important;font-weight:700!important;letter-spacing:-1px!important;color:#efd9a9!important}
+  .mobile-v2 .m2-brand span{margin-top:3px!important;font-size:10px!important;font-weight:800!important;letter-spacing:.34em!important;color:#e13a30!important}
+  .mobile-v2 .m2-icon-btn{font-size:28px!important;color:#c8923f!important}
+
+  /* Use the Cloudflare mobile master at its intended full composition instead of the cropped strip. */
+  .mobile-v2 .m2-hero{height:318px!important;min-height:0!important;max-height:none!important;background-image:url('https://assets.moviereviewbypoorna.com/master/home-mobile.avif?v=1')!important;background-size:100% auto!important;background-position:center top!important;background-repeat:no-repeat!important;border-bottom:1px solid #5e3f1d!important}
+  .mobile-v2 .m2-hero::after{display:none!important}
+
+  .m2-home-section{padding:16px 12px 18px;border-bottom:1px solid #3e2913}
+  .m2-ribbon-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+  .m2-ribbon{display:inline-flex;align-items:center;gap:7px;position:relative;padding:7px 18px 7px 12px;background:linear-gradient(90deg,#bb3026,#9d231d);color:#f7e6c2;font-family:var(--font-label,'Oswald',sans-serif);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;box-shadow:0 4px 10px #0006}
+  .m2-ribbon::after{content:"";position:absolute;right:-14px;top:0;border-top:16px solid transparent;border-bottom:16px solid transparent;border-left:14px solid #9d231d}
+  .m2-ribbon .m2-ribbon-icon{font-size:14px}
+  .m2-ribbon-row .m2-viewall{font-size:9px!important;font-weight:800!important;letter-spacing:.05em!important;color:#f14336!important}
+
+  /* Now Reviewed: admit strip + poster + copy + information stub. */
+  .mobile-v2 .m2-now{display:block!important;position:relative!important;margin:0!important;border:1px solid #9e7133!important;border-radius:0!important;background:repeating-linear-gradient(0deg,rgba(100,65,25,.04) 0 1px,transparent 1px 4px),linear-gradient(180deg,#eddaa8 0%,#e8cb91 52%,#dcb978 100%)!important;box-shadow:0 7px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.48)!important;color:#21170d!important;text-decoration:none!important;overflow:hidden!important}
+  .mobile-v2 .m2-now::before,.mobile-v2 .m2-now::after{content:""!important;position:absolute!important;top:50%!important;width:18px!important;height:18px!important;border-radius:50%!important;background:#070706!important;transform:translateY(-50%)!important;z-index:5!important}
+  .mobile-v2 .m2-now::before{left:-10px!important}.mobile-v2 .m2-now::after{right:-10px!important}
+  .mobile-v2 .m2-now-body{display:grid!important;grid-template-columns:36px 112px minmax(0,1fr) 76px!important;gap:0!important;padding:0!important;min-height:198px!important}
+  .m2-admit{writing-mode:vertical-rl;transform:rotate(180deg);display:flex;align-items:center;justify-content:center;border-right:1px solid #b38749;color:#9b261f;font-family:Georgia,'Times New Roman',serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+  .mobile-v2 .m2-now-poster{height:auto!important;aspect-ratio:auto!important;margin:0!important;padding:10px 8px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+  .mobile-v2 .m2-now-poster img{display:block!important;width:100%!important;height:176px!important;object-fit:cover!important;object-position:center top!important;border:1px solid #7b5529!important;border-radius:0!important;box-shadow:0 5px 12px #0005!important}
+  .mobile-v2 .m2-now-copy{padding:13px 8px 10px!important;min-width:0!important}
+  .mobile-v2 .m2-kicker{margin:0 0 7px!important;color:#5d4023!important;font-family:Arial,Helvetica,sans-serif!important;font-size:7px!important;font-weight:900!important;letter-spacing:.16em!important;text-transform:uppercase!important}
+  .mobile-v2 .m2-now-title{margin:0 0 7px!important;color:#1f160d!important;font-family:Georgia,'Times New Roman',serif!important;font-size:29px!important;line-height:1!important;font-weight:700!important;letter-spacing:-.02em!important}
+
+  /* Style 6E on mobile: dark-black stamped ink. */
+  .mobile-v2 .m2-verdict-label{display:inline-block!important;margin:0 0 5px!important;padding:2px 4px!important;border:1px solid rgba(119,31,22,.72)!important;background:rgba(137,33,24,.035)!important;color:#8f2118!important;font-family:'Roboto Slab',Georgia,serif!important;font-size:8px!important;line-height:1!important;font-weight:900!important;letter-spacing:.055em!important;text-transform:uppercase!important;text-shadow:.3px .2px 0 rgba(90,24,17,.17)!important}
+  .mobile-v2 .m2-verdict{display:block!important;margin:0!important;color:#050505!important;font-family:'Roboto Slab',Georgia,serif!important;font-size:11px!important;line-height:1.34!important;font-weight:900!important;font-style:normal!important;letter-spacing:0!important;opacity:.98!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;text-shadow:.3px .2px 0 rgba(0,0,0,.17),0 1px 0 rgba(255,240,198,.12)!important}
+  .m2-now-stub{border-left:1px dashed #765229;padding:12px 7px;color:#5b3e22;font-family:Arial,Helvetica,sans-serif;font-size:7px;font-weight:800;line-height:1.2;text-transform:uppercase;min-width:0}
+  .m2-now-stub b{display:block;margin:2px 0 9px;color:#21170d;font-size:9px;line-height:1.18;font-weight:900;word-break:break-word}
+  .m2-now-stub hr{border:0;border-top:1px dashed #8b6435;margin:7px 0}
+  .m2-now-stub .m2-stub-rating{color:#9e241d}.m2-now-stub .m2-stars{font-size:8px!important;letter-spacing:0!important}
+
+  /* Recent Reviews: four compact cinema tickets in one strip. */
+  .m2-ticket-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:hidden;border:1px solid #9e7133;box-shadow:0 6px 16px #0006}
+  .m2-review-mini{position:relative;display:block;min-width:0;padding:7px 6px 9px;background:linear-gradient(180deg,#edd6a4,#e4c587);color:#21170d;text-decoration:none;border-right:1px dashed #7e5a30;overflow:visible}
+  .m2-review-mini:last-child{border-right:0}
+  .m2-review-mini::before,.m2-review-mini::after{content:"";position:absolute;right:-6px;width:12px;height:12px;border-radius:50%;background:#070706;z-index:3}.m2-review-mini::before{top:-6px}.m2-review-mini::after{bottom:-6px}.m2-review-mini:last-child::before,.m2-review-mini:last-child::after{display:none}
+  .m2-review-mini-poster{position:relative}.m2-review-mini-poster img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;object-position:center top;border:1px solid #805a2b}
+  .m2-date-tab{position:absolute;left:-3px;top:-3px;padding:4px 5px;background:#a72a22;color:#f5dfb1;font-family:Arial,Helvetica,sans-serif;font-size:7px;font-weight:900;line-height:1.05;text-align:center;text-transform:uppercase}
+  .m2-review-mini h3{margin:7px 0 4px;font-family:Georgia,'Times New Roman',serif;font-size:9px;line-height:1.12;font-weight:800;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .m2-mini-stars{font-size:9px;color:#a5221d;letter-spacing:0;white-space:nowrap}.m2-mini-stars .m2-stars{font-size:inherit!important;letter-spacing:0!important}
+
+  /* Previously Reviewed: four compact admission stubs. */
+  .m2-previous-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #9e7133;overflow:hidden;box-shadow:0 6px 16px #0006}
+  .m2-prev{position:relative;display:block;min-height:92px;padding:12px 18px 11px 8px;background:linear-gradient(180deg,#edd6a4,#e1bf7e);color:#21170d;text-decoration:none;border-right:1px dashed #7f5a2b;min-width:0}
+  .m2-prev:last-child{border-right:0}.m2-prev::before,.m2-prev::after{content:"";position:absolute;right:-6px;width:12px;height:12px;border-radius:50%;background:#070706;z-index:3}.m2-prev::before{top:-6px}.m2-prev::after{bottom:-6px}.m2-prev:last-child::before,.m2-prev:last-child::after{display:none}
+  .m2-prev h3{margin:0 0 5px;font-family:Georgia,'Times New Roman',serif;font-size:11px;line-height:1.05;font-weight:700;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .m2-prev-stars{font-size:8px;color:#a5221d;white-space:nowrap}.m2-prev-stars .m2-stars{font-size:inherit!important;letter-spacing:0!important}.m2-prev-year{margin-top:7px;font-family:Arial,Helvetica,sans-serif;font-size:7px;font-weight:800;text-transform:uppercase}.m2-prev-serial{position:absolute;right:4px;top:7px;writing-mode:vertical-rl;color:#9b261f;font-family:Arial,Helvetica,sans-serif;font-size:7px;font-weight:900;letter-spacing:.08em}
+
+  .mobile-v2 .m2-footer-art{height:132px!important;margin-top:0!important;background-image:url('https://assets.moviereviewbypoorna.com/master/home-mobile.avif?v=1')!important;background-size:100% auto!important;background-position:center bottom!important;background-repeat:no-repeat!important;border-top:1px solid #503619!important;border-bottom:1px solid #503619!important}
+
+  /* Review/Content page: compact clapperboard card with poster + details side-by-side. */
+  .m2-detail-card{position:relative;margin:16px 14px 12px;border:1px solid #8a6330;border-radius:20px;background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.08),transparent 30%),linear-gradient(180deg,#1a1815 0%,#0b0a09 42%,#050505 100%);overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.72),0 0 0 1px rgba(255,210,130,.05) inset,0 1px 0 rgba(255,255,255,.08) inset}
+  .m2-detail-clapper{height:66px;background-color:#111;background-image:url('https://assets.moviereviewbypoorna.com/master/content-mobile.avif?v=1');background-size:100% auto;background-position:center top;background-repeat:no-repeat;border-bottom:2px solid #5b4223;box-shadow:inset 0 -6px 16px rgba(0,0,0,.35)}
+  .m2-detail-body{display:grid;grid-template-columns:39% 61%;gap:10px;padding:18px 14px 14px}
+  .mobile-v2 .m2-detail-poster{width:auto!important;max-width:none!important;height:auto!important;aspect-ratio:auto!important;margin:0!important;border:0!important;border-radius:5px!important;background:transparent!important;box-shadow:none!important;overflow:hidden!important}
+  .mobile-v2 .m2-detail-poster img{display:block!important;width:100%!important;height:auto!important;aspect-ratio:2/3!important;object-fit:cover!important;object-position:center top!important;border:1px solid #a17438!important;border-radius:4px!important;box-shadow:0 8px 18px rgba(0,0,0,.5)!important}
+  .mobile-v2 .m2-info-card{margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;min-width:0!important}
+  .mobile-v2 .m2-info-title{margin:3px 0 8px!important;color:#e0a43e!important;font-family:Georgia,'Times New Roman',serif!important;font-size:29px!important;line-height:1!important;font-weight:700!important;word-break:break-word!important}
+  .mobile-v2 .m2-info-row{display:grid!important;grid-template-columns:70px minmax(0,1fr)!important;gap:6px!important;align-items:start!important;padding:7px 0!important;border-top:1px solid #3f2d17!important}
+  .mobile-v2 .m2-info-label{color:#c89542!important;font-family:Arial,Helvetica,sans-serif!important;font-size:9px!important;line-height:1.25!important;font-weight:800!important;letter-spacing:0!important;text-transform:none!important}
+  .mobile-v2 .m2-info-value{color:#ead6ac!important;font-family:Arial,Helvetica,sans-serif!important;font-size:10px!important;line-height:1.32!important;font-weight:700!important;min-width:0!important}
+  .mobile-v2 .m2-info-row .m2-stars{font-size:12px!important;letter-spacing:0!important}
+  .mobile-v2 .m2-info-row.verdict{display:block!important;padding-top:9px!important}
+  .mobile-v2 .m2-info-row.verdict .m2-info-label{display:block!important;margin-bottom:4px!important;color:#d6a145!important}
+  .mobile-v2 .m2-info-row.verdict .m2-info-value{display:block!important;color:#eee0c7!important;font-family:'Source Serif 4',Georgia,serif!important;font-size:11px!important;line-height:1.38!important;font-weight:600!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+
+  /* Preserve the approved Cloudflare theatre-screen review treatment, but remove the old detached clapper spacer. */
+  .mobile-v2 .m2-clapper{display:none!important}
+  .mobile-v2 .m2-review-stage{margin-top:8px!important}
+  .m2-detail-related{padding-top:20px!important}
+  .m2-detail-related .m2-card-grid{display:flex!important;grid-template-columns:none!important;gap:8px!important;overflow-x:auto!important;padding:0 0 5px!important;scroll-snap-type:x proximity!important}
+  .m2-detail-related .m2-movie-card{min-width:120px!important;width:120px!important;scroll-snap-align:start!important;border-radius:8px!important}
+  .m2-detail-related .m2-movie-poster{margin:6px 6px 0!important}.m2-detail-related .m2-movie-copy{min-height:65px!important;padding:7px!important}.m2-detail-related .m2-movie-title{font-size:10px!important;line-height:1.15!important}.m2-detail-related .m2-movie-stars{font-size:9px!important}
+
+  @media (max-width:390px){
+    .mobile-v2 .m2-header{height:92px!important}
+    .mobile-v2 .m2-brand strong{font-size:30px!important}
+    .mobile-v2 .m2-hero{height:300px!important}
+    .mobile-v2 .m2-now-body{grid-template-columns:32px 105px minmax(0,1fr) 72px!important}
+    .mobile-v2 .m2-now-poster img{height:164px!important}
+    .mobile-v2 .m2-now-title{font-size:26px!important}
+    .mobile-v2 .m2-verdict{font-size:10.5px!important}
+    .m2-now-stub{padding-left:6px!important;padding-right:6px!important}
+    .mobile-v2 .m2-info-title{font-size:27px!important}
+  }
+}
