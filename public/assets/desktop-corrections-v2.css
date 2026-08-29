@@ -8,13 +8,70 @@
   .home-verdict p{font:700 .9cqw/1.28 Georgia,serif!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
   .home-now-stub .master-stars{font-size:.92cqw!important;white-space:nowrap!important;overflow:visible!important}
 
-  /* Recent Reviews: fixed poster frame + independent copy column. */
-  .home-recent-card{overflow:hidden!important;position:relative!important}
-  .home-recent-card .master-poster{left:5.5%!important;top:7%!important;width:40.5%!important;height:86%!important;box-sizing:border-box!important;background:#101010!important;box-shadow:0 .22cqw .42cqw #0008!important;z-index:1!important}
-  .home-recent-card .master-poster img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center center!important;display:block!important}
-  .home-recent-card .copy{left:51.5%!important;right:5.5%!important;top:10%!important;bottom:10%!important;display:grid!important;grid-template-rows:minmax(0,1fr) auto!important;gap:.42cqw!important;align-items:start!important;overflow:hidden!important;min-width:0!important;z-index:2!important}
-  .home-recent-card .title{font:900 .88cqw/1.10 Georgia,serif!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;max-height:3.05cqw!important;align-self:center!important;max-width:100%!important;overflow-wrap:anywhere!important;word-break:normal!important}
-  .home-recent-card .master-stars{font-size:.66cqw!important;margin:0!important;align-self:end!important;overflow:hidden!important;white-space:nowrap!important;max-width:100%!important;line-height:1!important}
+  /* Recent Reviews: true two-column layout. Poster and copy can never overlap. */
+  .home-recent-card{
+    overflow:hidden!important;
+    position:relative!important;
+    display:grid!important;
+    grid-template-columns:36% minmax(0,1fr)!important;
+    grid-template-rows:100%!important;
+    column-gap:5%!important;
+    padding:6% 5% 6% 5.5%!important;
+    box-sizing:border-box!important;
+    align-items:stretch!important;
+  }
+  .home-recent-card .master-poster{
+    position:relative!important;
+    left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+    width:100%!important;height:100%!important;
+    min-width:0!important;min-height:0!important;
+    box-sizing:border-box!important;
+    background:#101010!important;
+    box-shadow:0 .22cqw .42cqw #0008!important;
+    z-index:1!important;
+    border-radius:.22cqw!important;
+  }
+  .home-recent-card .master-poster img{
+    width:100%!important;height:100%!important;
+    object-fit:cover!important;
+    object-position:center center!important;
+    display:block!important;
+  }
+  .home-recent-card .copy{
+    position:relative!important;
+    left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+    width:auto!important;height:100%!important;
+    min-width:0!important;min-height:0!important;
+    display:grid!important;
+    grid-template-rows:minmax(0,1fr) auto!important;
+    gap:.45cqw!important;
+    align-items:start!important;
+    overflow:hidden!important;
+    z-index:2!important;
+    padding:.2cqw 0!important;
+    box-sizing:border-box!important;
+  }
+  .home-recent-card .title{
+    font:900 .94cqw/1.08 Georgia,serif!important;
+    display:-webkit-box!important;
+    -webkit-box-orient:vertical!important;
+    -webkit-line-clamp:3!important;
+    overflow:hidden!important;
+    max-height:3.15cqw!important;
+    align-self:center!important;
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+  .home-recent-card .master-stars{
+    font-size:.68cqw!important;
+    margin:0!important;
+    align-self:end!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+    max-width:100%!important;
+    line-height:1!important;
+  }
 
   /* Previously Reviewed: keep each line inside its own ticket area. */
   .home-prev-card{padding:1.0cqw 4.4cqw .85cqw 2.75cqw!important}
@@ -34,13 +91,70 @@
   .content-review-body::-webkit-scrollbar-thumb{background:#b17b23;border-radius:8px;border:2px solid #111}
   .content-review-body::-webkit-scrollbar-thumb:hover{background:#d09a3a}
 
-  /* Related Reviews: fixed poster frame + independent copy column. */
-  .content-related-card{overflow:hidden!important;position:relative!important}
-  .content-related-card .master-poster{left:4.5%!important;top:6%!important;width:40%!important;height:86%!important;box-sizing:border-box!important;background:#101010!important;box-shadow:0 .2cqw .38cqw #0008!important;z-index:1!important}
-  .content-related-card .master-poster img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center center!important;display:block!important}
-  .content-related-card .copy{left:50.5%!important;right:5%!important;top:9%!important;bottom:10%!important;display:grid!important;grid-template-rows:minmax(0,1fr) auto!important;gap:.30cqw!important;align-items:start!important;overflow:hidden!important;min-width:0!important;z-index:2!important}
-  .content-related-card .title{font:900 .74cqw/1.10 Georgia,serif!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:3!important;overflow:hidden!important;max-height:2.50cqw!important;align-self:center!important;max-width:100%!important;overflow-wrap:anywhere!important;word-break:normal!important}
-  .content-related-card .master-stars{font-size:.55cqw!important;margin:0!important;align-self:end!important;overflow:hidden!important;white-space:nowrap!important;max-width:100%!important;line-height:1!important}
+  /* Related Reviews: same isolated two-column structure as Recent Reviews. */
+  .content-related-card{
+    overflow:hidden!important;
+    position:relative!important;
+    display:grid!important;
+    grid-template-columns:35% minmax(0,1fr)!important;
+    grid-template-rows:100%!important;
+    column-gap:5%!important;
+    padding:6% 4.5% 6% 4.5%!important;
+    box-sizing:border-box!important;
+    align-items:stretch!important;
+  }
+  .content-related-card .master-poster{
+    position:relative!important;
+    left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+    width:100%!important;height:100%!important;
+    min-width:0!important;min-height:0!important;
+    box-sizing:border-box!important;
+    background:#101010!important;
+    box-shadow:0 .2cqw .38cqw #0008!important;
+    z-index:1!important;
+    border-radius:.2cqw!important;
+  }
+  .content-related-card .master-poster img{
+    width:100%!important;height:100%!important;
+    object-fit:cover!important;
+    object-position:center center!important;
+    display:block!important;
+  }
+  .content-related-card .copy{
+    position:relative!important;
+    left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+    width:auto!important;height:100%!important;
+    min-width:0!important;min-height:0!important;
+    display:grid!important;
+    grid-template-rows:minmax(0,1fr) auto!important;
+    gap:.32cqw!important;
+    align-items:start!important;
+    overflow:hidden!important;
+    z-index:2!important;
+    padding:.15cqw 0!important;
+    box-sizing:border-box!important;
+  }
+  .content-related-card .title{
+    font:900 .78cqw/1.08 Georgia,serif!important;
+    display:-webkit-box!important;
+    -webkit-box-orient:vertical!important;
+    -webkit-line-clamp:3!important;
+    overflow:hidden!important;
+    max-height:2.6cqw!important;
+    align-self:center!important;
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+  .content-related-card .master-stars{
+    font-size:.56cqw!important;
+    margin:0!important;
+    align-self:end!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+    max-width:100%!important;
+    line-height:1!important;
+  }
 
   /* Invisible live links over the artwork's VIEW ALL labels. */
   .view-all-link{z-index:8;cursor:pointer}
