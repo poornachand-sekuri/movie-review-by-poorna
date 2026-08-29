@@ -1,5 +1,5 @@
 @media (min-width:761px){
-  /* Popcorn Verdict: clean, readable ticket-copy treatment. */
+  /* Popcorn Verdict: premium personal-quote treatment for the gold ticket. */
   .home-verdict{
     min-width:0!important;
     margin-top:.22cqw!important;
@@ -9,17 +9,17 @@
   .home-verdict>span{
     display:inline-block!important;
     margin:0 0 .28cqw!important;
-    padding:.12cqw .38cqw .14cqw!important;
-    border:1px solid rgba(108,27,19,.32)!important;
+    padding:.13cqw .42cqw .15cqw!important;
+    border:1px solid rgba(108,27,19,.34)!important;
     border-radius:.14cqw!important;
-    background:linear-gradient(180deg,#a52c22 0%,#842018 100%)!important;
-    box-shadow:inset 0 1px rgba(255,220,158,.22),0 .08cqw .14cqw rgba(68,28,9,.16)!important;
-    color:#f6d696!important;
+    background:linear-gradient(180deg,#a82d22 0%,#801d16 100%)!important;
+    box-shadow:inset 0 1px rgba(255,220,158,.24),0 .08cqw .14cqw rgba(68,28,9,.16)!important;
+    color:#f7dda6!important;
     font-family:Oswald,Arial,sans-serif!important;
-    font-size:.62cqw!important;
+    font-size:.65cqw!important;
     line-height:1!important;
     font-weight:600!important;
-    letter-spacing:.105em!important;
+    letter-spacing:.11em!important;
     text-transform:uppercase!important;
   }
   .home-verdict p{
@@ -28,14 +28,26 @@
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
-    color:#2f180f!important;
-    font-family:Inter,Arial,sans-serif!important;
-    font-size:.88cqw!important;
-    line-height:1.28!important;
-    font-weight:600!important;
-    letter-spacing:-.008em!important;
-    text-shadow:none!important;
+    color:#6b2119!important;
+    font-family:"Cormorant Garamond",Georgia,serif!important;
+    font-size:1.06cqw!important;
+    line-height:1.13!important;
+    font-weight:700!important;
+    font-style:italic!important;
+    letter-spacing:.003em!important;
+    text-shadow:0 1px 0 rgba(255,239,196,.28)!important;
     text-wrap:pretty!important;
+  }
+  .home-verdict p::before{
+    content:"“";
+    display:inline!important;
+    margin-right:.06em!important;
+    color:#9b2b20!important;
+    font-family:"Cormorant Garamond",Georgia,serif!important;
+    font-size:1.35em!important;
+    font-weight:700!important;
+    line-height:0!important;
+    vertical-align:-.12em!important;
   }
   .content-info .verdict-row{
     align-items:center!important;
