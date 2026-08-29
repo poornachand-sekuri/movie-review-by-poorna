@@ -1,5 +1,5 @@
 @media (min-width:761px){
-  /* Popcorn Verdict: match the ticket metadata language-value styling. */
+  /* Popcorn Verdict: vintage Indian cinema-ticket letterpress treatment. */
   .home-verdict{
     min-width:0!important;
     margin-top:.22cqw!important;
@@ -9,17 +9,18 @@
   .home-verdict>span{
     display:inline-block!important;
     margin:0 0 .28cqw!important;
-    padding:.13cqw .42cqw .15cqw!important;
-    border:1px solid rgba(108,27,19,.34)!important;
-    border-radius:.14cqw!important;
-    background:linear-gradient(180deg,#a82d22 0%,#801d16 100%)!important;
-    box-shadow:inset 0 1px rgba(255,220,158,.24),0 .08cqw .14cqw rgba(68,28,9,.16)!important;
-    color:#f7dda6!important;
-    font-family:Oswald,Arial,sans-serif!important;
-    font-size:.65cqw!important;
+    padding:0 0 .14cqw!important;
+    border:0!important;
+    border-bottom:1px solid rgba(112,57,19,.42)!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:#8f2118!important;
+    font-family:"Roboto Slab",Georgia,serif!important;
+    font-size:.68cqw!important;
     line-height:1!important;
-    font-weight:600!important;
-    letter-spacing:.11em!important;
+    font-weight:900!important;
+    letter-spacing:.065em!important;
     text-transform:uppercase!important;
   }
   .home-verdict p{
@@ -28,14 +29,14 @@
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
-    color:#211408!important;
-    font-family:Arial,Helvetica,sans-serif!important;
-    font-size:1.00cqw!important;
-    line-height:1.20!important;
+    color:#26170b!important;
+    font-family:"Roboto Slab",Georgia,serif!important;
+    font-size:1.03cqw!important;
+    line-height:1.18!important;
     font-weight:900!important;
     font-style:normal!important;
-    letter-spacing:0!important;
-    text-shadow:none!important;
+    letter-spacing:.002em!important;
+    text-shadow:0 1px 0 rgba(255,235,184,.22)!important;
     text-wrap:pretty!important;
   }
   .home-verdict p::before{
