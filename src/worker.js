@@ -1,7 +1,6 @@
 const DATA_KEY = '_system/review-admin-v1.json';
 const SESSION_COOKIE = 'mrp_admin';
 const SESSION_TTL = 60 * 60 * 12;
-const WP_POSTS = 'https://public-api.wordpress.com/rest/v1.1/sites/moviereviewbypoorna.wordpress.com/posts/';
 
 export default {
   async fetch(request, env) {
@@ -128,15 +127,10 @@ async function baseReviews(env, requestUrl) {
 
 function normalizeBase(q) {
   return {
-    i: Number(q.i), t: q.t || '', s: q.s || slugify(q.t || ''), d: q.d || '', l: q.l || '', m: absoluteLegacyImage(q.m || ''),
+    i: Number(q.i), t: q.t || '', s: q.s || slugify(q.t || ''), d: q.d || '', l: q.l || '', m: q.m || '',
     c: q.c ?? 0, e: q.e || '', rd: q.rd || '', r: q.r ?? null, v: q.v || '', body: q.body || '', gallery: Array.isArray(q.gallery) ? q.gallery : [],
     managed: false, updated_at: null
   };
-}
-
-function absoluteLegacyImage(src) {
-  if (!src) return '';
-  return /^https?:\/\//i.test(src) ? src : `https://moviereviewbypoorna.wordpress.com${src.startsWith('/') ? '' : '/'}${src}`;
 }
 
 async function loadStore(env) {
@@ -194,14 +188,7 @@ async function getAdminReview(id, env, requestUrl) {
   const reviews = await combinedReviews(env, requestUrl, true);
   const review = reviews.find(r => Number(r.i) === Number(id));
   if (!review) return json({ error: 'Review not found.' }, 404);
-  let body = review.body || '';
-  if (!body) {
-    try {
-      const res = await fetch(`${WP_POSTS}${id}?context=display`);
-      if (res.ok) body = (await res.json()).content || '';
-    } catch {}
-  }
-  return json({ ...review, body, gallery: review.gallery || [] });
+  return json({ ...review, body: review.body || '', gallery: review.gallery || [] });
 }
 
 async function createReview(request, env) {
