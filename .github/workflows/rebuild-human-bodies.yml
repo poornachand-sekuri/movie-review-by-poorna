@@ -1,10 +1,12 @@
-name: Rebuild reviews from original voice
+name: Apply human-tone editorial pass
 
 on:
   push:
     branches: [wordpress-full-migration]
     paths:
       - 'migration/rebuild_human_bodies.py'
+      - 'migration/apply_verdict_overrides.py'
+      - 'migration/verdict-overrides.json'
       - '.github/workflows/rebuild-human-bodies.yml'
   workflow_dispatch:
 
@@ -19,20 +21,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Rebuild review bodies from original posts
+      - name: Restore review bodies from original posts
         run: python migration/rebuild_human_bodies.py
+      - name: Apply rewritten Popcorn Verdicts
+        run: python migration/apply_verdict_overrides.py
       - name: Recompile native catalog
         run: python migration/compile_native_catalog.py
       - name: Validate diff
         run: git diff --check
-      - name: Commit rebuilt human-tone bodies
+      - name: Commit human-tone editorial pass
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add migration/edited migration/compiled/native-reviews.json migration/compiled/qa-report.json migration/compiled/human-body-rebuild-report.json
+          git add migration/edited migration/compiled/native-reviews.json migration/compiled/qa-report.json migration/compiled/human-body-rebuild-report.json migration/verdict-pass-status.json
           if git diff --cached --quiet; then
-            echo 'No review body changes.'
+            echo 'Human-tone editorial pass already applied.'
           else
-            git commit -m 'Restore original review voice in migrated bodies'
+            git commit -m 'Apply human-tone review and verdict pass'
             git push
           fi
