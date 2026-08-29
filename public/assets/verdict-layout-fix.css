@@ -1,5 +1,5 @@
 @media (min-width:761px){
-  /* Popcorn Verdict: premium personal-quote treatment for the gold ticket. */
+  /* Popcorn Verdict: match the ticket metadata language-value styling. */
   .home-verdict{
     min-width:0!important;
     margin-top:.22cqw!important;
@@ -28,26 +28,18 @@
     white-space:normal!important;
     overflow:visible!important;
     text-overflow:clip!important;
-    color:#6b2119!important;
-    font-family:"Cormorant Garamond",Georgia,serif!important;
-    font-size:1.06cqw!important;
-    line-height:1.13!important;
-    font-weight:700!important;
-    font-style:italic!important;
-    letter-spacing:.003em!important;
-    text-shadow:0 1px 0 rgba(255,239,196,.28)!important;
+    color:#211408!important;
+    font-family:Arial,Helvetica,sans-serif!important;
+    font-size:1.00cqw!important;
+    line-height:1.20!important;
+    font-weight:900!important;
+    font-style:normal!important;
+    letter-spacing:0!important;
+    text-shadow:none!important;
     text-wrap:pretty!important;
   }
   .home-verdict p::before{
-    content:"“";
-    display:inline!important;
-    margin-right:.06em!important;
-    color:#9b2b20!important;
-    font-family:"Cormorant Garamond",Georgia,serif!important;
-    font-size:1.35em!important;
-    font-weight:700!important;
-    line-height:0!important;
-    vertical-align:-.12em!important;
+    content:none!important;
   }
   .content-info .verdict-row{
     align-items:center!important;
