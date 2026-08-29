@@ -1,0 +1,118 @@
+@media (max-width:760px){
+  /* Mobile V2 Content: immersive auditorium treatment without changing natural page scrolling. */
+  .mobile-v2 .m2-review-stage{
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    margin-top:18px;
+    padding:58px 30px 22px;
+    border-top:1px solid #6f4a20;
+    border-bottom:1px solid #241307;
+    background:
+      radial-gradient(circle at 13% 27px,#fff0bd 0 2px,#d39437 3px 5px,transparent 10px),
+      radial-gradient(circle at 31% 27px,#fff0bd 0 2px,#d39437 3px 5px,transparent 10px),
+      radial-gradient(circle at 50% 27px,#fff0bd 0 2px,#d39437 3px 5px,transparent 10px),
+      radial-gradient(circle at 69% 27px,#fff0bd 0 2px,#d39437 3px 5px,transparent 10px),
+      radial-gradient(circle at 87% 27px,#fff0bd 0 2px,#d39437 3px 5px,transparent 10px),
+      radial-gradient(ellipse at 50% 8%,rgba(230,173,69,.18),transparent 31%),
+      linear-gradient(90deg,#300204 0,#0b0504 11%,#030303 24%,#030303 76%,#0b0504 89%,#300204 100%);
+    box-shadow:inset 0 22px 46px #0008,inset 0 -26px 46px #000b;
+  }
+  .mobile-v2 .m2-review-stage::before,
+  .mobile-v2 .m2-review-stage::after{
+    content:"";
+    position:absolute;
+    z-index:1;
+    top:0;
+    bottom:0;
+    width:30px;
+    pointer-events:none;
+    background:
+      linear-gradient(90deg,rgba(255,255,255,.06),transparent 24%,rgba(0,0,0,.22) 55%,rgba(255,255,255,.035) 78%,transparent),
+      repeating-linear-gradient(90deg,#330305 0 5px,#7b1015 6px 10px,#470609 11px 16px);
+    box-shadow:0 0 22px #000b;
+  }
+  .mobile-v2 .m2-review-stage::before{left:0;border-right:1px solid #8d241f55}
+  .mobile-v2 .m2-review-stage::after{right:0;transform:scaleX(-1);border-right:1px solid #8d241f55}
+
+  .mobile-v2 .m2-review-ribbon{
+    position:relative;
+    z-index:4;
+    margin:-38px auto 14px;
+    min-width:170px;
+    justify-content:center;
+    padding:10px 22px 10px 18px;
+    background:linear-gradient(180deg,#b42c22 0%,#76100c 100%);
+    box-shadow:0 7px 18px #000a,inset 0 1px #e86650;
+    border:1px solid #64110d;
+  }
+
+  .mobile-v2 .m2-review-body{
+    position:relative;
+    z-index:3;
+    margin:0;
+    padding:22px 20px 12px;
+    border:1px solid #866331;
+    border-radius:8px;
+    background:
+      radial-gradient(ellipse at 50% 0,rgba(255,241,205,.045),transparent 27%),
+      linear-gradient(180deg,#0b0b0a 0%,#050505 100%);
+    box-shadow:
+      0 0 0 5px #13100b,
+      0 0 0 6px #4c351c,
+      0 12px 28px #000c,
+      inset 0 0 28px #0008;
+  }
+  .mobile-v2 .m2-review-body::before{
+    content:"";
+    position:absolute;
+    left:8%;right:8%;top:-14px;height:9px;
+    border-radius:50%;
+    background:radial-gradient(ellipse at center,rgba(245,190,94,.45),transparent 70%);
+    filter:blur(5px);
+    pointer-events:none;
+  }
+
+  .mobile-v2 .m2-seats{
+    position:relative;
+    z-index:3;
+    height:170px;
+    margin:20px -8px -6px;
+    border-top:1px solid #6b441f;
+    border-bottom:1px solid #211108;
+    background:
+      radial-gradient(ellipse at center,#7a1218 0 10px,#2c0406 11px 16px,transparent 17px) 0 14px/50px 38px repeat-x,
+      radial-gradient(ellipse at center,#681015 0 10px,#270305 11px 16px,transparent 17px) 24px 51px/56px 40px repeat-x,
+      radial-gradient(ellipse at center,#570d12 0 10px,#220304 11px 16px,transparent 17px) 3px 89px/62px 42px repeat-x,
+      radial-gradient(ellipse at center,#490b0f 0 10px,#1b0204 11px 16px,transparent 17px) 31px 128px/68px 44px repeat-x,
+      linear-gradient(180deg,#090807 0%,#030303 42%,#010101 100%);
+    box-shadow:inset 0 18px 26px #0009,inset 0 -20px 28px #000d;
+  }
+  .mobile-v2 .m2-seats::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:
+      linear-gradient(115deg,transparent 0 39%,rgba(229,171,72,.065) 44%,transparent 49%),
+      linear-gradient(245deg,transparent 0 39%,rgba(229,171,72,.05) 44%,transparent 49%);
+  }
+  .mobile-v2 .m2-seats::after{
+    content:"AUDITORIUM";
+    position:absolute;
+    left:50%;bottom:8px;
+    transform:translateX(-50%);
+    font-family:var(--font-label,"Oswald",sans-serif);
+    font-size:9px;
+    letter-spacing:.34em;
+    color:#9d713480;
+  }
+
+  /* Make Related Reviews feel like the lobby after the auditorium. */
+  .mobile-v2 .m2-review-stage + .m2-section{
+    position:relative;
+    padding-top:24px;
+    border-top:1px solid #4a3018;
+    background:linear-gradient(180deg,#070503 0,#030303 26px,#030303 100%);
+  }
+}
