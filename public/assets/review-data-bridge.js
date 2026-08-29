@@ -1,3 +1,4 @@
+// Native review bridge: same-origin API only.
 (()=>{
   const nativeFetch=window.fetch.bind(window);
   let catalogPromise=null;
