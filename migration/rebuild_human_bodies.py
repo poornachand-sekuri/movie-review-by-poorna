@@ -20,6 +20,20 @@ ANCHOR_OPEN = re.compile(r'<a\b[^>]*>', re.I)
 ANCHOR_CLOSE = re.compile(r'</a\s*>', re.I)
 ALLOWED_OPEN = re.compile(r'<(p|strong|em|ol|li|br)\b[^>]*>', re.I)
 LEGACY = ('wordpress.com', '/wp-content/', 'public-api.wordpress.com')
+SPACED_SMART_DASH = re.compile(r'\s+(?:[–—]|&(?:ndash|mdash);|&#(?:8211|8212);)\s+', re.I)
+SMART_DASH = re.compile(r'(?:[–—]|&(?:ndash|mdash);|&#(?:8211|8212);)', re.I)
+
+
+def normalize_human_punctuation(text: str) -> str:
+    # A spaced smart dash is usually being used as an aside. A comma reads more
+    # naturally in Poorna's conversational review style. Range/compound dashes
+    # without surrounding spaces become an ordinary keyboard hyphen.
+    text = SPACED_SMART_DASH.sub(', ', text)
+    text = SMART_DASH.sub('-', text)
+    while '--' in text:
+        text = text.replace('--', '-')
+    text = re.sub(r',\s*,+', ', ', text)
+    return text
 
 
 def clean_html(raw_html: str) -> str:
@@ -35,10 +49,9 @@ def clean_html(raw_html: str) -> str:
         return '<br>' if tag == 'br' else f'<{tag}>'
 
     text = ALLOWED_OPEN.sub(strip_attrs, text)
-    # Normalize only layout whitespace between tags. Keep the author's wording/punctuation untouched.
+    # Normalize only layout whitespace between tags. Keep the author's wording intact.
     text = re.sub(r'>\s+<', '><', text)
-    text = text.strip()
-    text = text.replace('--', '-')
+    text = normalize_human_punctuation(text.strip())
     return text
 
 
@@ -71,12 +84,15 @@ def main():
             body = clean_html(raw_html)
             if not body:
                 raise SystemExit(f'empty cleaned body for {rid}')
-            low = html_lib.unescape(body).lower()
+            decoded = html_lib.unescape(body)
+            low = decoded.lower()
             hits = [marker for marker in LEGACY if marker in low]
             if hits:
                 raise SystemExit(f'legacy URL marker remains in cleaned body {rid}: {hits}')
             if re.search(r'<(?:img|figure|iframe|script)\b', body, re.I):
                 raise SystemExit(f'unsafe/non-content HTML remains in cleaned body {rid}')
+            if '--' in body or '–' in decoded or '—' in decoded:
+                raise SystemExit(f'forbidden dash style remains in cleaned body {rid}')
             if row.get('body') != body:
                 row['body'] = body
                 changed = True
@@ -90,12 +106,14 @@ def main():
 
     report = {
         'total': len(seen),
-        'body_source': 'original WordPress content_html with structural cleanup only',
+        'body_source': 'original WordPress content_html with structural cleanup and simple human punctuation normalization',
         'changed_total': len(set(changed_ids)),
         'opening_watched_labels_removed': sorted(set(opening_removed)),
         'anchors_flattened_to_text': sorted(set(anchor_flattened)),
         'legacy_wordpress_refs_in_cleaned_bodies': 0,
         'double_hyphen_refs_in_cleaned_bodies': 0,
+        'en_dash_refs_in_cleaned_bodies': 0,
+        'em_dash_refs_in_cleaned_bodies': 0,
         'ready': len(seen) == 137,
     }
     REPORT.parent.mkdir(parents=True, exist_ok=True)
