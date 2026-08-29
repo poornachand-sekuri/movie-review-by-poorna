@@ -1,0 +1,64 @@
+@media (max-width:760px){
+  /* Keep only the actual MAD OVER MOVIES hero crop from the mobile master artwork. */
+  .mobile-v2 .m2-hero{
+    height:52.5vw!important;
+    min-height:190px!important;
+    max-height:225px!important;
+    background-image:url('https://assets.moviereviewbypoorna.com/master/home-mobile.avif?v=1')!important;
+    background-size:100% auto!important;
+    background-position:center -13vw!important;
+    background-repeat:no-repeat!important;
+    border-bottom:1px solid #5e3f1d!important;
+  }
+  .mobile-v2 .m2-hero::after{display:block!important;height:12px!important;background:linear-gradient(transparent,#070706)!important}
+
+  /* The full mobile master footer contains a baked navigation bar. Do not render it behind the live nav. */
+  .mobile-v2 .m2-footer-art{display:none!important}
+
+  /* Content header: genuine clapperboard treatment without reusing the full content screenshot. */
+  .mobile-v2 .m2-detail-clapper{
+    position:relative!important;
+    height:66px!important;
+    background-image:
+      linear-gradient(180deg,rgba(255,255,255,.10),transparent 25%,rgba(0,0,0,.34) 82%),
+      repeating-linear-gradient(135deg,#101010 0 42px,#ead8b3 42px 80px)!important;
+    background-color:#111!important;
+    background-size:auto!important;
+    background-position:0 0!important;
+    border-bottom:2px solid #5b4223!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 -7px 16px rgba(0,0,0,.45)!important;
+  }
+  .mobile-v2 .m2-detail-clapper::before{
+    content:"";position:absolute;left:10px;bottom:-16px;width:68px;height:34px;
+    background:#141414;border:1px solid #6d4b23;border-radius:0 0 7px 7px;z-index:2
+  }
+  .mobile-v2 .m2-detail-clapper::after{
+    content:"•••";position:absolute;left:23px;bottom:-9px;color:#bba578;
+    letter-spacing:10px;font-size:16px;z-index:3
+  }
+
+  /* Review theatre: CSS atmosphere only. No full screenshot crop, so no duplicate labels/cards. */
+  .mobile-v2 .m2-review-stage{
+    background-image:
+      radial-gradient(ellipse at 50% 0,rgba(104,55,17,.24),transparent 31%),
+      linear-gradient(90deg,#260405 0,#060504 8%,#050504 92%,#260405 100%)!important;
+    background-color:#020202!important;
+    background-size:auto!important;
+    background-position:0 0!important;
+    background-repeat:no-repeat!important;
+  }
+  .mobile-v2 .m2-seats{
+    height:86px!important;
+    background-image:
+      repeating-radial-gradient(ellipse at 7% 105%,#5c0d0f 0 7px,#260405 8px 13px,transparent 14px 34px),
+      linear-gradient(180deg,#080504 0,#020202 100%)!important;
+    background-color:#020202!important;
+    background-size:auto!important;
+    background-position:0 0!important;
+    background-repeat:repeat!important;
+    box-shadow:inset 0 12px 20px #0008,inset 0 -12px 18px #000b!important;
+  }
+
+  /* Make the final live navigation the only footer/navigation treatment. */
+  .mobile-v2 .m2-bottom-nav{border-top:1px solid #67471f!important;box-shadow:0 -6px 18px #000d!important}
+}
