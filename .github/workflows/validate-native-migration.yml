@@ -1,0 +1,41 @@
+name: Validate native review migration
+
+on:
+  push:
+    branches:
+      - wordpress-full-migration
+    paths:
+      - 'migration/edited/**'
+      - 'migration/rating-overrides.json'
+      - 'migration/poster-target-overrides.json'
+      - 'migration/compile_native_catalog.py'
+      - '.github/workflows/validate-native-migration.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: wordpress-full-migration
+
+      - name: Compile and validate native reviews
+        run: python migration/compile_native_catalog.py
+
+      - name: Commit compiled catalog and QA report
+        shell: bash
+        run: |
+          if git diff --quiet -- migration/compiled && [ -z "$(git status --porcelain -- migration/compiled)" ]; then
+            echo "No compiled migration changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add migration/compiled
+          git commit -m "Update native migration QA report"
+          git push origin HEAD:wordpress-full-migration
