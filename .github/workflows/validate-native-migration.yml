@@ -6,6 +6,7 @@ on:
       - wordpress-full-migration
     paths:
       - 'migration/edited/**'
+      - 'migration/rating-overrides.json'
       - 'migration/compile_native_catalog.py'
       - '.github/workflows/validate-native-migration.yml'
   workflow_dispatch:
