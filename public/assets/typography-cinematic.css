@@ -3,6 +3,7 @@
   --font-display:"Cinzel",Georgia,"Times New Roman",serif;
   --font-label:"Oswald","Arial Narrow",Arial,sans-serif;
   --font-body:"Inter",Arial,Helvetica,sans-serif;
+  --font-review:"Source Serif 4",Georgia,"Times New Roman",serif;
   --font-editorial:"Cinzel",Georgia,"Times New Roman",serif;
 }
 
@@ -61,11 +62,17 @@ button,input{letter-spacing:.01em}
   .content-info .master-stars{font-size:1.08cqw!important}
   .content-info .verdict-value{font-family:var(--font-body)!important;font-size:.91cqw!important;font-weight:500!important;line-height:1.45!important;letter-spacing:.002em!important}
 
-  /* Content: review body */
-  .content-review-body{font-family:var(--font-body)!important;font-size:1.02cqw!important;font-weight:430!important;line-height:1.68!important;letter-spacing:.002em!important}
-  .content-review-body p{margin-bottom:1.15em!important}
-  .content-review-body strong,.content-review-body b{font-weight:650!important}
-  .content-review-body h1,.content-review-body h2,.content-review-body h3{font-family:var(--font-display)!important;letter-spacing:.01em!important;line-height:1.2!important}
+  /* Content: long-form review body */
+  .content-review-body{font-family:var(--font-review)!important;font-size:1.08cqw!important;font-weight:450!important;line-height:1.72!important;letter-spacing:.003em!important;color:#f4f0e8!important;text-rendering:optimizeLegibility}
+  .content-review-body p{margin:0 0 1.28em!important}
+  .content-review-body p:first-child{font-size:1.04em!important;font-weight:500!important;color:#fff7e8!important}
+  .content-review-body strong,.content-review-body b{font-weight:700!important;color:#fff6df!important}
+  .content-review-body em,.content-review-body i{font-style:italic!important;color:#ead6ad!important}
+  .content-review-body h1,.content-review-body h2,.content-review-body h3{font-family:var(--font-display)!important;font-weight:700!important;letter-spacing:.02em!important;line-height:1.24!important;color:#e6ad45!important;margin:1.45em 0 .6em!important}
+  .content-review-body h2{font-size:1.38em!important}.content-review-body h3{font-size:1.18em!important}
+  .content-review-body a{color:#e8b64e!important;text-decoration-color:#8d651d!important;text-underline-offset:.16em!important}
+  .content-review-body blockquote{font-family:var(--font-review)!important;font-style:italic!important;font-size:1.03em!important;line-height:1.68!important;margin:1.3em 0!important;padding:.25em 0 .25em 1.25em!important;border-left:3px solid #b6812e!important;color:#e8d8b9!important}
+  .content-review-body ul,.content-review-body ol{padding-left:1.45em!important;margin:0 0 1.2em!important}.content-review-body li{margin:.35em 0!important}
 
   /* Content: Related Reviews */
   .content-related-card .title{font-family:var(--font-display)!important;font-size:.77cqw!important;font-weight:750!important;line-height:1.14!important;letter-spacing:.004em!important}
@@ -89,8 +96,13 @@ button,input{letter-spacing:.01em}
   .home-prev-card .meta,.home-prev-card .serial{font-family:var(--font-label)!important;font-weight:600!important;letter-spacing:.055em!important;text-transform:uppercase}
   .content-info h1{font-family:var(--font-display)!important;font-weight:800!important;letter-spacing:.01em!important}
   .content-info .label{font-family:var(--font-label)!important;font-weight:600!important;letter-spacing:.045em!important}
-  .content-info .value,.content-review-body{font-family:var(--font-body)!important}
-  .content-review-body{font-weight:430!important;line-height:1.62!important}
+  .content-info .value{font-family:var(--font-body)!important}
+  .content-review-body{font-family:var(--font-review)!important;font-size:2.58cqw!important;font-weight:450!important;line-height:1.68!important;letter-spacing:.002em!important;color:#f4f0e8!important;text-rendering:optimizeLegibility}
+  .content-review-body p{margin:0 0 1.22em!important}
+  .content-review-body p:first-child{font-weight:500!important;color:#fff7e8!important}
+  .content-review-body strong,.content-review-body b{font-weight:700!important;color:#fff6df!important}
+  .content-review-body h1,.content-review-body h2,.content-review-body h3{font-family:var(--font-display)!important;color:#e6ad45!important;line-height:1.22!important}
+  .content-review-body blockquote{font-style:italic!important;padding-left:1em!important;border-left:2px solid #b6812e!important;color:#e8d8b9!important}
   .archive .page-title{font-size:clamp(30px,8vw,44px)!important}
   .libtitle{font-size:clamp(18px,5.2vw,24px)!important}
 }
