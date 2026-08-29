@@ -58,13 +58,13 @@ jobs:
       - name: Verify authoritative mobile masking is deployed
         run: |
           html=$(curl -fsSL "${PREVIEW_BASE}/")
-          grep -Fq '/assets/mobile-authoritative.css?v=1' <<<"${html}"
-          css=$(curl -fsSL "${PREVIEW_BASE}/assets/mobile-authoritative.css?v=1")
+          grep -Fq '/assets/mobile-authoritative.css?v=2' <<<"${html}"
+          css=$(curl -fsSL "${PREVIEW_BASE}/assets/mobile-authoritative.css?v=2")
           grep -Fq '.home-now-copy' <<<"${css}"
-          grep -Fq '.home-recent-card::before' <<<"${css}"
-          grep -Fq '.home-prev-card' <<<"${css}"
-          grep -Fq '.content-info' <<<"${css}"
-          grep -Fq '.content-review-body' <<<"${css}"
-          grep -Fq '.content-related-card::before' <<<"${css}"
+          grep -Fq '.home-recent-card{' <<<"${css}"
+          grep -Fq '.home-prev-grid{' <<<"${css}"
+          grep -Fq '.content-info{' <<<"${css}"
+          grep -Fq '.content-review-body{' <<<"${css}"
+          grep -Fq '.content-related-grid{' <<<"${css}"
       - name: Validate deployed Cloudflare preview runtime
         run: python migration/validate_preview_runtime.py
