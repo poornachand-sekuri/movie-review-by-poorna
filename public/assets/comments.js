@@ -6,6 +6,7 @@
 
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const fmtDate=s=>{const d=new Date(s);return isNaN(d)?'':d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})};
+  const submitLabel=target.scope==='review'?'SUBMIT COMMENT':'SUBMIT FOR APPROVAL →';
   let mounted=false;
 
   function markup(){
@@ -17,12 +18,12 @@
         <form class="comment-form" data-comment-form>
           <div class="comment-form-head"><h3>Leave a Comment</h3><p>Comments appear only after approval by the site admin.</p></div>
           <div class="comment-grid">
-            <label><span>Name *</span><input name="name" maxlength="60" autocomplete="name" required></label>
-            <label><span>Email <small>(not published)</small></span><input name="email" maxlength="160" type="email" autocomplete="email"></label>
+            <label><span>Name *</span><input name="name" maxlength="60" autocomplete="name" placeholder="Name" required></label>
+            <label><span>Email <small>(not published)</small></span><input name="email" maxlength="160" type="email" autocomplete="email" placeholder="Email"></label>
           </div>
-          <label class="comment-wide"><span>Comment *</span><textarea name="comment" maxlength="1200" rows="5" required placeholder="Write your comment…"></textarea></label>
+          <label class="comment-wide"><span>Comment *</span><textarea name="comment" maxlength="1200" rows="5" required placeholder="Your Comment"></textarea></label>
           <label class="comment-hp" aria-hidden="true"><span>Website</span><input name="website" tabindex="-1" autocomplete="off"></label>
-          <div class="comment-submit-row"><button type="submit">SUBMIT FOR APPROVAL →</button><span class="comment-status" data-comment-status></span></div>
+          <div class="comment-submit-row"><button type="submit">${submitLabel}</button><span class="comment-status" data-comment-status></span></div>
         </form>
       </div>
     </section>`;
@@ -30,15 +31,22 @@
 
   function mount(){
     if(mounted||document.querySelector('[data-comments-root]'))return;
-    const mobile=document.querySelector('.mobile-v2');
-    if(mobile){
-      const footer=mobile.querySelector('.m2-footer-art');
-      if(!footer)return;
-      footer.insertAdjacentHTML('beforebegin',markup());
+    const mobile=matchMedia('(max-width:760px)').matches;
+    if(target.scope==='review'&&mobile){
+      const layer=document.querySelector('.content-master .master-layer');
+      if(!layer)return;
+      layer.insertAdjacentHTML('beforeend',markup());
     }else{
-      const page=document.querySelector('.master-page');
-      if(!page)return;
-      page.insertAdjacentHTML('afterend',markup());
+      const mobileV2=document.querySelector('.mobile-v2');
+      if(mobileV2){
+        const footer=mobileV2.querySelector('.m2-footer-art');
+        if(!footer)return;
+        footer.insertAdjacentHTML('beforebegin',markup());
+      }else{
+        const page=document.querySelector('.master-page');
+        if(!page)return;
+        page.insertAdjacentHTML('afterend',markup());
+      }
     }
     mounted=true;
     wire();
@@ -81,7 +89,7 @@
         await api('/api/comments',{method:'POST',body:JSON.stringify({scope:target.scope,slug:target.slug,name:fd.get('name'),email:fd.get('email'),comment:fd.get('comment'),website:fd.get('website')})});
         form.reset();status.textContent='Thanks — your comment is awaiting admin approval.';status.className='comment-status success';
       }catch(err){status.textContent=err.message;status.className='comment-status error'}
-      finally{btn.disabled=false;btn.textContent='SUBMIT FOR APPROVAL →'}
+      finally{btn.disabled=false;btn.textContent=submitLabel}
     });
   }
 
