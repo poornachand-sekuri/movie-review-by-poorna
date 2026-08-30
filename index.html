@@ -33,14 +33,14 @@
   <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
 
   <dialog class="search-dialog" id="searchDialog">
-    <form method="dialog" class="search-shell" id="searchForm">
+    <div class="search-shell">
       <div class="search-head">
         <label for="searchInput">Search reviews</label>
-        <button type="submit" value="cancel" aria-label="Close search">×</button>
+        <button type="button" id="searchClose" aria-label="Close search">×</button>
       </div>
-      <input id="searchInput" type="search" autocomplete="off" placeholder="Movie title…">
+      <input id="searchInput" type="search" autocomplete="off" placeholder="Movie title or language…">
       <div id="searchResults" class="search-results" role="list"></div>
-    </form>
+    </div>
   </dialog>
 
   <template id="reviewTemplate">
@@ -107,16 +107,19 @@
         <div class="comments-shell">
           <div class="comments-bg" aria-hidden="true"></div>
           <div class="comments-content">
-            <section class="recent-comments">
-              <h2>Recent Comments</h2>
+            <section class="recent-comments" aria-labelledby="recentCommentsTitle">
+              <h2 id="recentCommentsTitle" class="sr-only">Recent Comments</h2>
               <div class="comment-list"></div>
             </section>
-            <section class="add-comment">
-              <h2>Add Your Comment</h2>
+            <section class="add-comment" aria-labelledby="addCommentTitle">
+              <h2 id="addCommentTitle" class="sr-only">Add Your Comment</h2>
               <form class="comment-form">
-                <label>Name<input name="name" required maxlength="60"></label>
-                <label>Email<input name="email" type="email" required maxlength="120"></label>
-                <label>Comment<textarea name="comment" required maxlength="1200" rows="5"></textarea></label>
+                <label class="sr-only" for="commentName">Name</label>
+                <input id="commentName" name="name" required maxlength="60" placeholder="Name" autocomplete="name">
+                <label class="sr-only" for="commentEmail">Email</label>
+                <input id="commentEmail" name="email" type="email" required maxlength="120" placeholder="Email" autocomplete="email">
+                <label class="sr-only" for="commentText">Comment</label>
+                <textarea id="commentText" name="comment" required maxlength="1200" rows="5" placeholder="Write your comment…"></textarea>
                 <div class="comment-actions"><button type="submit">Submit Comment</button></div>
                 <p class="comment-status" role="status"></p>
               </form>
