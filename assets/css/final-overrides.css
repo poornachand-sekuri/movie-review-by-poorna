@@ -44,9 +44,41 @@
   background: transparent;
 }
 
-/* Cast & Crew: every role group is displayed on a separate line. */
+/* Cast & Crew: every array is a separate row with a label/value treatment. */
 .movie-cast {
-  white-space: pre-line;
+  display: grid;
+  gap: 5px;
+  white-space: normal;
+}
+.cast-crew-row {
+  display: grid;
+  grid-template-columns: minmax(58px, auto) minmax(0, 1fr);
+  gap: 7px;
+  align-items: start;
+}
+.cast-role-label {
+  display: inline-flex;
+  width: fit-content;
+  min-width: 56px;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 6px;
+  border: 1px solid rgba(216,174,99,.55);
+  border-radius: 3px;
+  background: rgba(216,174,99,.08);
+  color: var(--gold);
+  font-size: .58rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+.cast-role-value {
+  min-width: 0;
+  color: var(--ivory);
+  font-size: .75rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 /* Theater: Asset 07 intentionally contains screen area below the MY REVIEW badge.
@@ -71,15 +103,30 @@
   z-index: 3;
 }
 
-/* Related reel artwork has five physical windows. The matching engine still
-   returns at most four reviews, so cards occupy the first four exact windows and
-   the fifth remains empty. */
+/* Related reel artwork contains five physical windows. The browser crops the
+   locked artwork after the last populated window, so an unused final frame is
+   never shown. The underlying AVIF remains unchanged. */
 .related-reel {
-  width: max(100%, 920px);
-  aspect-ratio: 2048 / 549;
+  --reel-full-width: 920px;
+  --related-count: 4;
+  position: relative;
+  flex: none;
+  width: calc(var(--reel-full-width) * var(--related-count) / 5);
+  height: calc(var(--reel-full-width) * 549 / 2048);
+  aspect-ratio: auto;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-position: left top;
+  background-size: var(--reel-full-width) 100%;
 }
 .related-grid {
-  inset: 13.5% .65% 14.1%;
+  position: absolute;
+  top: 13.5%;
+  bottom: 14.1%;
+  left: calc(var(--reel-full-width) * .0065);
+  right: auto;
+  width: calc(var(--reel-full-width) * .987);
+  display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: .76%;
 }
@@ -247,7 +294,9 @@
   }
 
   .related-reel {
-    width: 860px;
+    --reel-full-width: 860px;
+    width: calc(var(--reel-full-width) * var(--related-count) / 5);
+    height: calc(var(--reel-full-width) * 549 / 2048);
   }
 
   .comments-shell {
