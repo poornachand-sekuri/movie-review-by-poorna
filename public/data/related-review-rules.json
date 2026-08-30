@@ -1,11 +1,10 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "generated_at": "2026-08-31",
-  "purpose": "Ranking rules for Related Reviews using shared cast and directors only. Music directors are display metadata only and never participate in Related Reviews matching.",
+  "purpose": "Ranking rules for Related Reviews using shared cast and directors first, with music directors used only as the final fallback when fewer than max_results primary matches exist.",
   "max_results": 4,
   "exclude_current_review": true,
   "require_shared_person": true,
-  "excluded_match_fields": ["music_directors"],
   "tiers": [
     {
       "name": "shared_cast",
@@ -18,6 +17,13 @@
       "priority": 2,
       "fields": ["directors"],
       "weight_per_shared_person": 65
+    },
+    {
+      "name": "shared_music_director",
+      "priority": 3,
+      "fields": ["music_directors"],
+      "weight_per_shared_person": 25,
+      "fallback_only": true
     }
   ],
   "bonuses": {
@@ -25,11 +31,11 @@
     "shared_cast_and_director": 20
   },
   "selection": {
-    "strategy": "Fill from shared-cast matches first, then shared-director matches. Never use music directors for matching, scoring, bonuses, fallback, or tie-breaking.",
+    "strategy": "Fill from Actor/Actress matches first, then Director matches. Only after those are exhausted, use Music Director matches to fill remaining slots up to max_results. Music Director overlap must not boost, reorder, or otherwise influence cast/director matches.",
     "deduplicate_by": "slug",
     "tie_breakers": [
       "higher_total_score",
-      "more_shared_people",
+      "more_shared_people_within_the_active_tier",
       "smaller_release_date_distance_days",
       "newer_review_date",
       "slug_ascending"
@@ -39,7 +45,8 @@
     "include_match_reason": true,
     "examples": [
       "Prabhas",
-      "Prashanth Neel"
+      "Prashanth Neel",
+      "Anirudh Ravichander (fallback only)"
     ]
   }
 }
