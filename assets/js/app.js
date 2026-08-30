@@ -37,18 +37,39 @@ function normalizeCastRecord(slug) {
   return Object.fromEntries(fields.map((field, index) => [field, raw[index] || []]));
 }
 
-function castSummary(slug) {
+function castGroups(slug) {
   const record = normalizeCastRecord(slug);
-  const groups = [
+  return [
     ['Actor', record.actors],
     ['Actress', record.actresses],
     ['Director', record.directors],
     ['Music', record.music_directors]
-  ];
-  return groups
-    .filter(([, values]) => values?.length)
-    .map(([label, values]) => `${label}: ${values.join(', ')}`)
-    .join(' • ') || '—';
+  ].filter(([, values]) => values?.length);
+}
+
+function renderCastCrew(container, slug) {
+  container.replaceChildren();
+  const groups = castGroups(slug);
+  if (!groups.length) {
+    container.textContent = '—';
+    return;
+  }
+
+  for (const [labelText, values] of groups) {
+    const row = document.createElement('div');
+    row.className = 'cast-crew-row';
+
+    const label = document.createElement('span');
+    label.className = 'cast-role-label';
+    label.textContent = labelText;
+
+    const value = document.createElement('span');
+    value.className = 'cast-role-value';
+    value.textContent = values.join(', ');
+
+    row.append(label, value);
+    container.append(row);
+  }
 }
 
 function intersect(a = [], b = []) {
@@ -77,26 +98,35 @@ function scoreRelated(current, candidate) {
   const castWeight = tierRules.shared_cast?.weight_per_shared_person ?? 100;
   const directorWeight = tierRules.shared_director?.weight_per_shared_person ?? 65;
   const musicWeight = tierRules.shared_music_director?.weight_per_shared_person ?? 25;
-
-  let score = sharedCast.length * castWeight;
-  score += sharedDirectors.length * directorWeight;
-  score += sharedMusic.length * musicWeight;
-
   const bonuses = state.rules?.bonuses || {};
-  if (sharedCast.length >= 2) score += bonuses.two_or_more_shared_cast_members || 0;
-  if (sharedCast.length && sharedDirectors.length) score += bonuses.shared_cast_and_director || 0;
-  if (sharedCast.length && sharedMusic.length) score += bonuses.shared_cast_and_music_director || 0;
 
   let tier = 99;
-  if (sharedCast.length) tier = 1;
-  else if (sharedDirectors.length) tier = 2;
-  else if (sharedMusic.length) tier = 3;
+  let score = 0;
+  let sharedPeople = [];
+
+  if (sharedCast.length) {
+    tier = 1;
+    score = sharedCast.length * castWeight;
+    score += sharedDirectors.length * directorWeight;
+    if (sharedCast.length >= 2) score += bonuses.two_or_more_shared_cast_members || 0;
+    if (sharedDirectors.length) score += bonuses.shared_cast_and_director || 0;
+    sharedPeople = [...new Set([...sharedCast, ...sharedDirectors])];
+  } else if (sharedDirectors.length) {
+    tier = 2;
+    score = sharedDirectors.length * directorWeight;
+    sharedPeople = [...new Set(sharedDirectors)];
+  } else if (sharedMusic.length) {
+    // Music directors are strictly fallback-only. They never boost a cast/director match.
+    tier = 3;
+    score = sharedMusic.length * musicWeight;
+    sharedPeople = [...new Set(sharedMusic)];
+  }
 
   return {
     movie: candidate,
     score,
     tier,
-    sharedPeople: [...new Set([...sharedCast, ...sharedDirectors, ...sharedMusic])],
+    sharedPeople,
     releaseDistance: dateDistanceDays(current.rd, candidate.rd)
   };
 }
@@ -116,9 +146,11 @@ function getRelated(current) {
       return dateCompare || a.movie.s.localeCompare(b.movie.s);
     });
 
+  // Fill all Actor/Actress and Director matches first.
   const primary = scored.filter(item => item.tier <= 2).slice(0, max);
   if (primary.length >= max) return primary;
 
+  // Only then use Music Director matches to fill any remaining slots.
   const selected = [...primary];
   const used = new Set(primary.map(item => item.movie.s));
   for (const item of scored.filter(entry => entry.tier === 3)) {
@@ -160,8 +192,13 @@ function setupArtwork(root) {
 
 function renderRelated(root, movie) {
   const grid = $('.related-grid', root);
+  const reel = $('.related-reel', root);
   grid.replaceChildren();
   const related = getRelated(movie);
+
+  // The source artwork contains five windows, but this page displays at most four reviews.
+  // Crop the unused artwork windows rather than showing an empty framed reel.
+  reel.style.setProperty('--related-count', String(Math.max(1, Math.min(4, related.length || 1))));
 
   for (const item of related) {
     const card = document.createElement('a');
@@ -356,7 +393,7 @@ function renderMovie(movie) {
   $('.movie-title', root).textContent = movie.t;
   $('.movie-language', root).textContent = movie.l || '—';
   $('.movie-release', root).textContent = formatDate(movie.rd);
-  $('.movie-cast', root).textContent = castSummary(movie.s);
+  renderCastCrew($('.movie-cast', root), movie.s);
   $('.movie-rating', root).textContent = starString(movie.r);
   $('.movie-rating', root).setAttribute('aria-label', `${Math.round(Number(movie.r) || 0)} out of 5 stars`);
   $('.movie-pov', root).textContent = movie.v || movie.e || '';
