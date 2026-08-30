@@ -84,6 +84,15 @@ function dateDistanceDays(a, b) {
   return Math.abs(ta - tb) / 86400000;
 }
 
+function stableHash(value) {
+  let hash = 2166136261;
+  for (const character of String(value)) {
+    hash ^= character.codePointAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
 function scoreRelated(current, candidate) {
   const currentCast = normalizeCastRecord(current.s);
   const candidateCast = normalizeCastRecord(candidate.s);
@@ -150,7 +159,7 @@ function getRelated(current) {
   const primary = scored.filter(item => item.tier <= 2).slice(0, max);
   if (primary.length >= max) return primary;
 
-  // Only then use Music Director matches to fill any remaining slots.
+  // Only then use Music Director matches to fill remaining relationship slots.
   const selected = [...primary];
   const used = new Set(primary.map(item => item.movie.s));
   for (const item of scored.filter(entry => entry.tier === 3)) {
@@ -158,8 +167,39 @@ function getRelated(current) {
       selected.push(item);
       used.add(item.movie.s);
     }
-    if (selected.length >= max) break;
+    if (selected.length >= max) return selected;
   }
+
+  // Final safety fallback: fill remaining windows with stable pseudo-random reviews
+  // in the same language. The current review and already-selected reviews are excluded.
+  const language = String(current.l || '').trim().toLocaleLowerCase();
+  if (language) {
+    const sameLanguage = state.movies
+      .filter(movie => (
+        movie.s !== current.s &&
+        !used.has(movie.s) &&
+        String(movie.l || '').trim().toLocaleLowerCase() === language
+      ))
+      .sort((a, b) => {
+        const aHash = stableHash(`${current.s}|${a.s}`);
+        const bHash = stableHash(`${current.s}|${b.s}`);
+        return aHash - bHash || a.s.localeCompare(b.s);
+      });
+
+    for (const movie of sameLanguage) {
+      selected.push({
+        movie,
+        score: 0,
+        tier: 4,
+        sharedPeople: [],
+        fallbackReason: 'Same-language recommendation',
+        releaseDistance: dateDistanceDays(current.rd, movie.rd)
+      });
+      used.add(movie.s);
+      if (selected.length >= max) break;
+    }
+  }
+
   return selected;
 }
 
@@ -197,14 +237,18 @@ function renderRelated(root, movie) {
   const related = getRelated(movie);
 
   // The source artwork contains five windows, but this page displays at most four reviews.
-  // Crop the unused artwork windows rather than showing an empty framed reel.
+  // Crop unused artwork windows if the full fallback chain still yields fewer than four.
   reel.style.setProperty('--related-count', String(Math.max(1, Math.min(4, related.length || 1))));
 
   for (const item of related) {
     const card = document.createElement('a');
     card.className = 'related-card';
     card.href = `/?review=${encodeURIComponent(item.movie.s)}`;
-    card.title = item.sharedPeople.length ? `Related via ${item.sharedPeople.join(', ')}` : item.movie.t;
+    card.title = item.sharedPeople.length
+      ? `Related via ${item.sharedPeople.join(', ')}`
+      : item.fallbackReason
+        ? `${item.fallbackReason}: ${item.movie.t}`
+        : item.movie.t;
 
     const posterZone = document.createElement('div');
     posterZone.className = 'related-poster-zone';
@@ -230,7 +274,7 @@ function renderRelated(root, movie) {
   if (!related.length) {
     const empty = document.createElement('p');
     empty.className = 'comment-empty';
-    empty.textContent = 'No related reviews found yet.';
+    empty.textContent = 'No reviews are available for this language yet.';
     grid.append(empty);
   }
 }
