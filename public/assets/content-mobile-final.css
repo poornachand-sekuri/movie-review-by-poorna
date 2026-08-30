@@ -62,45 +62,31 @@
     overflow:hidden!important;
   }
 
-  /* Review badge is part of the artwork; text begins beneath it. */
-  .content-review-body{
+  /* Review badge is part of the artwork; review always scrolls inside the theater screen. */
+  .content-review-body,
+  .content-review-body.collapsed{
     left:11.7%!important;
     top:44.7%!important;
     width:75.7%!important;
-    height:21.2%!important;
-    padding:1.5cqw 1.8cqw!important;
+    height:24.0%!important;
+    padding:1.5cqw 2.3cqw 1.5cqw 1.8cqw!important;
     box-sizing:border-box!important;
     color:#f2f2f2!important;
     font-size:2.35cqw!important;
     line-height:1.55!important;
-    overflow:auto!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
     pointer-events:auto!important;
     background:transparent!important;
+    mask-image:none!important;
     scrollbar-width:thin!important;
+    scrollbar-color:#9b722f #100d09!important;
   }
-  .content-review-body.collapsed{
-    height:19.2%!important;
-    overflow:hidden!important;
-    mask-image:linear-gradient(#000 0 82%,transparent 100%)!important;
-  }
+  .content-review-body::-webkit-scrollbar{width:5px}
+  .content-review-body::-webkit-scrollbar-track{background:#100d09}
+  .content-review-body::-webkit-scrollbar-thumb{background:#9b722f;border-radius:10px}
   .content-review-body p{margin:0 0 1em!important}
-  .mobile-readmore{
-    left:36%!important;
-    top:66.3%!important;
-    width:28%!important;
-    height:2.6%!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    background:#080808!important;
-    border:1px solid #7f5a23!important;
-    border-radius:1.3cqw!important;
-    color:#fff!important;
-    font-size:1.8cqw!important;
-    letter-spacing:.05em!important;
-    cursor:pointer!important;
-    z-index:5!important;
-  }
+  .mobile-readmore{display:none!important}
 
   /* Five ticket slots in the approved Related Reviews artwork. */
   .content-related-grid{
