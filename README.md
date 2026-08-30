@@ -14,9 +14,14 @@ The preserved review data remains authoritative and is not rewritten by the fron
 
 Production artwork is served from Cloudflare R2 through:
 
-`https://assets.moviereviewbypoorna.com/ui/content-page/v2/mobile/`
+`https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile/`
 
 The exact filenames are configured in `assets/js/config.js`.
+
+The R2 UI namespace is split by page type so Home and Content artwork stay separate:
+
+- `ui/pages/home/...`
+- `ui/pages/content/...`
 
 Do not restore old frontend CSS/JS from `pre-clean-reset-backup-20260830` into this implementation.
 
