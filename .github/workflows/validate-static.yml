@@ -32,8 +32,8 @@ jobs:
           const castCrew = JSON.parse(fs.readFileSync('public/data/cast-crew.json', 'utf8'));
           const rules = JSON.parse(fs.readFileSync('public/data/related-review-rules.json', 'utf8'));
 
-          if (!Array.isArray(reviews) || reviews.length !== 137) {
-            throw new Error(`Expected 137 preserved reviews, found ${Array.isArray(reviews) ? reviews.length : 'non-array'}`);
+          if (!Array.isArray(reviews) || reviews.length !== 136) {
+            throw new Error(`Expected 136 reviews, found ${Array.isArray(reviews) ? reviews.length : 'non-array'}`);
           }
           if (!castCrew.records || typeof castCrew.records !== 'object') {
             throw new Error('cast-crew.json is missing records');
@@ -42,15 +42,8 @@ jobs:
             throw new Error('related-review-rules.json does not match the expected schema');
           }
 
-          // One preserved legacy review slug contains a URL-encoded wink suffix.
-          // Its enrichment intentionally lives under the clean opinion-post slug.
-          const castAliases = {
-            'my-opinion-on-various-opinions-on-adipursh-%f0%9f%98%89': 'my-opinion-on-various-opinions-on-adipursh'
-          };
-
-          const castKey = slug => castAliases[slug] || slug;
           const missingCast = reviews
-            .filter(review => !castCrew.records[castKey(review.s)])
+            .filter(review => !castCrew.records[review.s])
             .map(review => review.s);
 
           if (missingCast.length) {
