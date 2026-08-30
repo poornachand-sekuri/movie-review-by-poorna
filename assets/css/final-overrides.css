@@ -1,0 +1,28 @@
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* The Comments artwork already contains its section headings and field frames. */
+.comment-form input,
+.comment-form textarea {
+  border-color: rgba(216,174,99,.3);
+  background: rgba(0,0,0,.36);
+}
+.comment-actions button {
+  min-width: 68%;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.comment-actions button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
