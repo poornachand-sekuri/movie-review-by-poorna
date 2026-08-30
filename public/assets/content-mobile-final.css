@@ -73,12 +73,14 @@
     color:#f2f2f2!important;
     font-size:2.35cqw!important;
     line-height:1.55!important;
-    overflow:hidden!important;
+    overflow:auto!important;
     pointer-events:auto!important;
     background:transparent!important;
+    scrollbar-width:thin!important;
   }
   .content-review-body.collapsed{
     height:19.2%!important;
+    overflow:hidden!important;
     mask-image:linear-gradient(#000 0 82%,transparent 100%)!important;
   }
   .content-review-body p{margin:0 0 1em!important}
