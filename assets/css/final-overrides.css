@@ -25,17 +25,36 @@
  * Artwork is not modified: live content is fitted into the locked AVIF windows.
  */
 
-/* Clapboard poster: keep the actual frame proportions and maximize the live poster
-   inside a safe inset. The poster is never cropped or distorted. */
+/* Clapboard: keep poster + compact facts in the upper two-column area, then use
+   the full board width for Cast & Crew and My POV. Rating intentionally sits
+   above those two final sections. */
+.clapboard-body {
+  min-height: 0;
+  padding: 58px 14px 24px;
+}
+.clapboard-content {
+  grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 14px;
+  align-items: start;
+}
 .poster-frame {
+  width: 100%;
+  min-width: 0;
   aspect-ratio: 1122 / 1402;
+  align-self: start;
 }
 .poster-frame-art {
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
 }
 .poster-safe-zone {
   inset: 5.2% 5.8%;
+  display: grid;
+  place-items: center;
   overflow: hidden;
+  background: #050505;
 }
 .movie-poster {
   display: block;
@@ -45,25 +64,71 @@
   max-height: 100%;
   object-fit: contain;
   object-position: 50% 50%;
-  background: transparent;
+  background: #050505;
 }
-
-/* Cast & Crew: every array is a separate row with a label/value treatment. */
+.movie-meta {
+  min-width: 0;
+  padding-top: 0;
+}
+.movie-title {
+  margin-bottom: 13px;
+}
+.meta-list-primary > div {
+  grid-template-columns: minmax(72px, .72fr) minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 0;
+}
+.meta-list-primary dd {
+  font-size: .81rem;
+  line-height: 1.38;
+}
+.meta-list-wide {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+}
+.meta-list-wide > div {
+  display: grid;
+  grid-template-columns: minmax(92px, 25%) minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px 0;
+  border-top: 1px solid rgba(216,174,99,.22);
+}
+.meta-list-wide dt {
+  color: var(--gold-soft);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.meta-list-wide dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--ivory);
+  font-size: .81rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.meta-cast-row {
+  margin-top: 1px;
+}
 .movie-cast {
   display: grid;
-  gap: 5px;
+  gap: 6px;
+  min-width: 0;
   white-space: normal;
 }
 .cast-crew-row {
   display: grid;
-  grid-template-columns: minmax(58px, auto) minmax(0, 1fr);
-  gap: 7px;
+  grid-template-columns: minmax(68px, auto) minmax(0, 1fr);
+  gap: 8px;
   align-items: start;
+  min-width: 0;
 }
 .cast-role-label {
   display: inline-flex;
   width: fit-content;
-  min-width: 56px;
+  min-width: 66px;
   justify-content: center;
   align-items: center;
   padding: 2px 6px;
@@ -76,12 +141,24 @@
   line-height: 1.2;
   letter-spacing: .055em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .cast-role-value {
   min-width: 0;
   color: var(--ivory);
-  font-size: .75rem;
-  line-height: 1.35;
+  font-size: .79rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.movie-rating {
+  color: var(--gold) !important;
+  letter-spacing: .1em;
+  white-space: nowrap;
+}
+.movie-pov {
+  font-size: .83rem !important;
+  line-height: 1.5 !important;
   overflow-wrap: anywhere;
 }
 
@@ -324,6 +401,30 @@
   :root {
     --review-font-size: 18px;
     --review-line-height: 1.7;
+  }
+
+  .clapboard-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .clapboard-content {
+    grid-template-columns: minmax(0, 41%) minmax(0, 1fr);
+    column-gap: 12px;
+  }
+  .meta-list-primary > div {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 6px;
+  }
+  .meta-list-wide > div {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .cast-crew-row {
+    grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+    gap: 7px;
+  }
+  .cast-role-label {
+    min-width: 62px;
   }
 
   .related-reel {
