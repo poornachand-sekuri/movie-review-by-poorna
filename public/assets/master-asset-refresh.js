@@ -1,6 +1,6 @@
 (()=>{
   const BASE='https://assets.moviereviewbypoorna.com/master';
-  const VERSION='10';
+  const VERSION='11';
   const ASSETS={
     'home-desktop':`${BASE}/home_desktop.avif?v=${VERSION}`,
     'home-mobile':`${BASE}/home_mobile.avif?v=${VERSION}`,
