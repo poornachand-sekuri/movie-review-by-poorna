@@ -16,26 +16,242 @@
   border: 0 !important;
 }
 
-/* The Comments artwork already contains its section headings and field frames. */
+/*
+ * FINAL V2 browser-alignment corrections.
+ * Artwork is not modified: live content is fitted into the locked AVIF windows.
+ */
+
+/* Clapboard poster: keep the actual frame proportions and maximize the live poster
+   inside a safe inset. The poster is never cropped or distorted. */
+.poster-frame {
+  aspect-ratio: 1122 / 1402;
+}
+.poster-frame-art {
+  object-fit: contain;
+}
+.poster-safe-zone {
+  inset: 5.2% 5.8%;
+  overflow: hidden;
+}
+.movie-poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: 50% 50%;
+  background: transparent;
+}
+
+/* Cast & Crew: every role group is displayed on a separate line. */
+.movie-cast {
+  white-space: pre-line;
+}
+
+/* Theater: Asset 07 intentionally contains screen area below the MY REVIEW badge.
+   Pull the stretchable middle upward into that screen area so review copy begins
+   shortly below the badge instead of after a large empty block. */
+.theater {
+  position: relative;
+}
+.theater-top {
+  position: relative;
+  z-index: 1;
+}
+.theater-middle {
+  position: relative;
+  z-index: 2;
+  margin-top: -18%;
+  padding-top: 3.2%;
+  min-height: 175px;
+}
+.review-body {
+  position: relative;
+  z-index: 3;
+}
+
+/* Related reel artwork has five physical windows. The matching engine still
+   returns at most four reviews, so cards occupy the first four exact windows and
+   the fifth remains empty. */
+.related-reel {
+  width: max(100%, 920px);
+  aspect-ratio: 2048 / 549;
+}
+.related-grid {
+  inset: 13.5% .65% 14.1%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .76%;
+}
+.related-card {
+  overflow: hidden;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 3px;
+  padding: 5% 5.5% 4.5%;
+}
+.related-poster-zone {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.related-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.related-title {
+  min-height: 2.25em;
+  padding: 0 2px;
+  color: var(--ivory);
+  font-size: .69rem;
+  line-height: 1.08;
+  font-weight: 800;
+  overflow: hidden;
+}
+.related-stars {
+  min-height: 1.1em;
+  color: var(--gold);
+  font-size: .68rem;
+  line-height: 1;
+  letter-spacing: .035em;
+  white-space: nowrap;
+}
+
+/* Comments artwork is a fixed 1496×880 horizontal shell. Match that ratio first,
+   then position the live HTML exactly over the artwork's empty fields/panels. */
+.comments-shell {
+  min-height: 0;
+  aspect-ratio: 1496 / 880;
+  padding: 0;
+  overflow: visible;
+}
+.comments-bg {
+  background-size: 100% 100%;
+}
+.comments-content {
+  position: absolute;
+  inset: 0;
+  display: block;
+  min-width: 0;
+}
+.recent-comments {
+  position: absolute;
+  left: 3.75%;
+  top: 16.1%;
+  width: 41.1%;
+  height: 77.5%;
+  padding: 1.5% 1.5%;
+  overflow: auto;
+}
+.add-comment {
+  position: absolute;
+  left: 50.55%;
+  top: 16.1%;
+  width: 45.15%;
+  height: 77.8%;
+}
+.comment-form {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .comment-form input,
 .comment-form textarea {
-  border-color: rgba(216,174,99,.3);
-  background: rgba(0,0,0,.36);
+  position: absolute;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  border-color: transparent;
+  border-radius: 0;
+  background: rgba(0,0,0,.18);
+  box-shadow: none;
+  color: var(--ivory);
+  padding: 0 3.2%;
+  font-size: clamp(13px, 3.15vw, 16px);
+}
+.comment-form input:focus,
+.comment-form textarea:focus {
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px rgba(216,174,99,.55);
+}
+#commentName {
+  top: 0;
+  height: 10.35%;
+}
+#commentEmail {
+  top: 13.55%;
+  height: 10.35%;
+}
+#commentText {
+  top: 26.8%;
+  height: 44.2%;
+  min-height: 0;
+  padding-top: 2.4%;
+  padding-bottom: 2.4%;
+  resize: none;
+}
+.comment-actions {
+  position: absolute;
+  left: 13.4%;
+  right: 13.4%;
+  top: 84.65%;
+  height: 13.55%;
+  margin: 0;
+  display: block;
 }
 .comment-actions button {
-  min-width: 68%;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 5%;
   border-color: transparent;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
+  color: var(--gold);
+  display: grid;
+  place-items: center;
+  font-size: clamp(.58rem, 2.1vw, .72rem);
+  line-height: 1;
 }
 .comment-actions button:focus-visible {
   outline: 2px solid var(--gold);
-  outline-offset: 3px;
+  outline-offset: -4px;
+}
+.comment-status {
+  position: absolute;
+  top: 101.5%;
+  left: 0;
+  width: 100%;
+  min-height: 1.4em;
+  margin: 0;
+  padding: 0 2%;
+  text-align: center;
+}
+.comment-empty {
+  margin: 0;
+  padding: 0;
 }
 
 @media (max-width: 370px) {
   :root {
     --review-font-size: 18px;
     --review-line-height: 1.7;
+  }
+
+  .related-reel {
+    width: 860px;
+  }
+
+  .comments-shell {
+    /* Preserve artwork geometry rather than switching to a stacked layout. */
+    min-height: 0;
   }
 }
