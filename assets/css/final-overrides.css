@@ -1,3 +1,9 @@
+:root {
+  /* Locked review typography: never shrink based on review length or narrow mobile width. */
+  --review-font-size: 18px;
+  --review-line-height: 1.7;
+}
+
 .sr-only {
   position: absolute !important;
   width: 1px !important;
@@ -25,4 +31,11 @@
 .comment-actions button:focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 3px;
+}
+
+@media (max-width: 370px) {
+  :root {
+    --review-font-size: 18px;
+    --review-line-height: 1.7;
+  }
 }
