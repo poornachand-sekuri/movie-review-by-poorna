@@ -2,6 +2,10 @@
   /* Locked review typography: never shrink based on review length or narrow mobile width. */
   --review-font-size: 18px;
   --review-line-height: 1.7;
+  --like-green: #769b70;
+  --like-green-soft: rgba(118,155,112,.12);
+  --dislike-red: #a54a4d;
+  --dislike-red-soft: rgba(165,74,77,.12);
 }
 
 .sr-only {
@@ -79,6 +83,35 @@
   font-size: .75rem;
   line-height: 1.35;
   overflow-wrap: anywhere;
+}
+
+/* Reactions: retain the black/gold cinema frame while giving each live action a
+   restrained semantic color. Green/red stays muted so it does not fight the artwork. */
+.reaction-button[data-vote="like"] svg {
+  fill: var(--like-green);
+}
+.reaction-button[data-vote="like"] .reaction-label,
+.reaction-button[data-vote="like"] strong {
+  color: var(--like-green);
+}
+.reaction-button[data-vote="dislike"] svg {
+  fill: var(--dislike-red);
+}
+.reaction-button[data-vote="dislike"] .reaction-label,
+.reaction-button[data-vote="dislike"] strong {
+  color: var(--dislike-red);
+}
+.reaction-button[data-vote="like"]:hover,
+.reaction-button[data-vote="like"][aria-pressed="true"] {
+  background: var(--like-green-soft);
+}
+.reaction-button[data-vote="dislike"]:hover,
+.reaction-button[data-vote="dislike"][aria-pressed="true"] {
+  background: var(--dislike-red-soft);
+}
+.reaction-button:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -3px;
 }
 
 /* Theater: Asset 07 intentionally contains screen area below the MY REVIEW badge.
