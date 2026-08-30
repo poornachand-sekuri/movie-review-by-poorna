@@ -1,10 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "generated_at": "2026-08-31",
-  "purpose": "Ranking rules for Related Reviews using public/data/cast-crew.json without modifying authoritative review content in public/data/index.json.",
+  "purpose": "Ranking rules for Related Reviews using shared cast and directors only. Music directors are display metadata only and never participate in Related Reviews matching.",
   "max_results": 4,
   "exclude_current_review": true,
   "require_shared_person": true,
+  "excluded_match_fields": ["music_directors"],
   "tiers": [
     {
       "name": "shared_cast",
@@ -17,22 +18,14 @@
       "priority": 2,
       "fields": ["directors"],
       "weight_per_shared_person": 65
-    },
-    {
-      "name": "shared_music_director",
-      "priority": 3,
-      "fields": ["music_directors"],
-      "weight_per_shared_person": 25,
-      "fallback_only": true
     }
   ],
   "bonuses": {
     "two_or_more_shared_cast_members": 30,
-    "shared_cast_and_director": 20,
-    "shared_cast_and_music_director": 10
+    "shared_cast_and_director": 20
   },
   "selection": {
-    "strategy": "Fill from higher-priority relationship tiers first. Use music-director-only matches only when fewer than max_results have been found from cast/director relationships.",
+    "strategy": "Fill from shared-cast matches first, then shared-director matches. Never use music directors for matching, scoring, bonuses, fallback, or tie-breaking.",
     "deduplicate_by": "slug",
     "tie_breakers": [
       "higher_total_score",
@@ -46,8 +39,7 @@
     "include_match_reason": true,
     "examples": [
       "Prabhas",
-      "Prashanth Neel",
-      "Anirudh Ravichander"
+      "Prashanth Neel"
     ]
   }
 }
