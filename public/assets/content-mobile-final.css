@@ -1,0 +1,163 @@
+@media (max-width:760px){
+  /* CONTENT MOBILE — approved 900x1748 master */
+  .content-poster{
+    left:6.2%!important;
+    top:16.0%!important;
+    width:22.8%!important;
+    height:18.5%!important;
+    border-radius:.7cqw!important;
+    box-shadow:none!important;
+  }
+
+  .content-info{
+    left:32.0%!important;
+    top:16.0%!important;
+    width:61.0%!important;
+    height:18.8%!important;
+    padding:1.7cqw 2.5cqw!important;
+    box-sizing:border-box!important;
+    background:transparent!important;
+    border:0!important;
+    color:#f4efe7!important;
+    overflow:hidden!important;
+  }
+  .content-info h1{
+    font:800 4cqw/1 Arial,sans-serif!important;
+    color:#e2a237!important;
+    margin:0 0 1.2cqw!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .content-info .row{
+    display:grid!important;
+    grid-template-columns:19cqw minmax(0,1fr)!important;
+    align-items:center!important;
+    min-height:5.5cqw!important;
+    border:0!important;
+  }
+  .content-info .row:last-child{border:0!important}
+  .content-info .label{
+    font-size:2.0cqw!important;
+    font-weight:800!important;
+    color:#dea33b!important;
+    white-space:nowrap!important;
+  }
+  .content-info .value{
+    font-size:2.0cqw!important;
+    line-height:1.22!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .content-info .master-stars{font-size:2.3cqw!important;color:#e4a62e!important}
+  .content-info .verdict-row{min-height:6.8cqw!important}
+  .content-info .verdict-value{
+    font-size:1.72cqw!important;
+    line-height:1.24!important;
+    display:-webkit-box!important;
+    -webkit-box-orient:vertical!important;
+    -webkit-line-clamp:2!important;
+    white-space:normal!important;
+    overflow:hidden!important;
+  }
+
+  /* Review badge is part of the artwork; text begins beneath it. */
+  .content-review-body{
+    left:11.7%!important;
+    top:44.7%!important;
+    width:75.7%!important;
+    height:21.2%!important;
+    padding:1.5cqw 1.8cqw!important;
+    box-sizing:border-box!important;
+    color:#f2f2f2!important;
+    font-size:2.35cqw!important;
+    line-height:1.55!important;
+    overflow:hidden!important;
+    pointer-events:auto!important;
+    background:transparent!important;
+  }
+  .content-review-body.collapsed{
+    height:19.2%!important;
+    mask-image:linear-gradient(#000 0 82%,transparent 100%)!important;
+  }
+  .content-review-body p{margin:0 0 1em!important}
+  .mobile-readmore{
+    left:36%!important;
+    top:66.3%!important;
+    width:28%!important;
+    height:2.6%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    background:#080808!important;
+    border:1px solid #7f5a23!important;
+    border-radius:1.3cqw!important;
+    color:#fff!important;
+    font-size:1.8cqw!important;
+    letter-spacing:.05em!important;
+    cursor:pointer!important;
+    z-index:5!important;
+  }
+
+  /* Five ticket slots in the approved Related Reviews artwork. */
+  .content-related-grid{
+    left:3.7%!important;
+    top:87.2%!important;
+    width:91.0%!important;
+    height:9.6%!important;
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:.3%!important;
+  }
+  .content-related-card{
+    position:relative!important;
+    overflow:hidden!important;
+    text-decoration:none!important;
+  }
+  .content-related-card .master-poster{
+    left:8.5%!important;
+    top:7%!important;
+    width:83%!important;
+    height:80%!important;
+    box-shadow:none!important;
+    border-radius:.6cqw!important;
+  }
+  .content-related-card .copy{
+    position:absolute!important;
+    left:9%!important;
+    right:9%!important;
+    top:66%!important;
+    bottom:5%!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+    text-align:center!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+  }
+  .content-related-card .title{
+    font:900 1.25cqw/1.05 Georgia,serif!important;
+    color:#f0d290!important;
+    text-shadow:0 1px 2px #000!important;
+    display:-webkit-box!important;
+    -webkit-box-orient:vertical!important;
+    -webkit-line-clamp:2!important;
+    overflow:hidden!important;
+  }
+  .content-related-card .master-stars{
+    font-size:1.05cqw!important;
+    margin-top:.3cqw!important;
+    background:#0a0806cc!important;
+    border-radius:.35cqw!important;
+    padding:.15cqw .4cqw!important;
+    color:#d8a239!important;
+  }
+  .content-master .view-all-related{
+    left:82.5%!important;
+    top:83.7%!important;
+    width:14.5%!important;
+    height:2.5%!important;
+  }
+}
