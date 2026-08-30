@@ -1,6 +1,6 @@
 export const CONFIG = {
   dataBase: '/public/data',
-  uiAssetBase: 'https://assets.moviereviewbypoorna.com/ui/content-page/v2/mobile',
+  uiAssetBase: 'https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile',
   apiBase: '',
   relatedToCommentsGapPx: 56,
   assets: {
