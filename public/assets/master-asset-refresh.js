@@ -5,7 +5,7 @@
     'home-desktop':`${BASE}/home_desktop.avif?v=${VERSION}`,
     'home-mobile':`${BASE}/home_mobile.avif?v=${VERSION}`,
     'content-desktop':`${BASE}/content_desktop.avif?v=${VERSION}`,
-    'content-mobile':`${BASE}/content_mobile.avif?v=${VERSION}`
+    'content-mobile':`${BASE}/content_mobile.avif?v=11`
   };
   function keyFor(img){
     const mobile=matchMedia('(max-width:760px)').matches;
