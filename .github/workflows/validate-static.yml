@@ -28,6 +28,11 @@ jobs:
           node --check assets/js/ui-patch.js
           node --check assets/js/live-reactions.js
           node --check assets/js/comments.js
+          node --check assets/js/analytics.js
+          node --check assets/js/cine-cafe.js
+          node --check admin/admin.js
+          node --check src/analytics-store.js
+          node --check src/admin-console.js
           node --check src/worker.js
 
       - name: Validate Cloudflare Worker bundle
@@ -41,6 +46,7 @@ jobs:
 
           const runtimeRoots = [
             'index.html',
+            'admin',
             'assets',
             'src',
             'public/data',
@@ -137,7 +143,15 @@ jobs:
             throw new Error(`UI artwork must use owned R2 base ${requiredUiBase}`);
           }
 
-          console.log(`Validated ${reviews.length} reviews: poster/body images and UI artwork use owned R2 assets.`);
+          const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
+          if (!wrangler.includes('"binding": "REVIEW_ASSETS"') || !wrangler.includes('"bucket_name": "movie-review-assets"')) {
+            throw new Error('Admin review uploads must stay bound to movie-review-assets as REVIEW_ASSETS.');
+          }
+          if (!wrangler.includes('https://assets.moviereviewbypoorna.com')) {
+            throw new Error('Admin review uploads must use the custom R2 public domain.');
+          }
+
+          console.log(`Validated ${reviews.length} reviews: poster/body images and Admin R2 ownership are correct.`);
           NODE
 
       - name: Validate preserved JSON data
@@ -149,7 +163,7 @@ jobs:
           const rules = JSON.parse(fs.readFileSync('public/data/related-review-rules.json', 'utf8'));
 
           if (!Array.isArray(reviews) || reviews.length !== 136) {
-            throw new Error(`Expected 136 reviews, found ${Array.isArray(reviews) ? reviews.length : 'non-array'}`);
+            throw new Error(`Expected 136 base reviews, found ${Array.isArray(reviews) ? reviews.length : 'non-array'}`);
           }
           if (!castCrew.records || typeof castCrew.records !== 'object') {
             throw new Error('cast-crew.json is missing records');
@@ -166,16 +180,22 @@ jobs:
             throw new Error(`Missing Cast & Crew records: ${missingCast.join(', ')}`);
           }
 
-          console.log(`Validated ${reviews.length} reviews and Cast & Crew joins.`);
+          console.log(`Validated ${reviews.length} base reviews and Cast & Crew joins.`);
           NODE
 
       - name: Verify required frontend files
         run: |
           test -f index.html
+          test -f admin/index.html
+          test -f admin/admin.css
+          test -f admin/admin.js
           test -f assets/css/site.css
           test -f assets/css/final-overrides.css
           test -f assets/js/config.js
           test -f assets/js/app.js
           test -f assets/js/live-reactions.js
           test -f assets/js/comments.js
+          test -f assets/js/analytics.js
+          test -f src/admin-console.js
+          test -f src/analytics-store.js
           test -f src/worker.js
