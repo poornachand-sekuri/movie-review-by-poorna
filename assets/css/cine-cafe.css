@@ -219,9 +219,8 @@ button, input { font: inherit; -webkit-tap-highlight-color: transparent; }
 .review-likes span { color: #f1dcc0; margin-left: .3em; }
 .review-likes[hidden] { display: none !important; }
 
-/* Fixed pagination geometry mapped to the baked controls. The source artwork
-   intentionally leaves a wider gap before Next; the runtime ellipsis fills
-   that space so the whole strip reads as one balanced pagination sequence. */
+/* Fixed pagination geometry mapped to the six baked controls:
+   previous arrow, four number boxes, next arrow. */
 .pagination-layer {
   position: absolute;
   z-index: 8;
@@ -240,8 +239,7 @@ button, input { font: inherit; -webkit-tap-highlight-color: transparent; }
 .pagination-layer > :nth-child(3) { left: 31.1%; width: 12.3%; }
 .pagination-layer > :nth-child(4) { left: 47.0%; width: 12.3%; }
 .pagination-layer > :nth-child(5) { left: 62.9%; width: 12.3%; }
-.pagination-layer > :nth-child(6) { left: 78.4%; width: 7.6%; }
-.pagination-layer > :nth-child(7) { left: 88.6%; width: 11.4%; }
+.pagination-layer > :nth-child(6) { left: 88.6%; width: 11.4%; }
 
 .page-button,
 .page-slot-empty {
@@ -273,16 +271,6 @@ button, input { font: inherit; -webkit-tap-highlight-color: transparent; }
 .page-slot-empty {
   border: 1px solid rgba(217, 168, 79, .78);
   background: rgba(4,4,4,.94);
-}
-.page-ellipsis {
-  display: grid;
-  place-items: center;
-  color: rgba(243, 223, 185, .9);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(13px, 2.1cqw, 19px);
-  line-height: 1;
-  transform: translateY(-4%);
-  text-shadow: 0 1px 3px rgba(0,0,0,.72);
 }
 .pagination-layer > .page-arrow {
   border: 0;
