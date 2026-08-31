@@ -6,7 +6,8 @@ const isHome = !hasReview && pathParts.length === 0;
 if (isHome) {
   const styles = [
     '/assets/css/home-v3.css?v=20260901-master-v3',
-    '/assets/css/home-mobile-polish.css?v=20260901-mobile-polish-5'
+    '/assets/css/home-mobile-polish.css?v=20260901-home-comments-1',
+    '/assets/css/home-comments.css?v=20260901-home-comments-1'
   ];
 
   styles.forEach(href => {
@@ -16,7 +17,9 @@ if (isHome) {
     document.head.append(css);
   });
 
-  import('./home-v3.js?v=20260901-mobile-polish-5');
+  import('./home-v3.js?v=20260901-home-comments-1')
+    .then(() => import('./home-comments.js?v=20260901-home-comments-1'))
+    .catch(error => console.error('Unable to load the Home page:', error));
 } else {
   import('./app.js').then(() => import('./ui-patch.js'));
 }
