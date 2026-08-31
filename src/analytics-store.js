@@ -70,6 +70,9 @@ export class AnalyticsStore extends DurableObject {
       const slug = clean(body.slug, 160) || null;
       const title = clean(body.title, 220) || null;
       if (!pageKey) return json({ error: 'Missing page key' }, 400);
+      if (pageKey === '/admin' || pageKey.startsWith('/admin/')) {
+        return json({ tracked: false, excluded: 'admin' });
+      }
 
       const day = isoDay();
       this.sql.exec(
@@ -166,6 +169,8 @@ export class AnalyticsStore extends DurableObject {
               COALESCE(SUM(views), 0) AS views
        FROM page_daily
        WHERE day >= ?
+         AND page_key != '/admin'
+         AND page_key NOT LIKE '/admin/%'
        GROUP BY page_type, page_key, slug
        ORDER BY views DESC, page_key ASC`,
       since
@@ -174,6 +179,8 @@ export class AnalyticsStore extends DurableObject {
       `SELECT p.page_key, COUNT(DISTINCT p.visitor_key) AS visitors
        FROM visitor_page_daily p
        WHERE p.day >= ?
+         AND p.page_key != '/admin'
+         AND p.page_key NOT LIKE '/admin/%'
        GROUP BY p.page_key`,
       since
     ).toArray();
