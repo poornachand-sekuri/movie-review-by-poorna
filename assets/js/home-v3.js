@@ -37,6 +37,66 @@ function poster(movie, className) {
   return wrap;
 }
 
+function fitPovText(copy, pov) {
+  if (!copy || !pov || !pov.textContent.trim()) return;
+
+  if (!pov.dataset.maxFontPx) {
+    const initial = Number.parseFloat(getComputedStyle(pov).fontSize) || 16;
+    pov.dataset.maxFontPx = String(initial);
+  }
+
+  const maxPx = Number.parseFloat(pov.dataset.maxFontPx) || 16;
+  const minPx = 7.5;
+
+  // Keep the exact Content-page chalk treatment; only font size is allowed to vary.
+  pov.style.display = 'block';
+  pov.style.webkitLineClamp = 'unset';
+  pov.style.webkitBoxOrient = 'initial';
+  pov.style.overflow = 'visible';
+
+  const setSize = px => {
+    pov.style.fontSize = `${px.toFixed(2)}px`;
+  };
+  const fits = () => copy.scrollHeight <= copy.clientHeight + 1;
+
+  setSize(maxPx);
+  if (fits()) return;
+
+  let low = minPx;
+  let high = maxPx;
+  let best = minPx;
+
+  // Binary-search the largest readable size that keeps the complete POV visible.
+  for (let i = 0; i < 12; i += 1) {
+    const mid = (low + high) / 2;
+    setSize(mid);
+    if (fits()) {
+      best = mid;
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+
+  setSize(best);
+}
+
+function wirePovAutoFit(copy, pov) {
+  const fit = () => requestAnimationFrame(() => fitPovText(copy, pov));
+  fit();
+
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(fit).catch(() => {});
+  }
+
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(fit);
+    observer.observe(copy);
+  } else {
+    window.addEventListener('resize', fit, { passive: true });
+  }
+}
+
 function recentCard(movie) {
   const link = document.createElement('a');
   link.className = 'hm3-card';
@@ -268,6 +328,7 @@ async function buildHome() {
   $('#content').replaceChildren(page);
   $('#app').setAttribute('aria-busy', 'false');
   wireGlobalNavigation(menu, search);
+  wirePovAutoFit(copy, pov);
 }
 
 async function init() {
