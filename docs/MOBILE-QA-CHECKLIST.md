@@ -1,6 +1,6 @@
 # Mobile Content Page QA Checklist
 
-Use this checklist before merging `fresh-take-mobile-v2` into `main`.
+Use this checklist before merging a mobile frontend branch into `main`.
 
 ## Asset availability
 
