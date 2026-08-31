@@ -1,10 +1,29 @@
 (() => {
   const HOME_PATH = '/';
   const CINE_CAFE_PATH = '/cine-cafe/';
+  const SITE_NAME = 'Movie Reviews By Poorna';
   const url = new URL(window.location.href);
   const pathParts = url.pathname.split('/').filter(Boolean);
   const isHome = !url.searchParams.has('review') && pathParts.length === 0;
   const isCineCafe = url.pathname.replace(/\/+$/, '') === '/cine-cafe';
+
+  function normalizeMetadata() {
+    if (document.title !== SITE_NAME) document.title = SITE_NAME;
+    const description = document.querySelector('meta[name="description"]');
+    if (description && description.getAttribute('content') !== SITE_NAME) {
+      description.setAttribute('content', SITE_NAME);
+    }
+  }
+
+  normalizeMetadata();
+  const titleElement = document.querySelector('title');
+  if (titleElement) {
+    new MutationObserver(normalizeMetadata).observe(titleElement, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+  }
 
   function homeIcon() {
     return `
@@ -57,8 +76,8 @@
     const brand = document.createElement('a');
     brand.className = 'shared-nav-brand';
     brand.href = HOME_PATH;
-    brand.setAttribute('aria-label', 'Movie Reviews By Poorna — Home');
-    brand.innerHTML = '<span class="shared-nav-brand-main">Movie Reviews By Poorna</span>';
+    brand.setAttribute('aria-label', `${SITE_NAME} — Home`);
+    brand.innerHTML = `<span class="shared-nav-brand-main">${SITE_NAME}</span>`;
 
     const search = document.createElement('button');
     search.className = 'shared-nav-action shared-nav-search';
