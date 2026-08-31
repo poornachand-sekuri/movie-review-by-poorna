@@ -80,7 +80,7 @@ jobs:
           console.log(`Checked ${files.length} runtime/data files: no WordPress references.`);
           NODE
 
-      - name: Enforce R2 review media ownership
+      - name: Enforce R2 review image ownership
         run: |
           node - <<'NODE'
           const fs = require('fs');
@@ -89,43 +89,36 @@ jobs:
           const requiredPosterPrefix = `https://${allowedHost}/reviews/`;
           const violations = [];
 
-          function inspect(value, location) {
-            if (typeof value === 'string') {
-              const matches = value.match(/https?:\/\/[^\s"'<>]+/g) || [];
-              for (const raw of matches) {
-                let url;
-                try {
-                  url = new URL(raw);
-                } catch {
-                  violations.push(`${location}: invalid URL ${raw}`);
-                  continue;
-                }
-                if (url.hostname !== allowedHost) {
-                  violations.push(`${location}: external host ${url.hostname}`);
-                }
-              }
+          function requireOwnedImage(raw, location) {
+            if (!raw) return;
+            let url;
+            try {
+              url = new URL(raw);
+            } catch {
+              violations.push(`${location}: invalid image URL ${raw}`);
               return;
             }
-            if (Array.isArray(value)) {
-              value.forEach((item, index) => inspect(item, `${location}[${index}]`));
-              return;
-            }
-            if (value && typeof value === 'object') {
-              for (const [key, child] of Object.entries(value)) {
-                inspect(child, `${location}.${key}`);
-              }
+            if (url.protocol !== 'https:' || url.hostname !== allowedHost || !url.pathname.startsWith('/reviews/')) {
+              violations.push(`${location}: image must be under ${requiredPosterPrefix}`);
             }
           }
 
           reviews.forEach((review, index) => {
             if (typeof review.m !== 'string' || !review.m.startsWith(requiredPosterPrefix)) {
               violations.push(`reviews[${index}].m: poster must live under ${requiredPosterPrefix}`);
+            } else {
+              requireOwnedImage(review.m, `reviews[${index}].m`);
             }
-            inspect(review, `reviews[${index}]`);
+
+            const body = String(review.body || '');
+            const imagePattern = /<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi;
+            for (const match of body.matchAll(imagePattern)) {
+              requireOwnedImage(match[1], `reviews[${index}].body<img>`);
+            }
           });
 
           if (violations.length) {
-            throw new Error(`Review data references media/content outside owned R2:\n${violations.join('\n')}`);
+            throw new Error(`Review image asset violation(s):\n${violations.join('\n')}`);
           }
 
           const config = fs.readFileSync('assets/js/config.js', 'utf8');
@@ -134,7 +127,7 @@ jobs:
             throw new Error(`UI artwork must use owned R2 base ${requiredUiBase}`);
           }
 
-          console.log(`Validated ${reviews.length} reviews: media and UI artwork are owned R2 assets.`);
+          console.log(`Validated ${reviews.length} reviews: poster/body images and UI artwork use owned R2 assets.`);
           NODE
 
       - name: Validate preserved JSON data
