@@ -24,11 +24,23 @@ function clearLegacyReaction(slug) {
   }
 }
 
-function resolveSlug() {
+async function resolveSlug() {
   const url = new URL(location.href);
   const fromQuery = url.searchParams.get('review');
-  if (fromQuery) return fromQuery;
-  return url.pathname.split('/').filter(Boolean).at(-1) || null;
+  const pathSlug = url.pathname.split('/').filter(Boolean).at(-1) || null;
+
+  try {
+    const response = await fetch('/data/index.json', { cache: 'force-cache' });
+    if (!response.ok) throw new Error('Review catalog unavailable');
+    const movies = await response.json();
+    if (!Array.isArray(movies) || !movies.length) return fromQuery || pathSlug;
+    const slugs = new Set(movies.map(movie => movie?.s).filter(Boolean));
+    if (fromQuery && slugs.has(fromQuery)) return fromQuery;
+    if (pathSlug && slugs.has(pathSlug)) return pathSlug;
+    return movies[0]?.s || null;
+  } catch {
+    return fromQuery || pathSlug;
+  }
 }
 
 function normalize(values) {
@@ -132,10 +144,15 @@ document.addEventListener('click', async event => {
   }
 }, true);
 
-activeSlug = resolveSlug();
-if (activeSlug && !hydrateWhenReady()) {
+async function start() {
+  activeSlug = await resolveSlug();
+  if (!activeSlug) return;
+  if (hydrateWhenReady()) return;
+
   const observer = new MutationObserver(() => {
     if (hydrateWhenReady()) observer.disconnect();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 }
+
+start();
