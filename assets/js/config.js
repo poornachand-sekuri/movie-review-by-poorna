@@ -11,7 +11,7 @@ export const CONFIG = {
     posterFrame: '06-poster-frame-LOCKED.avif',
     theaterTop: '07-theater-top-LOCKED.avif',
     theaterMiddle: '08-theater-middle-stretchable-LOCKED.avif',
-    theaterBottom: '09-theater-bottom-seats-LOCKED.avif',
+    theaterBottom: '09-theater-bottom-seats-LOCKED.avif?v=20260831-1',
     relatedHeader: '10-related-reviews-header-LOCKED.avif',
     relatedReel: '11-related-reviews-film-reel-strip-LOCKED.avif',
     commentsHeader: '13-share-your-opinion-header-LOCKED.avif',
