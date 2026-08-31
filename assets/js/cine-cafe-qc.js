@@ -14,11 +14,23 @@ function syncFilterAppearance() {
   }
 }
 
+function fitReviewTitles() {
+  document.querySelectorAll('.review-title').forEach(title => {
+    const text = (title.textContent || '').trim();
+    const length = Array.from(text).length;
+    title.classList.remove('title-long', 'title-xlong');
+    if (length > 46) title.classList.add('title-xlong');
+    else if (length > 28) title.classList.add('title-long');
+    title.title = text;
+  });
+}
+
 function cleanCardChrome() {
   document.querySelectorAll('.review-likes').forEach(likes => {
     const count = Number(likes.querySelector('span')?.textContent || 0);
     likes.hidden = count <= 0;
   });
+  fitReviewTitles();
 }
 
 function runQcPass() {
