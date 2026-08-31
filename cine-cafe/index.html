@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <meta name="description" content="Cine Café — Reviews Served Hot and Cold">
+  <title>Cine Café — Movie Reviews By Poorna</title>
+  <link rel="stylesheet" href="/assets/css/cine-cafe.css?v=20260901-0018">
+  <link rel="stylesheet" href="/assets/css/cine-cafe-special.css?v=20260901-0018">
+</head>
+<body>
+  <main class="cine-cafe-page" aria-label="Cine Café review search">
+    <section class="cine-cafe-stage" id="cineCafeStage" aria-busy="true">
+      <a class="hotspot hotspot-menu" href="/" aria-label="Back to home"></a>
+      <button class="hotspot hotspot-search" id="headerSearch" type="button" aria-label="Focus search"></button>
+      <button class="hotspot hotspot-bell" type="button" aria-label="Notifications" disabled></button>
+
+      <form class="search-overlay" id="searchForm" role="search">
+        <label class="sr-only" for="cineSearch">Search reviews</label>
+        <input id="cineSearch" type="search" autocomplete="off" placeholder="Search movie, cast, director…">
+      </form>
+
+      <p class="result-count" id="resultCount" aria-live="polite"></p>
+      <section class="results-layer" id="resultsLayer" aria-label="Review results"></section>
+      <nav class="pagination-layer" id="pagination" aria-label="Review pages"></nav>
+      <p class="empty-state" id="emptyState" hidden>No reviews match your search.</p>
+    </section>
+  </main>
+
+  <script type="module" src="/assets/js/cine-cafe.js?v=20260901-0018"></script>
+</body>
+</html>
