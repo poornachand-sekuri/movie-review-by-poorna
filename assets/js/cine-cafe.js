@@ -5,10 +5,6 @@ const state = {
   movies: [],
   castCrew: null,
   query: '',
-  language: '',
-  year: '',
-  rating: '',
-  sort: 'latest',
   page: 1
 };
 
@@ -56,21 +52,63 @@ function localLikes(slug) {
 
 function filteredMovies() {
   const q = state.query.trim().toLocaleLowerCase();
-  const minRating = Number(state.rating) || 0;
-  const list = state.movies.filter(movie => {
-    if (q && !searchableText(movie).includes(q)) return false;
-    if (state.language && movie.l !== state.language) return false;
-    if (state.year && yearOf(movie) !== state.year) return false;
-    if (minRating && Number(movie.r || 0) < minRating) return false;
-    return true;
-  });
+  return state.movies
+    .filter(movie => !q || searchableText(movie).includes(q))
+    .sort((a, b) =>
+      String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || '')) ||
+      Number(b.i || 0) - Number(a.i || 0)
+    );
+}
 
-  return list.sort((a, b) => {
-    if (state.sort === 'oldest') return String(a.rd || a.d || '').localeCompare(String(b.rd || b.d || '')) || a.t.localeCompare(b.t);
-    if (state.sort === 'rating-desc') return Number(b.r || 0) - Number(a.r || 0) || String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || ''));
-    if (state.sort === 'title') return a.t.localeCompare(b.t);
-    return String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || '')) || b.i - a.i;
+function fitOneTitle(title) {
+  const text = (title.textContent || '').trim();
+  if (!text || !title.clientWidth) return;
+
+  title.title = text;
+  title.style.fontSize = '';
+  title.style.lineHeight = '';
+  title.style.maxHeight = '';
+
+  const computed = getComputedStyle(title);
+  const startSize = Number.parseFloat(computed.fontSize) || 16;
+  const minSize = 9.5;
+  const lineHeightRatio = 1.04;
+
+  const measure = title.cloneNode(true);
+  Object.assign(measure.style, {
+    position: 'fixed',
+    visibility: 'hidden',
+    pointerEvents: 'none',
+    left: '-9999px',
+    top: '0',
+    width: `${title.clientWidth}px`,
+    height: 'auto',
+    maxHeight: 'none',
+    overflow: 'visible',
+    display: 'block',
+    webkitLineClamp: 'unset',
+    webkitBoxOrient: 'unset',
+    whiteSpace: 'normal',
+    lineHeight: String(lineHeightRatio)
   });
+  document.body.append(measure);
+
+  let size = startSize;
+  while (size > minSize) {
+    measure.style.fontSize = `${size}px`;
+    const maxThreeLines = size * lineHeightRatio * 3 + 2;
+    if (measure.scrollHeight <= maxThreeLines) break;
+    size -= 0.5;
+  }
+  measure.remove();
+
+  title.style.fontSize = `${Math.max(minSize, size)}px`;
+  title.style.lineHeight = String(lineHeightRatio);
+  title.style.maxHeight = `${Math.max(minSize, size) * lineHeightRatio * 3.05}px`;
+}
+
+function fitReviewTitles() {
+  document.querySelectorAll('.review-title').forEach(fitOneTitle);
 }
 
 function makeCard(movie, index) {
@@ -107,9 +145,10 @@ function makeCard(movie, index) {
   stars.textContent = starString(movie.r);
   stars.setAttribute('aria-label', `${Math.round(Number(movie.r) || 0)} out of 5 stars`);
 
+  const likeValue = localLikes(movie.s);
   const likes = document.createElement('div');
   likes.className = 'review-likes';
-  const likeValue = localLikes(movie.s);
+  likes.hidden = likeValue <= 0;
   likes.setAttribute('aria-label', `${likeValue} likes`);
   likes.textContent = '♥';
   const likeCount = document.createElement('span');
@@ -123,15 +162,16 @@ function makeCard(movie, index) {
 }
 
 function pageWindow(current, total) {
-  if (total <= 4) return Array.from({ length: total }, (_, i) => i + 1);
+  if (total <= 4) return Array.from({ length: total }, (_, index) => index + 1);
   if (current <= 2) return [1, 2, 3, 4];
   if (current >= total - 1) return [total - 3, total - 2, total - 1, total];
-  return [current - 1, current, current + 1, Math.min(total, current + 2)];
+  return [current - 1, current, current + 1, current + 2];
 }
 
 function renderPagination(totalPages) {
   const nav = $('#pagination');
   nav.replaceChildren();
+
   if (totalPages <= 1) {
     nav.hidden = true;
     return;
@@ -139,44 +179,48 @@ function renderPagination(totalPages) {
   nav.hidden = false;
 
   const previous = document.createElement('button');
-  previous.className = 'page-button';
+  previous.className = 'page-button page-arrow';
   previous.type = 'button';
   previous.textContent = '‹';
-  previous.ariaLabel = 'Previous page';
+  previous.setAttribute('aria-label', 'Previous page');
   previous.disabled = state.page === 1;
   previous.addEventListener('click', () => setPage(state.page - 1));
   nav.append(previous);
 
-  for (const item of pageWindow(state.page, totalPages)) {
+  const pages = pageWindow(state.page, totalPages);
+  for (let slot = 0; slot < 4; slot += 1) {
+    const page = pages[slot];
+    if (!page) {
+      const empty = document.createElement('span');
+      empty.className = 'page-slot-empty';
+      empty.setAttribute('aria-hidden', 'true');
+      nav.append(empty);
+      continue;
+    }
+
     const button = document.createElement('button');
-    button.className = `page-button${item === state.page ? ' current' : ''}`;
+    button.className = `page-button${page === state.page ? ' current' : ''}`;
     button.type = 'button';
-    button.textContent = String(item);
-    button.ariaLabel = `Page ${item}`;
-    if (item === state.page) button.setAttribute('aria-current', 'page');
-    button.addEventListener('click', () => setPage(item));
+    button.textContent = String(page);
+    button.setAttribute('aria-label', `Page ${page}`);
+    if (page === state.page) button.setAttribute('aria-current', 'page');
+    button.addEventListener('click', () => setPage(page));
     nav.append(button);
   }
 
-  const ellipsis = document.createElement('span');
-  ellipsis.className = 'page-ellipsis';
-  ellipsis.textContent = totalPages > 4 ? '…' : '';
-  ellipsis.setAttribute('aria-hidden', 'true');
-  nav.append(ellipsis);
-
   const next = document.createElement('button');
-  next.className = 'page-button';
+  next.className = 'page-button page-arrow';
   next.type = 'button';
   next.textContent = '›';
-  next.ariaLabel = 'Next page';
+  next.setAttribute('aria-label', 'Next page');
   next.disabled = state.page === totalPages;
   next.addEventListener('click', () => setPage(state.page + 1));
   nav.append(next);
 }
 
 function setPage(page) {
-  const total = Math.max(1, Math.ceil(filteredMovies().length / PAGE_SIZE));
-  state.page = Math.max(1, Math.min(total, page));
+  const totalPages = Math.max(1, Math.ceil(filteredMovies().length / PAGE_SIZE));
+  state.page = Math.max(1, Math.min(totalPages, page));
   render();
   stage.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
@@ -185,32 +229,22 @@ function render() {
   const movies = filteredMovies();
   const totalPages = Math.max(1, Math.ceil(movies.length / PAGE_SIZE));
   if (state.page > totalPages) state.page = totalPages;
+
   const start = (state.page - 1) * PAGE_SIZE;
   const visible = movies.slice(start, start + PAGE_SIZE);
-
   const layer = $('#resultsLayer');
   layer.replaceChildren(...visible.map(makeCard));
 
   const first = movies.length ? start + 1 : 0;
   const last = Math.min(start + PAGE_SIZE, movies.length);
   $('#resultCount').textContent = movies.length
-    ? `Showing ${first}–${last} of ${movies.length} results`
-    : 'Showing 0 results';
+    ? `Showing ${first}–${last} of ${movies.length} reviews`
+    : 'Showing 0 reviews';
 
   $('#emptyState').hidden = movies.length !== 0;
   renderPagination(totalPages);
   stage.setAttribute('aria-busy', 'false');
-}
-
-function populateFilters() {
-  const languages = [...new Set(state.movies.map(movie => movie.l).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-  const years = [...new Set(state.movies.map(yearOf).filter(Boolean))].sort((a, b) => b.localeCompare(a));
-
-  const language = $('#languageFilter');
-  for (const value of languages) language.add(new Option(value, value));
-
-  const year = $('#yearFilter');
-  for (const value of years) year.add(new Option(value, value));
+  requestAnimationFrame(fitReviewTitles);
 }
 
 function bindControls() {
@@ -221,46 +255,7 @@ function bindControls() {
     state.page = 1;
     render();
   });
-
-  $('#languageFilter').addEventListener('change', event => {
-    state.language = event.target.value;
-    state.page = 1;
-    render();
-  });
-  $('#yearFilter').addEventListener('change', event => {
-    state.year = event.target.value;
-    state.page = 1;
-    render();
-  });
-  $('#ratingFilter').addEventListener('change', event => {
-    state.rating = event.target.value;
-    state.page = 1;
-    render();
-  });
-  $('#sortFilter').addEventListener('change', event => {
-    state.sort = event.target.value;
-    state.page = 1;
-    render();
-  });
-  $('#allReviews').addEventListener('click', () => {
-    state.query = '';
-    state.language = '';
-    state.year = '';
-    state.rating = '';
-    state.sort = 'latest';
-    state.page = 1;
-    $('#cineSearch').value = '';
-    $('#languageFilter').value = '';
-    $('#yearFilter').value = '';
-    $('#ratingFilter').value = '';
-    $('#sortFilter').value = 'latest';
-    render();
-  });
-  $('#filtersButton').addEventListener('click', () => {
-    const expanded = $('#filtersButton').getAttribute('aria-expanded') === 'true';
-    $('#filtersButton').setAttribute('aria-expanded', String(!expanded));
-    $('#languageFilter').focus();
-  });
+  window.addEventListener('resize', () => requestAnimationFrame(fitReviewTitles));
 }
 
 async function init() {
@@ -273,7 +268,6 @@ async function init() {
     if (!moviesResponse.ok || !castResponse.ok) throw new Error('Could not load review data.');
     state.movies = await moviesResponse.json();
     state.castCrew = await castResponse.json();
-    populateFilters();
     render();
   } catch (error) {
     $('#emptyState').hidden = false;
