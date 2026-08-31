@@ -66,7 +66,7 @@ visualPatch.textContent = `
     margin-top: -1px !important;
     margin-bottom: -1px !important;
     min-height: 0 !important;
-    padding: 14px 18.5% 22px !important;
+    padding: 14px 18.5% 22px 19.5% !important;
     background-size: 100% 100% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
