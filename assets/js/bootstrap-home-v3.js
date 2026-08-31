@@ -17,15 +17,18 @@ if (isHome) {
     document.head.append(css);
   });
 
-  import('./home-v3.js?v=20260901-home-comments-2')
-    .then(() => import('./home-comments.js?v=20260901-home-comments-2'))
-    .catch(error => console.error('Unable to load the Home page:', error));
+  Promise.all([
+    import('./home-v3.js?v=20260901-home-comments-2')
+      .then(() => import('./home-comments.js?v=20260901-home-comments-2')),
+    import('./analytics.js')
+  ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {
   import('./app.js').then(async () => {
     const [, , comments] = await Promise.all([
       import('./ui-patch.js'),
       import('./live-reactions.js'),
-      import('./comments.js')
+      import('./comments.js'),
+      import('./analytics.js')
     ]);
     comments.mountReviewComments();
   });
