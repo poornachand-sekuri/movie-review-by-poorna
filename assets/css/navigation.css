@@ -1,0 +1,106 @@
+/* Shared mobile navigation integration.
+   The three approved page masters keep their existing artwork; these rules only
+   provide clickable Home/search destinations and visually mask the old hamburger. */
+
+/* CONTENT PAGE */
+.brand-header::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 1.4%;
+  top: 24%;
+  width: 12.5%;
+  height: 52%;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    #050505 0%,
+    #050505 58%,
+    rgba(5, 5, 5, .98) 72%,
+    rgba(5, 5, 5, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.header-menu {
+  display: none !important;
+}
+
+.header-home {
+  left: 18%;
+  right: 18%;
+  top: 8%;
+  width: auto;
+  height: 84%;
+  z-index: 3;
+}
+
+.header-search {
+  z-index: 4;
+}
+
+/* HOME PAGE */
+.hm3-stage::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 1.1%;
+  top: .55%;
+  width: 8.2%;
+  height: 4.9%;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    #050505 0%,
+    #050505 60%,
+    rgba(5, 5, 5, .97) 75%,
+    rgba(5, 5, 5, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.hm3-menu {
+  display: none !important;
+}
+
+.hm3-home {
+  left: 17%;
+  top: .35%;
+  width: 66%;
+  height: 5.25%;
+  z-index: 21;
+  border-radius: 10px;
+}
+
+/* CINE CAFE */
+.cine-cafe-stage::before {
+  content: "";
+  position: absolute;
+  z-index: 8;
+  left: .9%;
+  top: .65%;
+  width: 7.4%;
+  height: 5.1%;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    #050505 0%,
+    #050505 60%,
+    rgba(5, 5, 5, .97) 75%,
+    rgba(5, 5, 5, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.hotspot-menu {
+  display: none !important;
+}
+
+.hotspot-home {
+  left: 16%;
+  top: .45%;
+  width: 68%;
+  height: 5.35%;
+  z-index: 10;
+  border-radius: 10px;
+}
