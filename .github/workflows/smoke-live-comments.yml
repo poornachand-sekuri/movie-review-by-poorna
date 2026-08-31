@@ -13,37 +13,57 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          url='https://movie-review-by-poorna.poornarocks.workers.dev/api/comments?target=review&target_id=dc'
-          body=''
-          status=''
+          base='https://movie-review-by-poorna.poornarocks.workers.dev'
+          url="$base/api/comments?target=review&target_id=dc"
+          ready='false'
 
           for attempt in {1..12}; do
             status=$(curl -sS -o /tmp/comments.json -w '%{http_code}' "$url" || true)
-            if [ "$status" = '200' ]; then
-              body=$(cat /tmp/comments.json)
+            if [ "$status" = '200' ] && node - /tmp/comments.json <<'NODE'
+          const fs = require('fs');
+          const payload = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          if (!Array.isArray(payload.comments)) process.exit(1);
+          for (const comment of payload.comments) {
+            for (const key of ['id', 'name', 'comment', 'created_at']) {
+              if (typeof comment[key] !== 'string') process.exit(1);
+            }
+            if ('email' in comment || 'client_key' in comment) process.exit(1);
+          }
+          NODE
+            then
+              ready='true'
               break
             fi
             sleep 5
           done
 
-          if [ "$status" != '200' ]; then
-            echo "Production comments endpoint returned HTTP $status"
+          if [ "$ready" != 'true' ]; then
+            echo 'Production comments endpoint did not become ready with valid JSON'
             cat /tmp/comments.json 2>/dev/null || true
             exit 1
           fi
 
-          node - "$body" <<'NODE'
-          const payload = JSON.parse(process.argv[2]);
-          if (!Array.isArray(payload.comments)) {
-            throw new Error('Public comments response is missing comments[]');
-          }
-          for (const comment of payload.comments) {
-            for (const key of ['id', 'name', 'comment', 'created_at']) {
-              if (typeof comment[key] !== 'string') throw new Error(`Invalid public comment ${key}`);
-            }
-            if ('email' in comment || 'client_key' in comment) {
-              throw new Error('Private commenter data leaked through public API');
-            }
-          }
+          node - /tmp/comments.json <<'NODE'
+          const fs = require('fs');
+          const payload = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
           console.log(`Live comments OK: ${payload.comments.length} approved comment(s)`);
+          NODE
+
+          post_status=$(curl -sS -o /tmp/comment-post.json -w '%{http_code}' \
+            -X POST "$base/api/comments" \
+            -H "Origin: $base" \
+            -H 'Content-Type: application/json' \
+            --data '{"target":"review","target_id":"dc","name":"Smoke Test","email":"smoke@example.com","comment":"Non-persistent honeypot probe","website":"bot-field"}')
+
+          if [ "$post_status" != '202' ]; then
+            echo "Non-persistent comments POST probe returned HTTP $post_status"
+            cat /tmp/comment-post.json 2>/dev/null || true
+            exit 1
+          fi
+
+          node - /tmp/comment-post.json <<'NODE'
+          const fs = require('fs');
+          const payload = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          if (payload.status !== 'pending') throw new Error('Unexpected comments POST response');
+          console.log('Live comments POST route OK (honeypot probe was not stored)');
           NODE
