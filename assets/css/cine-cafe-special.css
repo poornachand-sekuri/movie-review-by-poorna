@@ -6,10 +6,10 @@
 
 .review-card:nth-child(odd) .poster-zone,
 .review-card:nth-child(odd) .review-info {
-  transform: rotate(-0.7deg) scale(.995);
+  transform: rotate(-1.35deg) scale(.985);
 }
 
 .review-card:nth-child(even) .poster-zone,
 .review-card:nth-child(even) .review-info {
-  transform: rotate(0.7deg) scale(.995);
+  transform: rotate(1.35deg) scale(.985);
 }
