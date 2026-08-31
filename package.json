@@ -1,0 +1,13 @@
+{
+  "name": "movie-review-by-poorna",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && mkdir -p dist/data && cp index.html dist/index.html && cp -R assets dist/assets && cp public/data/index.json public/data/cast-crew.json public/data/related-review-rules.json dist/data/",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

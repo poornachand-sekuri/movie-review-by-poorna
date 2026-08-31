@@ -1,0 +1,62 @@
+name: Validate Fresh Take
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fresh-take-mobile-v2
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check assets/js/config.js
+          node --check assets/js/app.js
+          node --check assets/js/ui-patch.js
+
+      - name: Validate preserved JSON data
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const reviews = JSON.parse(fs.readFileSync('public/data/index.json', 'utf8'));
+          const castCrew = JSON.parse(fs.readFileSync('public/data/cast-crew.json', 'utf8'));
+          const rules = JSON.parse(fs.readFileSync('public/data/related-review-rules.json', 'utf8'));
+
+          if (!Array.isArray(reviews) || reviews.length !== 136) {
+            throw new Error(`Expected 136 reviews, found ${Array.isArray(reviews) ? reviews.length : 'non-array'}`);
+          }
+          if (!castCrew.records || typeof castCrew.records !== 'object') {
+            throw new Error('cast-crew.json is missing records');
+          }
+          if (!Array.isArray(rules.tiers) || rules.max_results !== 4) {
+            throw new Error('related-review-rules.json does not match the expected schema');
+          }
+
+          const missingCast = reviews
+            .filter(review => !castCrew.records[review.s])
+            .map(review => review.s);
+
+          if (missingCast.length) {
+            throw new Error(`Missing Cast & Crew records: ${missingCast.join(', ')}`);
+          }
+
+          console.log(`Validated ${reviews.length} reviews and Cast & Crew joins.`);
+          NODE
+
+      - name: Verify required frontend files
+        run: |
+          test -f index.html
+          test -f assets/css/site.css
+          test -f assets/css/final-overrides.css
+          test -f assets/js/config.js
+          test -f assets/js/app.js

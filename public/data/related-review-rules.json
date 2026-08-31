@@ -1,10 +1,10 @@
 {
-  "schema_version": 1,
+  "schema_version": 4,
   "generated_at": "2026-08-31",
-  "purpose": "Ranking rules for Related Reviews using public/data/cast-crew.json without modifying authoritative review content in public/data/index.json.",
+  "purpose": "Ranking rules for Related Reviews using shared cast and directors first, music directors only as a relationship fallback, and same-language reviews as the final safety fill so the reel can remain populated.",
   "max_results": 4,
   "exclude_current_review": true,
-  "require_shared_person": true,
+  "require_shared_person_for_relationship_tiers": true,
   "tiers": [
     {
       "name": "shared_cast",
@@ -24,19 +24,28 @@
       "fields": ["music_directors"],
       "weight_per_shared_person": 25,
       "fallback_only": true
+    },
+    {
+      "name": "same_language_fill",
+      "priority": 4,
+      "field": "language",
+      "fallback_only": true,
+      "relationship_match_required": false,
+      "selection": "stable_pseudo_random_per_current_review"
     }
   ],
   "bonuses": {
     "two_or_more_shared_cast_members": 30,
-    "shared_cast_and_director": 20,
-    "shared_cast_and_music_director": 10
+    "shared_cast_and_director": 20
   },
   "selection": {
-    "strategy": "Fill from higher-priority relationship tiers first. Use music-director-only matches only when fewer than max_results have been found from cast/director relationships.",
+    "strategy": "Fill Actor/Actress matches first, then Director matches. If fewer than max_results remain, use Music Director matches. If the relationship tiers still produce fewer than max_results, fill the remaining slots with other reviews in the same language. Same-language fill never outranks a relationship match.",
     "deduplicate_by": "slug",
-    "tie_breakers": [
+    "exclude_current_review": true,
+    "same_language_fill_is_stable_per_review": true,
+    "tie_breakers_for_relationship_tiers": [
       "higher_total_score",
-      "more_shared_people",
+      "more_shared_people_within_the_active_tier",
       "smaller_release_date_distance_days",
       "newer_review_date",
       "slug_ascending"
@@ -47,7 +56,8 @@
     "examples": [
       "Prabhas",
       "Prashanth Neel",
-      "Anirudh Ravichander"
+      "Anirudh Ravichander (relationship fallback only)",
+      "Same-language recommendation (final safety fill)"
     ]
   }
 }
