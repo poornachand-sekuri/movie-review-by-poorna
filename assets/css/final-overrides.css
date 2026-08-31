@@ -262,6 +262,11 @@
   filter-rendering: optimizeQuality;
 }
 
+/* Give the completed screening a small visual pause before asking for a reaction. */
+.theater + .reaction-panel {
+  margin-top: 22px;
+}
+
 /* Related reel artwork contains five physical windows. The browser crops the
    locked artwork after the last populated window, so an unused final frame is
    never shown. The underlying AVIF remains unchanged. */
