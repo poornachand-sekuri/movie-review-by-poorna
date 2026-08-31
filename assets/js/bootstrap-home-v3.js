@@ -6,7 +6,7 @@ const isHome = !hasReview && pathParts.length === 0;
 if (isHome) {
   const styles = [
     '/assets/css/home-v3.css?v=20260901-master-v3',
-    '/assets/css/home-mobile-polish.css?v=20260901-mobile-polish-3'
+    '/assets/css/home-mobile-polish.css?v=20260901-mobile-polish-4'
   ];
 
   styles.forEach(href => {
@@ -16,7 +16,7 @@ if (isHome) {
     document.head.append(css);
   });
 
-  import('./home-v3.js?v=20260901-mobile-polish-3');
+  import('./home-v3.js?v=20260901-mobile-polish-4');
 } else {
   import('./app.js').then(() => import('./ui-patch.js'));
 }
