@@ -8,7 +8,7 @@ Recommended rollout:
 
 1. Upload the finalized AVIFs to the new `ui/pages/content/v2/mobile/` folder.
 2. Verify every asset URL directly.
-3. Deploy the `fresh-take-mobile-v2` frontend branch to a preview environment.
+3. Deploy the candidate frontend branch to a preview environment.
 4. Test short, medium and very long reviews plus Related Reviews and Comments.
 5. Switch production to the new frontend only after visual approval.
 6. Keep the previous UI artwork for a rollback window.
