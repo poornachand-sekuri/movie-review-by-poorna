@@ -46,4 +46,17 @@ jobs:
             exit 1
           fi
 
-          echo 'Admin assets, dynamic catalog and protected session endpoint are live.'
+          # A deliberately wrong password must return 401 when both Admin secrets are configured.
+          # If ADMIN_PASSWORD or ADMIN_SESSION_SECRET is missing, the Worker returns 503 instead.
+          login_status=$(curl -sS -o /tmp/login.json -w '%{http_code}' \
+            -X POST "$base/api/admin/login" \
+            -H "Origin: $base" \
+            -H 'Content-Type: application/json' \
+            --data '{"password":"__smoke_test_intentionally_wrong_password__"}' || true)
+          if [ "$login_status" != '401' ]; then
+            echo "Admin secrets are not confirmed; wrong-password probe returned HTTP $login_status"
+            cat /tmp/login.json || true
+            exit 1
+          fi
+
+          echo 'Admin assets, dynamic catalog, protected session endpoint and configured Admin secrets are live.'
