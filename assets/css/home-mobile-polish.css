@@ -1,0 +1,63 @@
+.home-v3-mode .hm3-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #050505;
+}
+
+.home-v3-mode .hm3-stage {
+  flex: 0 0 auto;
+}
+
+/*
+ * The master artwork has a fixed authored aspect ratio, so taller phone
+ * viewports can have a small remainder below it. Treat that remainder as
+ * intentional theatre ambience rather than leaving a plain black void.
+ * The flex tail only consumes unused viewport height; it adds no extra
+ * scrolling when the authored stage is already taller than the viewport.
+ */
+.home-v3-mode .hm3-page::after {
+  content: "";
+  display: block;
+  flex: 1 0 0;
+  min-height: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(214, 163, 64, .14) 0%, rgba(214, 163, 64, .045) 34%, rgba(5, 5, 5, 0) 70%),
+    linear-gradient(90deg, rgba(148, 19, 26, .055) 0%, rgba(5, 5, 5, 0) 22%, rgba(5, 5, 5, 0) 78%, rgba(148, 19, 26, .055) 100%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .008) 0 1px, rgba(5, 5, 5, 0) 1px 8px),
+    linear-gradient(180deg, #080704 0%, #040404 58%, #050505 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(214, 163, 64, .11),
+    inset 0 22px 38px rgba(0, 0, 0, .34);
+}
+
+/*
+ * Previously Reviewed lives in landscape film-reel windows while source
+ * artwork can be portrait, square, or landscape. `cover` gives every phone
+ * a consistent edge-to-edge window without distortion or overflow; the
+ * reel clips only the excess outside its authored frame.
+ */
+.home-v3-mode .hm3-prev-poster {
+  overflow: hidden;
+  background: #070604;
+}
+
+.home-v3-mode .hm3-prev-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: 50% 38%;
+  transform: translateZ(0);
+}
+
+@media (max-width: 360px) {
+  .home-v3-mode .hm3-prev-poster img {
+    object-position: 50% 34%;
+  }
+}
