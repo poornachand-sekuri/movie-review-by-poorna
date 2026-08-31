@@ -1,7 +1,95 @@
-/* Final alignment/QC layer for the fixed Cine Cafe master artwork. */
+/* Light glossy refinement layer for the fixed Cine Cafe master artwork. */
+
+html,
+body {
+  background:
+    radial-gradient(circle at 50% 0%, #3b2a1a 0%, #1b130d 42%, #0c0907 100%);
+}
+
+.cine-cafe-page {
+  background:
+    radial-gradient(circle at 50% 4%, rgba(166, 118, 67, .22), transparent 34%),
+    linear-gradient(180deg, #20160f 0%, #0c0907 100%);
+}
+
+.cine-cafe-stage {
+  width: min(100%, 900px);
+  background-image: none;
+  background-color: #21170f;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, .38),
+    0 0 0 1px rgba(242, 213, 154, .09);
+}
+
+.cine-cafe-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/cine-cafe/v2/mobile/Cine_Cafe_Master_2x3_Static_Final.avif');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: top center;
+  filter: brightness(1.22) contrast(.91) saturate(.94);
+}
+
+.cine-cafe-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 13%, rgba(255, 246, 222, .11), transparent 27%),
+    linear-gradient(180deg,
+      rgba(255, 248, 229, .055) 0%,
+      rgba(255, 239, 207, .018) 34%,
+      rgba(255, 221, 164, .025) 68%,
+      rgba(255, 246, 226, .04) 100%);
+  mix-blend-mode: screen;
+}
+
+.search-overlay {
+  left: 9.4%;
+  width: 64.2%;
+}
+.search-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 48%);
+  box-shadow: inset 0 1px 0 rgba(255, 239, 205, .16);
+}
+.search-overlay input {
+  padding-left: 12.4%;
+  padding-right: 3.5%;
+  color: #fff3d7;
+  font-size: clamp(12px, 2.05cqw, 18px);
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+}
+.search-overlay input::placeholder {
+  color: rgba(255, 241, 213, .74);
+}
+
+.filter-panel-hotspot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), transparent 48%);
+  box-shadow: inset 0 1px 0 rgba(255, 236, 198, .14);
+}
+
 .filter-reset {
   background: transparent;
   color: transparent;
+}
+.filter-reset:hover,
+.filter-reset:focus-visible {
+  background: rgba(255, 236, 194, .08);
 }
 
 .filter-control {
@@ -11,15 +99,20 @@
   color: transparent;
 }
 .filter-control select option {
-  color: #17120b;
-  background: #f4dfb5;
+  color: #23170d;
+  background: #f8e8c8;
 }
 .filter-control.has-value {
-  background: rgba(11, 9, 6, .97);
-  box-shadow: inset 0 0 0 1px rgba(215, 164, 73, .4);
+  background:
+    linear-gradient(180deg, rgba(105, 75, 41, .74), rgba(47, 31, 18, .78));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 239, 207, .22),
+    inset 0 0 0 1px rgba(226, 178, 95, .45),
+    0 4px 12px rgba(0,0,0,.13);
 }
 .filter-control.has-value select {
-  color: var(--cream);
+  color: #fff0d0;
+  text-shadow: 0 1px 2px rgba(0,0,0,.42);
 }
 .filter-control.filter-disabled {
   background: transparent;
@@ -30,23 +123,104 @@
 }
 .filter-control.has-value::after {
   opacity: 1;
+  color: #ffd993;
 }
 .filter-genre::after {
   opacity: 0;
 }
 
 .result-count {
-  top: 29.45%;
+  left: 4.7%;
+  top: 29.35%;
+  padding: .55% 1.15%;
+  border-radius: 999px;
+  color: #3c2916;
+  background: linear-gradient(180deg, rgba(255, 244, 218, .94), rgba(231, 202, 151, .88));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    0 4px 14px rgba(0,0,0,.16);
+  font-weight: 700;
+  letter-spacing: .005em;
+}
+
+.review-link {
+  border-radius: 8px;
+  background: linear-gradient(112deg,
+    rgba(255, 250, 237, .015) 0%,
+    rgba(255, 250, 237, .015) 39%,
+    rgba(255, 241, 213, .075) 40%,
+    rgba(255, 228, 182, .035) 100%);
+}
+.review-link::after {
+  content: '';
+  position: absolute;
+  left: 40%;
+  right: 3%;
+  top: 5%;
+  height: 34%;
+  pointer-events: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0));
+}
+
+.poster-zone {
+  border: 1px solid rgba(255, 220, 157, .5);
+  background: #17110c;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 6px 16px rgba(0,0,0,.24);
+}
+.poster-zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(145deg, rgba(255,255,255,.11), transparent 30%, transparent 72%, rgba(255, 219, 156, .07));
+}
+.poster-zone img {
+  filter: brightness(1.05) saturate(.98) contrast(.98);
+}
+
+.review-info {
+  top: 11%;
+  height: 75%;
+}
+.review-title {
+  color: #fff0cf;
+  font-size: clamp(11px, 2.02cqw, 18px);
+  line-height: 1.05;
+  text-shadow: 0 1px 3px rgba(0,0,0,.45);
+}
+.review-meta {
+  margin-top: 4.2%;
+  color: #ead3a9;
+  font-size: clamp(8px, 1.38cqw, 12px);
+}
+.review-stars {
+  color: #f4b73a;
+  font-size: clamp(10px, 1.92cqw, 17px);
+  letter-spacing: .045em;
+  text-shadow: 0 1px 4px rgba(96,54,8,.35);
+}
+.review-likes {
+  margin-top: 2.2%;
+  color: #e84b45;
+}
+.review-likes[hidden] {
+  display: none !important;
 }
 
 .page-button {
   background: transparent;
+  color: #f0d7a5;
 }
 .page-button.current {
-  background: rgba(195, 139, 45, .9);
-  color: #151008;
-  font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(255, 225, 164, .28);
+  background: linear-gradient(180deg, #f7dda7 0%, #d29a42 55%, #b87520 100%);
+  color: #24170a;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.6),
+    0 4px 14px rgba(0,0,0,.18);
 }
 .pagination-layer .page-button:first-child,
 .pagination-layer .page-button:last-child {
@@ -55,7 +229,25 @@
 }
 .pagination-layer .page-ellipsis {
   grid-column: 6;
+  color: #f0c46f;
 }
 .pagination-layer .page-button:last-child {
   grid-column: 7;
+}
+
+.empty-state {
+  border-color: rgba(221, 169, 84, .52);
+  background: rgba(48, 33, 20, .9);
+  color: #fff1d2;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25);
+}
+
+@media (max-width: 640px) {
+  .cine-cafe-stage {
+    width: 100%;
+    box-shadow: none;
+  }
+  .result-count {
+    padding: .45% 1%;
+  }
 }
