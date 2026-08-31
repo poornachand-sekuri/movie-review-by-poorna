@@ -1,0 +1,61 @@
+/* Final alignment/QC layer for the fixed Cine Cafe master artwork. */
+.filter-reset {
+  background: transparent;
+  color: transparent;
+}
+
+.filter-control {
+  background: transparent;
+}
+.filter-control select {
+  color: transparent;
+}
+.filter-control select option {
+  color: #17120b;
+  background: #f4dfb5;
+}
+.filter-control.has-value {
+  background: rgba(11, 9, 6, .97);
+  box-shadow: inset 0 0 0 1px rgba(215, 164, 73, .4);
+}
+.filter-control.has-value select {
+  color: var(--cream);
+}
+.filter-control.filter-disabled {
+  background: transparent;
+  color: transparent;
+}
+.filter-control::after {
+  opacity: 0;
+}
+.filter-control.has-value::after {
+  opacity: 1;
+}
+.filter-genre::after {
+  opacity: 0;
+}
+
+.result-count {
+  top: 29.45%;
+}
+
+.page-button {
+  background: transparent;
+}
+.page-button.current {
+  background: rgba(195, 139, 45, .9);
+  color: #151008;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(255, 225, 164, .28);
+}
+.pagination-layer .page-button:first-child,
+.pagination-layer .page-button:last-child {
+  color: transparent;
+  background: transparent;
+}
+.pagination-layer .page-ellipsis {
+  grid-column: 6;
+}
+.pagination-layer .page-button:last-child {
+  grid-column: 7;
+}
