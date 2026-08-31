@@ -208,6 +208,12 @@ function renderPagination(totalPages) {
     nav.append(button);
   }
 
+  const ellipsis = document.createElement('span');
+  ellipsis.className = 'page-ellipsis';
+  ellipsis.textContent = totalPages > 4 ? '…' : '';
+  ellipsis.setAttribute('aria-hidden', 'true');
+  nav.append(ellipsis);
+
   const next = document.createElement('button');
   next.className = 'page-button page-arrow';
   next.type = 'button';
