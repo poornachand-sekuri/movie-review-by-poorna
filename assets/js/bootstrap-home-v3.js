@@ -10,5 +10,8 @@ if (isHome) {
   document.head.append(css);
   import('./home-v3.js');
 } else {
-  import('./app.js').then(() => import('./ui-patch.js'));
+  import('./app.js').then(() => Promise.all([
+    import('./ui-patch.js'),
+    import('./live-reactions.js')
+  ]));
 }
