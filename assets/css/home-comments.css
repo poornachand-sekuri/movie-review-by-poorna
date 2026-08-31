@@ -1,0 +1,28 @@
+/*
+ * Home reuses the exact Content-page Comments component and artwork.
+ * This wrapper only recreates the Content page's outer spacing because the
+ * Home artwork itself intentionally removes the normal `.content-page` padding.
+ */
+.home-v3-mode .hm3-comments-wrap {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--related-comments-gap, 56px) 10px 36px;
+  background: #050505;
+}
+
+.home-v3-mode .hm3-comments-wrap .comments-section {
+  margin-top: 0;
+}
+
+.home-v3-mode .hm3-comments-wrap .comments-header,
+.home-v3-mode .hm3-comments-wrap .comments-shell {
+  width: 100%;
+}
+
+@media (max-width: 370px) {
+  .home-v3-mode .hm3-comments-wrap {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+}
