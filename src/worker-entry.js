@@ -3,6 +3,7 @@ import worker, {
   CommentsStore,
   AnalyticsStore
 } from './worker.js';
+import { adminIsAuthenticated } from './admin-console.js';
 
 export { ReactionStore, CommentsStore, AnalyticsStore };
 
@@ -10,6 +11,16 @@ let derivedSessionSecretPromise;
 
 function hex(bytes) {
   return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function json(payload, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store'
+    }
+  });
 }
 
 async function derivedSessionSecret(password) {
@@ -35,6 +46,17 @@ async function runtimeEnv(env) {
 
 export default {
   async fetch(request, env, ctx) {
-    return worker.fetch(request, await runtimeEnv(env), ctx);
+    const runtime = await runtimeEnv(env);
+    const url = new URL(request.url);
+
+    // Any public page viewed while this browser has a valid Admin session is an
+    // operational visit (Preview / View Site / manual Admin browsing), not audience traffic.
+    if (url.pathname === '/api/analytics/pageview' && request.method === 'POST') {
+      if (await adminIsAuthenticated(request, runtime)) {
+        return json({ tracked: false, excluded: 'admin-session' });
+      }
+    }
+
+    return worker.fetch(request, runtime, ctx);
   }
 };
