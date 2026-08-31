@@ -2,6 +2,7 @@
   const HOME_PATH = '/';
   const CINE_CAFE_PATH = '/cine-cafe/';
   const SITE_NAME = 'Movie Reviews By Poorna';
+  const HEADER_ART = 'https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile/01-top-logo-header-LOCKED.avif';
   const url = new URL(window.location.href);
   const pathParts = url.pathname.split('/').filter(Boolean);
   const isHome = !url.searchParams.has('review') && pathParts.length === 0;
@@ -23,21 +24,6 @@
       characterData: true,
       subtree: true
     });
-  }
-
-  function homeIcon() {
-    return `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3.5 10.8 12 3.8l8.5 7v9.4h-6v-5.7h-5v5.7h-6z"></path>
-      </svg>`;
-  }
-
-  function searchIcon() {
-    return `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="10.8" cy="10.8" r="6.2"></circle>
-        <path d="m15.4 15.4 5 5"></path>
-      </svg>`;
   }
 
   function disableLegacyHeaderControls(root = document) {
@@ -67,23 +53,21 @@
     nav.className = 'shared-top-nav';
     nav.setAttribute('aria-label', 'Primary navigation');
 
-    const home = document.createElement('a');
-    home.className = 'shared-nav-action shared-nav-home';
-    home.href = HOME_PATH;
-    home.setAttribute('aria-label', 'Home');
-    home.innerHTML = `${homeIcon()}<span>Home</span>`;
+    const artwork = document.createElement('img');
+    artwork.className = 'shared-nav-artwork';
+    artwork.src = HEADER_ART;
+    artwork.alt = SITE_NAME;
+    artwork.decoding = 'async';
 
     const brand = document.createElement('a');
-    brand.className = 'shared-nav-brand';
+    brand.className = 'shared-nav-brand-hotspot';
     brand.href = HOME_PATH;
     brand.setAttribute('aria-label', `${SITE_NAME} — Home`);
-    brand.innerHTML = `<span class="shared-nav-brand-main">${SITE_NAME}</span>`;
 
     const search = document.createElement('button');
-    search.className = 'shared-nav-action shared-nav-search';
+    search.className = 'shared-nav-search-hotspot';
     search.type = 'button';
     search.setAttribute('aria-label', isCineCafe ? 'Focus Cine Cafe search' : 'Open Cine Cafe search');
-    search.innerHTML = `${searchIcon()}<span>Search</span>`;
     search.addEventListener('click', () => {
       if (isCineCafe) {
         document.querySelector('#cineSearch')?.focus();
@@ -92,19 +76,15 @@
       window.location.assign(CINE_CAFE_PATH);
     });
 
-    nav.append(home, brand, search);
+    nav.append(artwork, brand, search);
     host.append(nav);
     disableLegacyHeaderControls(host);
     return true;
   }
 
-  function configureStaticHosts() {
-    makeSharedNav(document.querySelector('#brandHeader'));
-    makeSharedNav(document.querySelector('#cineCafeStage'));
-    disableLegacyHeaderControls();
-  }
-
-  configureStaticHosts();
+  makeSharedNav(document.querySelector('#brandHeader'));
+  makeSharedNav(document.querySelector('#cineCafeStage'));
+  disableLegacyHeaderControls();
 
   if (isHome && !makeSharedNav(document.querySelector('.hm3-stage'))) {
     const observer = new MutationObserver(() => {
