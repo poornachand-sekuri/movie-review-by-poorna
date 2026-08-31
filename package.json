@@ -1,10 +1,10 @@
 {
   "name": "movie-review-by-poorna",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && mkdir -p dist/data dist/cine-cafe && cp index.html dist/index.html && cp -R cine-cafe/. dist/cine-cafe/ && cp -R assets dist/assets && cp public/data/index.json public/data/cast-crew.json public/data/related-review-rules.json dist/data/",
+    "build": "npm run clean && mkdir -p dist/data dist/cine-cafe dist/admin && cp index.html dist/index.html && cp -R cine-cafe/. dist/cine-cafe/ && cp -R admin/. dist/admin/ && cp -R assets dist/assets && cp public/data/index.json public/data/cast-crew.json public/data/related-review-rules.json dist/data/",
     "deploy": "npm run build && wrangler deploy"
   },
   "devDependencies": {
