@@ -13,3 +13,24 @@
 .review-card:nth-child(even) .review-info {
   transform: rotate(1.35deg) scale(.985);
 }
+
+/* Three restrained gold dots complete the baked pagination rhythm without
+   introducing another box or changing the existing page geometry. */
+.pagination-layer::after {
+  content: '•••';
+  position: absolute;
+  left: 77.4%;
+  top: 0;
+  width: 9.4%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  color: rgba(217, 168, 79, .92);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(8px, 1.25cqw, 11px);
+  line-height: 1;
+  letter-spacing: .28em;
+  text-indent: .28em;
+  text-shadow: 0 0 4px rgba(217, 168, 79, .24);
+}
