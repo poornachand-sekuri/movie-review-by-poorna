@@ -1,3 +1,5 @@
+import './analytics.js';
+
 const DATA_BASE = '/data';
 const PAGE_SIZE = 6;
 
