@@ -1,12 +1,11 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "movie-review-by-poorna",
-  "main": "src/worker.js",
+  "main": "src/worker-entry.js",
   "compatibility_date": "2026-08-30",
   "secrets": {
     "required": [
-      "ADMIN_PASSWORD",
-      "ADMIN_SESSION_SECRET"
+      "ADMIN_PASSWORD"
     ]
   },
   "vars": {
