@@ -3,6 +3,12 @@
   "name": "movie-review-by-poorna",
   "main": "src/worker.js",
   "compatibility_date": "2026-08-30",
+  "secrets": {
+    "required": [
+      "ADMIN_PASSWORD",
+      "ADMIN_SESSION_SECRET"
+    ]
+  },
   "vars": {
     "R2_PUBLIC_BASE": "https://assets.moviereviewbypoorna.com"
   },
