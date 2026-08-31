@@ -1,5 +1,6 @@
-/* Shared Content-page header across Home, Content and Cine Cafe.
-   The actual locked Content header artwork is reused on every page. */
+/* Page-specific navigation integration.
+   Content header artwork is reused on Content + Cine Cafe only.
+   Home retains its approved native top bar. */
 
 :root {
   --shared-nav-ink: #050505;
@@ -24,8 +25,8 @@
   pointer-events: none;
 }
 
-/* The original Content artwork includes a hamburger at the far left. Keep the
-   approved no-hamburger behavior by masking only that small artwork zone. */
+/* The locked Content header contains a hamburger at far left. Mask only that
+   authored icon while retaining the original logo/search artwork. */
 .shared-top-nav::after {
   content: '';
   position: absolute;
@@ -79,8 +80,7 @@
   outline-offset: -4px;
 }
 
-/* CONTENT PAGE: let the shared header artwork define the same natural height as
-   the original Content header, while keeping the legacy copy out of sight. */
+/* CONTENT PAGE — same approved header treatment. */
 .brand-header {
   background: var(--shared-nav-ink) !important;
 }
@@ -103,19 +103,73 @@
   display: none !important;
 }
 
-/* HOME + CINE CAFE: overlay the same Content header on their baked header strip.
-   Nothing below is moved, so the approved page mappings remain intact. */
-.hm3-stage::before,
-.cine-cafe-stage::before {
-  content: none !important;
+/* HOME PAGE — keep the original baked top menu. Only remove/mask hamburger. */
+.hm3-stage::before {
+  content: '';
+  position: absolute;
+  z-index: 19;
+  left: 1.1%;
+  top: .55%;
+  width: 8.2%;
+  height: 4.9%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    #050505 0%,
+    #050505 60%,
+    rgba(5,5,5,.97) 75%,
+    rgba(5,5,5,0) 100%
+  );
 }
 
-.hm3-menu,
-.hm3-search,
-.hm3-home,
-.hotspot-menu,
-.hotspot-search,
-.hotspot-bell,
-.hotspot-home {
+.hm3-menu {
+  display: none !important;
+}
+
+/* Transparent Home link over the native Home-page brand title. */
+.hm3-home {
+  left: 17%;
+  top: .35%;
+  width: 66%;
+  height: 5.25%;
+  z-index: 21;
+  border-radius: 10px;
+}
+
+/* CINE CAFE — Content header is a real row ABOVE the untouched Cafe stage. */
+.cine-cafe-page {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.cine-cafe-page > .shared-top-nav {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(100%, 900px);
+}
+
+/* Remove only the Cafe master’s own hamburger graphic + hit area. */
+.cine-cafe-stage::before {
+  content: '';
+  position: absolute;
+  z-index: 8;
+  left: .9%;
+  top: .65%;
+  width: 7.4%;
+  height: 5.1%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    #050505 0%,
+    #050505 60%,
+    rgba(5,5,5,.97) 75%,
+    rgba(5,5,5,0) 100%
+  );
+}
+
+.hotspot-menu {
   display: none !important;
 }
