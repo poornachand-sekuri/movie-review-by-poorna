@@ -12,11 +12,10 @@
 }
 
 /*
- * The master artwork has a fixed authored aspect ratio, so taller phone
- * viewports can have a small remainder below it. Treat that remainder as
- * intentional theatre ambience rather than leaving a plain black void.
- * The flex tail only consumes unused viewport height; it adds no extra
- * scrolling when the authored stage is already taller than the viewport.
+ * Taller mobile viewports can extend beyond the authored Home artwork.
+ * Finish that space as a visible continuation of the theatre rather than a
+ * near-black empty block: warm screen glow above, deep-red curtain spill at
+ * the sides and restrained floor/aisle lines below.
  */
 .home-v3-mode .hm3-page::after {
   content: "";
@@ -25,39 +24,84 @@
   min-height: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% -10%, rgba(214, 163, 64, .14) 0%, rgba(214, 163, 64, .045) 34%, rgba(5, 5, 5, 0) 70%),
-    linear-gradient(90deg, rgba(148, 19, 26, .055) 0%, rgba(5, 5, 5, 0) 22%, rgba(5, 5, 5, 0) 78%, rgba(148, 19, 26, .055) 100%),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, .008) 0 1px, rgba(5, 5, 5, 0) 1px 8px),
-    linear-gradient(180deg, #080704 0%, #040404 58%, #050505 100%);
+    radial-gradient(ellipse at 50% -8%, rgba(224, 176, 75, .26) 0%, rgba(173, 116, 29, .105) 27%, rgba(5, 5, 5, 0) 60%),
+    linear-gradient(90deg, rgba(112, 8, 13, .22) 0%, rgba(112, 8, 13, .075) 10%, rgba(5, 5, 5, 0) 27%, rgba(5, 5, 5, 0) 73%, rgba(112, 8, 13, .075) 90%, rgba(112, 8, 13, .22) 100%),
+    repeating-linear-gradient(90deg, rgba(216, 163, 64, .038) 0 1px, rgba(5, 5, 5, 0) 1px 42px),
+    repeating-linear-gradient(0deg, rgba(216, 163, 64, .035) 0 1px, rgba(5, 5, 5, 0) 1px 27px),
+    linear-gradient(180deg, #0e0a06 0%, #090604 30%, #050505 72%, #030303 100%);
   box-shadow:
-    inset 0 1px 0 rgba(214, 163, 64, .11),
-    inset 0 22px 38px rgba(0, 0, 0, .34);
+    inset 0 1px 0 rgba(216, 163, 64, .28),
+    inset 0 22px 42px rgba(0, 0, 0, .3),
+    inset 20px 0 34px rgba(77, 4, 8, .13),
+    inset -20px 0 34px rgba(77, 4, 8, .13);
 }
 
 /*
- * Previously Reviewed lives in landscape film-reel windows while source
- * artwork can be portrait, square, or landscape. `cover` gives every phone
- * a consistent edge-to-edge window without distortion or overflow; the
- * reel clips only the excess outside its authored frame.
+ * PREVIOUSLY REVIEWED
+ *
+ * The earlier version relied on a percentage-height image inside a flexible
+ * CSS-grid row. Safari can resolve that percentage against the image's
+ * intrinsic dimensions, which is why wide source artwork collapsed into a
+ * thin horizontal strip on some iPhones.
+ *
+ * Give the poster window a definite box instead. The image is then absolutely
+ * pinned to all four edges and `cover` is guaranteed to fill the authored reel
+ * window without stretching. Excess artwork is clipped by the reel window.
  */
+.home-v3-mode .hm3-prev-card {
+  position: relative !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
 .home-v3-mode .hm3-prev-poster {
-  overflow: hidden;
+  position: absolute !important;
+  left: 4px !important;
+  right: 4px !important;
+  top: 3px !important;
+  bottom: 33px !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: block !important;
   background: #070604;
 }
 
 .home-v3-mode .hm3-prev-poster img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
-  object-fit: cover;
-  object-position: 50% 38%;
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: 50% 42% !important;
   transform: translateZ(0);
 }
 
+.home-v3-mode .hm3-prev-info {
+  position: absolute !important;
+  left: 4px !important;
+  right: 4px !important;
+  bottom: 3px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 2px 2px 1px !important;
+}
+
 @media (max-width: 360px) {
+  .home-v3-mode .hm3-prev-poster {
+    bottom: 31px !important;
+  }
+
+  .home-v3-mode .hm3-prev-info {
+    height: 26px !important;
+    min-height: 26px !important;
+  }
+
   .home-v3-mode .hm3-prev-poster img {
-    object-position: 50% 34%;
+    object-position: 50% 40% !important;
   }
 }
