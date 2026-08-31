@@ -3,6 +3,9 @@
   "name": "movie-review-by-poorna",
   "main": "src/worker.js",
   "compatibility_date": "2026-08-30",
+  "vars": {
+    "R2_PUBLIC_BASE": "https://assets.moviereviewbypoorna.com"
+  },
   "build": {
     "command": "npm run build"
   },
@@ -10,8 +13,18 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api/*",
+      "/data/index.json",
+      "/data/cast-crew.json"
+    ]
   },
+  "r2_buckets": [
+    {
+      "binding": "REVIEW_ASSETS",
+      "bucket_name": "movie-review-assets"
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {
@@ -21,6 +34,10 @@
       {
         "name": "COMMENTS",
         "class_name": "CommentsStore"
+      },
+      {
+        "name": "ANALYTICS",
+        "class_name": "AnalyticsStore"
       }
     ]
   },
@@ -32,6 +49,10 @@
     {
       "tag": "v2-comments",
       "new_sqlite_classes": ["CommentsStore"]
+    },
+    {
+      "tag": "v3-admin-analytics",
+      "new_sqlite_classes": ["AnalyticsStore"]
     }
   ]
 }

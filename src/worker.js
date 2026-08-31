@@ -1,11 +1,16 @@
 import { DurableObject } from 'cloudflare:workers';
+import { AnalyticsStore } from './analytics-store.js';
+import {
+  getCombinedReviews,
+  handleAdminApi,
+  handleDynamicData
+} from './admin-console.js';
 
 const VOTER_COOKIE = 'mrp_voter';
 const VOTER_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 const COMMENT_RATE_LIMIT_MS = 30 * 1000;
 const COMMENT_DUPLICATE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const PUBLIC_COMMENT_LIMIT = 10;
-let catalogSlugsPromise;
 
 function json(payload, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(payload), {
@@ -42,26 +47,10 @@ function sameOriginWrite(request, url) {
   return !origin || origin === url.origin;
 }
 
-async function catalogSlugs(env, requestUrl) {
-  if (!catalogSlugsPromise) {
-    catalogSlugsPromise = (async () => {
-      const dataUrl = new URL('/data/index.json', requestUrl);
-      const response = await env.ASSETS.fetch(dataUrl);
-      if (!response.ok) throw new Error('Could not load review catalog');
-      const reviews = await response.json();
-      return new Set((Array.isArray(reviews) ? reviews : []).map(review => review?.s).filter(Boolean));
-    })().catch(error => {
-      catalogSlugsPromise = undefined;
-      throw error;
-    });
-  }
-  return catalogSlugsPromise;
-}
-
 async function validSlug(env, requestUrl, slug) {
   if (!slug || typeof slug !== 'string' || slug.length > 160) return false;
-  const slugs = await catalogSlugs(env, requestUrl);
-  return slugs.has(slug);
+  const reviews = await getCombinedReviews(env, requestUrl, true);
+  return reviews.some(review => review.s === slug);
 }
 
 async function validCommentTarget(env, requestUrl, target, targetId) {
@@ -93,14 +82,17 @@ function parseCommentTarget(url, body = null) {
   return { target, targetId };
 }
 
-function adminAuthorized(request, env) {
-  const expected = String(env.ADMIN_COMMENTS_TOKEN || '');
-  if (!expected) return false;
-  const authorization = request.headers.get('authorization') || '';
-  return authorization === `Bearer ${expected}`;
+async function syncReactionAnalytics(env, slug, snapshot) {
+  if (!env.ANALYTICS || !slug || !snapshot) return;
+  const store = env.ANALYTICS.getByName('global-analytics');
+  await store.fetch('https://analytics-store.internal/reaction-sync', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ slug, like: snapshot.like, dislike: snapshot.dislike })
+  });
 }
 
-async function forwardReaction(request, env, url) {
+async function forwardReaction(request, env, url, ctx) {
   if (request.method !== 'GET' && request.method !== 'POST') {
     return json({ error: 'Method not allowed' }, 405, { allow: 'GET, POST' });
   }
@@ -140,15 +132,17 @@ async function forwardReaction(request, env, url) {
     method: request.method,
     headers
   });
+  let snapshot;
+  try {
+    snapshot = await storeResponse.json();
+  } catch {
+    return json({ error: 'Reaction store unavailable' }, 503);
+  }
+  if (storeResponse.ok && ctx?.waitUntil) ctx.waitUntil(syncReactionAnalytics(env, slug, snapshot));
 
-  const response = new Response(storeResponse.body, {
-    status: storeResponse.status,
-    statusText: storeResponse.statusText,
-    headers: storeResponse.headers
+  return json(snapshot, storeResponse.status, {
+    'set-cookie': voterCookie(voterKey)
   });
-  response.headers.set('cache-control', 'no-store');
-  response.headers.set('set-cookie', voterCookie(voterKey));
-  return response;
 }
 
 async function forwardComments(request, env, url) {
@@ -217,44 +211,32 @@ async function forwardComments(request, env, url) {
   return response;
 }
 
-async function forwardAdminComments(request, env, url) {
-  if (!env.ADMIN_COMMENTS_TOKEN) {
-    return json({ error: 'Comments moderation is not configured' }, 503);
+async function forwardAnalytics(request, env, url) {
+  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, { allow: 'POST' });
+  if (!sameOriginWrite(request, url)) return json({ error: 'Cross-origin request rejected' }, 403);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: 'Invalid JSON body' }, 400);
   }
-  if (!adminAuthorized(request, env)) return json({ error: 'Unauthorized' }, 401);
-
-  const store = env.COMMENTS.getByName('global-comments');
-  const pathPrefix = '/api/admin/comments';
-  const remainder = url.pathname.slice(pathPrefix.length).replace(/^\/+/, '');
-
-  if (request.method === 'GET' && !remainder) {
-    const internalUrl = new URL('https://comments-store.internal/admin/list');
-    for (const key of ['status', 'target', 'target_id', 'limit']) {
-      const value = url.searchParams.get(key);
-      if (value) internalUrl.searchParams.set(key, value);
-    }
-    return store.fetch(internalUrl, { method: 'GET' });
-  }
-
-  if (request.method === 'POST' && remainder) {
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return json({ error: 'Invalid JSON body' }, 400);
-    }
-    const action = String(body?.action || '').trim().toLowerCase();
-    if (!['approve', 'reject', 'delete'].includes(action)) {
-      return json({ error: 'Action must be approve, reject or delete' }, 400);
-    }
-    return store.fetch('https://comments-store.internal/admin/moderate', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ id: decodeURIComponent(remainder), action })
-    });
-  }
-
-  return json({ error: 'Method not allowed' }, 405);
+  const voterKey = safeVoterKey(request);
+  const store = env.ANALYTICS.getByName('global-analytics');
+  const tracked = await store.fetch('https://analytics-store.internal/track', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-mrp-voter': voterKey
+    },
+    body: JSON.stringify(body)
+  });
+  const response = new Response(tracked.body, {
+    status: tracked.status,
+    statusText: tracked.statusText,
+    headers: tracked.headers
+  });
+  response.headers.set('set-cookie', voterCookie(voterKey));
+  return response;
 }
 
 export class ReactionStore extends DurableObject {
@@ -271,14 +253,16 @@ export class ReactionStore extends DurableObject {
     `);
   }
 
-  snapshot(voterKey) {
+  snapshot(voterKey = null) {
     const totals = this.sql.exec(`
       SELECT
         COALESCE(SUM(CASE WHEN vote = 'like' THEN 1 ELSE 0 END), 0) AS like_count,
         COALESCE(SUM(CASE WHEN vote = 'dislike' THEN 1 ELSE 0 END), 0) AS dislike_count
       FROM votes
     `).one();
-    const mine = this.sql.exec('SELECT vote FROM votes WHERE voter_key = ?', voterKey).toArray()[0] || null;
+    const mine = voterKey
+      ? this.sql.exec('SELECT vote FROM votes WHERE voter_key = ?', voterKey).toArray()[0] || null
+      : null;
     return {
       like: Number(totals?.like_count) || 0,
       dislike: Number(totals?.dislike_count) || 0,
@@ -287,6 +271,9 @@ export class ReactionStore extends DurableObject {
   }
 
   async fetch(request) {
+    const url = new URL(request.url);
+    if (request.method === 'GET' && url.pathname === '/admin') return json(this.snapshot());
+
     const voterKey = request.headers.get('x-mrp-voter');
     if (!voterKey) return json({ error: 'Missing voter identity' }, 400);
 
@@ -406,7 +393,8 @@ export class CommentsStore extends DurableObject {
 
   adminList(url) {
     const allowedStatuses = new Set(['pending', 'approved', 'rejected', 'deleted', 'all']);
-    const status = allowedStatuses.has(url.searchParams.get('status')) ? url.searchParams.get('status') : 'pending';
+    const requested = url.searchParams.get('status');
+    const status = allowedStatuses.has(requested) ? requested : 'pending';
     const target = url.searchParams.get('target');
     const targetId = url.searchParams.get('target_id');
     const limit = Math.max(1, Math.min(200, Number(url.searchParams.get('limit')) || 100));
@@ -439,6 +427,28 @@ export class CommentsStore extends DurableObject {
     return json({ comments });
   }
 
+  adminCounts() {
+    const rows = this.sql.exec(
+      `SELECT status, COUNT(*) AS count
+       FROM comments
+       GROUP BY status`
+    ).toArray();
+    const counts = { pending: 0, approved: 0, rejected: 0, deleted: 0, all: 0 };
+    for (const row of rows) {
+      const count = Number(row.count) || 0;
+      if (row.status in counts) counts[row.status] = count;
+      counts.all += count;
+    }
+    const targets = this.sql.exec(
+      `SELECT target_type, COUNT(*) AS count
+       FROM comments
+       WHERE status != 'deleted'
+       GROUP BY target_type`
+    ).toArray();
+    counts.byTarget = Object.fromEntries(targets.map(row => [row.target_type, Number(row.count) || 0]));
+    return json({ counts });
+  }
+
   moderate(request) {
     return request.json().then(body => {
       const statusByAction = {
@@ -468,19 +478,30 @@ export class CommentsStore extends DurableObject {
     if (request.method === 'GET' && url.pathname === '/public') return this.publicComments(url);
     if (request.method === 'POST' && url.pathname === '/submit') return this.submit(request);
     if (request.method === 'GET' && url.pathname === '/admin/list') return this.adminList(url);
+    if (request.method === 'GET' && url.pathname === '/admin/counts') return this.adminCounts();
     if (request.method === 'POST' && url.pathname === '/admin/moderate') return this.moderate(request);
     return json({ error: 'Not found' }, 404);
   }
 }
 
+export { AnalyticsStore };
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (url.pathname === '/api/reactions') return forwardReaction(request, env, url);
+
+    if (url.pathname === '/admin') return Response.redirect(new URL('/admin/', url), 302);
+
+    const adminResponse = await handleAdminApi(request, env, url);
+    if (adminResponse) return adminResponse;
+
+    if (url.pathname === '/api/reactions') return forwardReaction(request, env, url, ctx);
     if (url.pathname === '/api/comments') return forwardComments(request, env, url);
-    if (url.pathname === '/api/admin/comments' || url.pathname.startsWith('/api/admin/comments/')) {
-      return forwardAdminComments(request, env, url);
-    }
+    if (url.pathname === '/api/analytics/pageview') return forwardAnalytics(request, env, url);
+
+    const dynamicData = await handleDynamicData(request, env, url);
+    if (dynamicData) return dynamicData;
+
     return env.ASSETS.fetch(request);
   }
 };
