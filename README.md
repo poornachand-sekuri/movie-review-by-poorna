@@ -1,4 +1,4 @@
-# Movie Reviews By Poorna — Fresh Take
+# Movie Reviews By Poorna
 
 This branch contains the new mobile-first content-page frontend built from scratch around the finalized AVIF artwork.
 
