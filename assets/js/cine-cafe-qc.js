@@ -14,7 +14,27 @@ function syncFilterAppearance() {
   }
 }
 
-syncFilterAppearance();
+function cleanCardChrome() {
+  document.querySelectorAll('.review-likes').forEach(likes => {
+    const count = Number(likes.querySelector('span')?.textContent || 0);
+    likes.hidden = count <= 0;
+  });
+}
+
+function runQcPass() {
+  syncFilterAppearance();
+  cleanCardChrome();
+}
+
+runQcPass();
+
+const resultsLayer = document.querySelector('#resultsLayer');
+if (resultsLayer) {
+  new MutationObserver(cleanCardChrome).observe(resultsLayer, {
+    childList: true,
+    subtree: true
+  });
+}
 
 document.addEventListener('change', event => {
   if (event.target.matches('#languageFilter, #yearFilter, #ratingFilter, #sortFilter')) {
@@ -23,5 +43,5 @@ document.addEventListener('change', event => {
 });
 
 document.querySelector('#allReviews')?.addEventListener('click', () => {
-  requestAnimationFrame(syncFilterAppearance);
+  requestAnimationFrame(runQcPass);
 });
