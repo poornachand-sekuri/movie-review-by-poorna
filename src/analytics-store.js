@@ -155,14 +155,19 @@ export class AnalyticsStore extends DurableObject {
        ORDER BY day ASC`,
       since
     ).toArray();
-    const topPages = this.sql.exec(
-      `SELECT page_type, page_key, slug, MAX(title) AS title,
+    const pageViews = this.sql.exec(
+      `SELECT page_type, page_key, slug,
+              CASE
+                WHEN page_type = 'home' THEN 'Home'
+                WHEN page_type = 'cine-cafe' THEN 'Cine Café'
+                WHEN page_type = 'review' THEN COALESCE(MAX(slug), page_key)
+                ELSE COALESCE(MAX(title), page_key)
+              END AS title,
               COALESCE(SUM(views), 0) AS views
        FROM page_daily
        WHERE day >= ?
        GROUP BY page_type, page_key, slug
-       ORDER BY views DESC
-       LIMIT 50`,
+       ORDER BY views DESC, page_key ASC`,
       since
     ).toArray();
     const pageVisitors = this.sql.exec(
@@ -173,6 +178,14 @@ export class AnalyticsStore extends DurableObject {
       since
     ).toArray();
     const visitorsByPage = Object.fromEntries(pageVisitors.map(row => [row.page_key, Number(row.visitors) || 0]));
+    const pageViewRows = pageViews.map(row => ({
+      pageType: row.page_type,
+      pageKey: row.page_key,
+      slug: row.slug || null,
+      title: row.title || null,
+      views: Number(row.views) || 0,
+      visitors: visitorsByPage[row.page_key] || 0
+    }));
     const reactions = this.sql.exec(
       `SELECT slug, like_count AS like, dislike_count AS dislike, updated_at
        FROM reaction_summary
@@ -191,14 +204,8 @@ export class AnalyticsStore extends DurableObject {
       uniqueVisitors: Number(unique?.visitors) || 0,
       byType: byType.map(row => ({ pageType: row.page_type, views: Number(row.views) || 0 })),
       daily: daily.map(row => ({ day: row.day, views: Number(row.views) || 0 })),
-      topPages: topPages.map(row => ({
-        pageType: row.page_type,
-        pageKey: row.page_key,
-        slug: row.slug || null,
-        title: row.title || null,
-        views: Number(row.views) || 0,
-        visitors: visitorsByPage[row.page_key] || 0
-      })),
+      pageViews: pageViewRows,
+      topPages: pageViewRows,
       reactionTotals,
       reactions: reactions.map(row => ({
         slug: row.slug,
