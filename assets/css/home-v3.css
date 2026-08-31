@@ -110,8 +110,9 @@
   z-index: 6;
   left: 46.3%;
   top: 13.1%;
-  width: 39.6%;
+  width: 36.8%;
   height: 23.8%;
+  box-sizing: border-box;
   overflow: hidden;
   color: var(--hm3-ivory);
 }
@@ -152,11 +153,25 @@
   text-transform: uppercase;
 }
 
+/* Match the locked Content-page My POV treatment exactly. */
 .hm3-pov {
-  margin: 1.8% 0 0;
-  color: #f5f1e8;
-  font-size: clamp(7.5px, 1.95vw, 10.5px);
-  line-height: 1.34;
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 0 5px 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(247,246,239,.94);
+  font-family: "Chalkboard SE", "Marker Felt", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.58;
+  letter-spacing: .012em;
+  text-shadow:
+    0 .35px 0 rgba(255,255,255,.22),
+    0 0 .8px rgba(255,255,255,.18);
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
@@ -293,14 +308,14 @@
   line-height: 1;
 }
 
-/* PREVIOUSLY REVIEWED — posters use the full reel window; text overlays at the bottom. */
+/* PREVIOUSLY REVIEWED — constrain live content to the reel's inner windows only. */
 .hm3-prev-viewport {
   position: absolute;
   z-index: 10;
-  left: 4.25%;
-  top: 81.05%;
-  width: 91.55%;
-  height: 16.35%;
+  left: 4.3%;
+  top: 83.0%;
+  width: 90.6%;
+  height: 13.15%;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -309,15 +324,19 @@
 }
 
 .hm3-prev-track {
-  gap: 1.85%;
+  gap: 1.6%;
 }
 
 .hm3-prev-card {
   position: relative;
-  flex: 0 0 23.6%;
+  flex: 0 0 23.8%;
   height: 100%;
   min-width: 0;
   box-sizing: border-box;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 2px;
+  padding: 3px 4px 3px;
   overflow: hidden;
   background: transparent;
   color: var(--hm3-ivory);
@@ -327,8 +346,8 @@
 }
 
 .hm3-prev-poster {
-  position: absolute;
-  inset: 7px 7px 8px;
+  position: static;
+  min-height: 0;
   overflow: hidden;
   display: grid;
   place-items: center;
@@ -336,24 +355,21 @@
 }
 
 .hm3-prev-info {
-  position: absolute;
-  left: 7px;
-  right: 7px;
-  bottom: 8px;
-  min-height: 48px;
+  position: static;
+  min-height: 28px;
   box-sizing: border-box;
-  padding: 7px 4px 5px;
+  padding: 2px 2px 1px;
   display: grid;
-  align-content: end;
-  gap: 3px;
-  background: linear-gradient(180deg, rgba(3,3,3,.12), rgba(3,3,3,.90) 34%, rgba(3,3,3,.98));
+  align-content: center;
+  gap: 1px;
+  background: rgba(4,4,4,.88);
 }
 
 .hm3-prev-title {
   color: #f0d29a;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(6.5px, 1.55vw, 8.5px);
-  line-height: 1.05;
+  font-size: clamp(6px, 1.35vw, 8px);
+  line-height: 1.04;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -361,13 +377,13 @@
 }
 
 .hm3-prev-stars {
-  font-size: clamp(6.5px, 1.5vw, 8.5px);
+  font-size: clamp(6px, 1.3vw, 8px);
   line-height: 1;
 }
 
 @media (max-width: 360px) {
   .hm3-now-title { font-size: 14px; }
-  .hm3-pov { font-size: 7.5px; -webkit-line-clamp: 3; }
+  .hm3-pov { font-size: .96rem; -webkit-line-clamp: 3; }
   .hm3-card-info { min-height: 58px; }
-  .hm3-prev-info { min-height: 43px; }
+  .hm3-prev-info { min-height: 26px; }
 }
