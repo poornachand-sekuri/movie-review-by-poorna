@@ -1,0 +1,377 @@
+:root {
+  --hm3-gold: #d6a340;
+  --hm3-gold-soft: #f0cf83;
+  --hm3-red: #94131a;
+  --hm3-ivory: #f4eee2;
+  --hm3-black: #050505;
+}
+
+.home-v3-mode {
+  background: var(--hm3-black);
+}
+
+.home-v3-mode .app-shell {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  overflow: clip;
+  background: var(--hm3-black);
+}
+
+.home-v3-mode .brand-header {
+  display: none !important;
+}
+
+.home-v3-mode .content-page {
+  padding: 0 !important;
+}
+
+.hm3-page {
+  width: 100%;
+  background: var(--hm3-black);
+}
+
+.hm3-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1024 / 1535;
+  overflow: hidden;
+  background: #050505;
+}
+
+.hm3-master {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  user-select: none;
+  pointer-events: none;
+}
+
+.hm3-hotspot {
+  position: absolute;
+  z-index: 20;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+}
+
+.hm3-hotspot:focus-visible,
+.hm3-card:focus-visible,
+.hm3-prev-card:focus-visible,
+.hm3-now-poster:focus-visible {
+  outline: 2px solid var(--hm3-gold-soft);
+  outline-offset: -2px;
+}
+
+.hm3-menu {
+  left: 1.7%;
+  top: .8%;
+  width: 6.5%;
+  height: 4.3%;
+}
+
+.hm3-search {
+  right: 1.7%;
+  top: .8%;
+  width: 6.5%;
+  height: 4.3%;
+}
+
+/* NOW REVIEWED — mapped only into the empty authored areas. */
+.hm3-now-poster {
+  position: absolute;
+  z-index: 5;
+  left: 15.6%;
+  top: 12.2%;
+  width: 27.0%;
+  height: 26.4%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #090909;
+  text-decoration: none;
+}
+
+.hm3-now-poster img,
+.hm3-card-poster img,
+.hm3-prev-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.hm3-now-copy {
+  position: absolute;
+  z-index: 6;
+  left: 46.3%;
+  top: 12.5%;
+  width: 39.6%;
+  height: 25.6%;
+  overflow: hidden;
+  color: var(--hm3-ivory);
+}
+
+.hm3-now-title {
+  margin: 0;
+  color: var(--hm3-gold-soft);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(15px, 4.2vw, 23px);
+  line-height: 1.06;
+  font-weight: 800;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.hm3-now-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3.4%;
+  color: #eee9df;
+  font-size: clamp(8px, 2.1vw, 11px);
+  line-height: 1.2;
+}
+
+.hm3-dot {
+  color: var(--hm3-gold);
+}
+
+.hm3-label {
+  margin-top: 4.8%;
+  color: var(--hm3-gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(8px, 2vw, 11px);
+  font-weight: 700;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+.hm3-cast,
+.hm3-pov {
+  margin: 1.2% 0 0;
+  color: #f5f1e8;
+  font-size: clamp(7.5px, 1.9vw, 10.5px);
+  line-height: 1.32;
+}
+
+.hm3-cast {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hm3-pov {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hm3-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 3.8%;
+}
+
+.hm3-stars {
+  color: #e0a326;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+.hm3-now-stars {
+  font-size: clamp(12px, 3vw, 17px);
+}
+
+.hm3-read-review {
+  right: 14.2%;
+  top: 36.55%;
+  width: 14.8%;
+  height: 2.6%;
+  border-radius: 999px;
+}
+
+.hm3-recent-view-all {
+  right: 3.6%;
+  top: 51.25%;
+  width: 11.5%;
+  height: 2.4%;
+}
+
+.hm3-prev-view-all {
+  right: 3.6%;
+  top: 78.45%;
+  width: 11.5%;
+  height: 2.4%;
+}
+
+/* RECENT REVIEWS — exactly four authored windows are visible at rest. */
+.hm3-recent-viewport {
+  position: absolute;
+  z-index: 10;
+  left: 3.35%;
+  top: 54.15%;
+  width: 93.25%;
+  height: 22.35%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.hm3-recent-viewport::-webkit-scrollbar,
+.hm3-prev-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.hm3-recent-track,
+.hm3-prev-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-wrap: nowrap;
+}
+
+.hm3-recent-track {
+  gap: 2.15%;
+}
+
+.hm3-card {
+  flex: 0 0 23.35%;
+  height: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: 5px 5px 8px;
+  background: rgba(8, 8, 8, .96);
+  color: var(--hm3-ivory);
+  text-decoration: none;
+  text-align: center;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.hm3-card-poster {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #050505;
+}
+
+.hm3-card-info {
+  min-height: 58px;
+  padding: 5px 2px 0;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  background: rgba(5,5,5,.96);
+}
+
+.hm3-card-title {
+  color: #f0d29a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(7px, 1.8vw, 10px);
+  font-weight: 800;
+  line-height: 1.05;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hm3-card-lang {
+  color: #c8bba4;
+  font-size: clamp(6px, 1.45vw, 8px);
+  line-height: 1;
+}
+
+.hm3-card-stars {
+  font-size: clamp(7px, 1.7vw, 9px);
+  line-height: 1;
+}
+
+/* PREVIOUSLY REVIEWED — four live windows aligned to the baked film strip. */
+.hm3-prev-viewport {
+  position: absolute;
+  z-index: 10;
+  left: 4.25%;
+  top: 81.0%;
+  width: 91.55%;
+  height: 16.55%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.hm3-prev-track {
+  gap: 1.85%;
+}
+
+.hm3-prev-card {
+  position: relative;
+  flex: 0 0 23.60%;
+  height: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+  padding: 5px 4px 7px;
+  background: rgba(7,7,7,.97);
+  color: var(--hm3-ivory);
+  text-decoration: none;
+  text-align: center;
+  scroll-snap-align: start;
+}
+
+.hm3-prev-poster {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #050505;
+}
+
+.hm3-prev-info {
+  min-height: 44px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding-top: 3px;
+  background: rgba(5,5,5,.96);
+}
+
+.hm3-prev-title {
+  color: #f0d29a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(6.5px, 1.55vw, 8.5px);
+  line-height: 1.05;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hm3-prev-stars {
+  font-size: clamp(6.5px, 1.5vw, 8.5px);
+  line-height: 1;
+}
+
+@media (max-width: 360px) {
+  .hm3-now-copy { top: 12.3%; }
+  .hm3-now-title { font-size: 14px; }
+  .hm3-cast, .hm3-pov { font-size: 7.5px; }
+  .hm3-card-info { min-height: 52px; }
+  .hm3-prev-info { min-height: 40px; }
+}
