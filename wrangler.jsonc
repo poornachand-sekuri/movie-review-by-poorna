@@ -20,10 +20,10 @@
       }
     ]
   },
-  "exports": {
-    "ReactionStore": {
-      "type": "durable-object",
-      "storage": "sqlite"
+  "migrations": [
+    {
+      "tag": "v1-reactions",
+      "new_sqlite_classes": ["ReactionStore"]
     }
-  }
+  ]
 }

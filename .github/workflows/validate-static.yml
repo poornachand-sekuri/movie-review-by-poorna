@@ -18,11 +18,19 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install deployment tooling
+        run: npm install
+
       - name: Check JavaScript syntax
         run: |
           node --check assets/js/config.js
           node --check assets/js/app.js
           node --check assets/js/ui-patch.js
+          node --check assets/js/live-reactions.js
+          node --check src/worker.js
+
+      - name: Validate Cloudflare Worker bundle
+        run: npx wrangler deploy --dry-run
 
       - name: Reject WordPress runtime dependencies
         run: |
@@ -33,6 +41,7 @@ jobs:
           const runtimeRoots = [
             'index.html',
             'assets',
+            'src',
             'public/data',
             'package.json',
             'wrangler.jsonc'
@@ -166,3 +175,5 @@ jobs:
           test -f assets/css/final-overrides.css
           test -f assets/js/config.js
           test -f assets/js/app.js
+          test -f assets/js/live-reactions.js
+          test -f src/worker.js
