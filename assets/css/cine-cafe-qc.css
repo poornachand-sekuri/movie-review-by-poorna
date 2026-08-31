@@ -182,14 +182,26 @@ body {
 }
 
 .review-info {
-  top: 11%;
-  height: 75%;
+  top: 10.2%;
+  height: 77%;
 }
 .review-title {
   color: #fff0cf;
   font-size: clamp(11px, 2.02cqw, 18px);
   line-height: 1.05;
   text-shadow: 0 1px 3px rgba(0,0,0,.45);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+.review-title.title-long {
+  font-size: clamp(10px, 1.78cqw, 16px);
+  line-height: 1.02;
+}
+.review-title.title-xlong {
+  font-size: clamp(9px, 1.58cqw, 14px);
+  line-height: 1.02;
+  -webkit-line-clamp: 3;
 }
 .review-meta {
   margin-top: 4.2%;
@@ -210,26 +222,54 @@ body {
   display: none !important;
 }
 
+/* The master AVIF already contains the pagination frames. Runtime only paints
+   the numerals into those frames so the boxes never double up or distort. */
+.pagination-layer {
+  grid-template-columns: 1fr repeat(4, 1fr) .72fr 1fr;
+  gap: 2.1%;
+}
 .page-button {
-  background: transparent;
-  color: #f0d7a5;
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent !important;
+  color: #f2d9a7;
+  box-shadow: none !important;
+  font-weight: 650;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
 }
 .page-button.current {
-  background: linear-gradient(180deg, #f7dda7 0%, #d29a42 55%, #b87520 100%);
-  color: #24170a;
+  color: #fff2c8;
   font-weight: 800;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.6),
-    0 4px 14px rgba(0,0,0,.18);
+  text-shadow:
+    0 0 7px rgba(239, 174, 68, .95),
+    0 1px 2px rgba(0,0,0,.65);
+}
+.page-button.current::after {
+  content: '';
+  position: absolute;
+  left: 32%;
+  right: 32%;
+  bottom: 13%;
+  height: 2px;
+  border-radius: 999px;
+  background: #efae44;
+  box-shadow: 0 0 6px rgba(239, 174, 68, .65);
 }
 .pagination-layer .page-button:first-child,
 .pagination-layer .page-button:last-child {
   color: transparent;
-  background: transparent;
+  background: transparent !important;
+}
+.pagination-layer .page-button:first-child::after,
+.pagination-layer .page-button:last-child::after {
+  display: none;
 }
 .pagination-layer .page-ellipsis {
   grid-column: 6;
   color: #f0c46f;
+  text-shadow: 0 1px 3px rgba(0,0,0,.55);
 }
 .pagination-layer .page-button:last-child {
   grid-column: 7;
