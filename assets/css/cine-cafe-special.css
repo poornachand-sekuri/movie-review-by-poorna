@@ -1,0 +1,15 @@
+/* Runtime-only tabletop effect. The baked AVIF remains untouched. */
+.poster-zone,
+.review-info {
+  transform-origin: 50% 50%;
+}
+
+.review-card:nth-child(odd) .poster-zone,
+.review-card:nth-child(odd) .review-info {
+  transform: rotate(-0.7deg) scale(.995);
+}
+
+.review-card:nth-child(even) .poster-zone,
+.review-card:nth-child(even) .review-info {
+  transform: rotate(0.7deg) scale(.995);
+}
