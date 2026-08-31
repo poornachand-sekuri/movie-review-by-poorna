@@ -1,0 +1,28 @@
+/*
+ * Home reuses the exact Content-page Comments component and artwork.
+ * The Home dashboard already leaves a small authored breathing space below
+ * Previously Reviewed, so only a compact responsive gap is needed here.
+ */
+.home-v3-mode .hm3-comments-wrap {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(10px, 3vw, 16px) 10px 36px;
+  background: #050505;
+}
+
+.home-v3-mode .hm3-comments-wrap .comments-section {
+  margin-top: 0;
+}
+
+.home-v3-mode .hm3-comments-wrap .comments-header,
+.home-v3-mode .hm3-comments-wrap .comments-shell {
+  width: 100%;
+}
+
+@media (max-width: 370px) {
+  .home-v3-mode .hm3-comments-wrap {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+}
