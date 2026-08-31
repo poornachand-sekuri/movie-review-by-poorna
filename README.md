@@ -32,7 +32,7 @@ Do not restore old frontend CSS/JS from `pre-clean-reset-backup-20260830` into t
 - clapboard top overlaps the body so the two assets read as one component
 - poster is always `object-fit: contain`; no cropping
 - Movie Title, language, release date, Cast & Crew, stars and My POV are live data
-- Like/Dislike uses live SVG Thumbs Up / Thumbs Down controls
+- Like/Dislike uses persistent shared counts through the same-origin `/api/reactions` endpoint
 - Theater uses Top + stretchable Middle + Bottom/Seats
 - review font size does not shrink for longer reviews
 - no review scrollbar and no Read More
@@ -49,17 +49,24 @@ A review can be opened with:
 
 If no slug is supplied, the newest record in `index.json` is shown.
 
-## Likes and comments
+## Likes / dislikes
 
-The UI is ready for an API, but the production persistence backend is intentionally not faked.
+Production reactions are persisted by `src/worker.js` using one SQLite-backed Cloudflare Durable Object per review slug.
 
-Until `apiBase` is configured in `assets/js/config.js`:
+- `GET /api/reactions?slug=<movie-slug>` returns shared Like/Dislike totals plus this browser's current vote.
+- `POST /api/reactions` accepts `{ "slug": "...", "vote": "like" | "dislike" }`.
+- a first-party voter cookie ensures repeated clicks from the same browser do not inflate totals.
+- switching Like to Dislike (or vice versa) updates the existing vote instead of adding a second vote.
+- `assets/js/live-reactions.js` migrates an existing browser-local preview vote into the shared store once, then removes the legacy local value.
+- unknown review slugs are rejected against the live review catalog.
 
-- reactions use a browser-local preview fallback
-- comments show that the moderation backend is not connected
-- comment submissions are not sent anywhere
+The Worker and static assets remain in the same Cloudflare deployment, so no cross-origin API configuration is required.
 
-See `docs/API-CONTRACT.md` for the intended production API.
+## Comments
+
+Comment persistence/moderation is still intentionally separate and is not enabled by the reactions backend. `CONFIG.apiBase` remains blank for the existing comments preview flow.
+
+See `docs/API-CONTRACT.md` for the intended comments API and moderation contract.
 
 ## R2 structure
 
