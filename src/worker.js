@@ -90,9 +90,7 @@ async function forwardReaction(request, env, url) {
 
   const voterKey = safeVoterKey(request);
   const store = env.REACTIONS.getByName(slug);
-  const headers = new Headers({
-    'x-mrp-voter': voterKey
-  });
+  const headers = new Headers({ 'x-mrp-voter': voterKey });
   if (vote) headers.set('x-mrp-vote', vote);
 
   const storeResponse = await store.fetch('https://reaction-store.internal/', {
@@ -100,7 +98,11 @@ async function forwardReaction(request, env, url) {
     headers
   });
 
-  const response = new Response(storeResponse.body, storeResponse);
+  const response = new Response(storeResponse.body, {
+    status: storeResponse.status,
+    statusText: storeResponse.statusText,
+    headers: storeResponse.headers
+  });
   response.headers.set('cache-control', 'no-store');
   response.headers.set('set-cookie', voterCookie(voterKey));
   return response;
@@ -127,7 +129,7 @@ export class ReactionStore extends DurableObject {
         COALESCE(SUM(CASE WHEN vote = 'dislike' THEN 1 ELSE 0 END), 0) AS dislike_count
       FROM votes
     `).one();
-    const mine = this.sql.exec('SELECT vote FROM votes WHERE voter_key = ?', voterKey).one();
+    const mine = this.sql.exec('SELECT vote FROM votes WHERE voter_key = ?', voterKey).toArray()[0] || null;
     return {
       like: Number(totals?.like_count) || 0,
       dislike: Number(totals?.dislike_count) || 0,
