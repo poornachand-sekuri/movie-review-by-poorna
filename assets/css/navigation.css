@@ -4,12 +4,12 @@
 :root {
   --shared-nav-ink: #050505;
   --shared-nav-gold: #d8ae63;
-  --home-master-crop: 5.4%;
-  --cine-master-crop: 5.9%;
 }
 
 .shared-top-nav {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
   z-index: 120;
   width: 100%;
   overflow: hidden;
@@ -79,9 +79,14 @@
   outline-offset: -4px;
 }
 
-/* CONTENT PAGE: keep the existing header slot and replace only its artwork. */
+/* CONTENT PAGE: let the shared header artwork define the same natural height as
+   the original Content header, while keeping the legacy copy out of sight. */
 .brand-header {
   background: var(--shared-nav-ink) !important;
+}
+
+.brand-header > .shared-top-nav {
+  position: relative;
 }
 
 .brand-header > .brand-artwork {
@@ -98,59 +103,8 @@
   display: none !important;
 }
 
-/* HOME: show the real shared header row above the page. The Home master itself
-   is then cropped inside a viewport, so its baked top menu disappears without
-   moving any of the mapped live content relative to that master. */
-body.home-v3-mode .app-shell > .brand-header {
-  display: block !important;
-}
-
-.hm3-cropped-shell {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1024 / 1452.11;
-  overflow: hidden;
-  background: var(--shared-nav-ink);
-}
-
-.hm3-cropped-shell > .hm3-stage {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  transform: translateY(calc(-1 * var(--home-master-crop)));
-}
-
-/* CINE CAFE: shared header first, untouched Cine Cafe canvas immediately below,
-   with only its baked header strip clipped away. */
-.cine-cafe-page {
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.cine-cafe-page > .shared-top-nav {
-  width: min(100%, 900px);
-  flex: 0 0 auto;
-}
-
-.cine-cafe-cropped-shell {
-  position: relative;
-  width: min(100%, 900px);
-  aspect-ratio: 2 / 2.823;
-  overflow: hidden;
-  flex: 0 0 auto;
-  background: var(--shared-nav-ink);
-}
-
-.cine-cafe-cropped-shell > .cine-cafe-stage {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  transform: translateY(calc(-1 * var(--cine-master-crop)));
-}
-
+/* HOME + CINE CAFE: overlay the same Content header on their baked header strip.
+   Nothing below is moved, so the approved page mappings remain intact. */
 .hm3-stage::before,
 .cine-cafe-stage::before {
   content: none !important;
