@@ -46,7 +46,7 @@
     }
   }
 
-  function makeSharedNav(host) {
+  function makeSharedNav(host, { prepend = false } = {}) {
     if (!host || host.querySelector(':scope > .shared-top-nav')) return false;
 
     const nav = document.createElement('nav');
@@ -77,24 +77,50 @@
     });
 
     nav.append(artwork, brand, search);
-    host.append(nav);
+    if (prepend) host.prepend(nav);
+    else host.append(nav);
     disableLegacyHeaderControls(host);
     return true;
   }
 
+  function wrapStage(stage, className) {
+    if (!stage) return false;
+    if (stage.parentElement?.classList.contains(className)) return true;
+
+    const shell = document.createElement('div');
+    shell.className = className;
+    stage.before(shell);
+    shell.append(stage);
+    return true;
+  }
+
+  // Content and Home share the same real header host. Home CSS explicitly
+  // reveals this host even though the locked Home implementation used to hide it.
   makeSharedNav(document.querySelector('#brandHeader'));
-  makeSharedNav(document.querySelector('#cineCafeStage'));
+
+  if (isCineCafe) {
+    const page = document.querySelector('.cine-cafe-page');
+    makeSharedNav(page, { prepend: true });
+    wrapStage(document.querySelector('#cineCafeStage'), 'cine-cafe-cropped-shell');
+  }
+
   disableLegacyHeaderControls();
 
-  if (isHome && !makeSharedNav(document.querySelector('.hm3-stage'))) {
-    const observer = new MutationObserver(() => {
+  if (isHome) {
+    const configureHomeStage = () => {
       const stage = document.querySelector('.hm3-stage');
-      if (!stage) return;
-      makeSharedNav(stage);
+      if (!stage) return false;
+      wrapStage(stage, 'hm3-cropped-shell');
       disableLegacyHeaderControls(stage);
-      observer.disconnect();
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+      return true;
+    };
+
+    if (!configureHomeStage()) {
+      const observer = new MutationObserver(() => {
+        if (configureHomeStage()) observer.disconnect();
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    }
   }
 
   document.addEventListener('click', event => {
