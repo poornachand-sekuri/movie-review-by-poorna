@@ -1,13 +1,9 @@
-/* Shared top navigation for Home, Content and Cine Cafe.
-   This live bar deliberately covers each page master's baked header area so all
-   three mobile experiences expose the same navigation without shifting artwork. */
+/* Shared Content-page header across Home, Content and Cine Cafe.
+   The actual locked Content header artwork is reused on every page. */
 
 :root {
-  --shared-nav-height: clamp(50px, 13vw, 64px);
-  --shared-nav-gold: #d6a340;
-  --shared-nav-gold-soft: #f0cf83;
-  --shared-nav-ivory: #f5efe4;
   --shared-nav-ink: #050505;
+  --shared-nav-gold: #d8ae63;
 }
 
 .shared-top-nav {
@@ -16,128 +12,89 @@
   top: 0;
   z-index: 120;
   width: 100%;
-  height: var(--shared-nav-height);
-  display: grid;
-  grid-template-columns: minmax(72px, 20%) minmax(0, 1fr) minmax(72px, 20%);
-  align-items: stretch;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.035), transparent 38%),
-    linear-gradient(180deg, #11100f 0%, #070707 58%, #050505 100%);
-  border-bottom: 1px solid rgba(214,163,64,.72);
-  box-shadow:
-    inset 0 -1px 0 rgba(240,207,131,.10),
-    0 5px 14px rgba(0,0,0,.34);
-  color: var(--shared-nav-ivory);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--shared-nav-ink);
 }
 
-.shared-nav-action,
-.shared-nav-brand {
-  border: 0;
+.shared-nav-artwork {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* The original Content artwork includes a hamburger at the far left. Keep the
+   approved no-hamburger behavior by masking only that small artwork zone. */
+.shared-top-nav::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  top: 0;
+  width: 16%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 42% 50%,
+    #050505 0%,
+    #050505 48%,
+    rgba(5,5,5,.99) 64%,
+    rgba(5,5,5,.92) 78%,
+    rgba(5,5,5,0) 100%
+  );
+}
+
+.shared-nav-brand-hotspot,
+.shared-nav-search-hotspot {
+  position: absolute;
+  z-index: 4;
   margin: 0;
   padding: 0;
+  border: 0;
+  border-radius: 10px;
   background: transparent;
-  color: inherit;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.shared-nav-action {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(4px, 1.2vw, 7px);
-  color: #eadfc9;
-  font-size: clamp(8px, 2.25vw, 11px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+.shared-nav-brand-hotspot {
+  left: 16%;
+  top: 8%;
+  width: 68%;
+  height: 84%;
+}
+
+.shared-nav-search-hotspot {
+  right: 0;
+  top: 14%;
+  width: 16%;
+  height: 72%;
   cursor: pointer;
 }
 
-.shared-nav-action svg {
-  width: clamp(14px, 4.2vw, 20px);
-  height: clamp(14px, 4.2vw, 20px);
-  flex: 0 0 auto;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.shared-nav-brand-hotspot:focus-visible,
+.shared-nav-search-hotspot:focus-visible {
+  outline: 2px solid var(--shared-nav-gold);
+  outline-offset: -4px;
 }
 
-.shared-nav-home {
-  border-right: 1px solid rgba(214,163,64,.18);
-}
-
-.shared-nav-search {
-  border-left: 1px solid rgba(214,163,64,.18);
-}
-
-.shared-nav-brand {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 4px 2px;
-  text-align: center;
-}
-
-.shared-nav-brand-main {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  color: var(--shared-nav-gold-soft);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(11px, 3.4vw, 17px);
-  font-weight: 800;
-  line-height: 1.02;
-  letter-spacing: .055em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shared-nav-brand-sub {
-  display: block;
-  max-width: 100%;
-  margin-top: 3px;
-  overflow: hidden;
-  color: rgba(245,239,228,.74);
-  font-size: clamp(6.5px, 1.7vw, 8.5px);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: .17em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.shared-nav-action:active,
-.shared-nav-brand:active {
-  background: rgba(214,163,64,.09);
-}
-
-.shared-nav-action:focus-visible,
-.shared-nav-brand:focus-visible {
-  outline: 2px solid var(--shared-nav-gold-soft);
-  outline-offset: -3px;
-}
-
-/* CONTENT PAGE: retain a header-sized slot but replace its artwork completely. */
+/* CONTENT PAGE: let the shared header artwork define the same natural height as
+   the original Content header, while keeping the legacy copy out of sight. */
 .brand-header {
-  height: var(--shared-nav-height);
-  min-height: var(--shared-nav-height);
   background: var(--shared-nav-ink) !important;
 }
 
-.brand-header .brand-artwork {
+.brand-header > .shared-top-nav {
+  position: relative;
+}
+
+.brand-header > .brand-artwork {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 100%;
-  opacity: 0;
+  height: auto;
+  visibility: hidden;
   pointer-events: none;
 }
 
@@ -146,51 +103,19 @@
   display: none !important;
 }
 
-/* HOME PAGE: cover the baked top strip without moving the locked master. */
-.hm3-stage::before {
-  content: '';
-  position: absolute;
-  z-index: 110;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: var(--shared-nav-height);
-  background: var(--shared-nav-ink);
-  pointer-events: none;
+/* HOME + CINE CAFE: overlay the same Content header on their baked header strip.
+   Nothing below is moved, so the approved page mappings remain intact. */
+.hm3-stage::before,
+.cine-cafe-stage::before {
+  content: none !important;
 }
 
 .hm3-menu,
 .hm3-search,
-.hm3-home {
-  display: none !important;
-}
-
-/* CINE CAFE: create the same live top strip over the master artwork. */
-.cine-cafe-stage::before {
-  content: '';
-  position: absolute;
-  z-index: 110;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: var(--shared-nav-height);
-  background: var(--shared-nav-ink);
-  pointer-events: none;
-}
-
+.hm3-home,
 .hotspot-menu,
 .hotspot-search,
 .hotspot-bell,
 .hotspot-home {
   display: none !important;
-}
-
-@media (max-width: 360px) {
-  .shared-top-nav {
-    grid-template-columns: 18% minmax(0, 1fr) 18%;
-  }
-
-  .shared-nav-action span {
-    display: none;
-  }
 }
