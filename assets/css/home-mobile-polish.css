@@ -13,8 +13,10 @@
 
 /*
  * Taller mobile viewports can extend beyond the authored Home artwork.
- * Continue the theatre atmosphere with only smooth gradients. Avoid repeating
- * lines/patterns here because they read as visible boxes on tall phone screens.
+ * Continue the page as a premium cinema aisle using a browser-rendered SVG:
+ * velvet side curtains, a deep burgundy carpet, gold rails and soft aisle
+ * lights. Because it is vector artwork, it stays sharp on Retina/HD screens
+ * without introducing bitmap-loading or device-resolution issues.
  */
 .home-v3-mode .hm3-page::after {
   content: "";
@@ -22,17 +24,16 @@
   flex: 1 0 0;
   min-height: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 88% 54% at 50% -7%, rgba(221, 168, 66, .23) 0%, rgba(135, 83, 20, .085) 38%, rgba(5, 5, 5, 0) 74%),
-    radial-gradient(ellipse 62% 105% at -8% 45%, rgba(101, 8, 13, .18) 0%, rgba(52, 5, 8, .07) 44%, rgba(5, 5, 5, 0) 78%),
-    radial-gradient(ellipse 62% 105% at 108% 45%, rgba(101, 8, 13, .18) 0%, rgba(52, 5, 8, .07) 44%, rgba(5, 5, 5, 0) 78%),
-    radial-gradient(ellipse 80% 34% at 50% 105%, rgba(129, 76, 18, .075) 0%, rgba(5, 5, 5, 0) 72%),
-    linear-gradient(180deg, #0d0906 0%, #090604 27%, #060505 58%, #040404 82%, #030303 100%);
+  background-color: #030303;
+  background-image:
+    url("/assets/ui/home-theatre-tail.svg?v=20260901-hd-tail-1"),
+    linear-gradient(180deg, #0d0906 0%, #070303 55%, #020202 100%);
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100% 100%;
   box-shadow:
-    inset 0 1px 0 rgba(216, 163, 64, .22),
-    inset 0 24px 46px rgba(0, 0, 0, .32),
-    inset 28px 0 42px rgba(74, 5, 9, .105),
-    inset -28px 0 42px rgba(74, 5, 9, .105);
+    inset 0 1px 0 rgba(216, 163, 64, .25),
+    inset 0 22px 38px rgba(0, 0, 0, .24);
 }
 
 /*
