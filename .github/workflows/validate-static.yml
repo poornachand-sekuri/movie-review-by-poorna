@@ -1,4 +1,4 @@
-name: Validate Fresh Take
+name: Validate Movie Reviews By Poorna
 
 on:
   pull_request:
