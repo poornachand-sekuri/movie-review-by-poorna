@@ -124,8 +124,7 @@ button, select, input { -webkit-tap-highlight-color: transparent; }
   background: rgba(11, 9, 6, .87);
   overflow: hidden;
 }
-.filter-control select,
-.filter-control.filter-disabled {
+.filter-control select {
   width: 100%;
   height: 100%;
   border: 0;
@@ -138,6 +137,13 @@ button, select, input { -webkit-tap-highlight-color: transparent; }
   font-family: Arial, Helvetica, sans-serif;
   font-size: clamp(10px, 1.75cqw, 15px);
   cursor: pointer;
+}
+.filter-control.filter-disabled {
+  outline: 0;
+  background: rgba(11, 9, 6, .87);
+  color: rgba(247,234,208,.55);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(10px, 1.75cqw, 15px);
 }
 .filter-control::after {
   content: '⌄';
