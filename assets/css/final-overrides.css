@@ -50,7 +50,7 @@
   object-fit: fill;
 }
 .poster-safe-zone {
-  inset: 5.2% 5.8%;
+  inset: 6.5% 6.2%;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -58,13 +58,13 @@
 }
 .movie-poster {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  object-position: 50% 50%;
-  background: #050505;
+  object-position: center;
+  background: transparent;
 }
 .movie-meta {
   min-width: 0;
@@ -174,22 +174,26 @@
   white-space: nowrap;
 }
 .meta-pov-row {
-  padding-bottom: 9px !important;
+  padding-bottom: 10px !important;
 }
+/* My POV should read like raw chalk written directly on the clapboard surface. */
 .movie-pov {
-  position: relative;
   width: 100%;
   margin-top: 10px !important;
-  padding: 11px 13px 12px 15px;
-  border-left: 3px solid rgba(216,174,99,.72);
-  border-radius: 0 5px 5px 0;
-  background: linear-gradient(90deg, rgba(216,174,99,.075), rgba(216,174,99,.022) 62%, transparent);
-  color: #f3ecdf !important;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: .9rem !important;
-  font-weight: 500;
-  line-height: 1.53 !important;
-  letter-spacing: .004em;
+  padding: 0 5px 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(247,246,239,.94) !important;
+  font-family: "Chalkboard SE", "Marker Felt", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-size: 1rem !important;
+  font-weight: 400;
+  line-height: 1.58 !important;
+  letter-spacing: .012em;
+  text-shadow:
+    0 .35px 0 rgba(255,255,255,.22),
+    0 0 .8px rgba(255,255,255,.18);
   overflow-wrap: anywhere;
 }
 
@@ -471,7 +475,7 @@
     font-size: .79rem;
   }
   .movie-pov {
-    font-size: .87rem !important;
+    font-size: .96rem !important;
   }
 
   .related-reel {
