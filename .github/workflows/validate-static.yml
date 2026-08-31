@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - fresh-take-mobile-v2
+      - main
 
 jobs:
   validate:
@@ -23,6 +23,119 @@ jobs:
           node --check assets/js/config.js
           node --check assets/js/app.js
           node --check assets/js/ui-patch.js
+
+      - name: Reject WordPress runtime dependencies
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const runtimeRoots = [
+            'index.html',
+            'assets',
+            'public/data',
+            'package.json',
+            'wrangler.jsonc'
+          ];
+          const blocked = [
+            /wordpress/i,
+            /wp-content/i,
+            /wp-json/i,
+            /wp-includes/i,
+            /wp-admin/i,
+            /wp-login/i,
+            /xmlrpc\.php/i
+          ];
+          const textExtensions = new Set([
+            '.html', '.css', '.js', '.json', '.jsonc', '.md', '.txt', '.xml'
+          ]);
+
+          function filesUnder(target) {
+            if (!fs.existsSync(target)) return [];
+            const stat = fs.statSync(target);
+            if (stat.isFile()) return [target];
+            return fs.readdirSync(target, { withFileTypes: true }).flatMap(entry => {
+              const child = path.join(target, entry.name);
+              return entry.isDirectory() ? filesUnder(child) : [child];
+            });
+          }
+
+          const files = runtimeRoots.flatMap(filesUnder).filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return textExtensions.has(ext) || path.basename(file) === 'package.json';
+          });
+
+          const violations = [];
+          for (const file of files) {
+            const text = fs.readFileSync(file, 'utf8');
+            for (const pattern of blocked) {
+              if (pattern.test(text)) violations.push(`${file}: ${pattern}`);
+            }
+          }
+
+          if (violations.length) {
+            throw new Error(`Forbidden WordPress runtime reference(s):\n${violations.join('\n')}`);
+          }
+
+          console.log(`Checked ${files.length} runtime/data files: no WordPress references.`);
+          NODE
+
+      - name: Enforce R2 review media ownership
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const reviews = JSON.parse(fs.readFileSync('public/data/index.json', 'utf8'));
+          const allowedHost = 'assets.moviereviewbypoorna.com';
+          const requiredPosterPrefix = `https://${allowedHost}/reviews/`;
+          const violations = [];
+
+          function inspect(value, location) {
+            if (typeof value === 'string') {
+              const matches = value.match(/https?:\/\/[^\s"'<>]+/g) || [];
+              for (const raw of matches) {
+                let url;
+                try {
+                  url = new URL(raw);
+                } catch {
+                  violations.push(`${location}: invalid URL ${raw}`);
+                  continue;
+                }
+                if (url.hostname !== allowedHost) {
+                  violations.push(`${location}: external host ${url.hostname}`);
+                }
+              }
+              return;
+            }
+            if (Array.isArray(value)) {
+              value.forEach((item, index) => inspect(item, `${location}[${index}]`));
+              return;
+            }
+            if (value && typeof value === 'object') {
+              for (const [key, child] of Object.entries(value)) {
+                inspect(child, `${location}.${key}`);
+              }
+            }
+          }
+
+          reviews.forEach((review, index) => {
+            if (typeof review.m !== 'string' || !review.m.startsWith(requiredPosterPrefix)) {
+              violations.push(`reviews[${index}].m: poster must live under ${requiredPosterPrefix}`);
+            }
+            inspect(review, `reviews[${index}]`);
+          });
+
+          if (violations.length) {
+            throw new Error(`Review data references media/content outside owned R2:\n${violations.join('\n')}`);
+          }
+
+          const config = fs.readFileSync('assets/js/config.js', 'utf8');
+          const requiredUiBase = `https://${allowedHost}/ui/pages/content/v2/mobile`;
+          if (!config.includes(`uiAssetBase: '${requiredUiBase}'`)) {
+            throw new Error(`UI artwork must use owned R2 base ${requiredUiBase}`);
+          }
+
+          console.log(`Validated ${reviews.length} reviews: media and UI artwork are owned R2 assets.`);
+          NODE
 
       - name: Validate preserved JSON data
         run: |
