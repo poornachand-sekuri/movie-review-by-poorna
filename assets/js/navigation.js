@@ -26,27 +26,14 @@
     });
   }
 
-  function disableLegacyHeaderControls(root = document) {
-    const selectors = [
-      '#menuButton',
-      '#searchButton',
-      '.hm3-menu',
-      '.hm3-search',
-      '.hm3-home',
-      '.hotspot-menu',
-      '.hotspot-search',
-      '.hotspot-bell',
-      '.hotspot-home'
-    ];
-
-    for (const element of root.querySelectorAll(selectors.join(','))) {
-      element.hidden = true;
-      element.tabIndex = -1;
-      element.setAttribute('aria-hidden', 'true');
-    }
+  function hideElement(element) {
+    if (!element) return;
+    element.hidden = true;
+    element.tabIndex = -1;
+    element.setAttribute('aria-hidden', 'true');
   }
 
-  function makeSharedNav(host) {
+  function makeSharedNav(host, before = null) {
     if (!host || host.querySelector(':scope > .shared-top-nav')) return false;
 
     const nav = document.createElement('nav');
@@ -77,29 +64,58 @@
     });
 
     nav.append(artwork, brand, search);
-    host.append(nav);
-    disableLegacyHeaderControls(host);
+    if (before) host.insertBefore(nav, before);
+    else host.append(nav);
     return true;
   }
 
-  makeSharedNav(document.querySelector('#brandHeader'));
-  makeSharedNav(document.querySelector('#cineCafeStage'));
-  disableLegacyHeaderControls();
+  function configureContent() {
+    if (isHome || isCineCafe) return;
+    const header = document.querySelector('#brandHeader');
+    makeSharedNav(header);
+    hideElement(document.querySelector('#menuButton'));
+    hideElement(document.querySelector('#searchButton'));
+  }
 
-  if (isHome && !makeSharedNav(document.querySelector('.hm3-stage'))) {
+  function configureCineCafe() {
+    if (!isCineCafe) return;
+    const page = document.querySelector('.cine-cafe-page');
+    const stage = document.querySelector('#cineCafeStage');
+    makeSharedNav(page, stage);
+    hideElement(stage?.querySelector('.hotspot-menu'));
+  }
+
+  function configureHomeStage() {
+    const stage = document.querySelector('.hm3-stage');
+    if (!stage) return false;
+
+    hideElement(stage.querySelector('.hm3-menu'));
+
+    if (!stage.querySelector(':scope > .hm3-home')) {
+      const home = document.createElement('a');
+      home.className = 'hm3-hotspot hm3-home';
+      home.href = HOME_PATH;
+      home.setAttribute('aria-label', `${SITE_NAME} — Home`);
+      stage.append(home);
+    }
+    return true;
+  }
+
+  configureContent();
+  configureCineCafe();
+
+  if (isHome && !configureHomeStage()) {
     const observer = new MutationObserver(() => {
-      const stage = document.querySelector('.hm3-stage');
-      if (!stage) return;
-      makeSharedNav(stage);
-      disableLegacyHeaderControls(stage);
-      observer.disconnect();
+      if (configureHomeStage()) observer.disconnect();
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
+  /* Home retains its native search icon, but its action goes to Cine Cafe.
+     View All continues to route to Cine Cafe as previously approved. */
   document.addEventListener('click', event => {
     const target = event.target.closest?.(
-      '.hm3-recent-view-all, .hm3-prev-view-all, [data-cine-cafe-nav]'
+      '.hm3-search, .hm3-recent-view-all, .hm3-prev-view-all, [data-cine-cafe-nav]'
     );
     if (!target) return;
 
