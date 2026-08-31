@@ -1,0 +1,49 @@
+name: Smoke Live Comments
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  live-comments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify public comments API
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://movie-review-by-poorna.poornarocks.workers.dev/api/comments?target=review&target_id=dc'
+          body=''
+          status=''
+
+          for attempt in {1..12}; do
+            status=$(curl -sS -o /tmp/comments.json -w '%{http_code}' "$url" || true)
+            if [ "$status" = '200' ]; then
+              body=$(cat /tmp/comments.json)
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$status" != '200' ]; then
+            echo "Production comments endpoint returned HTTP $status"
+            cat /tmp/comments.json 2>/dev/null || true
+            exit 1
+          fi
+
+          node - "$body" <<'NODE'
+          const payload = JSON.parse(process.argv[2]);
+          if (!Array.isArray(payload.comments)) {
+            throw new Error('Public comments response is missing comments[]');
+          }
+          for (const comment of payload.comments) {
+            for (const key of ['id', 'name', 'comment', 'created_at']) {
+              if (typeof comment[key] !== 'string') throw new Error(`Invalid public comment ${key}`);
+            }
+            if ('email' in comment || 'client_key' in comment) {
+              throw new Error('Private commenter data leaked through public API');
+            }
+          }
+          console.log(`Live comments OK: ${payload.comments.length} approved comment(s)`);
+          NODE

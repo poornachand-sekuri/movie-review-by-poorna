@@ -27,6 +27,7 @@ jobs:
           node --check assets/js/app.js
           node --check assets/js/ui-patch.js
           node --check assets/js/live-reactions.js
+          node --check assets/js/comments.js
           node --check src/worker.js
 
       - name: Validate Cloudflare Worker bundle
@@ -176,4 +177,5 @@ jobs:
           test -f assets/js/config.js
           test -f assets/js/app.js
           test -f assets/js/live-reactions.js
+          test -f assets/js/comments.js
           test -f src/worker.js

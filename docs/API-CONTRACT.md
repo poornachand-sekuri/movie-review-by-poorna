@@ -1,14 +1,12 @@
 # Likes / Dislikes and Comments API Contract
 
-The frontend is deliberately decoupled from the persistence backend. Set `CONFIG.apiBase` in `assets/js/config.js` when the production API is available.
-
-A Cloudflare Worker + D1 is a good fit if the site is being kept within Cloudflare, but the contract below is host-agnostic.
+Production APIs are same-origin Cloudflare Worker routes under `/api`.
 
 ## Reactions
 
-### GET `/reactions?slug=<movie-slug>`
+### GET `/api/reactions?slug=<movie-slug>`
 
-Response:
+Returns shared totals plus this browser's current vote.
 
 ```json
 {
@@ -18,11 +16,7 @@ Response:
 }
 ```
 
-`myVote` may be `"like"`, `"dislike"` or `null`.
-
-### POST `/reactions`
-
-Request:
+### POST `/api/reactions`
 
 ```json
 {
@@ -31,21 +25,20 @@ Request:
 }
 ```
 
-Response uses the same shape as the GET endpoint.
-
-Production requirements:
-
-- validate the movie slug against the review catalog
-- allow only `like` / `dislike`
-- prevent one client from endlessly inflating counts
-- allow switching a previous vote without double-counting
-- never trust counts sent from the browser
+The Worker validates the slug, accepts only `like` / `dislike`, prevents repeat inflation from the same browser and supports switching a previous vote.
 
 ## Public comments
 
-### GET `/comments?slug=<movie-slug>`
+Comments are target-based so the same backend can serve review pages and the Home page.
 
-Return approved comments only:
+Supported targets:
+
+- review page: `target=review`, `target_id=<movie-slug>`
+- Home page: `target=home`, `target_id=home`
+
+### GET `/api/comments?target=review&target_id=<movie-slug>`
+
+Only approved comments are returned, newest first. Public responses never contain email addresses or client identifiers.
 
 ```json
 {
@@ -60,70 +53,95 @@ Return approved comments only:
 }
 ```
 
-Do not expose commenter email addresses publicly.
+### POST `/api/comments`
 
-### POST `/comments`
-
-Request:
+Review-page submission:
 
 ```json
 {
-  "slug": "salaar-part-1-ceasefire",
+  "target": "review",
+  "target_id": "salaar-part-1-ceasefire",
   "name": "Movie Lover",
   "email": "viewer@example.com",
   "comment": "Loved the review."
 }
 ```
 
-New comments must be stored as `pending` and must not become public until an admin approves them.
+Home-page submission uses `"target": "home"` and `"target_id": "home"`.
 
-Suggested response:
+Successful submissions are stored as `pending` and are not public until approved.
 
 ```json
 {
-  "status": "pending"
+  "status": "pending",
+  "id": "..."
 }
 ```
 
+Server-side safeguards include:
+
+- same-origin write protection
+- review-slug validation against the live catalog
+- name, email and comment length validation
+- email format validation
+- honeypot bot field support
+- per-browser submission cooldown
+- duplicate-comment rejection window
+- private email storage
+
 ## Admin moderation
 
-Admin routes must require authentication and must never rely on a hidden frontend button as security.
+Admin routes are disabled until the Cloudflare Worker secret `ADMIN_COMMENTS_TOKEN` is configured. They require:
 
-Minimum actions:
+```text
+Authorization: Bearer <ADMIN_COMMENTS_TOKEN>
+```
 
-- list pending comments
-- approve pending comment
-- reject pending comment
-- delete an already approved comment
+### GET `/api/admin/comments`
 
-Suggested state model:
+Defaults to pending comments. Optional query parameters:
+
+- `status=pending|approved|rejected|deleted|all`
+- `target=review|home`
+- `target_id=<id>`
+- `limit=<1-200>`
+
+Admin responses may include commenter email addresses because this endpoint is authenticated.
+
+### POST `/api/admin/comments/<comment-id>`
+
+```json
+{
+  "action": "approve"
+}
+```
+
+Allowed actions: `approve`, `reject`, `delete`.
+
+State model:
 
 ```text
 pending -> approved -> deleted
         -> rejected
 ```
 
-Suggested D1 tables:
+## Storage
 
-```sql
-CREATE TABLE reactions (
-  slug TEXT NOT NULL,
-  voter_key TEXT NOT NULL,
-  vote TEXT NOT NULL CHECK (vote IN ('like','dislike')),
-  updated_at TEXT NOT NULL,
-  PRIMARY KEY (slug, voter_key)
-);
+Reactions use one SQLite-backed Durable Object per review. Comments use one central SQLite-backed `CommentsStore` Durable Object so a moderation queue can span Home and all review pages.
 
-CREATE TABLE comments (
-  id TEXT PRIMARY KEY,
-  slug TEXT NOT NULL,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  comment TEXT NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('pending','approved','rejected','deleted')),
-  created_at TEXT NOT NULL,
-  moderated_at TEXT
-);
+The comments table stores:
+
+```text
+id
+target_type
+target_id
+name
+email
+comment
+status
+client_key
+created_at
+moderated_at
 ```
 
-Add rate limiting, spam protection and server-side input length validation before public launch.
+The reusable frontend adapter is `assets/js/comments.js`. Content pages call it with a review target; the Home comments UI can call the same module with the Home target when that branch is ready.

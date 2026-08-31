@@ -17,6 +17,10 @@
       {
         "name": "REACTIONS",
         "class_name": "ReactionStore"
+      },
+      {
+        "name": "COMMENTS",
+        "class_name": "CommentsStore"
       }
     ]
   },
@@ -24,6 +28,10 @@
     {
       "tag": "v1-reactions",
       "new_sqlite_classes": ["ReactionStore"]
+    },
+    {
+      "tag": "v2-comments",
+      "new_sqlite_classes": ["CommentsStore"]
     }
   ]
 }

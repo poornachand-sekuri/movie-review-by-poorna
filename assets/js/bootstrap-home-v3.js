@@ -10,8 +10,12 @@ if (isHome) {
   document.head.append(css);
   import('./home-v3.js');
 } else {
-  import('./app.js').then(() => Promise.all([
-    import('./ui-patch.js'),
-    import('./live-reactions.js')
-  ]));
+  import('./app.js').then(async () => {
+    const [, , comments] = await Promise.all([
+      import('./ui-patch.js'),
+      import('./live-reactions.js'),
+      import('./comments.js')
+    ]);
+    comments.mountReviewComments();
+  });
 }
