@@ -1,88 +1,106 @@
 (() => {
+  const HOME_PATH = '/';
   const CINE_CAFE_PATH = '/cine-cafe/';
   const url = new URL(window.location.href);
-  const isHome = !url.searchParams.has('review') && url.pathname.split('/').filter(Boolean).length === 0;
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const isHome = !url.searchParams.has('review') && pathParts.length === 0;
   const isCineCafe = url.pathname.replace(/\/+$/, '') === '/cine-cafe';
 
-  function createHomeHotspot(parent, className, label) {
-    if (!parent || parent.querySelector(`.${className.split(' ').join('.')}`)) return;
-    const link = document.createElement('a');
-    link.className = className;
-    link.href = '/';
-    link.setAttribute('aria-label', label);
-    parent.append(link);
+  function homeIcon() {
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.5 10.8 12 3.8l8.5 7v9.4h-6v-5.7h-5v5.7h-6z"></path>
+      </svg>`;
   }
 
-  function configureContentHeader() {
-    const header = document.querySelector('#brandHeader');
-    if (!header) return;
+  function searchIcon() {
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.8" cy="10.8" r="6.2"></circle>
+        <path d="m15.4 15.4 5 5"></path>
+      </svg>`;
+  }
 
-    createHomeHotspot(
-      header,
-      'header-hotspot header-home',
-      'Movie Reviews By Poorna — Home'
-    );
+  function disableLegacyHeaderControls(root = document) {
+    const selectors = [
+      '#menuButton',
+      '#searchButton',
+      '.hm3-menu',
+      '.hm3-search',
+      '.hm3-home',
+      '.hotspot-menu',
+      '.hotspot-search',
+      '.hotspot-bell',
+      '.hotspot-home'
+    ];
 
-    const menu = document.querySelector('#menuButton');
-    if (menu) {
-      menu.hidden = true;
-      menu.tabIndex = -1;
-      menu.setAttribute('aria-hidden', 'true');
+    for (const element of root.querySelectorAll(selectors.join(','))) {
+      element.hidden = true;
+      element.tabIndex = -1;
+      element.setAttribute('aria-hidden', 'true');
     }
   }
 
-  function configureCineCafeHeader() {
-    const stage = document.querySelector('#cineCafeStage');
-    if (!stage) return;
+  function makeSharedNav(host) {
+    if (!host || host.querySelector(':scope > .shared-top-nav')) return false;
 
-    createHomeHotspot(
-      stage,
-      'hotspot hotspot-home',
-      'Movie Reviews By Poorna — Home'
-    );
+    const nav = document.createElement('nav');
+    nav.className = 'shared-top-nav';
+    nav.setAttribute('aria-label', 'Primary navigation');
 
-    const menu = stage.querySelector('.hotspot-menu');
-    if (menu) {
-      menu.hidden = true;
-      menu.tabIndex = -1;
-      menu.setAttribute('aria-hidden', 'true');
-    }
-  }
+    const home = document.createElement('a');
+    home.className = 'shared-nav-action shared-nav-home';
+    home.href = HOME_PATH;
+    home.setAttribute('aria-label', 'Home');
+    home.innerHTML = `${homeIcon()}<span>Home</span>`;
 
-  function configureHomeHeader() {
-    const stage = document.querySelector('.hm3-stage');
-    if (!stage) return false;
+    const brand = document.createElement('a');
+    brand.className = 'shared-nav-brand';
+    brand.href = HOME_PATH;
+    brand.setAttribute('aria-label', 'Movie Reviews By Poorna — Home');
+    brand.innerHTML = '<span class="shared-nav-brand-main">Movie Reviews By Poorna</span>';
 
-    createHomeHotspot(
-      stage,
-      'hm3-hotspot hm3-home',
-      'Movie Reviews By Poorna — Home'
-    );
+    const search = document.createElement('button');
+    search.className = 'shared-nav-action shared-nav-search';
+    search.type = 'button';
+    search.setAttribute('aria-label', isCineCafe ? 'Focus Cine Cafe search' : 'Open Cine Cafe search');
+    search.innerHTML = `${searchIcon()}<span>Search</span>`;
+    search.addEventListener('click', () => {
+      if (isCineCafe) {
+        document.querySelector('#cineSearch')?.focus();
+        return;
+      }
+      window.location.assign(CINE_CAFE_PATH);
+    });
 
-    const menu = stage.querySelector('.hm3-menu');
-    if (menu) {
-      menu.hidden = true;
-      menu.tabIndex = -1;
-      menu.setAttribute('aria-hidden', 'true');
-    }
+    nav.append(home, brand, search);
+    host.append(nav);
+    disableLegacyHeaderControls(host);
     return true;
   }
 
-  configureContentHeader();
-  configureCineCafeHeader();
+  function configureStaticHosts() {
+    makeSharedNav(document.querySelector('#brandHeader'));
+    makeSharedNav(document.querySelector('#cineCafeStage'));
+    disableLegacyHeaderControls();
+  }
 
-  if (isHome && !configureHomeHeader()) {
+  configureStaticHosts();
+
+  if (isHome && !makeSharedNav(document.querySelector('.hm3-stage'))) {
     const observer = new MutationObserver(() => {
-      if (configureHomeHeader()) observer.disconnect();
+      const stage = document.querySelector('.hm3-stage');
+      if (!stage) return;
+      makeSharedNav(stage);
+      disableLegacyHeaderControls(stage);
+      observer.disconnect();
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
   document.addEventListener('click', event => {
-    if (isCineCafe) return;
-
     const target = event.target.closest?.(
-      '#searchButton, .hm3-search, .hm3-recent-view-all, .hm3-prev-view-all, [data-cine-cafe-nav]'
+      '.hm3-recent-view-all, .hm3-prev-view-all, [data-cine-cafe-nav]'
     );
     if (!target) return;
 
