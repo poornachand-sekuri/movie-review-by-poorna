@@ -238,8 +238,8 @@ function render() {
   const first = movies.length ? start + 1 : 0;
   const last = Math.min(start + PAGE_SIZE, movies.length);
   $('#resultCount').textContent = movies.length
-    ? `Showing ${first}–${last} of ${movies.length} reviews`
-    : 'Showing 0 reviews';
+    ? `Serving ${first}–${last} of ${movies.length} reviews`
+    : 'Serving 0 reviews';
 
   $('#emptyState').hidden = movies.length !== 0;
   renderPagination(totalPages);
