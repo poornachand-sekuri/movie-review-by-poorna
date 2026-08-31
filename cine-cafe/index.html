@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050403">
+  <meta name="description" content="Cine Café — Reviews Served Hot and Cold">
+  <title>Cine Café — Movie Reviews By Poorna</title>
+  <link rel="stylesheet" href="/assets/css/cine-cafe.css">
+</head>
+<body>
+  <main class="cine-cafe-page" aria-label="Cine Café review search">
+    <section class="cine-cafe-stage" id="cineCafeStage" aria-busy="true">
+      <a class="hotspot hotspot-menu" href="/" aria-label="Back to home"></a>
+      <button class="hotspot hotspot-search" id="headerSearch" type="button" aria-label="Focus search"></button>
+      <button class="hotspot hotspot-bell" type="button" aria-label="Notifications" disabled></button>
+
+      <form class="search-overlay" id="searchForm" role="search">
+        <label class="sr-only" for="cineSearch">Search reviews</label>
+        <input id="cineSearch" type="search" autocomplete="off" placeholder="Search movie, cast, director…">
+      </form>
+
+      <button class="filter-panel-hotspot" id="filtersButton" type="button" aria-expanded="false" aria-controls="filterRow">Filters</button>
+
+      <div class="filter-row" id="filterRow">
+        <button class="filter-reset" id="allReviews" type="button">All Reviews</button>
+        <label class="filter-control filter-language">
+          <span class="sr-only">Language</span>
+          <select id="languageFilter" aria-label="Language"><option value="">Language</option></select>
+        </label>
+        <button class="filter-control filter-genre filter-disabled" id="genreFilter" type="button" disabled aria-describedby="genreNote">Genre</button>
+        <span id="genreNote" class="sr-only">Genre filtering will activate when genre metadata is available.</span>
+        <label class="filter-control filter-year">
+          <span class="sr-only">Year</span>
+          <select id="yearFilter" aria-label="Year"><option value="">Year</option></select>
+        </label>
+        <label class="filter-control filter-rating">
+          <span class="sr-only">Rating</span>
+          <select id="ratingFilter" aria-label="Rating">
+            <option value="">Rating</option>
+            <option value="5">★★★★★</option>
+            <option value="4">★★★★☆ &amp; up</option>
+            <option value="3">★★★☆☆ &amp; up</option>
+            <option value="2">★★☆☆☆ &amp; up</option>
+            <option value="1">★☆☆☆☆ &amp; up</option>
+          </select>
+        </label>
+        <label class="filter-control filter-sort">
+          <span class="sr-only">Sort reviews</span>
+          <select id="sortFilter" aria-label="Sort reviews">
+            <option value="latest">Sort by Latest</option>
+            <option value="oldest">Sort by Oldest</option>
+            <option value="rating-desc">Sort by Rating</option>
+            <option value="title">Sort by Title</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="result-count" id="resultCount" aria-live="polite"></p>
+
+      <section class="results-layer" id="resultsLayer" aria-label="Review results"></section>
+
+      <nav class="pagination-layer" id="pagination" aria-label="Review pages"></nav>
+      <p class="empty-state" id="emptyState" hidden>No reviews match those filters.</p>
+    </section>
+  </main>
+
+  <script type="module" src="/assets/js/cine-cafe.js"></script>
+</body>
+</html>
