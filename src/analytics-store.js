@@ -18,6 +18,11 @@ function clean(value, max = 180) {
   return String(value || '').trim().slice(0, max);
 }
 
+function publicPageWhere(alias = '') {
+  const prefix = alias ? `${alias}.` : '';
+  return `${prefix}page_key != '/admin' AND ${prefix}page_key NOT LIKE '/admin/%'`;
+}
+
 export class AnalyticsStore extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
@@ -129,23 +134,24 @@ export class AnalyticsStore extends DurableObject {
   summary(url) {
     const days = Math.max(1, Math.min(365, Number(url.searchParams.get('days')) || 30));
     const since = isoDay(Date.now() - (days - 1) * 86400000);
+    const publicPages = publicPageWhere();
 
     const totals = this.sql.exec(
       `SELECT COALESCE(SUM(views), 0) AS views
        FROM page_daily
-       WHERE day >= ?`,
+       WHERE day >= ? AND ${publicPages}`,
       since
     ).one();
     const unique = this.sql.exec(
-      `SELECT COUNT(DISTINCT visitor_key) AS visitors
-       FROM visitor_site_daily
-       WHERE day >= ?`,
+      `SELECT COUNT(DISTINCT v.visitor_key) AS visitors
+       FROM visitor_page_daily v
+       WHERE v.day >= ? AND ${publicPageWhere('v')}`,
       since
     ).one();
     const byType = this.sql.exec(
       `SELECT page_type, COALESCE(SUM(views), 0) AS views
        FROM page_daily
-       WHERE day >= ?
+       WHERE day >= ? AND ${publicPages}
        GROUP BY page_type
        ORDER BY views DESC`,
       since
@@ -153,7 +159,7 @@ export class AnalyticsStore extends DurableObject {
     const daily = this.sql.exec(
       `SELECT day, COALESCE(SUM(views), 0) AS views
        FROM page_daily
-       WHERE day >= ?
+       WHERE day >= ? AND ${publicPages}
        GROUP BY day
        ORDER BY day ASC`,
       since
@@ -163,14 +169,12 @@ export class AnalyticsStore extends DurableObject {
               CASE
                 WHEN page_type = 'home' THEN 'Home'
                 WHEN page_type = 'cine-cafe' THEN 'Cine Café'
-                WHEN page_type = 'review' THEN COALESCE(MAX(slug), page_key)
+                WHEN page_type = 'review' THEN NULL
                 ELSE COALESCE(MAX(title), page_key)
               END AS title,
               COALESCE(SUM(views), 0) AS views
        FROM page_daily
-       WHERE day >= ?
-         AND page_key != '/admin'
-         AND page_key NOT LIKE '/admin/%'
+       WHERE day >= ? AND ${publicPages}
        GROUP BY page_type, page_key, slug
        ORDER BY views DESC, page_key ASC`,
       since
@@ -178,9 +182,7 @@ export class AnalyticsStore extends DurableObject {
     const pageVisitors = this.sql.exec(
       `SELECT p.page_key, COUNT(DISTINCT p.visitor_key) AS visitors
        FROM visitor_page_daily p
-       WHERE p.day >= ?
-         AND p.page_key != '/admin'
-         AND p.page_key NOT LIKE '/admin/%'
+       WHERE p.day >= ? AND ${publicPageWhere('p')}
        GROUP BY p.page_key`,
       since
     ).toArray();
