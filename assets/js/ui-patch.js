@@ -12,8 +12,9 @@ if (searchDialog && searchClose) {
  * Surgical visual fixes only.
  * 1) Keep the full movie poster uncropped while removing the obvious empty/letterbox
  *    look that landscape source images create inside the portrait gold frame.
- * 2) Lift the locked theater-bottom artwork on real phone displays so the red cinema
- *    seats remain clearly visible without changing the AVIF itself.
+ * 2) Align the final single-source theater artwork as one continuous Top → Middle → Bottom
+ *    composition. The old theater overlap and seat-brightness tuning belonged to the
+ *    previous artwork and must not affect the new master-derived AVIFs.
  */
 const visualPatch = document.createElement('style');
 visualPatch.textContent = `
@@ -52,8 +53,34 @@ visualPatch.textContent = `
     background: transparent !important;
   }
 
+  /* Final theater master: do not pull the middle over the fixed Top artwork. */
+  .theater-top {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+  }
+
+  /* Keep review copy entirely inside the black projection screen. */
+  .theater-middle {
+    margin-top: -1px !important;
+    margin-bottom: -1px !important;
+    min-height: 0 !important;
+    padding: 14px 18.5% 22px 19.5% !important;
+    background-size: 100% 100% !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  /* Preserve the new seating artwork at its authored brightness and color. */
   .theater-bottom {
-    filter: brightness(1.92) contrast(1.18) saturate(1.72) !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin-top: -1px !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
   }
 `;
 document.head.append(visualPatch);
