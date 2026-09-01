@@ -11,9 +11,58 @@ const state = {
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-function setAsset(img, name) {
-  img.src = uiAsset(name);
+const UI_IMAGE_DIMENSIONS = {
+  header: [1934, 320],
+  clapTop: [2025, 275],
+  posterFrame: [1122, 1402],
+  theaterTop: [1535, 248],
+  theaterBottom: [1535, 384],
+  relatedHeader: [2048, 326],
+  commentsHeader: [1496, 193]
+};
+
+function setAsset(img, name, { loading = 'eager', fetchPriority = 'auto' } = {}) {
+  if (!img) return;
+  const dimensions = UI_IMAGE_DIMENSIONS[name];
+  if (dimensions) {
+    img.width = dimensions[0];
+    img.height = dimensions[1];
+  }
   img.decoding = 'async';
+  img.loading = loading;
+  if (fetchPriority !== 'auto') img.fetchPriority = fetchPriority;
+  img.src = uiAsset(name);
+}
+
+function deferBackground(element, name) {
+  if (!element) return;
+  element.dataset.uiBackground = uiAsset(name);
+}
+
+function applyDeferredBackground(element) {
+  const source = element?.dataset?.uiBackground;
+  if (!source) return;
+  element.style.backgroundImage = `url("${source}")`;
+  delete element.dataset.uiBackground;
+}
+
+function observeDeferredBackgrounds(root) {
+  const targets = [...root.querySelectorAll('[data-ui-background]')];
+  if (!targets.length) return;
+  if (!('IntersectionObserver' in window)) {
+    targets.forEach(applyDeferredBackground);
+    return;
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      applyDeferredBackground(entry.target);
+      observer.unobserve(entry.target);
+    }
+  }, { rootMargin: '600px 0px' });
+
+  targets.forEach(target => observer.observe(target));
 }
 
 function starString(rating) {
@@ -211,18 +260,18 @@ function requestedSlug() {
 }
 
 function setupArtwork(root) {
-  setAsset($('#brandArtwork'), 'header');
-  setAsset($('.clapboard-top', root), 'clapTop');
+  setAsset($('#brandArtwork'), 'header', { fetchPriority: 'high' });
+  setAsset($('.clapboard-top', root), 'clapTop', { fetchPriority: 'high' });
   $('.clapboard-bg', root).style.backgroundImage = `url("${uiAsset('clapBody')}")`;
-  $('.reaction-bg', root).style.backgroundImage = `url("${uiAsset('likeFrame')}")`;
+  deferBackground($('.reaction-bg', root), 'likeFrame');
   setAsset($('.poster-frame-art', root), 'posterFrame');
-  setAsset($('.theater-top', root), 'theaterTop');
+  setAsset($('.theater-top', root), 'theaterTop', { fetchPriority: 'high' });
   $('.theater-middle', root).style.backgroundImage = `url("${uiAsset('theaterMiddle')}")`;
-  setAsset($('.theater-bottom', root), 'theaterBottom');
-  setAsset($('.related-header', root), 'relatedHeader');
-  $('.related-reel', root).style.backgroundImage = `url("${uiAsset('relatedReel')}")`;
-  setAsset($('.comments-header', root), 'commentsHeader');
-  $('.comments-bg', root).style.backgroundImage = `url("${uiAsset('commentsShell')}")`;
+  setAsset($('.theater-bottom', root), 'theaterBottom', { loading: 'lazy', fetchPriority: 'low' });
+  setAsset($('.related-header', root), 'relatedHeader', { loading: 'lazy', fetchPriority: 'low' });
+  deferBackground($('.related-reel', root), 'relatedReel');
+  setAsset($('.comments-header', root), 'commentsHeader', { loading: 'lazy', fetchPriority: 'low' });
+  deferBackground($('.comments-bg', root), 'commentsShell');
   document.documentElement.style.setProperty('--related-comments-gap', `${CONFIG.relatedToCommentsGapPx}px`);
 }
 
@@ -252,6 +301,7 @@ function renderRelated(root, movie) {
     poster.src = item.movie.m;
     poster.alt = `${item.movie.t} poster`;
     poster.loading = 'lazy';
+    poster.decoding = 'async';
     posterZone.append(poster);
 
     const title = document.createElement('div');
@@ -275,153 +325,6 @@ function renderRelated(root, movie) {
   }
 }
 
-function reactionStorageKey(slug) {
-  return `mrp-reactions:${slug}`;
-}
-
-function getLocalReactions(slug) {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(reactionStorageKey(slug)) || '{}');
-    return { like: Number(parsed.like) || 0, dislike: Number(parsed.dislike) || 0, myVote: parsed.myVote || null };
-  } catch {
-    return { like: 0, dislike: 0, myVote: null };
-  }
-}
-
-function setLocalReactions(slug, value) {
-  localStorage.setItem(reactionStorageKey(slug), JSON.stringify(value));
-}
-
-async function loadReactions(slug) {
-  if (!CONFIG.apiBase) return getLocalReactions(slug);
-  try {
-    const response = await fetch(`${CONFIG.apiBase}/reactions?slug=${encodeURIComponent(slug)}`);
-    if (!response.ok) throw new Error('reaction request failed');
-    return await response.json();
-  } catch {
-    return getLocalReactions(slug);
-  }
-}
-
-async function submitReaction(slug, vote) {
-  if (CONFIG.apiBase) {
-    const response = await fetch(`${CONFIG.apiBase}/reactions`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ slug, vote })
-    });
-    if (!response.ok) throw new Error('Could not save reaction');
-    return response.json();
-  }
-
-  const current = getLocalReactions(slug);
-  if (current.myVote === vote) return current;
-  if (current.myVote === 'like') current.like = Math.max(0, current.like - 1);
-  if (current.myVote === 'dislike') current.dislike = Math.max(0, current.dislike - 1);
-  current[vote] += 1;
-  current.myVote = vote;
-  setLocalReactions(slug, current);
-  return current;
-}
-
-function paintReactions(root, values) {
-  $('.like-count', root).textContent = values.like ?? 0;
-  $('.dislike-count', root).textContent = values.dislike ?? 0;
-  for (const button of $$('.reaction-button', root)) {
-    button.setAttribute('aria-pressed', String(button.dataset.vote === values.myVote));
-  }
-}
-
-async function setupReactions(root, movie) {
-  paintReactions(root, await loadReactions(movie.s));
-  for (const button of $$('.reaction-button', root)) {
-    button.addEventListener('click', async () => {
-      button.disabled = true;
-      try {
-        paintReactions(root, await submitReaction(movie.s, button.dataset.vote));
-      } finally {
-        button.disabled = false;
-      }
-    });
-  }
-}
-
-async function loadComments(slug) {
-  if (!CONFIG.apiBase) return [];
-  try {
-    const response = await fetch(`${CONFIG.apiBase}/comments?slug=${encodeURIComponent(slug)}`);
-    if (!response.ok) return [];
-    const payload = await response.json();
-    return Array.isArray(payload) ? payload : payload.comments || [];
-  } catch {
-    return [];
-  }
-}
-
-function commentCard(comment) {
-  const card = document.createElement('article');
-  card.className = 'comment-card';
-  const name = document.createElement('strong');
-  name.textContent = comment.name || 'Movie Lover';
-  const body = document.createElement('p');
-  body.textContent = comment.comment || '';
-  const time = document.createElement('time');
-  time.textContent = comment.created_at ? formatDate(comment.created_at.slice(0, 10)) : '';
-  card.append(name, body, time);
-  return card;
-}
-
-async function setupComments(root, movie) {
-  const list = $('.comment-list', root);
-  const comments = await loadComments(movie.s);
-  list.replaceChildren();
-  if (comments.length) comments.forEach(comment => list.append(commentCard(comment)));
-  else {
-    const empty = document.createElement('p');
-    empty.className = 'comment-empty';
-    empty.textContent = CONFIG.apiBase
-      ? 'No approved comments yet. Be the first to share your opinion.'
-      : 'Comments backend is not connected on this preview branch yet.';
-    list.append(empty);
-  }
-
-  const form = $('.comment-form', root);
-  const status = $('.comment-status', root);
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    const data = new FormData(form);
-    const payload = {
-      slug: movie.s,
-      name: String(data.get('name') || '').trim(),
-      email: String(data.get('email') || '').trim(),
-      comment: String(data.get('comment') || '').trim()
-    };
-    if (!payload.name || !payload.email || !payload.comment) return;
-
-    const submit = $('button[type="submit"]', form);
-    submit.disabled = true;
-    status.textContent = '';
-    try {
-      if (!CONFIG.apiBase) {
-        status.textContent = 'Preview mode: the form is ready, but a moderation API must be connected before public launch.';
-        return;
-      }
-      const response = await fetch(`${CONFIG.apiBase}/comments`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!response.ok) throw new Error('Could not submit comment');
-      form.reset();
-      status.textContent = 'Thank you. Your comment is pending admin approval.';
-    } catch (error) {
-      status.textContent = error.message || 'Could not submit comment.';
-    } finally {
-      submit.disabled = false;
-    }
-  });
-}
-
 function renderMovie(movie) {
   state.activeMovie = movie;
   document.title = `${movie.t} — Movie Reviews By Poorna`;
@@ -441,6 +344,8 @@ function renderMovie(movie) {
   const poster = $('.movie-poster', root);
   poster.src = movie.m;
   poster.alt = `${movie.t} poster`;
+  poster.decoding = 'async';
+  poster.fetchPriority = 'high';
 
   // Review body is authored content from the site's own preserved dataset.
   $('.review-body', root).innerHTML = movie.body || `<p>${movie.e || ''}</p>`;
@@ -449,8 +354,8 @@ function renderMovie(movie) {
 
   const content = $('#content');
   content.replaceChildren(fragment);
-  setupReactions(content, movie);
-  setupComments(content, movie);
+  document.documentElement.dataset.activeReviewSlug = movie.s;
+  observeDeferredBackgrounds(content);
   $('#app').setAttribute('aria-busy', 'false');
 }
 

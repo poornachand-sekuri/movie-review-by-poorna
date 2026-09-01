@@ -9,9 +9,9 @@ export const CONFIG = {
     clapBody: '04-clapboard-body-NO-SCREW-PLATE-LOCKED.avif',
     likeFrame: '05-like-dislike-interaction-frame-TALLER-LOCKED.avif',
     posterFrame: '06-poster-frame-LOCKED.avif',
-    theaterTop: '07-theater-top-LOCKED.avif?v=20260831-final-theater',
-    theaterMiddle: '08-theater-middle-stretchable-LOCKED.avif?v=20260831-final-theater',
-    theaterBottom: '09-theater-bottom-seats-LOCKED.avif?v=20260831-final-theater',
+    theaterTop: '/assets/images/content-v2/theater-top-q58.avif?v=20260901-runtime-1',
+    theaterMiddle: '/assets/images/content-v2/theater-middle-q58.avif?v=20260901-runtime-1',
+    theaterBottom: '/assets/images/content-v2/theater-bottom-q58.avif?v=20260901-runtime-1',
     relatedHeader: '10-related-reviews-header-LOCKED.avif',
     relatedReel: '11-related-reviews-film-reel-strip-LOCKED.avif',
     commentsHeader: '13-share-your-opinion-header-LOCKED.avif',
@@ -20,5 +20,8 @@ export const CONFIG = {
 };
 
 export function uiAsset(name) {
-  return `${CONFIG.uiAssetBase}/${CONFIG.assets[name]}`;
+  const asset = CONFIG.assets[name];
+  if (typeof asset !== 'string') return '';
+  if (asset.startsWith('/') || /^https?:\/\//i.test(asset)) return asset;
+  return `${CONFIG.uiAssetBase}/${asset}`;
 }

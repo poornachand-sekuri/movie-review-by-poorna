@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && mkdir -p dist/data dist/cine-cafe dist/admin && cp index.html dist/index.html && cp -R cine-cafe/. dist/cine-cafe/ && cp -R admin/. dist/admin/ && cp -R assets dist/assets && cp public/data/index.json public/data/cast-crew.json public/data/related-review-rules.json dist/data/",
+    "build": "npm run clean && mkdir -p dist/data dist/cine-cafe dist/admin && cp index.html dist/index.html && cp -R cine-cafe/. dist/cine-cafe/ && cp -R admin/. dist/admin/ && cp -R assets dist/assets && cp public/_headers dist/_headers && cp public/data/index.json public/data/cast-crew.json public/data/related-review-rules.json dist/data/",
     "check:syntax": "node --check assets/js/config.js && node --check assets/js/app.js && node --check assets/js/bootstrap-home-v3.js && node --check assets/js/home-v3.js && node --check assets/js/home-comments.js && node --check assets/js/ui-patch.js && node --check assets/js/live-reactions.js && node --check assets/js/comments.js && node --check assets/js/analytics.js && node --check assets/js/cine-cafe.js && node --check assets/js/navigation.js && node --check admin/admin.js && node --check src/analytics-store.js && node --check src/admin-console.js && node --check src/worker.js && node --check src/review-catalog.js && node --check src/worker-entry.js && node --check scripts/validate-compact-catalog.mjs",
     "check:catalog": "node scripts/validate-compact-catalog.mjs",
     "check:js": "npm run check:syntax && npm run check:catalog",
