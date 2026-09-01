@@ -66,7 +66,7 @@ body.hm3-now-modal-open {
 
 .home-v3-mode .hm3-now-modal-shell {
   position: relative;
-  width: min(96vw, 720px, calc((100svh - 58px) * 1.66));
+  width: min(96vw, 720px, calc((100svh - 58px) * 1.60));
   max-width: 96vw;
   animation: hm3-now-modal-rise .22s cubic-bezier(.2,.8,.2,1) both;
 }
@@ -75,14 +75,18 @@ body.hm3-now-modal-open {
 .home-v3-mode .hm3-now-modal-card.hm3-now-section {
   position: relative;
   width: 100% !important;
+  aspect-ratio: 1.60;
   margin: 0 !important;
   cursor: default;
   filter: drop-shadow(0 16px 34px rgba(0,0,0,.72));
 }
 
 .home-v3-mode .hm3-now-modal-card .hm3-section-art {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: fill;
 }
 
 .home-v3-mode .hm3-now-modal-close {
@@ -133,7 +137,7 @@ body.hm3-now-modal-open {
   }
 
   .home-v3-mode .hm3-now-modal-shell {
-    width: min(97vw, calc((100svh - 54px) * 1.66));
+    width: min(97vw, calc((100svh - 54px) * 1.60));
     max-width: 97vw;
   }
 
