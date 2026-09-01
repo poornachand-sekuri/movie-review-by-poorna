@@ -4,52 +4,16 @@
   --hm3-gold-light: #fff0a8;
 }
 
-/* Requested Home/Lounge refinements. Keep the locked AVIF artwork untouched. */
-
-/* Now Reviewed: ratings live on the Content page, not on Home. */
-.home-v3-mode .hm3-now-stars {
-  display: none !important;
-}
-
-/* Give the live ticket content a little more breathing room below the authored frame. */
-.home-v3-mode .hm3-now-poster,
-.home-v3-mode .hm3-now-copy {
-  top: 12.95% !important;
-}
-
-/* My POV: retain personality, but favor readability over handwriting simulation. */
-.home-v3-mode .hm3-pov {
-  height: 50% !important;
-  margin-top: 4px !important;
-  color: rgba(250, 248, 242, .97) !important;
-  font-family: Georgia, "Times New Roman", serif !important;
-  font-size: clamp(9px, 2.15vw, 11.5px) !important;
-  font-style: italic;
-  font-weight: 500 !important;
-  line-height: 1.34 !important;
-  letter-spacing: .008em !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, .9) !important;
-}
-
-/* Recent/Previous rating stars: glossy cinema gold. */
 .home-v3-mode .hm3-recent-stars,
 .home-v3-mode .hm3-prev-stars {
-  background: linear-gradient(
-    180deg,
-    var(--hm3-gold-light) 0%,
-    #f3cf68 26%,
-    var(--hm3-gold-mid) 54%,
-    var(--hm3-gold-deep) 78%,
-    #e3b84f 100%
-  );
+  background: linear-gradient(180deg, var(--hm3-gold-light) 0%, #f3cf68 26%, var(--hm3-gold-mid) 54%, var(--hm3-gold-deep) 78%, #e3b84f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .75)) drop-shadow(0 0 2px rgba(224, 170, 54, .28));
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.75)) drop-shadow(0 0 2px rgba(224,170,54,.30));
 }
 
-/* Movie titles must remain on one line. Overflowing titles pan gently left/right. */
 .home-v3-mode .hm3-scroll-title {
   display: block !important;
   min-width: 0;
@@ -77,10 +41,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-v3-mode .hm3-scroll-title.is-overflowing .hm3-title-scroll {
-    animation: none;
-  }
-  .home-v3-mode .hm3-scroll-title {
-    text-overflow: ellipsis !important;
-  }
+  .home-v3-mode .hm3-scroll-title.is-overflowing .hm3-title-scroll { animation: none; }
+  .home-v3-mode .hm3-scroll-title { text-overflow: ellipsis !important; }
 }
