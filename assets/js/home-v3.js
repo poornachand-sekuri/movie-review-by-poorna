@@ -333,7 +333,7 @@ async function buildHome() {
 
 async function init() {
   try {
-    const response = await fetch(`${CONFIG.dataBase}/index.json`);
+    const response = await fetch('/data/catalog.json');
     if (!response.ok) throw new Error('Could not load review data.');
     state.movies = await response.json();
     await buildHome();

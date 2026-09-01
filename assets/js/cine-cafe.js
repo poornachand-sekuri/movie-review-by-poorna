@@ -264,7 +264,7 @@ async function init() {
   bindControls();
   try {
     const [moviesResponse, castResponse] = await Promise.all([
-      fetch(`${DATA_BASE}/index.json`),
+      fetch('/data/catalog.json'),
       fetch(`${DATA_BASE}/cast-crew.json`)
     ]);
     if (!moviesResponse.ok || !castResponse.ok) throw new Error('Could not load review data.');

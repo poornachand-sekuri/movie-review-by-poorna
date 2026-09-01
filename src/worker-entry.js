@@ -3,7 +3,11 @@ import worker, {
   CommentsStore,
   AnalyticsStore
 } from './worker.js';
-import { adminIsAuthenticated } from './admin-console.js';
+import {
+  adminIsAuthenticated,
+  getCombinedReviews
+} from './admin-console.js';
+import { compactReviews } from './review-catalog.js';
 
 export { ReactionStore, CommentsStore, AnalyticsStore };
 
@@ -13,12 +17,13 @@ function hex(bytes) {
   return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function json(payload, status = 200) {
+function json(payload, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store'
+      'cache-control': 'no-store',
+      ...extraHeaders
     }
   });
 }
@@ -48,6 +53,13 @@ export default {
   async fetch(request, env, ctx) {
     const runtime = await runtimeEnv(env);
     const url = new URL(request.url);
+
+    if (request.method === 'GET' && url.pathname === '/data/catalog.json') {
+      const reviews = await getCombinedReviews(runtime, request.url, true);
+      return json(compactReviews(reviews), 200, {
+        'x-mrp-catalog-mode': 'compact'
+      });
+    }
 
     // Any public page viewed while this browser has a valid Admin session is an
     // operational visit (Preview / View Site / manual Admin browsing), not audience traffic.

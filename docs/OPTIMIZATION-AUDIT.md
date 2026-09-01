@@ -17,22 +17,23 @@ The finalized mobile UI is the compatibility baseline. Optimization work must no
 - Added a reusable `check:js` command covering all runtime JavaScript entry points/modules.
 - Added a reusable `validate` command for syntax plus Cloudflare dry-run validation.
 - Expanded branch CI coverage to the optimization branch, restricted workflow permissions to read-only contents, added stale-run cancellation, a timeout, and lower-noise npm installation.
+- Added a compact dynamic review catalogue for Home and Cine Cafe while retaining the full review-body catalogue for Content pages and Admin compatibility.
+- Added a CI regression check that preserves review ordering and compact fields while enforcing a minimum 25% serialized-payload reduction.
 
 ## Current architecture observations
 
 - Review/UI images are already externalized to the owned R2 domain and are AVIF where applicable; the Git repository itself is not carrying a large local image payload.
 - `/data/index.json` is dynamically assembled by the Worker so Admin-managed additions/updates remain visible. It intentionally bypasses the normal static-asset path.
-- Home and Cine Cafe currently consume the full dynamic review catalog even though they do not require full review-body HTML. A future compact dynamic catalog endpoint is a meaningful payload optimization, but it should be implemented and regression-tested as a separate change because it touches Worker data routing.
+- Home and Cine Cafe now consume `/data/catalog.json`, which contains only the fields needed for cards, search, ratings and Home POV content. Content pages continue using full `/data/index.json` so review-body HTML and galleries remain unchanged.
 - CSS is deliberately layered (`site.css`, `final-overrides.css`, navigation, Home polish/comments, Cine Cafe special). Consolidation could reduce requests but is higher visual-regression risk and should only be done with screenshot comparison across the finalized mobile viewport matrix.
 - Cloudflare static assets are revalidated by default. Aggressive browser caching has not been enabled because several current asset URLs are not content-hashed; long immutable caching would risk repeat visitors receiving stale CSS/JS after a release.
 
 ## Next optimization candidates, in priority order
 
-1. Add a dynamic compact catalog endpoint for Home/Cine Cafe while keeping full `/data/index.json` for review pages and Admin compatibility.
-2. Benchmark CSS consolidation after capturing baseline mobile screenshots for Home, Content, and Cine Cafe.
-3. Introduce systematic content-hashed/versioned frontend assets before applying long browser-cache TTLs.
-4. Consolidate production smoke workflows only after verifying that failure isolation and deployment timing remain equivalent.
-5. Add performance budgets for critical request count and frontend payload size to CI once baseline measurements are captured.
+1. Benchmark CSS consolidation after capturing baseline mobile screenshots for Home, Content, and Cine Cafe.
+2. Introduce systematic content-hashed/versioned frontend assets before applying long browser-cache TTLs.
+3. Consolidate production smoke workflows only after verifying that failure isolation and deployment timing remain equivalent.
+4. Extend performance budgets from catalogue payload size to critical request count and transferred frontend assets after baseline measurements are captured.
 
 ## Merge policy
 
