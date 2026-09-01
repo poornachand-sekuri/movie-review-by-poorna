@@ -16,25 +16,37 @@ jobs:
           set -euo pipefail
           base='https://movie-review-by-poorna-validation.poornarocks.workers.dev'
 
-          probe() {
+          wait_for_route() {
             local path="$1"
             local expected_type="$2"
             local output="$3"
-            local status
-            status=$(curl --retry 8 --retry-all-errors --retry-delay 3 \
-              --connect-timeout 10 --max-time 45 \
-              -sS -L -o "$output" -w '%{http_code}' "$base$path" || true)
-            echo "$path -> HTTP $status"
-            test "$status" = '200'
-            case "$expected_type" in
-              html) grep -qi '<!doctype html\|<html' "$output" ;;
-              json) node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$output" ;;
-            esac
+            local status='000'
+
+            for attempt in {1..24}; do
+              status=$(curl --connect-timeout 10 --max-time 45 \
+                -sS -L -o "$output" -w '%{http_code}' "$base$path" || true)
+              echo "Attempt $attempt: $path -> HTTP $status"
+              if [ "$status" = '200' ]; then
+                case "$expected_type" in
+                  html)
+                    if grep -qi '<!doctype html\|<html' "$output"; then return 0; fi
+                    ;;
+                  json)
+                    if node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$output"; then return 0; fi
+                    ;;
+                esac
+              fi
+              sleep 5
+            done
+
+            echo "Validation route did not become ready: $path (last HTTP $status)"
+            cat "$output" || true
+            return 1
           }
 
-          probe '/' html /tmp/home.html
-          probe '/cine-cafe/' html /tmp/cine-cafe.html
-          probe '/data/catalog.json' json /tmp/catalog.json
+          wait_for_route '/' html /tmp/home.html
+          wait_for_route '/cine-cafe/' html /tmp/cine-cafe.html
+          wait_for_route '/data/catalog.json' json /tmp/catalog.json
 
           node - /tmp/catalog.json <<'NODE'
           const fs = require('fs');

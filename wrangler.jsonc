@@ -1,10 +1,13 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "movie-review-by-poorna-validation",
-  "main": "src/preview-worker-entry.js",
+  "name": "movie-review-by-poorna",
+  "main": "src/worker-entry.js",
   "compatibility_date": "2026-08-30",
-  "workers_dev": true,
-  "preview_urls": true,
+  "secrets": {
+    "required": [
+      "ADMIN_PASSWORD"
+    ]
+  },
   "vars": {
     "R2_PUBLIC_BASE": "https://assets.moviereviewbypoorna.com"
   },
@@ -27,6 +30,36 @@
     {
       "binding": "REVIEW_ASSETS",
       "bucket_name": "movie-review-assets"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "REACTIONS",
+        "class_name": "ReactionStore"
+      },
+      {
+        "name": "COMMENTS",
+        "class_name": "CommentsStore"
+      },
+      {
+        "name": "ANALYTICS",
+        "class_name": "AnalyticsStore"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-reactions",
+      "new_sqlite_classes": ["ReactionStore"]
+    },
+    {
+      "tag": "v2-comments",
+      "new_sqlite_classes": ["CommentsStore"]
+    },
+    {
+      "tag": "v3-admin-analytics",
+      "new_sqlite_classes": ["AnalyticsStore"]
     }
   ]
 }
