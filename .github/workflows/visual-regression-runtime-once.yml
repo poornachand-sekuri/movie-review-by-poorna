@@ -12,7 +12,8 @@ jobs:
   visual-regression:
     if: >-
       github.event.head_commit.message == 'Run runtime visual regression once' ||
-      github.event.head_commit.message == 'Fix runtime visual regression timeout'
+      github.event.head_commit.message == 'Fix runtime visual regression timeout' ||
+      github.event.head_commit.message == 'Ignore offscreen lazy images in visual regression'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -171,6 +172,20 @@ jobs:
             }
           ];
 
+          async function relevantImageState(page) {
+            return page.evaluate(() => {
+              const images = [...document.images].filter(image => {
+                if (!image.hasAttribute('src')) return false;
+                const rect = image.getBoundingClientRect();
+                return rect.right > -1 && rect.left < window.innerWidth + 1;
+              });
+              return {
+                total: images.length,
+                pending: images.filter(image => !image.complete).length
+              };
+            });
+          }
+
           async function settlePage(page, url, readySelector) {
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
             await page.waitForSelector(readySelector, { timeout: 60000 });
@@ -193,15 +208,20 @@ jobs:
 
             await page.evaluate(() => window.scrollTo(0, 0));
             await page.waitForNetworkIdle({ idleTime: 500, timeout: 30000 }).catch(() => {});
-            await delay(1800);
+
+            let images = await relevantImageState(page);
+            for (let attempt = 0; attempt < 40 && images.pending > 0; attempt += 1) {
+              await delay(250);
+              images = await relevantImageState(page);
+            }
+            await delay(600);
 
             const readiness = await page.evaluate(() => ({
-              pendingImages: [...document.images].filter(image => !image.complete).length,
               deferredBackgrounds: document.querySelectorAll('[data-ui-background]').length,
               scrollHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
             }));
-            console.log(`${url}: pendingImages=${readiness.pendingImages}, deferredBackgrounds=${readiness.deferredBackgrounds}, height=${readiness.scrollHeight}`);
-            if (readiness.pendingImages !== 0) throw new Error(`${url}: ${readiness.pendingImages} images did not settle`);
+            console.log(`${url}: relevantImages=${images.total}, pendingRelevantImages=${images.pending}, deferredBackgrounds=${readiness.deferredBackgrounds}, height=${readiness.scrollHeight}`);
+            if (images.pending !== 0) throw new Error(`${url}: ${images.pending} visible-page images did not settle`);
             if (readiness.deferredBackgrounds !== 0) throw new Error(`${url}: ${readiness.deferredBackgrounds} deferred backgrounds did not load`);
           }
 
