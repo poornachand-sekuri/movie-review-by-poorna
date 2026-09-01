@@ -1,7 +1,7 @@
 import { mountComments } from './comments.js';
 
 const ASSET_BASE = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v3/mobile';
-const ASSET_VERSION = '20260901-lounge-continuous-bg-4';
+const ASSET_VERSION = '20260902-selected-cinema-lounge-6';
 const state = { movies: [] };
 const $ = (selector, root = document) => root.querySelector(selector);
 
