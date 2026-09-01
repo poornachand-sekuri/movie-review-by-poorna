@@ -1,0 +1,163 @@
+name: Host Isolated Validation Tunnel
+
+on:
+  push:
+    branches:
+      - optimization-preview
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: movie-review-validation-tunnel
+  cancel-in-progress: true
+
+jobs:
+  host-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install exact Wrangler runtime
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Build branch assets
+        run: npm run build
+
+      - name: Install Cloudflare tunnel client
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+            -o /usr/local/bin/cloudflared
+          chmod +x /usr/local/bin/cloudflared
+          cloudflared --version
+
+      - name: Start isolated branch server and Cloudflare tunnel
+        id: tunnel
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          npx wrangler dev \
+            --config wrangler.validation-deploy.jsonc \
+            --local \
+            --ip 127.0.0.1 \
+            --port 8787 \
+            > /tmp/wrangler-validation.log 2>&1 &
+          worker_pid=$!
+
+          worker_ready='false'
+          for attempt in {1..60}; do
+            status=$(curl -sS -o /tmp/local-home.html -w '%{http_code}' \
+              http://127.0.0.1:8787/ || true)
+            if [ "$status" = '200' ] && grep -qi '<!doctype html\|<html' /tmp/local-home.html; then
+              worker_ready='true'
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$worker_ready" != 'true' ]; then
+            echo 'Local validation Worker did not become ready.'
+            cat /tmp/wrangler-validation.log || true
+            exit 1
+          fi
+
+          local_catalog_status=$(curl -sS -o /tmp/local-catalog.json -w '%{http_code}' \
+            http://127.0.0.1:8787/data/catalog.json || true)
+          test "$local_catalog_status" = '200'
+          node -e "const r=JSON.parse(require('fs').readFileSync('/tmp/local-catalog.json','utf8')); if(!Array.isArray(r)||r.length<100) process.exit(1); console.log('Local catalog records:',r.length)"
+
+          cloudflared tunnel \
+            --url http://127.0.0.1:8787 \
+            --no-autoupdate \
+            > /tmp/cloudflared-validation.log 2>&1 &
+          tunnel_pid=$!
+
+          validation_url=''
+          for attempt in {1..60}; do
+            validation_url=$(grep -Eo 'https://[a-z0-9-]+\.trycloudflare\.com' \
+              /tmp/cloudflared-validation.log | head -n1 || true)
+            if [ -n "$validation_url" ]; then break; fi
+            if ! kill -0 "$tunnel_pid" 2>/dev/null; then
+              echo 'Cloudflare tunnel stopped before producing a URL.'
+              cat /tmp/cloudflared-validation.log || true
+              exit 1
+            fi
+            sleep 2
+          done
+
+          if [ -z "$validation_url" ]; then
+            echo 'Cloudflare tunnel URL was not produced.'
+            cat /tmp/cloudflared-validation.log || true
+            exit 1
+          fi
+
+          public_ready='false'
+          for attempt in {1..60}; do
+            home_status=$(curl -sS -L -o /tmp/public-home.html -w '%{http_code}' \
+              "$validation_url/" || true)
+            cine_status=$(curl -sS -L -o /tmp/public-cine.html -w '%{http_code}' \
+              "$validation_url/cine-cafe/" || true)
+            catalog_status=$(curl -sS -L -o /tmp/public-catalog.json -w '%{http_code}' \
+              "$validation_url/data/catalog.json" || true)
+            echo "Attempt $attempt: home=$home_status cine-cafe=$cine_status catalog=$catalog_status"
+            if [ "$home_status" = '200' ] && [ "$cine_status" = '200' ] && [ "$catalog_status" = '200' ] && \
+               grep -qi '<!doctype html\|<html' /tmp/public-home.html && \
+               grep -qi '<!doctype html\|<html' /tmp/public-cine.html && \
+               node -e "const r=JSON.parse(require('fs').readFileSync('/tmp/public-catalog.json','utf8')); if(!Array.isArray(r)||r.length<100) process.exit(1)"
+            then
+              public_ready='true'
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "$public_ready" != 'true' ]; then
+            echo 'Public validation tunnel did not pass route checks.'
+            cat /tmp/cloudflared-validation.log || true
+            cat /tmp/wrangler-validation.log || true
+            exit 1
+          fi
+
+          echo "url=$validation_url" >> "$GITHUB_OUTPUT"
+          echo "VALIDATION_URL=$validation_url"
+          echo "::notice title=Validation URL::$validation_url"
+
+          cat > /tmp/validation-comment.md <<EOF
+          ## Cloudflare validation preview is live
+
+          **Home:** $validation_url/
+
+          **Cine Cafe:** $validation_url/cine-cafe/
+
+          This tunnel serves commit \`${GITHUB_SHA}\` from the isolated \`optimization-preview\` branch. Persistent reactions, comment submission, analytics writes, and Admin APIs are disabled in this validation runtime. Production remains untouched.
+          EOF
+
+          gh pr comment 35 \
+            --repo "$GITHUB_REPOSITORY" \
+            --body-file /tmp/validation-comment.md
+
+          # Keep the validated tunnel available for manual review. It ends
+          # automatically with this isolated Actions job and never receives a
+          # production route or production deployment.
+          end=$((SECONDS + 20700))
+          while [ "$SECONDS" -lt "$end" ]; do
+            kill -0 "$worker_pid" 2>/dev/null || exit 1
+            kill -0 "$tunnel_pid" 2>/dev/null || exit 1
+            sleep 15
+          done
