@@ -232,16 +232,7 @@ function buildCommentsOverlay(shareSection) {
   name.placeholder = 'Name';
   name.setAttribute('aria-label', 'Name');
 
-  const email = document.createElement('input');
-  email.name = 'email';
-  email.type = 'email';
-  email.required = true;
-  email.maxLength = 120;
-  email.autocomplete = 'email';
-  email.placeholder = 'Email';
-  email.setAttribute('aria-label', 'Email');
-
-  identity.append(name, email);
+  identity.append(name);
 
   const comment = document.createElement('textarea');
   comment.name = 'comment';
