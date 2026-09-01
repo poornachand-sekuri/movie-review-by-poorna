@@ -4,7 +4,7 @@
   --hm3-white: #f6f4ef;
   --hm3-white-soft: #d9d6d0;
   --hm3-black: #050505;
-  --hm3-gap: clamp(10px, 2.7vw, 16px);
+  --hm3-gap: clamp(4px, 1.15vw, 7px);
 }
 
 .home-v3-mode {
@@ -443,7 +443,7 @@
 }
 
 @media (max-width: 360px) {
-  :root { --hm3-gap: 9px; }
+  :root { --hm3-gap: 4px; }
   .hm3-now-copy { padding-top: 1.2%; }
   .hm3-now-title { font-size: 12px; }
   .hm3-pov { line-height: 1.28; }
