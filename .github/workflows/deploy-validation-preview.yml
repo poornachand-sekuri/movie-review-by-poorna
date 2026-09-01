@@ -1,0 +1,62 @@
+name: Deploy Validation Preview
+
+on:
+  push:
+    branches:
+      - optimization-preview
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: movie-review-validation-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy-validation:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_ACCOUNT_ID: e07c59534823499c3138e8fddf4611c2
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN }}
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Confirm Cloudflare deployment credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Neither CLOUDFLARE_API_TOKEN nor CF_API_TOKEN is configured in GitHub Actions secrets.'
+            exit 1
+          fi
+
+      - name: Install exact Wrangler runtime
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Build validation assets
+        run: npm run build
+
+      - name: Deploy isolated validation Worker
+        run: npx wrangler deploy --config wrangler.validation-deploy.jsonc
+
+      - name: Verify deployed validation routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://movie-review-by-poorna-validation.poornarocks.workers.dev'
+          for path in '/' '/cine-cafe/' '/data/catalog.json'; do
+            status=$(curl --retry 10 --retry-all-errors --retry-delay 3 \
+              --connect-timeout 10 --max-time 45 -sS -L -o /tmp/result -w '%{http_code}' "$base$path")
+            echo "$path -> HTTP $status"
+            test "$status" = '200'
+          done
+          echo "VALIDATION_URL=$base"
