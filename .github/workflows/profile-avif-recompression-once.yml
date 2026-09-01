@@ -1,0 +1,89 @@
+name: Profile Theater AVIF Recompression Once
+
+on:
+  push:
+    branches:
+      - optimize/runtime-performance
+
+permissions:
+  contents: read
+
+jobs:
+  profile-avif:
+    if: github.event.head_commit.message == 'Profile theater AVIF recompression once'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Install image tooling
+        shell: bash
+        run: npm install --prefix /tmp/image-tools sharp ssim.js --no-audit --no-fund
+
+      - name: Generate and compare candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/avif
+          curl -fsSL --retry 3 --retry-all-errors --max-time 120 \
+            'https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile/07-theater-top-LOCKED.avif?v=20260831-final-theater' \
+            -o /tmp/avif/top-source.avif
+          curl -fsSL --retry 3 --retry-all-errors --max-time 120 \
+            'https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile/08-theater-middle-stretchable-LOCKED.avif?v=20260831-final-theater' \
+            -o /tmp/avif/middle-source.avif
+          curl -fsSL --retry 3 --retry-all-errors --max-time 120 \
+            'https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile/09-theater-bottom-seats-LOCKED.avif?v=20260831-final-theater' \
+            -o /tmp/avif/bottom-source.avif
+
+          NODE_PATH=/tmp/image-tools/node_modules node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const sharp = require('sharp');
+          const { ssim } = require('ssim.js');
+
+          const sources = ['top', 'middle', 'bottom'];
+          const qualities = [35, 42, 50, 58];
+
+          async function rawAtDisplayWidth(file) {
+            const result = await sharp(file)
+              .resize({ width: 520, withoutEnlargement: true })
+              .ensureAlpha()
+              .raw()
+              .toBuffer({ resolveWithObject: true });
+            return {
+              data: new Uint8Array(result.data),
+              width: result.info.width,
+              height: result.info.height
+            };
+          }
+
+          (async () => {
+            for (const name of sources) {
+              const source = `/tmp/avif/${name}-source.avif`;
+              const sourceStat = fs.statSync(source).size;
+              const metadata = await sharp(source).metadata();
+              const reference = await rawAtDisplayWidth(source);
+              console.log(`\n=== ${name.toUpperCase()} source=${sourceStat} bytes ${metadata.width}x${metadata.height}`);
+
+              for (const quality of qualities) {
+                for (const width of [metadata.width, 1040]) {
+                  if (width > metadata.width) continue;
+                  const suffix = width === metadata.width ? 'native' : `${width}w`;
+                  const output = `/tmp/avif/${name}-q${quality}-${suffix}.avif`;
+                  let pipeline = sharp(source);
+                  if (width !== metadata.width) pipeline = pipeline.resize({ width });
+                  await pipeline
+                    .avif({ quality, effort: 6, chromaSubsampling: '4:2:0' })
+                    .toFile(output);
+
+                  const candidate = await rawAtDisplayWidth(output);
+                  const score = ssim(reference, candidate, { downsample: 'original' }).mssim;
+                  const bytes = fs.statSync(output).size;
+                  const savings = 100 * (1 - bytes / sourceStat);
+                  console.log(`${name} q=${quality} ${suffix}: ${bytes} bytes, savings=${savings.toFixed(1)}%, displaySSIM=${score.toFixed(5)}`);
+                }
+              }
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
