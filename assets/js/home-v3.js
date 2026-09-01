@@ -361,11 +361,33 @@ async function buildHome() {
   await mountComments({ targetType: 'home', targetId: 'home', root: commentsOverlay });
 }
 
+async function loadMovies() {
+  const sources = ['/data/catalog.json', '/data/index.json'];
+  let lastError = null;
+
+  for (const source of sources) {
+    try {
+      const response = await fetch(source, { headers: { accept: 'application/json' } });
+      if (!response.ok) throw new Error(`Could not load ${source}`);
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('json')) throw new Error(`${source} did not return JSON`);
+
+      const payload = await response.json();
+      const movies = Array.isArray(payload) ? payload : payload?.reviews;
+      if (Array.isArray(movies) && movies.length) return movies;
+      throw new Error(`${source} contained no reviews`);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('Could not load review data.');
+}
+
 async function init() {
   try {
-    const response = await fetch('/data/catalog.json');
-    if (!response.ok) throw new Error('Could not load review data.');
-    state.movies = await response.json();
+    state.movies = await loadMovies();
     await buildHome();
   } catch (error) {
     $('#content').innerHTML = `<section class="loading-card">${error.message || 'Unable to load the Home page.'}</section>`;
