@@ -13,11 +13,12 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
+const HOME_VERSION = '20260901-lounge-final-3';
 
 if (isHome) {
   [
-    '/assets/css/home-v3.css?v=20260901-lounge-redesign-2',
-    '/assets/css/home-v3-adjustments.css?v=20260901-lounge-redesign-2'
+    `/assets/css/home-v3.css?v=${HOME_VERSION}`,
+    `/assets/css/home-v3-adjustments.css?v=${HOME_VERSION}`
   ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
@@ -25,19 +26,17 @@ if (isHome) {
     document.head.append(css);
   });
 
-  // Preload the background and the first two visible shells. The remaining
-  // authored section images are discovered immediately by home-v3.js.
   HOME_ASSETS.slice(0, 3).forEach(file => {
     const preload = document.createElement('link');
     preload.rel = 'preload';
     preload.as = 'image';
-    preload.href = `${HOME_ASSET_BASE}/${file}?v=20260901-lounge-redesign-1`;
+    preload.href = `${HOME_ASSET_BASE}/${file}?v=${HOME_VERSION}`;
     document.head.append(preload);
   });
 
   Promise.all([
-    import('./home-v3.js?v=20260901-lounge-redesign-2'),
-    import('./home-v3-adjustments.js?v=20260901-lounge-redesign-2'),
+    import(`./home-v3.js?v=${HOME_VERSION}`),
+    import(`./home-v3-adjustments.js?v=${HOME_VERSION}`),
     import('./analytics.js')
   ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {
