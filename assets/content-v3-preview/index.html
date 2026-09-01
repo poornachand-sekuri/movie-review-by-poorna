@@ -8,12 +8,11 @@
   <link rel="preconnect" href="https://assets.moviereviewbypoorna.com" crossorigin>
   <link rel="stylesheet" href="./preview.css">
   <link rel="stylesheet" href="./theater-behavior.css">
+  <link rel="stylesheet" href="./cinema-room-theme.css">
 </head>
 <body>
   <div class="cv3-page">
-    <div class="cv3-ambient" aria-hidden="true">
-      <img src="https://assets.moviereviewbypoorna.com/ui/pages/home/v3/mobile/01_background.avif?v=20260902-selected-cinema-lounge-6" alt="">
-    </div>
+    <div class="cv3-ambient" aria-hidden="true"></div>
 
     <main class="cv3-stage" id="previewRoot" aria-busy="true">
       <header class="cv3-header" aria-label="Movie Reviews By Poorna">
@@ -22,7 +21,7 @@
         <button class="cv3-header-hit cv3-header-search" type="button" aria-label="Search"></button>
       </header>
 
-      <section class="cv3-dossier cv3-glass" aria-labelledby="movieTitle">
+      <section class="cv3-dossier cv3-glass cv3-clapboard" aria-labelledby="movieTitle">
         <div class="cv3-kicker"><span>NOW SCREENING</span><b>THE REVIEW ROOM</b></div>
         <div class="cv3-dossier-grid">
           <div class="cv3-poster-shell">
@@ -78,9 +77,9 @@
         </div>
       </section>
 
-      <section class="cv3-related cv3-glass" aria-labelledby="relatedHeading">
+      <section class="cv3-related cv3-glass cv3-reel-section" aria-labelledby="relatedHeading">
         <div class="cv3-section-headline">
-          <div><span>KEEP WATCHING</span><h2 id="relatedHeading">Related Screenings</h2></div>
+          <div><span>KEEP WATCHING</span><h2 id="relatedHeading">Related Reviews</h2></div>
           <span class="cv3-swipe">SWIPE →</span>
         </div>
         <div class="cv3-related-scroll">
@@ -120,7 +119,7 @@
       </section>
 
       <footer class="cv3-concept-note">
-        CONTENT V3 · UI CONCEPT · RUNTIME NOT MODIFIED
+        CONTENT V3 · SAME CINEMA · DIFFERENT ROOM · RUNTIME NOT MODIFIED
       </footer>
     </main>
   </div>
