@@ -13,7 +13,7 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260902-selected-cinema-lounge-6';
+const HOME_VERSION = '20260902-now-title-left-padding-7';
 
 if (isHome) {
   [
