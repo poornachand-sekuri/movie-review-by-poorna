@@ -126,81 +126,115 @@ function wireResponsivePov(page) {
   else window.addEventListener('resize', fit, { passive: true });
 }
 
-function wireNowReviewedPopup(page) {
-  const source = $('.hm3-now-section', page);
+function wireExpandableSection(page, selector, options = {}) {
+  const source = $(selector, page);
   if (!source || source.dataset.popupWired === 'true') return;
   source.dataset.popupWired = 'true';
 
   let modal = null;
-  let card = null;
+  let shell = null;
+  let placeholder = null;
   let previousFocus = null;
-  let resizeHandler = null;
+  let sourceAspect = 1;
+  let popupAspect = 1;
 
   const refreshPopup = () => {
-    if (!card) return;
+    if (!modal || !shell) return;
+
+    const viewportWidth = Math.max(280, window.innerWidth || document.documentElement.clientWidth || 520);
+    const viewportHeight = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 720);
+    const widthFraction = viewportWidth <= 480 ? 0.97 : 0.96;
+    const maxWidth = Math.min(viewportWidth * widthFraction, 720);
+    const availableHeight = Math.max(220, viewportHeight - (viewportWidth <= 480 ? 54 : 58));
+    const fittedWidth = Math.max(240, Math.min(maxWidth, availableHeight * popupAspect));
+
+    shell.style.width = `${Math.floor(fittedWidth)}px`;
+    source.style.setProperty('--hm3-popup-aspect', String(popupAspect));
+
     requestAnimationFrame(() => {
-      updateScrollingTitles(card);
-      fitResponsivePov($('.hm3-pov', card), 15);
+      updateScrollingTitles(source);
+      if (options.fitPov) fitResponsivePov($('.hm3-pov', source), 15);
     });
-  };
-
-  const closePopup = () => {
-    if (!modal) return;
-
-    window.removeEventListener('resize', resizeHandler);
-    document.removeEventListener('keydown', handleKeydown);
-    modal.remove();
-    modal = null;
-    card = null;
-    resizeHandler = null;
-    document.documentElement.classList.remove('hm3-now-modal-open');
-    document.body.classList.remove('hm3-now-modal-open');
-
-    if (previousFocus instanceof HTMLElement) previousFocus.focus({ preventScroll: true });
   };
 
   const handleKeydown = event => {
     if (event.key === 'Escape') closePopup();
   };
 
+  const closePopup = () => {
+    if (!modal || !placeholder) return;
+
+    window.removeEventListener('resize', refreshPopup);
+    document.removeEventListener('keydown', handleKeydown);
+
+    placeholder.replaceWith(source);
+    source.classList.remove('hm3-section-modal-card');
+    source.style.removeProperty('--hm3-popup-aspect');
+    source.removeAttribute('data-popup-active');
+
+    modal.remove();
+    modal = null;
+    shell = null;
+    placeholder = null;
+
+    document.documentElement.classList.remove('hm3-section-modal-open');
+    document.body.classList.remove('hm3-section-modal-open');
+
+    requestAnimationFrame(() => {
+      updateScrollingTitles(source);
+      if (options.fitPov) fitResponsivePov($('.hm3-pov', source), 12);
+    });
+
+    if (previousFocus instanceof HTMLElement) previousFocus.focus({ preventScroll: true });
+  };
+
   const openPopup = () => {
     if (modal) return;
 
+    const rect = source.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    sourceAspect = rect.width / rect.height;
+    popupAspect = Number(options.popupAspect) > 0 ? Number(options.popupAspect) : sourceAspect;
     previousFocus = document.activeElement;
+
+    placeholder = document.createElement('div');
+    placeholder.className = `${source.className} hm3-section-placeholder`;
+    placeholder.setAttribute('aria-hidden', 'true');
+    placeholder.style.setProperty('--hm3-source-aspect', String(sourceAspect));
+    source.parentNode.insertBefore(placeholder, source);
+
     modal = document.createElement('div');
-    modal.className = 'hm3-now-modal';
+    modal.className = 'hm3-section-modal';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    modal.setAttribute('aria-label', 'Now Reviewed expanded ticket');
+    modal.setAttribute('aria-label', `${options.label || 'Section'} expanded`);
 
-    const shell = document.createElement('div');
-    shell.className = 'hm3-now-modal-shell';
+    shell = document.createElement('div');
+    shell.className = 'hm3-section-modal-shell';
 
-    card = source.cloneNode(true);
-    card.classList.add('hm3-now-modal-card');
-    card.dataset.popupWired = 'true';
-    card.setAttribute('aria-label', 'Now Reviewed expanded');
+    source.classList.add('hm3-section-modal-card');
+    source.dataset.popupActive = 'true';
 
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
-    closeButton.className = 'hm3-now-modal-close';
-    closeButton.setAttribute('aria-label', 'Close enlarged ticket');
+    closeButton.className = 'hm3-section-modal-close';
+    closeButton.setAttribute('aria-label', `Close enlarged ${options.label || 'section'}`);
     closeButton.textContent = '×';
 
-    shell.append(card, closeButton);
+    shell.append(source, closeButton);
     modal.append(shell);
-    document.body.append(modal);
-    document.documentElement.classList.add('hm3-now-modal-open');
-    document.body.classList.add('hm3-now-modal-open');
+    page.append(modal);
 
-    card.addEventListener('click', event => event.stopPropagation());
+    document.documentElement.classList.add('hm3-section-modal-open');
+    document.body.classList.add('hm3-section-modal-open');
+
     closeButton.addEventListener('click', closePopup);
     modal.addEventListener('click', event => {
       if (event.target === modal) closePopup();
     });
 
-    resizeHandler = refreshPopup;
-    window.addEventListener('resize', resizeHandler, { passive: true });
+    window.addEventListener('resize', refreshPopup, { passive: true });
     document.addEventListener('keydown', handleKeydown);
 
     refreshPopup();
@@ -209,9 +243,39 @@ function wireNowReviewedPopup(page) {
   };
 
   source.addEventListener('click', event => {
+    if (modal) return;
+
+    if (options.preserveInteractive) {
+      const protectedTarget = event.target.closest(options.preserveInteractive);
+      if (protectedTarget && source.contains(protectedTarget)) return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     openPopup();
+  });
+}
+
+function wireExpandableSections(page) {
+  wireExpandableSection(page, '.hm3-now-section', {
+    label: 'Now Reviewed',
+    popupAspect: 1.60,
+    fitPov: true
+  });
+
+  wireExpandableSection(page, '.hm3-recent-section', {
+    label: 'Recent Reviews',
+    preserveInteractive: 'a, button, input, textarea, select, label, form'
+  });
+
+  wireExpandableSection(page, '.hm3-previous-section', {
+    label: 'Previously Reviewed',
+    preserveInteractive: 'a, button, input, textarea, select, label, form'
+  });
+
+  wireExpandableSection(page, '.hm3-share-section', {
+    label: 'Share Your Opinion',
+    preserveInteractive: 'a, button, input, textarea, select, label, form, .hm3-comment-list, .hm3-comment-form'
   });
 }
 
@@ -220,7 +284,7 @@ async function init() {
   wireCafeNavigation(page);
   wireReviewLinks(page);
   wireResponsivePov(page);
-  wireNowReviewedPopup(page);
+  wireExpandableSections(page);
 
   const refreshTitles = () => requestAnimationFrame(() => updateScrollingTitles(page));
   refreshTitles();
