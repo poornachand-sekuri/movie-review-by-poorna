@@ -1,0 +1,214 @@
+name: Apply Compact Catalog Optimization Once
+
+on:
+  push:
+    branches:
+      - optimize/code-workflow-files
+    paths:
+      - .github/workflows/apply-compact-catalog-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout optimization branch
+        uses: actions/checkout@v4
+        with:
+          ref: optimize/code-workflow-files
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Apply exact compact-catalog changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path, old, new):
+              file = Path(path)
+              text = file.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {count}')
+              file.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          Path('src/review-catalog.js').write_text("""export const COMPACT_REVIEW_FIELDS = Object.freeze([
+            'i',
+            't',
+            's',
+            'd',
+            'l',
+            'm',
+            'c',
+            'e',
+            'rd',
+            'r',
+            'v'
+          ]);
+
+          export function compactReview(review = {}) {
+            return {
+              i: review.i,
+              t: review.t || '',
+              s: review.s || '',
+              d: review.d || '',
+              l: review.l || '',
+              m: review.m || '',
+              c: review.c || 0,
+              e: review.e || '',
+              rd: review.rd || '',
+              r: review.r == null ? null : review.r,
+              v: review.v || ''
+            };
+          }
+
+          export function compactReviews(reviews) {
+            return Array.isArray(reviews) ? reviews.map(compactReview) : [];
+          }
+          """, encoding='utf-8')
+
+          Path('scripts').mkdir(exist_ok=True)
+          Path('scripts/validate-compact-catalog.mjs').write_text("""import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          import { Buffer } from 'node:buffer';
+          import {
+            COMPACT_REVIEW_FIELDS,
+            compactReviews
+          } from '../src/review-catalog.js';
+
+          const full = JSON.parse(readFileSync(new URL('../public/data/index.json', import.meta.url), 'utf8'));
+          const compact = compactReviews(full);
+
+          assert(Array.isArray(full) && full.length > 0, 'The base review catalogue must be a non-empty array.');
+          assert.equal(compact.length, full.length, 'Compact catalogue must preserve every review.');
+
+          compact.forEach((review, index) => {
+            assert.deepEqual(
+              Object.keys(review),
+              [...COMPACT_REVIEW_FIELDS],
+              `Compact review ${index} has an unexpected field set or order.`
+            );
+            assert.equal(review.s, full[index].s, `Compact review ${index} changed review ordering.`);
+            assert(!Object.hasOwn(review, 'body'), `Compact review ${index} leaked body HTML.`);
+            assert(!Object.hasOwn(review, 'gallery'), `Compact review ${index} leaked gallery data.`);
+          });
+
+          const fullBytes = Buffer.byteLength(JSON.stringify(full));
+          const compactBytes = Buffer.byteLength(JSON.stringify(compact));
+          const reductionPercent = Number(((1 - compactBytes / fullBytes) * 100).toFixed(1));
+
+          assert(
+            compactBytes < fullBytes * 0.75,
+            `Compact catalogue must reduce serialized payload by at least 25%; reduction was ${reductionPercent}%.`
+          );
+
+          const homeSource = readFileSync(new URL('../assets/js/home-v3.js', import.meta.url), 'utf8');
+          const cafeSource = readFileSync(new URL('../assets/js/cine-cafe.js', import.meta.url), 'utf8');
+          const contentSource = readFileSync(new URL('../assets/js/app.js', import.meta.url), 'utf8');
+          const workerEntry = readFileSync(new URL('../src/worker-entry.js', import.meta.url), 'utf8');
+          const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
+
+          assert(homeSource.includes("fetch('/data/catalog.json')"), 'Home must use the compact catalogue endpoint.');
+          assert(cafeSource.includes("fetch('/data/catalog.json')"), 'Cine Cafe must use the compact catalogue endpoint.');
+          assert(
+            contentSource.includes('fetch(`${CONFIG.dataBase}/index.json`)'),
+            'Content pages must retain the full review endpoint.'
+          );
+          assert(workerEntry.includes("url.pathname === '/data/catalog.json'"), 'Worker must serve the compact endpoint.');
+          assert(wrangler.includes('"/data/catalog.json"'), 'Cloudflare must run the Worker first for the compact endpoint.');
+
+          console.log(
+            `Compact catalogue: ${compact.length} reviews, ${fullBytes} -> ${compactBytes} bytes (${reductionPercent}% reduction).`
+          );
+          """, encoding='utf-8')
+
+          replace_once(
+              'src/worker-entry.js',
+              "import { adminIsAuthenticated } from './admin-console.js';",
+              "import {\n  adminIsAuthenticated,\n  getCombinedReviews\n} from './admin-console.js';\nimport { compactReviews } from './review-catalog.js';"
+          )
+          replace_once(
+              'src/worker-entry.js',
+              "function json(payload, status = 200) {\n  return new Response(JSON.stringify(payload), {\n    status,\n    headers: {\n      'content-type': 'application/json; charset=utf-8',\n      'cache-control': 'no-store'\n    }\n  });\n}",
+              "function json(payload, status = 200, extraHeaders = {}) {\n  return new Response(JSON.stringify(payload), {\n    status,\n    headers: {\n      'content-type': 'application/json; charset=utf-8',\n      'cache-control': 'no-store',\n      ...extraHeaders\n    }\n  });\n}"
+          )
+          replace_once(
+              'src/worker-entry.js',
+              "    const url = new URL(request.url);\n\n    // Any public page viewed while this browser has a valid Admin session is an",
+              "    const url = new URL(request.url);\n\n    if (request.method === 'GET' && url.pathname === '/data/catalog.json') {\n      const reviews = await getCombinedReviews(runtime, request.url, true);\n      return json(compactReviews(reviews), 200, {\n        'x-mrp-catalog-mode': 'compact'\n      });\n    }\n\n    // Any public page viewed while this browser has a valid Admin session is an"
+          )
+
+          replace_once(
+              'wrangler.jsonc',
+              '      "/api/*",\n      "/data/index.json",',
+              '      "/api/*",\n      "/data/catalog.json",\n      "/data/index.json",'
+          )
+          replace_once(
+              'assets/js/home-v3.js',
+              '    const response = await fetch(`${CONFIG.dataBase}/index.json`);',
+              "    const response = await fetch('/data/catalog.json');"
+          )
+          replace_once(
+              'assets/js/cine-cafe.js',
+              '      fetch(`${DATA_BASE}/index.json`),',
+              "      fetch('/data/catalog.json'),"
+          )
+
+          package_path = Path('package.json')
+          package = json.loads(package_path.read_text(encoding='utf-8'))
+          syntax = package['scripts']['check:js']
+          old_tail = 'node --check src/worker.js && node --check src/worker-entry.js'
+          new_tail = 'node --check src/worker.js && node --check src/review-catalog.js && node --check src/worker-entry.js && node --check scripts/validate-compact-catalog.mjs'
+          if old_tail not in syntax:
+              raise SystemExit('package.json: expected check:js tail was not found')
+          package['scripts']['check:js'] = syntax.replace(old_tail, new_tail, 1)
+          package['scripts']['check:catalog'] = 'node scripts/validate-compact-catalog.mjs'
+          package['scripts']['validate'] = 'npm run check:js && npm run check:catalog && wrangler deploy --dry-run'
+          package_path.write_text(json.dumps(package, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+          replace_once(
+              'docs/OPTIMIZATION-AUDIT.md',
+              '- Expanded branch CI coverage to the optimization branch, restricted workflow permissions to read-only contents, added stale-run cancellation, a timeout, and lower-noise npm installation.\n',
+              '- Expanded branch CI coverage to the optimization branch, restricted workflow permissions to read-only contents, added stale-run cancellation, a timeout, and lower-noise npm installation.\n- Added a compact dynamic review catalogue for Home and Cine Cafe while retaining the full review-body catalogue for Content pages and Admin compatibility.\n- Added a CI regression check that preserves review ordering and compact fields while enforcing a minimum 25% serialized-payload reduction.\n'
+          )
+          replace_once(
+              'docs/OPTIMIZATION-AUDIT.md',
+              '- Home and Cine Cafe currently consume the full dynamic review catalog even though they do not require full review-body HTML. A future compact dynamic catalog endpoint is a meaningful payload optimization, but it should be implemented and regression-tested as a separate change because it touches Worker data routing.\n',
+              '- Home and Cine Cafe now consume `/data/catalog.json`, which contains only the fields needed for cards, search, ratings and Home POV content. Content pages continue using full `/data/index.json` so review-body HTML and galleries remain unchanged.\n'
+          )
+          replace_once(
+              'docs/OPTIMIZATION-AUDIT.md',
+              '1. Add a dynamic compact catalog endpoint for Home/Cine Cafe while keeping full `/data/index.json` for review pages and Admin compatibility.\n2. Benchmark CSS consolidation after capturing baseline mobile screenshots for Home, Content, and Cine Cafe.\n3. Introduce systematic content-hashed/versioned frontend assets before applying long browser-cache TTLs.\n4. Consolidate production smoke workflows only after verifying that failure isolation and deployment timing remain equivalent.\n5. Add performance budgets for critical request count and frontend payload size to CI once baseline measurements are captured.\n',
+              '1. Benchmark CSS consolidation after capturing baseline mobile screenshots for Home, Content, and Cine Cafe.\n2. Introduce systematic content-hashed/versioned frontend assets before applying long browser-cache TTLs.\n3. Consolidate production smoke workflows only after verifying that failure isolation and deployment timing remain equivalent.\n4. Extend performance budgets from catalogue payload size to critical request count and transferred frontend assets after baseline measurements are captured.\n'
+          )
+          PY
+
+      - name: Install deployment tooling
+        run: npm install --no-audit --no-fund
+
+      - name: Validate optimized branch
+        run: |
+          npm run check:js
+          npm run check:catalog
+          npx wrangler deploy --dry-run
+          git diff --check
+
+      - name: Commit optimization
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/review-catalog.js src/worker-entry.js scripts/validate-compact-catalog.mjs assets/js/home-v3.js assets/js/cine-cafe.js wrangler.jsonc package.json docs/OPTIMIZATION-AUDIT.md
+          git commit -m 'Add compact dynamic catalog for list pages'
+          git push origin HEAD:optimize/code-workflow-files
