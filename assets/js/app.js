@@ -11,9 +11,58 @@ const state = {
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-function setAsset(img, name) {
-  img.src = uiAsset(name);
+const UI_IMAGE_DIMENSIONS = {
+  header: [1934, 320],
+  clapTop: [2025, 275],
+  posterFrame: [1122, 1402],
+  theaterTop: [1535, 248],
+  theaterBottom: [1535, 384],
+  relatedHeader: [2048, 326],
+  commentsHeader: [1496, 193]
+};
+
+function setAsset(img, name, { loading = 'eager', fetchPriority = 'auto' } = {}) {
+  if (!img) return;
+  const dimensions = UI_IMAGE_DIMENSIONS[name];
+  if (dimensions) {
+    img.width = dimensions[0];
+    img.height = dimensions[1];
+  }
   img.decoding = 'async';
+  img.loading = loading;
+  if (fetchPriority !== 'auto') img.fetchPriority = fetchPriority;
+  img.src = uiAsset(name);
+}
+
+function deferBackground(element, name) {
+  if (!element) return;
+  element.dataset.uiBackground = uiAsset(name);
+}
+
+function applyDeferredBackground(element) {
+  const source = element?.dataset?.uiBackground;
+  if (!source) return;
+  element.style.backgroundImage = `url("${source}")`;
+  delete element.dataset.uiBackground;
+}
+
+function observeDeferredBackgrounds(root) {
+  const targets = [...root.querySelectorAll('[data-ui-background]')];
+  if (!targets.length) return;
+  if (!('IntersectionObserver' in window)) {
+    targets.forEach(applyDeferredBackground);
+    return;
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      applyDeferredBackground(entry.target);
+      observer.unobserve(entry.target);
+    }
+  }, { rootMargin: '600px 0px' });
+
+  targets.forEach(target => observer.observe(target));
 }
 
 function starString(rating) {
@@ -211,18 +260,18 @@ function requestedSlug() {
 }
 
 function setupArtwork(root) {
-  setAsset($('#brandArtwork'), 'header');
-  setAsset($('.clapboard-top', root), 'clapTop');
+  setAsset($('#brandArtwork'), 'header', { fetchPriority: 'high' });
+  setAsset($('.clapboard-top', root), 'clapTop', { fetchPriority: 'high' });
   $('.clapboard-bg', root).style.backgroundImage = `url("${uiAsset('clapBody')}")`;
-  $('.reaction-bg', root).style.backgroundImage = `url("${uiAsset('likeFrame')}")`;
+  deferBackground($('.reaction-bg', root), 'likeFrame');
   setAsset($('.poster-frame-art', root), 'posterFrame');
-  setAsset($('.theater-top', root), 'theaterTop');
+  setAsset($('.theater-top', root), 'theaterTop', { fetchPriority: 'high' });
   $('.theater-middle', root).style.backgroundImage = `url("${uiAsset('theaterMiddle')}")`;
-  setAsset($('.theater-bottom', root), 'theaterBottom');
-  setAsset($('.related-header', root), 'relatedHeader');
-  $('.related-reel', root).style.backgroundImage = `url("${uiAsset('relatedReel')}")`;
-  setAsset($('.comments-header', root), 'commentsHeader');
-  $('.comments-bg', root).style.backgroundImage = `url("${uiAsset('commentsShell')}")`;
+  setAsset($('.theater-bottom', root), 'theaterBottom', { loading: 'lazy', fetchPriority: 'low' });
+  setAsset($('.related-header', root), 'relatedHeader', { loading: 'lazy', fetchPriority: 'low' });
+  deferBackground($('.related-reel', root), 'relatedReel');
+  setAsset($('.comments-header', root), 'commentsHeader', { loading: 'lazy', fetchPriority: 'low' });
+  deferBackground($('.comments-bg', root), 'commentsShell');
   document.documentElement.style.setProperty('--related-comments-gap', `${CONFIG.relatedToCommentsGapPx}px`);
 }
 
@@ -252,6 +301,7 @@ function renderRelated(root, movie) {
     poster.src = item.movie.m;
     poster.alt = `${item.movie.t} poster`;
     poster.loading = 'lazy';
+    poster.decoding = 'async';
     posterZone.append(poster);
 
     const title = document.createElement('div');
@@ -294,6 +344,8 @@ function renderMovie(movie) {
   const poster = $('.movie-poster', root);
   poster.src = movie.m;
   poster.alt = `${movie.t} poster`;
+  poster.decoding = 'async';
+  poster.fetchPriority = 'high';
 
   // Review body is authored content from the site's own preserved dataset.
   $('.review-body', root).innerHTML = movie.body || `<p>${movie.e || ''}</p>`;
@@ -303,6 +355,7 @@ function renderMovie(movie) {
   const content = $('#content');
   content.replaceChildren(fragment);
   document.documentElement.dataset.activeReviewSlug = movie.s;
+  observeDeferredBackgrounds(content);
   $('#app').setAttribute('aria-busy', 'false');
 }
 
