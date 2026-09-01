@@ -1,0 +1,282 @@
+name: Apply CI Reproducibility and Mobile Smoke V2 Once
+
+on:
+  push:
+    branches:
+      - optimize/code-workflow-files
+    paths:
+      - .github/workflows/apply-ci-reproducibility-v2-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout optimization branch
+        uses: actions/checkout@v4
+        with:
+          ref: optimize/code-workflow-files
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Create reproducibility and mobile smoke files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p scripts
+
+          cat > .gitignore <<'EOF'
+          node_modules/
+          dist/
+          .wrangler/
+          .dev.vars
+          artifacts/
+          EOF
+
+          cat > scripts/smoke-local-mobile.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+          PORT=${MRP_SMOKE_PORT:-8787}
+          BASE_URL="http://127.0.0.1:${PORT}"
+          OUTPUT_DIR="${ROOT_DIR}/artifacts/mobile-smoke"
+          DATA_DIR="${OUTPUT_DIR}/data"
+          DOM_DIR="${OUTPUT_DIR}/dom"
+          SCREENSHOT_DIR="${OUTPUT_DIR}/screenshots"
+
+          rm -rf "${OUTPUT_DIR}"
+          mkdir -p "${DATA_DIR}" "${DOM_DIR}" "${SCREENSHOT_DIR}"
+
+          cd "${ROOT_DIR}"
+          CI=1 NO_COLOR=1 npx wrangler dev --ip 127.0.0.1 --port "${PORT}" >"${OUTPUT_DIR}/wrangler.log" 2>&1 &
+          WRANGLER_PID=$!
+
+          cleanup() {
+            kill "${WRANGLER_PID}" 2>/dev/null || true
+            wait "${WRANGLER_PID}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for _ in $(seq 1 60); do
+            if curl --fail --silent --show-error "${BASE_URL}/data/catalog.json" -o "${DATA_DIR}/catalog.json"; then
+              ready=true
+              break
+            fi
+            if ! kill -0 "${WRANGLER_PID}" 2>/dev/null; then
+              cat "${OUTPUT_DIR}/wrangler.log"
+              echo 'Local Cloudflare Worker exited before becoming ready.' >&2
+              exit 1
+            fi
+            sleep 0.5
+          done
+
+          if [[ "${ready}" != 'true' ]]; then
+            cat "${OUTPUT_DIR}/wrangler.log"
+            echo 'Local Cloudflare Worker did not become ready.' >&2
+            exit 1
+          fi
+
+          curl --fail --silent --show-error "${BASE_URL}/data/content.json?review=dc" -o "${DATA_DIR}/content.json"
+          curl --fail --silent --show-error "${BASE_URL}/data/index.json" -o "${DATA_DIR}/full.json"
+
+          node - "${DATA_DIR}/catalog.json" "${DATA_DIR}/content.json" "${DATA_DIR}/full.json" <<'NODE'
+          const fs = require('fs');
+          const [catalogPath, contentPath, fullPath] = process.argv.slice(2);
+          const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+          const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
+          const full = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+
+          if (!Array.isArray(full) || full.length < 130) throw new Error('Full local review catalogue is incomplete.');
+          if (!Array.isArray(catalog) || catalog.length !== full.length) throw new Error('Compact local catalogue changed review count.');
+          if (catalog.some(review => Object.hasOwn(review, 'body') || Object.hasOwn(review, 'gallery'))) {
+            throw new Error('Compact local catalogue leaked body or gallery fields.');
+          }
+          if (!content || !Array.isArray(content.reviews) || content.reviews.length !== full.length) {
+            throw new Error('Content local payload changed review count.');
+          }
+          if (!content.active || content.active.s !== 'dc') throw new Error('Content local payload did not resolve the requested review.');
+          if (typeof content.active.body !== 'string' || !content.active.body.trim()) {
+            throw new Error('Content local payload lost the active review body.');
+          }
+          if (!Array.isArray(content.active.gallery)) throw new Error('Content local payload lost the active review gallery.');
+
+          const slugs = rows => rows.map(review => review.s).join('\n');
+          if (slugs(catalog) !== slugs(content.reviews) || slugs(catalog) !== slugs(full)) {
+            throw new Error('Optimized local endpoints changed review ordering.');
+          }
+
+          const fullBytes = fs.statSync(fullPath).size;
+          const catalogBytes = fs.statSync(catalogPath).size;
+          const contentBytes = fs.statSync(contentPath).size;
+          if (catalogBytes >= fullBytes * 0.75) throw new Error('Compact local endpoint missed the 25% payload budget.');
+          if (contentBytes >= fullBytes * 0.75) throw new Error('Content local endpoint missed the 25% payload budget.');
+
+          console.log(`Local data smoke OK: ${full.length} reviews; full=${fullBytes}, catalog=${catalogBytes}, content=${contentBytes} bytes.`);
+          NODE
+
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [[ -z "${CHROME}" ]]; then
+            echo 'A Chromium-based browser is required for rendered mobile smoke testing.' >&2
+            exit 1
+          fi
+
+          render_mobile() {
+            local label=$1
+            local url=$2
+            local dom_file="${DOM_DIR}/${label}.html"
+            local screenshot_file="${SCREENSHOT_DIR}/${label}.png"
+            local log_file="${OUTPUT_DIR}/${label}-chrome.log"
+            local profile_dir="${OUTPUT_DIR}/chrome-${label}"
+
+            if ! timeout 40s "${CHROME}" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --no-first-run \
+              --no-default-browser-check \
+              --hide-scrollbars \
+              --force-device-scale-factor=1 \
+              --window-size=390,844 \
+              --virtual-time-budget=8000 \
+              --user-data-dir="${profile_dir}" \
+              --screenshot="${screenshot_file}" \
+              --dump-dom "${url}" >"${dom_file}" 2>"${log_file}"; then
+              rm -rf "${profile_dir}"
+              timeout 40s "${CHROME}" \
+                --headless \
+                --no-sandbox \
+                --disable-gpu \
+                --disable-dev-shm-usage \
+                --no-first-run \
+                --no-default-browser-check \
+                --hide-scrollbars \
+                --force-device-scale-factor=1 \
+                --window-size=390,844 \
+                --virtual-time-budget=8000 \
+                --user-data-dir="${profile_dir}" \
+                --screenshot="${screenshot_file}" \
+                --dump-dom "${url}" >"${dom_file}" 2>"${log_file}"
+            fi
+
+            test -s "${dom_file}"
+            test -s "${screenshot_file}"
+          }
+
+          render_mobile home "${BASE_URL}/"
+          render_mobile content "${BASE_URL}/?review=dc"
+          render_mobile cine-cafe "${BASE_URL}/cine-cafe/"
+
+          node - "${DOM_DIR}/home.html" "${DOM_DIR}/content.html" "${DOM_DIR}/cine-cafe.html" "${SCREENSHOT_DIR}" <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const [homePath, contentPath, cafePath, screenshotDir] = process.argv.slice(2);
+          const home = fs.readFileSync(homePath, 'utf8');
+          const content = fs.readFileSync(contentPath, 'utf8');
+          const cafe = fs.readFileSync(cafePath, 'utf8');
+
+          if (!home.includes('class="hm3-page"') || !home.includes('aria-busy="false"')) {
+            throw new Error('Rendered Home mobile page did not finish loading.');
+          }
+          const renderedReviewCount = (content.match(/<article class="review-page">/g) || []).length;
+          if (renderedReviewCount < 2 || !content.includes('aria-busy="false"')) {
+            throw new Error('Rendered Content mobile page did not finish loading outside its template.');
+          }
+          if (!cafe.includes('class="review-card"') || !cafe.includes('Serving') || !cafe.includes('aria-busy="false"')) {
+            throw new Error('Rendered Cine Cafe mobile page did not finish loading.');
+          }
+
+          for (const name of ['home.png', 'content.png', 'cine-cafe.png']) {
+            const bytes = fs.statSync(path.join(screenshotDir, name)).size;
+            if (bytes < 1000) throw new Error(`${name} screenshot is unexpectedly small.`);
+          }
+
+          console.log('Rendered 390x844 mobile smoke checks passed for Home, Content and Cine Cafe.');
+          NODE
+          EOF
+
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path, old, new):
+              file = Path(path)
+              text = file.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {count}')
+              file.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          package_path = Path('package.json')
+          package = json.loads(package_path.read_text(encoding='utf-8'))
+          package['engines'] = {'node': '>=22 <23'}
+          package['scripts']['check:smoke'] = 'bash scripts/smoke-local-mobile.sh'
+          package['scripts']['validate'] = 'npm run check:js && wrangler deploy --dry-run && npm run check:smoke'
+          package_path.write_text(json.dumps(package, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+          replace_once(
+              '.github/workflows/validate-static.yml',
+              "      - name: Set up Node\n        uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n\n      - name: Install deployment tooling\n        run: npm install --no-audit --no-fund",
+              "      - name: Set up Node\n        uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n          cache: npm\n\n      - name: Install deployment tooling\n        run: npm ci --no-audit --no-fund"
+          )
+          replace_once(
+              '.github/workflows/validate-static.yml',
+              "          test -f src/worker.js\n          test -f src/worker-entry.js",
+              "          test -f src/worker.js\n          test -f src/review-catalog.js\n          test -f src/worker-entry.js\n          test -f scripts/validate-compact-catalog.mjs\n          test -f scripts/smoke-local-mobile.sh\n          test -f package-lock.json\n\n      - name: Smoke-test rendered mobile pages locally\n        run: npm run check:smoke\n\n      - name: Upload mobile smoke evidence\n        if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: mobile-smoke-${{ github.run_id }}\n          path: artifacts/mobile-smoke\n          if-no-files-found: warn\n          retention-days: 7"
+          )
+
+          replace_once(
+              'docs/OPTIMIZATION-AUDIT.md',
+              '- Expanded branch CI coverage to the optimization branch, restricted workflow permissions to read-only contents, added stale-run cancellation, a timeout, and lower-noise npm installation.\n',
+              '- Expanded branch CI coverage to the optimization branch, restricted workflow permissions to read-only contents, added stale-run cancellation, a timeout, and lower-noise npm installation.\n- Added a committed npm lockfile, Node 22 engine constraint, `npm ci`, and dependency caching for reproducible and faster validation.\n- Added a local Cloudflare Worker plus headless-Chrome mobile smoke test for Home, Content, and Cine Cafe at 390×844, including endpoint payload checks and retained CI screenshot evidence.\n'
+          )
+          PY
+
+      - name: Generate committed npm lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate optimized branch and rendered mobile pages
+        id: validation
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/mobile-smoke
+          {
+            npm run check:js
+            npx wrangler deploy --dry-run
+            npm run check:smoke
+            git diff --check
+          } 2>&1 | tee artifacts/mobile-smoke/validation.log
+
+      - name: Upload temporary validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-smoke-v2-${{ github.run_id }}
+          path: artifacts/mobile-smoke
+          if-no-files-found: warn
+          retention-days: 2
+
+      - name: Commit reproducibility and smoke coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/apply-ci-reproducibility-once.yml
+          rm -f .github/workflows/apply-ci-reproducibility-v2-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Add reproducible CI and rendered mobile smoke checks'
+          git push origin HEAD:optimize/code-workflow-files
