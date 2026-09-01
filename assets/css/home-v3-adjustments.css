@@ -40,6 +40,15 @@
   animation: hm3-title-pan 4.8s ease-in-out 1s infinite alternate;
 }
 
+.home-v3-mode .hm3-comment-identity {
+  grid-template-columns: 1fr !important;
+}
+
+.home-v3-mode .hm3-comment-identity input {
+  width: 100%;
+  border-left: 0 !important;
+}
+
 .home-v3-mode .hm3-now-section,
 .home-v3-mode .hm3-recent-section,
 .home-v3-mode .hm3-previous-section,
