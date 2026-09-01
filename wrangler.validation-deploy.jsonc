@@ -8,9 +8,6 @@
   "vars": {
     "R2_PUBLIC_BASE": "https://assets.moviereviewbypoorna.com"
   },
-  "build": {
-    "command": "npm run build"
-  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
