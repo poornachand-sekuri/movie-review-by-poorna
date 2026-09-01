@@ -1,0 +1,182 @@
+name: Cine Cafe Runtime Visual Regression Once
+
+on:
+  push:
+    branches:
+      - optimize/runtime-performance
+
+permissions:
+  contents: read
+
+jobs:
+  compare-cine-cafe:
+    if: github.event.head_commit.message == 'Validate Cine Cafe render once'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout optimized branch
+        uses: actions/checkout@v5
+        with:
+          ref: optimize/runtime-performance
+
+      - name: Check out production baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch main \
+            https://github.com/${GITHUB_REPOSITORY}.git /tmp/production-main
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Build both versions and prepare compact catalogue
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run build
+          (
+            cd /tmp/production-main
+            npm install --ignore-scripts --no-audit --no-fund
+            npm run build
+          )
+
+          node <<'NODE'
+          const fs = require('fs');
+          for (const root of [process.cwd(), '/tmp/production-main']) {
+            const reviews = JSON.parse(fs.readFileSync(`${root}/public/data/index.json`, 'utf8'));
+            const compact = reviews.map(({ body, gallery, ...review }) => review);
+            fs.writeFileSync(`${root}/dist/data/catalog.json`, JSON.stringify(compact));
+          }
+          NODE
+
+          npm install --prefix /tmp/cine-visual puppeteer-core sharp ssim.js --no-audit --no-fund
+
+      - name: Start isolated servers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory "$PWD/dist" > /tmp/cine-optimized.log 2>&1 &
+          echo $! > /tmp/cine-optimized.pid
+          python3 -m http.server 4174 --bind 127.0.0.1 --directory /tmp/production-main/dist > /tmp/cine-baseline.log 2>&1 &
+          echo $! > /tmp/cine-baseline.pid
+
+          for port in 4173 4174; do
+            ready='false'
+            for attempt in {1..30}; do
+              if curl -fsS "http://127.0.0.1:${port}/cine-cafe/" >/dev/null; then
+                ready='true'
+                break
+              fi
+              sleep 1
+            done
+            test "$ready" = 'true'
+          done
+
+      - name: Compare Cine Cafe geometry and pixels
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_PATH=/tmp/cine-visual/node_modules node <<'NODE'
+          const puppeteer = require('puppeteer-core');
+          const sharp = require('sharp');
+          const { ssim } = require('ssim.js');
+
+          const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const selectors = [
+            '.cine-cafe-page',
+            '.cine-cafe-stage',
+            '.search-overlay',
+            '.result-count',
+            '.results-layer',
+            '.review-card',
+            '.pagination-layer'
+          ];
+
+          async function snapshot(browser, base, suffix) {
+            const page = await browser.newPage();
+            await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+            await page.goto(`${base}/cine-cafe/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+            await page.waitForSelector('.cine-cafe-stage[aria-busy="false"]', { timeout: 60000 });
+            await page.waitForSelector('.review-card', { timeout: 60000 });
+            await page.evaluate(() => document.fonts?.ready).catch(() => {});
+            await page.waitForNetworkIdle({ idleTime: 500, timeout: 30000 }).catch(() => {});
+            await delay(1200);
+
+            const geometry = await page.evaluate(selectors => Object.fromEntries(selectors.map(selector => {
+              const element = document.querySelector(selector);
+              if (!element) return [selector, null];
+              const rect = element.getBoundingClientRect();
+              return [selector, {
+                x: rect.x,
+                y: rect.y + window.scrollY,
+                width: rect.width,
+                height: rect.height
+              }];
+            })), selectors);
+
+            const output = `/tmp/cine-cafe-${suffix}.png`;
+            await page.screenshot({ path: output, fullPage: true, captureBeyondViewport: true });
+            await page.close();
+            return { output, geometry };
+          }
+
+          function compareGeometry(baseline, optimized) {
+            for (const [selector, left] of Object.entries(baseline)) {
+              const right = optimized[selector];
+              if (!left || !right) throw new Error(`Missing Cine Cafe element ${selector}`);
+              for (const key of ['x', 'y', 'width', 'height']) {
+                const delta = Math.abs(left[key] - right[key]);
+                if (delta > 1.1) {
+                  throw new Error(`${selector} ${key} changed by ${delta.toFixed(2)}px (${left[key]} -> ${right[key]})`);
+                }
+              }
+            }
+          }
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              executablePath: '/usr/bin/google-chrome',
+              headless: true,
+              protocolTimeout: 180000,
+              args: ['--no-sandbox', '--disable-dev-shm-usage']
+            });
+            try {
+              const baseline = await snapshot(browser, 'http://127.0.0.1:4174', 'baseline');
+              const optimized = await snapshot(browser, 'http://127.0.0.1:4173', 'optimized');
+              compareGeometry(baseline.geometry, optimized.geometry);
+
+              const leftMeta = await sharp(baseline.output).metadata();
+              const rightMeta = await sharp(optimized.output).metadata();
+              if (leftMeta.width !== rightMeta.width || leftMeta.height !== rightMeta.height) {
+                throw new Error(`Cine Cafe screenshot geometry changed from ${leftMeta.width}x${leftMeta.height} to ${rightMeta.width}x${rightMeta.height}`);
+              }
+
+              const width = Math.min(300, leftMeta.width);
+              const left = await sharp(baseline.output).resize({ width }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+              const right = await sharp(optimized.output).resize({ width }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+              const similarity = ssim(
+                { data: new Uint8Array(left.data), width: left.info.width, height: left.info.height },
+                { data: new Uint8Array(right.data), width: right.info.width, height: right.info.height },
+                { downsample: 'original' }
+              ).mssim;
+
+              console.log(`Cine Cafe: ${leftMeta.width}x${leftMeta.height}, SSIM=${similarity.toFixed(6)}`);
+              if (similarity < 0.999) throw new Error(`Cine Cafe visual similarity ${similarity} is below 0.999`);
+            } finally {
+              await browser.close();
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Stop isolated servers
+        if: always()
+        shell: bash
+        run: |
+          kill "$(cat /tmp/cine-optimized.pid)" 2>/dev/null || true
+          kill "$(cat /tmp/cine-baseline.pid)" 2>/dev/null || true
