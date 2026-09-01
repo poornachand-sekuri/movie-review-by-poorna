@@ -24,23 +24,12 @@ function clearLegacyReaction(slug) {
   }
 }
 
-async function resolveSlug() {
+function resolveSlug() {
   const url = new URL(location.href);
+  const fromPage = document.documentElement.dataset.activeReviewSlug || null;
   const fromQuery = url.searchParams.get('review');
   const pathSlug = url.pathname.split('/').filter(Boolean).at(-1) || null;
-
-  try {
-    const response = await fetch('/data/index.json', { cache: 'force-cache' });
-    if (!response.ok) throw new Error('Review catalog unavailable');
-    const movies = await response.json();
-    if (!Array.isArray(movies) || !movies.length) return fromQuery || pathSlug;
-    const slugs = new Set(movies.map(movie => movie?.s).filter(Boolean));
-    if (fromQuery && slugs.has(fromQuery)) return fromQuery;
-    if (pathSlug && slugs.has(pathSlug)) return pathSlug;
-    return movies[0]?.s || null;
-  } catch {
-    return fromQuery || pathSlug;
-  }
+  return fromPage || fromQuery || pathSlug;
 }
 
 function normalize(values) {
