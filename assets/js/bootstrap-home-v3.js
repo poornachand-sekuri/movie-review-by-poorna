@@ -15,10 +15,15 @@ const HOME_ASSETS = [
 ];
 
 if (isHome) {
-  const css = document.createElement('link');
-  css.rel = 'stylesheet';
-  css.href = '/assets/css/home-v3.css?v=20260901-lounge-redesign-1';
-  document.head.append(css);
+  [
+    '/assets/css/home-v3.css?v=20260901-lounge-redesign-2',
+    '/assets/css/home-v3-adjustments.css?v=20260901-lounge-redesign-2'
+  ].forEach(href => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = href;
+    document.head.append(css);
+  });
 
   // Preload the background and the first two visible shells. The remaining
   // authored section images are discovered immediately by home-v3.js.
@@ -31,7 +36,8 @@ if (isHome) {
   });
 
   Promise.all([
-    import('./home-v3.js?v=20260901-lounge-redesign-1'),
+    import('./home-v3.js?v=20260901-lounge-redesign-2'),
+    import('./home-v3-adjustments.js?v=20260901-lounge-redesign-2'),
     import('./analytics.js')
   ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {
