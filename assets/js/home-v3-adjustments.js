@@ -61,8 +61,8 @@ function prepareScrollingTitle(title) {
   title.append(inner);
 }
 
-function updateScrollingTitles(page) {
-  $$('.hm3-now-title, .hm3-recent-title, .hm3-prev-title', page).forEach(title => {
+function updateScrollingTitles(root) {
+  $$('.hm3-now-title, .hm3-recent-title, .hm3-prev-title', root).forEach(title => {
     prepareScrollingTitle(title);
     const inner = $('.hm3-title-scroll', title);
     if (!inner) return;
@@ -78,10 +78,149 @@ function updateScrollingTitles(page) {
   });
 }
 
+function fitResponsivePov(container, maxCap = 12) {
+  if (!container || !container.textContent.trim() || !container.clientWidth || !container.clientHeight) return;
+
+  const widthBasedMax = container.clientWidth / 9;
+  const maxPx = Math.max(7, Math.min(maxCap, widthBasedMax));
+  const minPx = Math.max(5.5, Math.min(8, maxPx * 0.62));
+  const fits = () => (
+    container.scrollHeight <= container.clientHeight + 1 &&
+    container.scrollWidth <= container.clientWidth + 1
+  );
+
+  container.style.fontSize = `${maxPx}px`;
+  if (fits()) return;
+
+  container.style.fontSize = `${minPx}px`;
+  if (!fits()) return;
+
+  let low = minPx;
+  let high = maxPx;
+  let best = minPx;
+
+  for (let i = 0; i < 14; i += 1) {
+    const mid = (low + high) / 2;
+    container.style.fontSize = `${mid}px`;
+    if (fits()) {
+      best = mid;
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+
+  container.style.fontSize = `${best}px`;
+}
+
+function wireResponsivePov(page) {
+  const copy = $('.hm3-now-copy', page);
+  const pov = $('.hm3-pov', page);
+  if (!copy || !pov) return;
+
+  const fit = () => requestAnimationFrame(() => fitResponsivePov(pov, 12));
+  fit();
+  document.fonts?.ready?.then(fit).catch(() => {});
+
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(copy);
+  else window.addEventListener('resize', fit, { passive: true });
+}
+
+function wireNowReviewedPopup(page) {
+  const source = $('.hm3-now-section', page);
+  if (!source || source.dataset.popupWired === 'true') return;
+  source.dataset.popupWired = 'true';
+
+  let modal = null;
+  let card = null;
+  let previousFocus = null;
+  let resizeHandler = null;
+
+  const refreshPopup = () => {
+    if (!card) return;
+    requestAnimationFrame(() => {
+      updateScrollingTitles(card);
+      fitResponsivePov($('.hm3-pov', card), 15);
+    });
+  };
+
+  const closePopup = () => {
+    if (!modal) return;
+
+    window.removeEventListener('resize', resizeHandler);
+    document.removeEventListener('keydown', handleKeydown);
+    modal.remove();
+    modal = null;
+    card = null;
+    resizeHandler = null;
+    document.documentElement.classList.remove('hm3-now-modal-open');
+    document.body.classList.remove('hm3-now-modal-open');
+
+    if (previousFocus instanceof HTMLElement) previousFocus.focus({ preventScroll: true });
+  };
+
+  const handleKeydown = event => {
+    if (event.key === 'Escape') closePopup();
+  };
+
+  const openPopup = () => {
+    if (modal) return;
+
+    previousFocus = document.activeElement;
+    modal = document.createElement('div');
+    modal.className = 'hm3-now-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Now Reviewed expanded ticket');
+
+    const shell = document.createElement('div');
+    shell.className = 'hm3-now-modal-shell';
+
+    card = source.cloneNode(true);
+    card.classList.add('hm3-now-modal-card');
+    card.dataset.popupWired = 'true';
+    card.setAttribute('aria-label', 'Now Reviewed expanded');
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'hm3-now-modal-close';
+    closeButton.setAttribute('aria-label', 'Close enlarged ticket');
+    closeButton.textContent = '×';
+
+    shell.append(card, closeButton);
+    modal.append(shell);
+    document.body.append(modal);
+    document.documentElement.classList.add('hm3-now-modal-open');
+    document.body.classList.add('hm3-now-modal-open');
+
+    card.addEventListener('click', event => event.stopPropagation());
+    closeButton.addEventListener('click', closePopup);
+    modal.addEventListener('click', event => {
+      if (event.target === modal) closePopup();
+    });
+
+    resizeHandler = refreshPopup;
+    window.addEventListener('resize', resizeHandler, { passive: true });
+    document.addEventListener('keydown', handleKeydown);
+
+    refreshPopup();
+    document.fonts?.ready?.then(refreshPopup).catch(() => {});
+    requestAnimationFrame(() => closeButton.focus({ preventScroll: true }));
+  };
+
+  source.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    openPopup();
+  });
+}
+
 async function init() {
   const page = await waitForHome();
   wireCafeNavigation(page);
   wireReviewLinks(page);
+  wireResponsivePov(page);
+  wireNowReviewedPopup(page);
 
   const refreshTitles = () => requestAnimationFrame(() => updateScrollingTitles(page));
   refreshTitles();
