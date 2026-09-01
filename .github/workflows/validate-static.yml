@@ -5,10 +5,19 @@ on:
   push:
     branches:
       - main
+      - optimize/code-workflow-files
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-static-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,21 +28,10 @@ jobs:
           node-version: '22'
 
       - name: Install deployment tooling
-        run: npm install
+        run: npm install --no-audit --no-fund
 
       - name: Check JavaScript syntax
-        run: |
-          node --check assets/js/config.js
-          node --check assets/js/app.js
-          node --check assets/js/ui-patch.js
-          node --check assets/js/live-reactions.js
-          node --check assets/js/comments.js
-          node --check assets/js/analytics.js
-          node --check assets/js/cine-cafe.js
-          node --check admin/admin.js
-          node --check src/analytics-store.js
-          node --check src/admin-console.js
-          node --check src/worker.js
+        run: npm run check:js
 
       - name: Validate Cloudflare Worker bundle
         run: npx wrangler deploy --dry-run
@@ -193,9 +191,15 @@ jobs:
           test -f assets/css/final-overrides.css
           test -f assets/js/config.js
           test -f assets/js/app.js
+          test -f assets/js/bootstrap-home-v3.js
+          test -f assets/js/home-v3.js
+          test -f assets/js/home-comments.js
           test -f assets/js/live-reactions.js
           test -f assets/js/comments.js
           test -f assets/js/analytics.js
+          test -f assets/js/cine-cafe.js
+          test -f assets/js/navigation.js
           test -f src/admin-console.js
           test -f src/analytics-store.js
           test -f src/worker.js
+          test -f src/worker-entry.js
