@@ -13,7 +13,7 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260901-lounge-tight-spacing-5';
+const HOME_VERSION = '20260902-selected-cinema-lounge-6';
 
 if (isHome) {
   [
