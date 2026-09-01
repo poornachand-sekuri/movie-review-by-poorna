@@ -1,0 +1,276 @@
+name: Runtime Performance Visual Regression Once
+
+on:
+  push:
+    branches:
+      - optimize/runtime-performance
+
+permissions:
+  contents: read
+
+jobs:
+  visual-regression:
+    if: github.event.head_commit.message == 'Run runtime visual regression once'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout optimized branch
+        uses: actions/checkout@v5
+        with:
+          ref: optimize/runtime-performance
+          fetch-depth: 1
+
+      - name: Check out production baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch main \
+            https://github.com/${GITHUB_REPOSITORY}.git /tmp/production-main
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Build both versions and install visual tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run build
+          (
+            cd /tmp/production-main
+            npm install --ignore-scripts --no-audit --no-fund
+            npm run build
+          )
+          npm install --prefix /tmp/visual-tools puppeteer-core sharp ssim.js --no-audit --no-fund
+
+      - name: Start isolated local servers
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/visual-server.mjs <<'NODE'
+          import http from 'node:http';
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import zlib from 'node:zlib';
+          import { URL } from 'node:url';
+
+          const root = path.resolve(process.argv[2]);
+          const sourceRoot = path.resolve(process.argv[3]);
+          const port = Number(process.argv[4]);
+          const reviews = JSON.parse(fs.readFileSync(path.join(sourceRoot, 'public/data/index.json'), 'utf8'));
+          const compact = reviews.map(({ body, gallery, ...review }) => review);
+
+          function sendJson(request, response, payload, status = 200) {
+            const raw = Buffer.from(JSON.stringify(payload));
+            const acceptsGzip = /gzip/.test(request.headers['accept-encoding'] || '');
+            const body = acceptsGzip ? zlib.gzipSync(raw) : raw;
+            response.writeHead(status, {
+              'content-type': 'application/json; charset=utf-8',
+              'cache-control': 'public, max-age=30',
+              ...(acceptsGzip ? { 'content-encoding': 'gzip' } : {}),
+              'content-length': body.length
+            });
+            response.end(body);
+          }
+
+          function contentType(file) {
+            const ext = path.extname(file).toLowerCase();
+            return {
+              '.html': 'text/html; charset=utf-8',
+              '.css': 'text/css; charset=utf-8',
+              '.js': 'text/javascript; charset=utf-8',
+              '.json': 'application/json; charset=utf-8',
+              '.avif': 'image/avif',
+              '.jpg': 'image/jpeg',
+              '.jpeg': 'image/jpeg',
+              '.png': 'image/png',
+              '.svg': 'image/svg+xml'
+            }[ext] || 'application/octet-stream';
+          }
+
+          const server = http.createServer((request, response) => {
+            const url = new URL(request.url, `http://127.0.0.1:${port}`);
+            if (url.pathname === '/data/catalog.json') return sendJson(request, response, compact);
+            if (url.pathname === '/data/content.json') {
+              const slug = url.searchParams.get('review') || compact[0]?.s;
+              const active = reviews.find(review => review.s === slug) || reviews[0];
+              return sendJson(request, response, { reviews: compact, active });
+            }
+            if (url.pathname === '/api/reactions') return sendJson(request, response, { like: 0, dislike: 0, myVote: null });
+            if (url.pathname === '/api/comments') return sendJson(request, response, { comments: [] });
+            if (url.pathname === '/api/analytics/pageview') return sendJson(request, response, { tracked: false });
+
+            let pathname = decodeURIComponent(url.pathname);
+            if (pathname === '/') pathname = '/index.html';
+            if (pathname.endsWith('/')) pathname += 'index.html';
+            let file = path.resolve(root, `.${pathname}`);
+            if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+              file = path.join(root, 'index.html');
+            }
+            const body = fs.readFileSync(file);
+            response.writeHead(200, {
+              'content-type': contentType(file),
+              'cache-control': file.endsWith('.html') ? 'no-cache' : 'public, max-age=300',
+              'content-length': body.length
+            });
+            response.end(body);
+          });
+
+          server.listen(port, '127.0.0.1', () => console.log(`visual server ready on ${port}`));
+          NODE
+
+          node /tmp/visual-server.mjs "$PWD/dist" "$PWD" 4173 > /tmp/optimized-server.log 2>&1 &
+          echo $! > /tmp/optimized-server.pid
+          node /tmp/visual-server.mjs /tmp/production-main/dist /tmp/production-main 4174 > /tmp/baseline-server.log 2>&1 &
+          echo $! > /tmp/baseline-server.pid
+
+          for port in 4173 4174; do
+            ready='false'
+            for attempt in {1..30}; do
+              if curl -fsS "http://127.0.0.1:${port}/" >/dev/null; then
+                ready='true'
+                break
+              fi
+              sleep 1
+            done
+            test "$ready" = 'true'
+          done
+
+      - name: Compare final rendered pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_PATH=/tmp/visual-tools/node_modules node <<'NODE'
+          const fs = require('fs');
+          const puppeteer = require('puppeteer-core');
+          const sharp = require('sharp');
+          const { ssim } = require('ssim.js');
+
+          const pages = [
+            {
+              name: 'home',
+              path: '/',
+              ready: '.hm3-page',
+              selectors: ['.hm3-stage', '.hm3-now-poster', '.hm3-now-copy', '.hm3-recent-viewport', '.hm3-prev-viewport']
+            },
+            {
+              name: 'content',
+              path: '/?review=dc',
+              ready: '.review-page',
+              selectors: ['.brand-header', '.clapboard', '.poster-frame', '.movie-meta', '.theater', '.reaction-panel', '.related-section', '.comments-section']
+            },
+            {
+              name: 'cine-cafe',
+              path: '/cine-cafe/',
+              ready: '.cafe-stage',
+              selectors: ['.cafe-stage', '.cafe-table', '.cafe-card', '.cafe-pagination']
+            }
+          ];
+
+          async function settlePage(page, url, readySelector) {
+            await page.goto(url, { waitUntil: 'networkidle0', timeout: 120000 });
+            await page.waitForSelector(readySelector, { timeout: 60000 });
+            await page.evaluate(async () => {
+              await document.fonts?.ready;
+              const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+              const fullHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+              for (let y = 0; y < fullHeight; y += 500) {
+                window.scrollTo(0, y);
+                await delay(80);
+              }
+              window.scrollTo(0, 0);
+              await delay(1200);
+              await Promise.all([...document.images].map(image => {
+                if (image.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                  image.addEventListener('load', resolve, { once: true });
+                  image.addEventListener('error', resolve, { once: true });
+                });
+              }));
+              await delay(400);
+            });
+          }
+
+          async function snapshot(browser, base, definition, suffix) {
+            const page = await browser.newPage();
+            await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+            await settlePage(page, `${base}${definition.path}`, definition.ready);
+            const geometry = await page.evaluate(selectors => Object.fromEntries(selectors.map(selector => {
+              const element = document.querySelector(selector);
+              if (!element) return [selector, null];
+              const rect = element.getBoundingClientRect();
+              return [selector, {
+                x: rect.x,
+                y: rect.y + window.scrollY,
+                width: rect.width,
+                height: rect.height
+              }];
+            })), definition.selectors);
+            const output = `/tmp/${definition.name}-${suffix}.png`;
+            await page.screenshot({ path: output, fullPage: true });
+            await page.close();
+            return { output, geometry };
+          }
+
+          function compareGeometry(name, baseline, optimized) {
+            for (const [selector, left] of Object.entries(baseline)) {
+              const right = optimized[selector];
+              if (!left || !right) throw new Error(`${name}: missing element ${selector}`);
+              for (const key of ['x', 'y', 'width', 'height']) {
+                const delta = Math.abs(left[key] - right[key]);
+                if (delta > 1.1) {
+                  throw new Error(`${name}: ${selector} ${key} changed by ${delta.toFixed(2)}px (${left[key]} -> ${right[key]})`);
+                }
+              }
+            }
+          }
+
+          async function compareImages(name, baselinePath, optimizedPath) {
+            const baselineMeta = await sharp(baselinePath).metadata();
+            const optimizedMeta = await sharp(optimizedPath).metadata();
+            if (baselineMeta.width !== optimizedMeta.width || baselineMeta.height !== optimizedMeta.height) {
+              throw new Error(`${name}: screenshot geometry changed from ${baselineMeta.width}x${baselineMeta.height} to ${optimizedMeta.width}x${optimizedMeta.height}`);
+            }
+            const width = Math.min(260, baselineMeta.width);
+            const baseline = await sharp(baselinePath).resize({ width }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+            const optimized = await sharp(optimizedPath).resize({ width }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+            const similarity = ssim(
+              { data: new Uint8Array(baseline.data), width: baseline.info.width, height: baseline.info.height },
+              { data: new Uint8Array(optimized.data), width: optimized.info.width, height: optimized.info.height },
+              { downsample: 'original' }
+            ).mssim;
+            const minimum = name === 'content' ? 0.985 : 0.998;
+            console.log(`${name}: final screenshot ${baselineMeta.width}x${baselineMeta.height}, SSIM=${similarity.toFixed(6)} (minimum ${minimum})`);
+            if (similarity < minimum) throw new Error(`${name}: visual similarity ${similarity} is below ${minimum}`);
+          }
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              executablePath: '/usr/bin/google-chrome',
+              headless: true,
+              args: ['--no-sandbox', '--disable-dev-shm-usage']
+            });
+            try {
+              for (const definition of pages) {
+                const baseline = await snapshot(browser, 'http://127.0.0.1:4174', definition, 'baseline');
+                const optimized = await snapshot(browser, 'http://127.0.0.1:4173', definition, 'optimized');
+                compareGeometry(definition.name, baseline.geometry, optimized.geometry);
+                await compareImages(definition.name, baseline.output, optimized.output);
+              }
+            } finally {
+              await browser.close();
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Stop isolated servers
+        if: always()
+        shell: bash
+        run: |
+          kill "$(cat /tmp/optimized-server.pid)" 2>/dev/null || true
+          kill "$(cat /tmp/baseline-server.pid)" 2>/dev/null || true
