@@ -19,12 +19,14 @@ The finalized mobile UI is the compatibility baseline. Optimization work must no
 - Expanded branch CI coverage to the optimization branch, restricted workflow permissions to read-only contents, added stale-run cancellation, a timeout, and lower-noise npm installation.
 - Added a compact dynamic review catalogue for Home and Cine Cafe while retaining the full review-body catalogue for Content pages and Admin compatibility.
 - Added a CI regression check that preserves review ordering and compact fields while enforcing a minimum 25% serialized-payload reduction.
+- Added a Content payload endpoint that combines the compact catalogue with only the requested review body/gallery, avoiding a full-catalogue body download on every Content page.
+- Centralized all public dynamic data endpoints in `handleDynamicData` instead of splitting catalogue routing across Worker entry points.
 
 ## Current architecture observations
 
 - Review/UI images are already externalized to the owned R2 domain and are AVIF where applicable; the Git repository itself is not carrying a large local image payload.
 - `/data/index.json` is dynamically assembled by the Worker so Admin-managed additions/updates remain visible. It intentionally bypasses the normal static-asset path.
-- Home and Cine Cafe now consume `/data/catalog.json`, which contains only the fields needed for cards, search, ratings and Home POV content. Content pages continue using full `/data/index.json` so review-body HTML and galleries remain unchanged.
+- Home and Cine Cafe consume `/data/catalog.json`. Content pages consume `/data/content.json?review=<slug>`, which returns the same compact catalogue plus the complete body/gallery for only the requested review. The compatibility endpoint `/data/index.json` remains available for existing integrations and Admin-backed data assembly.
 - CSS is deliberately layered (`site.css`, `final-overrides.css`, navigation, Home polish/comments, Cine Cafe special). Consolidation could reduce requests but is higher visual-regression risk and should only be done with screenshot comparison across the finalized mobile viewport matrix.
 - Cloudflare static assets are revalidated by default. Aggressive browser caching has not been enabled because several current asset URLs are not content-hashed; long immutable caching would risk repeat visitors receiving stale CSS/JS after a release.
 

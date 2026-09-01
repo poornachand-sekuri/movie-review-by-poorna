@@ -203,15 +203,11 @@ function getRelated(current) {
   return selected;
 }
 
-function resolveSlug() {
+function requestedSlug() {
   const url = new URL(location.href);
   const fromQuery = url.searchParams.get('review');
-  if (fromQuery && state.movieBySlug.has(fromQuery)) return fromQuery;
-
-  const pathSlug = location.pathname.split('/').filter(Boolean).at(-1);
-  if (pathSlug && state.movieBySlug.has(pathSlug)) return pathSlug;
-
-  return state.movies[0]?.s || null;
+  if (fromQuery) return fromQuery;
+  return location.pathname.split('/').filter(Boolean).at(-1) || '';
 }
 
 function setupArtwork(root) {
@@ -519,16 +515,26 @@ function setupNavigation() {
   $('#searchInput').addEventListener('input', event => renderSearchResults(event.target.value));
 }
 
-async function loadData() {
-  const [moviesResponse, castResponse, rulesResponse] = await Promise.all([
-    fetch(`${CONFIG.dataBase}/index.json`),
+async function loadData(slug) {
+  const contentUrl = new URL(`${CONFIG.dataBase}/content.json`, location.origin);
+  if (slug) contentUrl.searchParams.set('review', slug);
+
+  const [contentResponse, castResponse, rulesResponse] = await Promise.all([
+    fetch(contentUrl),
     fetch(`${CONFIG.dataBase}/cast-crew.json`),
     fetch(`${CONFIG.dataBase}/related-review-rules.json`)
   ]);
-  if (!moviesResponse.ok || !castResponse.ok || !rulesResponse.ok) {
+  if (!contentResponse.ok || !castResponse.ok || !rulesResponse.ok) {
     throw new Error('Could not load review data.');
   }
-  state.movies = await moviesResponse.json();
+
+  const payload = await contentResponse.json();
+  if (!Array.isArray(payload?.reviews) || !payload.active) {
+    throw new Error('Review data is incomplete.');
+  }
+
+  state.movies = payload.reviews;
+  state.activeMovie = payload.active;
   state.castCrew = await castResponse.json();
   state.rules = await rulesResponse.json();
   state.movieBySlug = new Map(state.movies.map(movie => [movie.s, movie]));
@@ -538,9 +544,9 @@ async function init() {
   setupNavigation();
   setAsset($('#brandArtwork'), 'header');
   try {
-    await loadData();
-    const slug = resolveSlug();
-    const movie = state.movieBySlug.get(slug) || state.movies[0];
+    const slug = requestedSlug();
+    await loadData(slug);
+    const movie = state.activeMovie || state.movieBySlug.get(slug) || state.movies[0];
     if (!movie) throw new Error('No reviews were found.');
     renderMovie(movie);
   } catch (error) {

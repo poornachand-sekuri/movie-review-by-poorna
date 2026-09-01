@@ -3,11 +3,14 @@ import { readFileSync } from 'node:fs';
 import { Buffer } from 'node:buffer';
 import {
   COMPACT_REVIEW_FIELDS,
-  compactReviews
+  compactReviews,
+  contentPayload
 } from '../src/review-catalog.js';
 
 const full = JSON.parse(readFileSync(new URL('../public/data/index.json', import.meta.url), 'utf8'));
 const compact = compactReviews(full);
+const requested = full[Math.floor(full.length / 2)]?.s || '';
+const content = contentPayload(full, requested);
 
 assert(Array.isArray(full) && full.length > 0, 'The base review catalogue must be a non-empty array.');
 assert.equal(compact.length, full.length, 'Compact catalogue must preserve every review.');
@@ -23,30 +26,54 @@ compact.forEach((review, index) => {
   assert(!Object.hasOwn(review, 'gallery'), `Compact review ${index} leaked gallery data.`);
 });
 
+assert.equal(content.reviews.length, full.length, 'Content payload must preserve every catalogue review.');
+assert.equal(content.active?.s, requested, 'Content payload must return the requested active review.');
+assert.equal(
+  content.active?.body,
+  full.find(review => review.s === requested)?.body,
+  'Content payload must preserve the active review body.'
+);
+assert(Array.isArray(content.active?.gallery), 'Content payload must preserve the active review gallery.');
+
 const fullBytes = Buffer.byteLength(JSON.stringify(full));
 const compactBytes = Buffer.byteLength(JSON.stringify(compact));
+const contentBytes = Buffer.byteLength(JSON.stringify(content));
 const reductionPercent = Number(((1 - compactBytes / fullBytes) * 100).toFixed(1));
+const contentReductionPercent = Number(((1 - contentBytes / fullBytes) * 100).toFixed(1));
 
 assert(
   compactBytes < fullBytes * 0.75,
   `Compact catalogue must reduce serialized payload by at least 25%; reduction was ${reductionPercent}%.`
 );
+assert(
+  contentBytes < fullBytes * 0.75,
+  `Content payload must reduce serialized payload by at least 25%; reduction was ${contentReductionPercent}%.`
+);
 
 const homeSource = readFileSync(new URL('../assets/js/home-v3.js', import.meta.url), 'utf8');
 const cafeSource = readFileSync(new URL('../assets/js/cine-cafe.js', import.meta.url), 'utf8');
 const contentSource = readFileSync(new URL('../assets/js/app.js', import.meta.url), 'utf8');
-const workerEntry = readFileSync(new URL('../src/worker-entry.js', import.meta.url), 'utf8');
+const dynamicDataSource = readFileSync(new URL('../src/admin-console.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
 
 assert(homeSource.includes("fetch('/data/catalog.json')"), 'Home must use the compact catalogue endpoint.');
 assert(cafeSource.includes("fetch('/data/catalog.json')"), 'Cine Cafe must use the compact catalogue endpoint.');
 assert(
-  contentSource.includes('fetch(`${CONFIG.dataBase}/index.json`)'),
-  'Content pages must retain the full review endpoint.'
+  contentSource.includes('`${CONFIG.dataBase}/content.json`'),
+  'Content pages must use the optimized Content payload endpoint.'
 );
-assert(workerEntry.includes("url.pathname === '/data/catalog.json'"), 'Worker must serve the compact endpoint.');
+assert(
+  !contentSource.includes('fetch(`${CONFIG.dataBase}/index.json`)'),
+  'Content pages must not download the full review catalogue directly.'
+);
+assert(dynamicDataSource.includes("url.pathname === '/data/catalog.json'"), 'Worker must serve the compact endpoint.');
+assert(dynamicDataSource.includes("url.pathname === '/data/content.json'"), 'Worker must serve the Content endpoint.');
 assert(wrangler.includes('"/data/catalog.json"'), 'Cloudflare must run the Worker first for the compact endpoint.');
+assert(wrangler.includes('"/data/content.json"'), 'Cloudflare must run the Worker first for the Content endpoint.');
 
 console.log(
   `Compact catalogue: ${compact.length} reviews, ${fullBytes} -> ${compactBytes} bytes (${reductionPercent}% reduction).`
+);
+console.log(
+  `Content payload: ${fullBytes} -> ${contentBytes} bytes (${contentReductionPercent}% reduction for one active review).`
 );

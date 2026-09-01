@@ -3,11 +3,7 @@ import worker, {
   CommentsStore,
   AnalyticsStore
 } from './worker.js';
-import {
-  adminIsAuthenticated,
-  getCombinedReviews
-} from './admin-console.js';
-import { compactReviews } from './review-catalog.js';
+import { adminIsAuthenticated } from './admin-console.js';
 
 export { ReactionStore, CommentsStore, AnalyticsStore };
 
@@ -53,13 +49,6 @@ export default {
   async fetch(request, env, ctx) {
     const runtime = await runtimeEnv(env);
     const url = new URL(request.url);
-
-    if (request.method === 'GET' && url.pathname === '/data/catalog.json') {
-      const reviews = await getCombinedReviews(runtime, request.url, true);
-      return json(compactReviews(reviews), 200, {
-        'x-mrp-catalog-mode': 'compact'
-      });
-    }
 
     // Any public page viewed while this browser has a valid Admin session is an
     // operational visit (Preview / View Site / manual Admin browsing), not audience traffic.

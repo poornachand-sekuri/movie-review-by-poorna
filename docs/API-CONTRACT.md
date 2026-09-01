@@ -2,6 +2,20 @@
 
 Production APIs are same-origin Cloudflare Worker routes under `/api`.
 
+## Public review data
+
+### GET `/data/catalog.json`
+
+Returns the dynamically combined base and Admin-managed review catalogue using only list/search fields. It intentionally excludes review-body HTML, galleries and Admin metadata. Home and Cine Cafe use this endpoint.
+
+### GET `/data/content.json?review=<movie-slug>`
+
+Returns `{ reviews, active }`, where `reviews` is the compact catalogue and `active` is the complete requested public review including body HTML and gallery. Unknown or missing slugs fall back to the latest review, matching the existing public-page behavior.
+
+### GET `/data/index.json`
+
+Retained as the full dynamically combined catalogue compatibility endpoint. Public Content pages no longer download this entire payload.
+
 ## Reactions
 
 ### GET `/api/reactions?slug=<movie-slug>`

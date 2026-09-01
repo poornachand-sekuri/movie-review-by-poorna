@@ -31,3 +31,12 @@ export function compactReview(review = {}) {
 export function compactReviews(reviews) {
   return Array.isArray(reviews) ? reviews.map(compactReview) : [];
 }
+
+export function contentPayload(reviews, requestedSlug = '') {
+  const source = Array.isArray(reviews) ? reviews : [];
+  const active = source.find(review => review.s === requestedSlug) || source[0] || null;
+  return {
+    reviews: compactReviews(source),
+    active
+  };
+}

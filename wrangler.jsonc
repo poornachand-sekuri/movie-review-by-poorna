@@ -21,6 +21,7 @@
     "run_worker_first": [
       "/api/*",
       "/data/catalog.json",
+      "/data/content.json",
       "/data/index.json",
       "/data/cast-crew.json"
     ]

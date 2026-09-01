@@ -1,3 +1,5 @@
+import { compactReviews, contentPayload } from './review-catalog.js';
+
 const REVIEW_DATA_KEY = '_system/review-admin-v2.json';
 const SESSION_COOKIE = 'mrp_admin';
 const SESSION_TTL_SECONDS = 60 * 60 * 12;
@@ -587,6 +589,14 @@ async function syncReactionBatch(env, url) {
 
 export async function handleDynamicData(request, env, url) {
   if (request.method !== 'GET') return null;
+  if (url.pathname === '/data/catalog.json') {
+    const reviews = await getCombinedReviews(env, request.url, false);
+    return json(compactReviews(reviews));
+  }
+  if (url.pathname === '/data/content.json') {
+    const reviews = await getCombinedReviews(env, request.url, false);
+    return json(contentPayload(reviews, url.searchParams.get('review') || ''));
+  }
   if (url.pathname === '/data/index.json') {
     const reviews = await getCombinedReviews(env, request.url, false);
     return json(reviews);
