@@ -32,7 +32,7 @@ All pages share one cinematic design language while each space retains its own p
 
 - No permanent staging/production data duplication.
 - `cinema-rebuild` deploys temporarily to `movie-review-by-poorna-preview` while the current live site remains untouched.
-- The single D1 database currently created as `movie-review-by-poorna-staging-db` becomes the content database for the new site; a second production D1 database will not be created.
+- The single canonical D1 database is `movie-review-by-poorna-content`; a second production D1 database will not be created.
 - At cutover, the approved production Worker will bind to the same D1 database and the temporary preview Worker can be removed.
 - No Cloudflare Images or KV runtime dependency is enabled.
 - Additional paid services or duplicated storage are not introduced without an explicit cost/performance review.
@@ -43,6 +43,7 @@ All pages share one cinematic design language while each space retains its own p
 - D1 schema migrations and deterministic legacy import tooling are present.
 - Automated validation covers TypeScript, Astro build, Cloudflare dry-run, migration/import smoke tests and database integrity.
 - The preserved and current live catalogues have been reconciled at 136 reviews with no differences at the time of audit.
+- `CONTENT_DB` is configured for `movie-review-by-poorna-content`.
 - No real review content has been copied into D1 yet.
 - Production `main` and existing review media remain untouched.
 
@@ -56,4 +57,4 @@ All pages share one cinematic design language while each space retains its own p
 - Review content and existing review media are migrated as data, never by copying old UI implementation.
 - Production `main` remains untouched until the rebuild is explicitly approved.
 
-See `docs/ENGINEERING-GUARDRAILS.md` and `docs/DATA-MIGRATION.md` before adding page implementation or changing the content model.
+See `docs/ENGINEERING-GUARDRAILS.md`, `docs/DATA-MIGRATION.md` and `docs/CLOUDFLARE-DEPLOYMENT.md` before adding page implementation or changing the content model.
