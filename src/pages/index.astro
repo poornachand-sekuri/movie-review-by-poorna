@@ -10,7 +10,7 @@ const featured = reviews[0] ?? null;
 const recent = reviews.slice(1, 5);
 const previous = reviews.slice(5, 9);
 
-const artBase = 'https://assets.moviereviewbypoorna.com/ui/site/v1/lounge/compact';
+const artBase = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive';
 const art = (file: string) => `${artBase}/${file}`;
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', {
