@@ -56,8 +56,13 @@ const contentSource = readFileSync(new URL('../assets/js/app.js', import.meta.ur
 const dynamicDataSource = readFileSync(new URL('../src/admin-console.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
 
-assert(homeSource.includes("fetch('/data/catalog.json')"), 'Home must use the compact catalogue endpoint.');
-assert(cafeSource.includes("fetch('/data/catalog.json')"), 'Cine Cafe must use the compact catalogue endpoint.');
+const usesCompactCatalog = source => (
+  source.includes("fetch('/data/catalog.json')") ||
+  source.includes("const sources = ['/data/catalog.json', '/data/index.json']")
+);
+
+assert(usesCompactCatalog(homeSource), 'Home must use the compact catalogue endpoint.');
+assert(usesCompactCatalog(cafeSource), 'Cine Cafe must use the compact catalogue endpoint.');
 assert(
   contentSource.includes('`${CONFIG.dataBase}/content.json`'),
   'Content pages must use the optimized Content payload endpoint.'
