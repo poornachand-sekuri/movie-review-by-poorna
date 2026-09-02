@@ -7,8 +7,8 @@
   <meta name="description" content="Movie Reviews By Poorna">
   <title>Cini Cafe | Movie Reviews By Poorna</title>
   <link rel="preconnect" href="https://assets.moviereviewbypoorna.com" crossorigin>
-  <link rel="preload" as="image" href="https://assets.moviereviewbypoorna.com/ui/pages/cine-cafe/v2/mobile/Cini_Cafe_Master.avif" fetchpriority="high">
-  <link rel="stylesheet" href="/assets/css/cine-cafe.css?v=20260902-cafe-pixel-canvas-1">
+  <link rel="preload" as="image" href="https://assets.moviereviewbypoorna.com/ui/pages/cine-cafe/v3/mobile/Cini_Cafe_Master.avif" fetchpriority="high">
+  <link rel="stylesheet" href="/assets/css/cine-cafe.css?v=20260902-cafe-pixel-canvas-2">
 </head>
 <body>
   <main class="cine-cafe-page" aria-label="Cini Cafe review search">
@@ -25,38 +25,19 @@
         </form>
 
         <div class="filters-layer" aria-label="Review filters">
-          <label class="filter-control filter-language">
-            <span id="languageLabel">Language</span>
-            <select id="languageFilter" aria-label="Filter by language"></select>
-          </label>
-          <label class="filter-control filter-year">
-            <span id="yearLabel">Year</span>
-            <select id="yearFilter" aria-label="Filter by year"></select>
-          </label>
-          <label class="filter-control filter-sort">
-            <span id="sortLabel">Latest</span>
-            <select id="sortFilter" aria-label="Sort reviews">
-              <option value="latest">Latest</option>
-              <option value="oldest">Oldest</option>
-              <option value="title-az">Title A–Z</option>
-              <option value="title-za">Title Z–A</option>
-            </select>
-          </label>
+          <label class="filter-control filter-language"><span id="languageLabel">Language</span><select id="languageFilter" aria-label="Filter by language"></select></label>
+          <label class="filter-control filter-year"><span id="yearLabel">Year</span><select id="yearFilter" aria-label="Filter by year"></select></label>
+          <label class="filter-control filter-sort"><span id="sortLabel">Latest</span><select id="sortFilter" aria-label="Sort reviews"><option value="latest">Latest</option><option value="oldest">Oldest</option><option value="title-az">Title A–Z</option><option value="title-za">Title Z–A</option></select></label>
           <button class="clear-filter" id="clearFilters" type="button" aria-label="Clear search and filters">Clear</button>
         </div>
 
-        <p class="result-count" aria-live="polite">
-          <span class="serving-range" id="servingRange"></span>
-          <span class="serving-total" id="servingTotal"></span>
-        </p>
-
+        <p class="result-count" aria-live="polite"><span class="serving-range" id="servingRange"></span><span class="serving-total" id="servingTotal"></span></p>
         <section class="results-layer" id="resultsLayer" aria-label="Review results"></section>
         <nav class="pagination-layer" id="pagination" aria-label="Review pages"></nav>
         <p class="empty-state" id="emptyState" hidden>No reviews match your search.</p>
       </section>
     </div>
   </main>
-
-  <script type="module" src="/assets/js/cine-cafe.js?v=20260902-cafe-pixel-canvas-1"></script>
+  <script type="module" src="/assets/js/cine-cafe.js?v=20260902-cafe-pixel-canvas-2"></script>
 </body>
 </html>
