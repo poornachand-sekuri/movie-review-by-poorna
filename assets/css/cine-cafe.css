@@ -76,9 +76,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   outline-offset: 2px;
 }
 
-/* The approved AVIF already contains the idle search hint. Keep the runtime
-   input completely transparent until a real query exists so there is never a
-   duplicate or mismatched placeholder. */
+/* Search is already visually correct. The approved AVIF supplies the idle hint. */
 .search-overlay {
   position: absolute;
   z-index: 50;
@@ -104,60 +102,35 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   caret-color: var(--red);
 }
 .search-overlay input::placeholder { color: transparent; opacity: 0; }
-.search-overlay input:not(:placeholder-shown) {
-  background: #050505;
-  color: var(--white);
-}
+.search-overlay input:not(:placeholder-shown) { background: #050505; color: var(--white); }
 .search-overlay input:focus:not(:placeholder-shown) { color: var(--white); }
 
-/* Exact label zones inside the four baked filter buttons. Icons and chevrons
-   remain entirely in the AVIF. */
-.filters-layer {
-  position: absolute;
-  z-index: 51;
-  left: 120px;
-  top: 418px;
-  width: 748px;
-  height: 79px;
-}
+/* Filter controls are positioned directly on the native 1023x1537 canvas.
+   Text centers were measured from the approved populated reference: x236,
+   x433, x637 and x834, with a shared baseline around y470. */
+.filters-layer { position: absolute; inset: 0; z-index: 51; }
 .filter-control,
 .clear-filter {
   position: absolute;
-  top: 0;
-  height: 79px;
+  top: 431px;
+  height: 76px;
   border: 0;
   padding: 0;
   margin: 0;
   background: transparent;
   color: var(--white);
 }
-.filter-language { left: 0; width: 200px; }
-.filter-year { left: 210px; width: 180px; }
-.filter-sort { left: 400px; width: 195px; }
+.filter-language { left: 124px; width: 201px; }
+.filter-year { left: 340px; width: 186px; }
+.filter-sort { left: 535px; width: 202px; }
 .clear-filter {
-  left: 606px;
-  width: 142px;
+  left: 747px;
+  width: 144px;
   cursor: pointer;
   color: transparent;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: .02em;
 }
+.filter-control > span,
 .clear-filter::after {
-  content: 'CLEAR';
-  position: absolute;
-  left: 38px;
-  right: 18px;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #f5f2ed;
-}
-.filter-control > span {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -168,15 +141,19 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-transform: uppercase;
-  font-size: 15px;
-  font-weight: 700;
+  color: #f2efea;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: .018em;
+  letter-spacing: .03em;
   pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,.8);
 }
-.filter-language > span { left: 58px; right: 28px; }
-.filter-year > span { left: 68px; right: 45px; }
-.filter-sort > span { left: 70px; right: 55px; }
+.filter-language > span { left: 58px; width: 108px; }
+.filter-year > span { left: 52px; width: 82px; }
+.filter-sort > span { left: 58px; width: 104px; }
+.clear-filter::after { content: 'CLEAR'; left: 58px; width: 58px; }
 .filter-control select {
   position: absolute;
   inset: 0;
@@ -187,7 +164,8 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   appearance: none;
 }
 
-/* Measured value slots around the baked SERVING / OF / REVIEWS labels. */
+/* Dynamic values replace only the two tiny baked dashes. Their centers are
+   x465 and x560, exactly between SERVING / OF / REVIEWS. */
 .result-count {
   position: absolute;
   z-index: 49;
@@ -198,71 +176,73 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   margin: 0;
   pointer-events: none;
   color: var(--red);
-  font-size: 18px;
-  font-weight: 800;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: 19px;
+  font-weight: 600;
   line-height: 1;
 }
 .serving-range,
 .serving-total {
   position: absolute;
-  top: 517px;
-  height: 46px;
+  top: 544px;
+  height: 29px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #050505;
   white-space: nowrap;
-  box-shadow: 0 0 5px 2px #050505;
 }
-.serving-range { left: 423px; width: 58px; }
-.serving-total { left: 519px; width: 52px; }
+.serving-range { left: 442px; width: 46px; }
+.serving-total { left: 538px; width: 44px; }
 
 .results-layer { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
 .review-card { position: absolute; width: 310px; height: 320px; pointer-events: auto; }
+/* Exact frame origins measured from the approved master. */
 .review-card:nth-child(1) { left: 30px; top: 610px; }
-.review-card:nth-child(2) { left: 340px; top: 610px; }
-.review-card:nth-child(3) { left: 650px; top: 610px; }
-.review-card:nth-child(4) { left: 30px; top: 945px; }
-.review-card:nth-child(5) { left: 340px; top: 945px; }
-.review-card:nth-child(6) { left: 650px; top: 945px; }
+.review-card:nth-child(2) { left: 348px; top: 610px; }
+.review-card:nth-child(3) { left: 657px; top: 610px; }
+.review-card:nth-child(4) { left: 30px; top: 941px; }
+.review-card:nth-child(5) { left: 348px; top: 941px; }
+.review-card:nth-child(6) { left: 657px; top: 941px; }
 .review-link { position: absolute; inset: 0; color: inherit; text-decoration: none; }
 
-/* One exact plaque template, reused unchanged for all six results. */
+/* Result content is split into non-overlapping poster, copy, rating and like
+   zones. The shorter poster preserves the baked heart at the lower-left. */
 .poster-zone {
   position: absolute;
-  left: 30px;
-  top: 62px;
-  width: 139px;
-  height: 202px;
+  left: 32px;
+  top: 70px;
+  width: 128px;
+  height: 178px;
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: #090909;
-  border-radius: 1px;
+  background: #080808;
+  border-radius: 2px;
 }
 .poster-zone img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center center;
 }
 .review-info {
   position: absolute;
-  left: 169px;
-  top: 64px;
+  left: 172px;
+  top: 72px;
   width: 116px;
-  height: 122px;
+  height: 104px;
   min-width: 0;
   overflow: hidden;
 }
 .review-title {
   margin: 0;
-  color: #f8f6f2;
+  color: #f7f4ef;
   font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-  font-size: 17px;
-  line-height: 1.08;
-  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.06;
+  font-weight: 500;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -271,9 +251,11 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   text-shadow: 0 1px 2px #000;
 }
 .review-meta {
-  margin: 10px 0 0;
-  color: #d2cdc6;
-  font-size: 12px;
+  margin: 11px 0 0;
+  color: #c9c4bd;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
   line-height: 1.15;
   white-space: nowrap;
   overflow: hidden;
@@ -281,39 +263,38 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 }
 .review-stars {
   position: absolute;
-  left: 169px;
-  top: 200px;
-  width: 120px;
+  left: 172px;
+  top: 190px;
+  width: 118px;
   color: var(--gold);
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: .25px;
+  letter-spacing: .15px;
   white-space: nowrap;
   text-shadow: 0 1px 3px #000;
 }
-/* Preserve the large baked heart; only erase its dash placeholder and place
-   the live count on the same visual baseline. */
+/* Baked heart occupies roughly x47-75,y253-278. Mask only the dash region
+   immediately to its right and render the live count on that same baseline. */
 .review-likes {
   position: absolute;
-  left: 78px;
-  top: 274px;
-  width: 56px;
-  height: 28px;
+  left: 83px;
+  top: 252px;
+  width: 46px;
+  height: 27px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #090909;
-  box-shadow: 0 0 4px 2px #090909;
   color: #f4f1eb;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
 }
 
-/* Pagination was already visually close; keep the measured baked-control
-   reuse intact. */
+/* Navigation / pagination is already accepted; preserve the measured version. */
 .pagination-layer { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
 .pagination-layer > * {
   position: absolute;
