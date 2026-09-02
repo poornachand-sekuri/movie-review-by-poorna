@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <title>Content V3 Design Preview — Movie Reviews By Poorna</title>
+  <link rel="preconnect" href="https://assets.moviereviewbypoorna.com" crossorigin>
+  <link rel="stylesheet" href="./preview.css">
+  <link rel="stylesheet" href="./theater-behavior.css">
+  <link rel="stylesheet" href="./cinema-room-theme.css">
+</head>
+<body>
+  <div class="cv3-page">
+    <div class="cv3-ambient" aria-hidden="true"></div>
+
+    <main class="cv3-stage" id="previewRoot" aria-busy="true">
+      <header class="cv3-header" aria-label="Movie Reviews By Poorna">
+        <img src="https://assets.moviereviewbypoorna.com/ui/pages/home/v3/mobile/02_top_menu_section.avif?v=20260902-selected-cinema-lounge-6" alt="Movie Reviews By Poorna">
+        <button class="cv3-header-hit cv3-header-menu" type="button" aria-label="Menu"></button>
+        <button class="cv3-header-hit cv3-header-search" type="button" aria-label="Search"></button>
+      </header>
+
+      <section class="cv3-dossier cv3-glass cv3-clapboard" aria-labelledby="movieTitle">
+        <div class="cv3-kicker"><span>NOW SCREENING</span><b>THE REVIEW ROOM</b></div>
+        <div class="cv3-dossier-grid">
+          <div class="cv3-poster-shell">
+            <div class="cv3-poster-glow" aria-hidden="true"></div>
+            <img id="moviePoster" class="cv3-poster" alt="">
+            <span class="cv3-poster-tag">FEATURE PRESENTATION</span>
+          </div>
+
+          <div class="cv3-facts">
+            <h1 id="movieTitle">Loading…</h1>
+            <div class="cv3-meta-row"><span>WATCHED IN</span><strong id="movieLanguage">—</strong></div>
+            <div class="cv3-meta-row"><span>RELEASE DATE</span><strong id="movieRelease">—</strong></div>
+            <div class="cv3-meta-row"><span>RATING</span><strong id="movieRating" class="cv3-stars">☆☆☆☆☆</strong></div>
+          </div>
+        </div>
+
+        <div class="cv3-divider"><span>CAST &amp; CREW</span></div>
+        <div id="movieCast" class="cv3-cast"></div>
+
+        <div class="cv3-pov-card">
+          <div class="cv3-pov-label">MY POV</div>
+          <p id="moviePov"></p>
+        </div>
+      </section>
+
+      <section class="cv3-review-section" aria-labelledby="reviewHeading">
+        <div class="cv3-review-marquee">
+          <span>★</span><h2 id="reviewHeading">MY REVIEW</h2><span>★</span>
+        </div>
+        <div class="cv3-screen-frame">
+          <div class="cv3-screen-light" aria-hidden="true"></div>
+          <article id="reviewBody" class="cv3-review-body"></article>
+        </div>
+        <div class="cv3-stage-lip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      </section>
+
+      <section class="cv3-verdict cv3-glass" aria-label="Review reactions">
+        <div class="cv3-section-title">
+          <span>YOUR VERDICT</span>
+          <h2>Do you like this review?</h2>
+        </div>
+        <div class="cv3-verdict-actions">
+          <button type="button" class="cv3-vote cv3-like" aria-pressed="false">
+            <span class="cv3-vote-icon">▲</span>
+            <span class="cv3-vote-copy"><b>THUMBS UP</b><small>Good take</small></span>
+            <strong>0</strong>
+          </button>
+          <button type="button" class="cv3-vote cv3-dislike" aria-pressed="false">
+            <span class="cv3-vote-icon">▼</span>
+            <span class="cv3-vote-copy"><b>THUMBS DOWN</b><small>Not for me</small></span>
+            <strong>0</strong>
+          </button>
+        </div>
+      </section>
+
+      <section class="cv3-related cv3-glass cv3-reel-section" aria-labelledby="relatedHeading">
+        <div class="cv3-section-headline">
+          <div><span>KEEP WATCHING</span><h2 id="relatedHeading">Related Reviews</h2></div>
+          <span class="cv3-swipe">SWIPE →</span>
+        </div>
+        <div class="cv3-related-scroll">
+          <div id="relatedGrid" class="cv3-related-grid"></div>
+        </div>
+      </section>
+
+      <section class="cv3-comments cv3-glass" aria-labelledby="commentsHeading">
+        <div class="cv3-section-headline">
+          <div><span>JOIN THE CONVERSATION</span><h2 id="commentsHeading">Share Your Opinion</h2></div>
+        </div>
+
+        <div class="cv3-comments-layout">
+          <section class="cv3-recent-comments" aria-label="Recent comments">
+            <div class="cv3-mini-title">RECENT COMMENTS</div>
+            <div class="cv3-comment-card">
+              <strong>Movie Lover</strong>
+              <p>This preview intentionally keeps the existing comments area while changing only the visual language.</p>
+              <time>Design preview</time>
+            </div>
+            <div class="cv3-comment-card cv3-comment-muted">
+              <strong>YOUR COMMUNITY</strong>
+              <p>Live moderated comments will appear here in the runtime implementation.</p>
+            </div>
+          </section>
+
+          <section class="cv3-add-comment" aria-label="Add your comment">
+            <div class="cv3-mini-title">ADD YOUR COMMENT</div>
+            <form>
+              <label><span>NAME</span><input type="text" placeholder="Your name"></label>
+              <label><span>EMAIL</span><input type="email" placeholder="you@example.com"></label>
+              <label><span>COMMENT</span><textarea rows="5" placeholder="Write your comment…"></textarea></label>
+              <button type="button">SUBMIT COMMENT</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <footer class="cv3-concept-note">
+        CONTENT V3 · SAME CINEMA · DIFFERENT ROOM · RUNTIME NOT MODIFIED
+      </footer>
+    </main>
+  </div>
+
+  <script type="module" src="./preview.js"></script>
+  <script type="module" src="./theater-modal.js"></script>
+</body>
+</html>

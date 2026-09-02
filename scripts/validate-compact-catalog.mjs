@@ -52,7 +52,8 @@ assert(
 
 const homeSource = readFileSync(new URL('../assets/js/home-v3.js', import.meta.url), 'utf8');
 const cafeSource = readFileSync(new URL('../assets/js/cine-cafe.js', import.meta.url), 'utf8');
-const contentSource = readFileSync(new URL('../assets/js/app.js', import.meta.url), 'utf8');
+const legacyContentSource = readFileSync(new URL('../assets/js/app.js', import.meta.url), 'utf8');
+const contentV3Source = readFileSync(new URL('../assets/js/content-v3.js', import.meta.url), 'utf8');
 const dynamicDataSource = readFileSync(new URL('../src/admin-console.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
 
@@ -64,12 +65,20 @@ const usesCompactCatalog = source => (
 assert(usesCompactCatalog(homeSource), 'Home must use the compact catalogue endpoint.');
 assert(usesCompactCatalog(cafeSource), 'Cine Cafe must use the compact catalogue endpoint.');
 assert(
-  contentSource.includes('`${CONFIG.dataBase}/content.json`'),
-  'Content pages must use the optimized Content payload endpoint.'
+  legacyContentSource.includes('`${CONFIG.dataBase}/content.json`'),
+  'Legacy Content pages must use the optimized Content payload endpoint.'
 );
 assert(
-  !contentSource.includes('fetch(`${CONFIG.dataBase}/index.json`)'),
-  'Content pages must not download the full review catalogue directly.'
+  !legacyContentSource.includes('fetch(`${CONFIG.dataBase}/index.json`)'),
+  'Legacy Content pages must not download the full review catalogue directly.'
+);
+assert(
+  contentV3Source.includes("new URL('/data/content.json', location.origin)"),
+  'Content V3 must request the optimized Content payload endpoint first.'
+);
+assert(
+  contentV3Source.includes('loadReviewPayload(slug)'),
+  'Content V3 must initialize through the optimized payload loader.'
 );
 assert(dynamicDataSource.includes("url.pathname === '/data/catalog.json'"), 'Worker must serve the compact endpoint.');
 assert(dynamicDataSource.includes("url.pathname === '/data/content.json'"), 'Worker must serve the Content endpoint.');
