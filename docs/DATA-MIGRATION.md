@@ -46,4 +46,4 @@ Before the new application is allowed to depend on D1, verification must confirm
 
 ## Rollback
 
-The existing production JSON/R2 content is retained throughout staging and launch validation. D1 becomes canonical only after the new site is approved and the migration verification report is clean.
+The existing production JSON/R2 content is retained throughout preview and launch validation. The same D1 database used during the rebuild becomes canonical only after the new site is approved and the migration verification report is clean; there is no second production D1 copy.
