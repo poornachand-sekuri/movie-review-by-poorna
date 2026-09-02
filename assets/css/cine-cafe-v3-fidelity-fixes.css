@@ -1,29 +1,29 @@
 /* Final Cini Cafe V3 mobile reaction-count fidelity pass. */
 
 /* The master AVIF contains decorative dash placeholders after the heart.
-   Start an opaque mask immediately AFTER the heart, cover the full dash run,
-   then render the live numeric count on the same baseline. */
+   Cover that complete placeholder region with one opaque cinema-style pill,
+   then centre the real live count in the replacement pill. The pill begins
+   immediately after the baked heart, so the heart itself remains untouched. */
 .cine-cafe-page .review-likes {
-  left: 76px !important;
-  top: 281px !important;
-  width: 90px !important;
-  height: 30px !important;
+  left: 75px !important;
+  top: 282px !important;
+  width: 82px !important;
+  height: 27px !important;
   box-sizing: border-box;
-  padding: 0 0 0 34px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  border: 0 !important;
-  border-radius: 0 !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(128, 14, 18, .48) !important;
+  border-radius: 999px !important;
   background: #050505 !important;
   color: #f4f0ea !important;
-  box-shadow: none !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 0 4px rgba(123,12,16,.16) !important;
   font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
   font-size: 15px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   letter-spacing: .02em !important;
-  text-align: left !important;
+  text-align: center !important;
   text-shadow: 0 1px 2px #000 !important;
   white-space: nowrap;
 }
