@@ -1,6 +1,7 @@
-/* Home V3 runtime repair.
-   Keeps My POV fully inside its AVIF ticket and makes long card titles readable
-   without duplicated or concatenated marquee fragments. */
+/* Home V3 runtime polish (v21).
+   One final fitter owns My POV sizing and one final ticker owns long card titles.
+   This avoids the competing/duplicated effects that previously made text look
+   cramped or concatenated on iPhone Safari. */
 
 const titleAnimations = new WeakMap();
 let resizeTimer = 0;
@@ -8,23 +9,31 @@ let resizeTimer = 0;
 function fitFullPov(pov) {
   if (!pov || !pov.textContent.trim() || pov.clientWidth <= 0 || pov.clientHeight <= 0) return;
 
-  /* Always restart from the CSS design size. The original Home fitter may have
-     written an inline size; clearing it prevents progressive shrink on refits. */
+  /* Always restart from the CSS preferred size so repeated ResizeObserver/font
+     callbacks cannot progressively shrink the copy. */
   pov.style.removeProperty('font-size');
-  const cssMax = Number.parseFloat(getComputedStyle(pov).fontSize) || 8;
-  const minPx = 4.4;
+  const preferredPx = Number.parseFloat(getComputedStyle(pov).fontSize) || 10;
+  const readableFloorPx = Math.min(preferredPx, 7.2);
 
   const fits = px => {
     pov.style.fontSize = `${px}px`;
     return pov.scrollHeight <= pov.clientHeight + 1 && pov.scrollWidth <= pov.clientWidth + 1;
   };
 
-  if (fits(cssMax)) return;
+  if (fits(preferredPx)) return;
 
-  let low = minPx;
-  let high = Math.max(cssMax, minPx);
-  let best = minPx;
-  for (let i = 0; i < 18; i += 1) {
+  /* Shrink only as much as required, and never below the readable design floor.
+     The ticket has enough vertical room for ordinary POV lengths, so the result
+     should normally stay very close to the preferred size. */
+  if (!fits(readableFloorPx)) {
+    pov.style.fontSize = `${readableFloorPx}px`;
+    return;
+  }
+
+  let low = readableFloorPx;
+  let high = preferredPx;
+  let best = readableFloorPx;
+  for (let i = 0; i < 16; i += 1) {
     const mid = (low + high) / 2;
     if (fits(mid)) {
       best = mid;
@@ -48,8 +57,8 @@ function fitReadableTitle(title) {
   const track = title?.querySelector('.hm3-title-track');
   if (!track) return;
 
-  /* The core helper can add a continuity copy. Remove it: on narrow iPhone
-     cards it was producing merged fragments such as RTSLITTLE / OGT... */
+  /* The core helper may create a continuity copy. Remove it so there is never a
+     second title that can visually join the first one. */
   while (track.children.length > 1) track.lastElementChild.remove();
   const copy = track.firstElementChild;
   if (!copy) return;
@@ -66,17 +75,25 @@ function fitReadableTitle(title) {
   title.style.textAlign = 'left';
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  /* Show the beginning of the real title first, hold briefly, then reveal the
-     rest right-to-left. At the end it pauses before resetting to the beginning.
-     No second copy is ever visible, so the title cannot look concatenated. */
   const overflow = Math.max(0, textWidth - viewportWidth);
-  const duration = Math.max(8500, Math.min(15000, 7000 + overflow * 45));
+  const fullyExited = -(textWidth + 18);
+  const duration = Math.max(10000, Math.min(17000, 9000 + overflow * 55));
+
+  /* Timeline:
+     0–18%  : show the beginning of the title
+     18–60% : scroll to reveal the ending
+     60–72% : hold the ending
+     72–82% : move the title completely off the left edge
+     82–100%: deliberate blank gap before the title restarts
+     This creates a visible breathing space between the last and first letters. */
   const animation = copy.animate(
     [
       { transform: 'translateX(0)', offset: 0 },
-      { transform: 'translateX(0)', offset: 0.16 },
-      { transform: `translateX(${-overflow}px)`, offset: 0.84 },
-      { transform: `translateX(${-overflow}px)`, offset: 1 }
+      { transform: 'translateX(0)', offset: 0.18 },
+      { transform: `translateX(${-overflow}px)`, offset: 0.60 },
+      { transform: `translateX(${-overflow}px)`, offset: 0.72 },
+      { transform: `translateX(${fullyExited}px)`, offset: 0.82 },
+      { transform: `translateX(${fullyExited}px)`, offset: 1 }
     ],
     { duration, iterations: Infinity, easing: 'linear' }
   );
@@ -97,23 +114,21 @@ function installFinalContainmentRuntime() {
 
   const refit = () => requestAnimationFrame(() => refitHome(page));
 
-  /* Run after the core Home builder, then again after any late font/layout work
-     so this final containment pass always wins over the older fitters. */
   refit();
-  setTimeout(refit, 120);
-  setTimeout(refit, 600);
+  setTimeout(refit, 140);
+  setTimeout(refit, 650);
   document.fonts?.ready?.then(() => {
     refit();
-    setTimeout(refit, 80);
+    setTimeout(refit, 100);
   }).catch(() => {});
 
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(refit, 90);
+    resizeTimer = window.setTimeout(refit, 110);
   }, { passive: true });
 
-  /* If the older marquee helper recreates a duplicate title after a responsive
-     recalculation, clean it and restore the single-copy ticker immediately. */
+  /* Neutralise any later duplicate title created by the older core marquee
+     observer and immediately restore the single-copy animation. */
   const titleObserver = new MutationObserver(mutations => {
     if (!mutations.some(mutation => mutation.type === 'childList')) return;
     refit();
