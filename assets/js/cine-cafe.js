@@ -67,7 +67,6 @@ function filteredMovies() {
   const latest = (a, b) =>
     String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || '')) ||
     Number(b.i || 0) - Number(a.i || 0);
-
   const oldest = (a, b) => -latest(a, b);
   const titleAZ = (a, b) => String(a.t || '').localeCompare(String(b.t || ''), undefined, { sensitivity: 'base' });
   const titleZA = (a, b) => -titleAZ(a, b);
@@ -330,15 +329,33 @@ function bindControls() {
   window.addEventListener('resize', () => requestAnimationFrame(fitReviewTitles));
 }
 
+async function loadMovies() {
+  const sources = ['/data/catalog.json', '/data/index.json'];
+  let lastError = null;
+  for (const source of sources) {
+    try {
+      const response = await fetch(source, { headers: { accept: 'application/json' } });
+      if (!response.ok) throw new Error(`Could not load ${source}`);
+      const payload = await response.json();
+      const movies = Array.isArray(payload) ? payload : payload?.reviews;
+      if (Array.isArray(movies) && movies.length) return movies;
+      throw new Error(`${source} contained no reviews`);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error('Could not load review data.');
+}
+
 async function init() {
   bindControls();
   try {
-    const [moviesResponse, castResponse] = await Promise.all([
-      fetch('/data/catalog.json'),
+    const [movies, castResponse] = await Promise.all([
+      loadMovies(),
       fetch(`${DATA_BASE}/cast-crew.json`)
     ]);
-    if (!moviesResponse.ok || !castResponse.ok) throw new Error('Could not load review data.');
-    state.movies = await moviesResponse.json();
+    if (!castResponse.ok) throw new Error('Could not load cast and crew data.');
+    state.movies = movies;
     state.castCrew = await castResponse.json();
     populateFilters();
     render();
