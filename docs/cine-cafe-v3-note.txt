@@ -1,0 +1,1 @@
+Cini Cafe v3 mobile redesign uses the single R2 master artwork at ui/pages/cine-cafe/v2/mobile/Cini_Cafe_Master.avif with live search, filters, result data and pagination overlaid by the dedicated cine-cafe runtime only. Home and main are intentionally untouched during branch development.
