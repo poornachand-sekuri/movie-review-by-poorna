@@ -13,14 +13,15 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260902-home-read-more-route-13';
-const CONTENT_VERSION = '20260902-content-v3-reaction-inline-12';
+const HOME_VERSION = '20260902-home-frame-fit-14';
+const CONTENT_VERSION = '20260902-content-fidelity-15';
 
 if (isHome) {
   [
     `/assets/css/home-v3.css?v=${HOME_VERSION}`,
     `/assets/css/home-v3-adjustments.css?v=${HOME_VERSION}`,
-    `/assets/css/home-v3-nav-polish.css?v=${HOME_VERSION}`
+    `/assets/css/home-v3-nav-polish.css?v=${HOME_VERSION}`,
+    `/assets/css/home-v3-fidelity-fixes.css?v=${HOME_VERSION}`
   ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
@@ -47,7 +48,8 @@ if (isHome) {
     `/assets/css/content-v3.css?v=${CONTENT_VERSION}`,
     `/assets/css/content-v3-fidelity.css?v=${CONTENT_VERSION}`,
     `/assets/css/content-v3-polish.css?v=${CONTENT_VERSION}`,
-    `/assets/css/content-v3-reaction-layout.css?v=${CONTENT_VERSION}`
+    `/assets/css/content-v3-reaction-layout.css?v=${CONTENT_VERSION}`,
+    `/assets/css/content-v3-fidelity-fixes.css?v=${CONTENT_VERSION}`
   ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
