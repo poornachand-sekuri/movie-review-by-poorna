@@ -1,12 +1,18 @@
-/* Home V3 title + POV polish (v21)
-   This layer is intentionally last in the Home stylesheet stack. It reserves
-   independent zones for poster artwork and movie copy, and keeps My POV large
-   and readable while still fitting inside the baked ticket frame. */
+/* Home V3 stable title + POV layout (v22)
+   Final stylesheet in the Home stack. Poster artwork, movie title/rating and
+   the Now Reviewed copy each have their own measured visual zones so runtime
+   content cannot collide with the baked AVIF artwork. */
 
-/* -------- Recent / Previously Reviewed: no title-over-poster overlap -------- */
+/* ---------------- Review cards: poster zone ---------------- */
+.home-v3-mode .hm3-recent-card,
+.home-v3-mode .hm3-prev-card,
 .home-v3-mode .hm3-recent-poster,
 .home-v3-mode .hm3-prev-poster {
   background: transparent !important;
+}
+
+.home-v3-mode .hm3-recent-poster,
+.home-v3-mode .hm3-prev-poster {
   overflow: hidden !important;
 }
 
@@ -14,11 +20,11 @@
   position: absolute !important;
   left: 8.5% !important;
   right: 8.5% !important;
-  top: 4.5% !important;
+  top: 5% !important;
   width: 83% !important;
-  height: 58% !important;
+  height: 51% !important;
   max-width: 83% !important;
-  max-height: 58% !important;
+  max-height: 51% !important;
   margin: 0 !important;
   object-fit: contain !important;
   object-position: 50% 50% !important;
@@ -30,20 +36,21 @@
   right: 9% !important;
   top: 5% !important;
   width: 82% !important;
-  height: 56% !important;
+  height: 50% !important;
   max-width: 82% !important;
-  max-height: 56% !important;
+  max-height: 50% !important;
   margin: 0 !important;
   object-fit: contain !important;
   object-position: 50% 50% !important;
 }
 
-/* Put title + stars in a dedicated lower band, with a visible gap below the
-   poster. The band never extends into the image viewport. */
+/* ---------------- Review cards: independent title/rating zone ----------------
+   The title band begins well below the poster window. It is deliberately opaque
+   so no poster pixel can visually sit behind the moving title. */
 .home-v3-mode .hm3-recent-info,
 .home-v3-mode .hm3-prev-info {
   position: absolute !important;
-  z-index: 6 !important;
+  z-index: 8 !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
@@ -53,26 +60,26 @@
   pointer-events: none !important;
   text-align: center !important;
   gap: 3px !important;
-  background: rgba(3,3,3,.94) !important;
-  border-top: 1px solid rgba(155,11,15,.28) !important;
+  background: rgba(2,2,2,.98) !important;
+  border-top: 1px solid rgba(176,21,25,.32) !important;
 }
 
 .home-v3-mode .hm3-recent-info {
-  left: 15.8% !important;
-  right: 15.8% !important;
-  top: 67% !important;
-  bottom: 10.6% !important;
+  left: 12.5% !important;
+  right: 12.5% !important;
+  top: 67.5% !important;
+  bottom: 10.5% !important;
   height: auto !important;
-  padding: 3.5% 2.8% 3.8% !important;
+  padding: 2.8% 2.2% 3.2% !important;
 }
 
 .home-v3-mode .hm3-prev-info {
-  left: 14.8% !important;
-  right: 14.8% !important;
-  top: 65.5% !important;
-  bottom: 10.6% !important;
+  left: 12% !important;
+  right: 12% !important;
+  top: 66.5% !important;
+  bottom: 10.8% !important;
   height: auto !important;
-  padding: 3.5% 2.8% 3.8% !important;
+  padding: 2.8% 2.2% 3.2% !important;
 }
 
 .home-v3-mode .hm3-recent-title,
@@ -85,12 +92,18 @@
   overflow: hidden !important;
   white-space: nowrap !important;
   text-overflow: clip !important;
+  color: #f8f4ed !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
+  font-weight: 800 !important;
   line-height: 1.12 !important;
+  letter-spacing: .012em !important;
+  text-transform: uppercase !important;
   text-align: center !important;
+  text-shadow: 0 1px 2px #000, 0 0 4px rgba(0,0,0,.98) !important;
 }
 
-.home-v3-mode .hm3-recent-title { font-size: clamp(5.7px, 1.42vw, 7.9px) !important; }
-.home-v3-mode .hm3-prev-title { font-size: clamp(5.1px, 1.2vw, 6.9px) !important; }
+.home-v3-mode .hm3-recent-title { font-size: clamp(5.8px, 1.45vw, 8px) !important; }
+.home-v3-mode .hm3-prev-title { font-size: clamp(5.2px, 1.24vw, 7.1px) !important; }
 
 .home-v3-mode .hm3-title-track {
   display: block !important;
@@ -111,8 +124,6 @@
   will-change: transform;
 }
 
-/* There must never be a second visible copy; JS supplies a blank pause between
-   the end and beginning of a long title instead. */
 .home-v3-mode .hm3-title-copy + .hm3-title-copy { display: none !important; }
 .home-v3-mode .hm3-recent-title.is-marquee,
 .home-v3-mode .hm3-prev-title.is-marquee { text-align: left !important; }
@@ -122,16 +133,31 @@
   padding-left: 0 !important;
 }
 
-/* -------- Now Reviewed / My POV: readable dynamic sizing -------- */
+.home-v3-mode .hm3-recent-stars,
+.home-v3-mode .hm3-prev-stars {
+  display: block !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  color: #e7b54d !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  text-shadow: 0 1px 2px #000 !important;
+}
+
+/* ---------------- Now Reviewed / My POV ----------------
+   Use almost the full safe red ticket, but keep a visible inner gutter. The POV
+   starts at a comfortable preferred size; JS only reduces it if the actual copy
+   needs more room and adjusts line-height before using the emergency small size. */
 .home-v3-mode .hm3-now-copy {
-  left: 54.2% !important;
-  top: 22.6% !important;
-  width: 29.4% !important;
-  height: 59.8% !important;
+  left: 53.9% !important;
+  top: 21.8% !important;
+  width: 30.0% !important;
+  height: 61.0% !important;
   right: auto !important;
   bottom: auto !important;
   box-sizing: border-box !important;
-  padding: 1.8% 2.4% 2.2% !important;
+  padding: 1.5% 1.8% 1.6% !important;
   display: grid !important;
   grid-template-rows: auto auto auto minmax(0,1fr) !important;
   align-content: stretch !important;
@@ -140,19 +166,23 @@
 
 .home-v3-mode .hm3-now-title {
   margin: 0 !important;
-  font-size: clamp(9.5px, 2.5vw, 13.5px) !important;
-  line-height: 1.04 !important;
+  font-size: clamp(9px, 2.35vw, 13px) !important;
+  line-height: 1.02 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .home-v3-mode .hm3-now-meta {
-  margin: 4px 0 0 !important;
-  font-size: clamp(6.2px, 1.58vw, 8.8px) !important;
-  line-height: 1.1 !important;
+  margin: 2px 0 0 !important;
+  font-size: clamp(5.8px, 1.48vw, 8.4px) !important;
+  line-height: 1.07 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .home-v3-mode .hm3-now-label {
-  margin-top: 6px !important;
-  font-size: clamp(6.4px, 1.62vw, 9px) !important;
+  margin-top: 4px !important;
+  font-size: clamp(6.1px, 1.55vw, 8.7px) !important;
   line-height: 1 !important;
 }
 
@@ -160,25 +190,31 @@
   width: 100% !important;
   height: auto !important;
   min-height: 0 !important;
-  margin: 5px 0 0 !important;
-  padding: 0 2.5% 0 0 !important;
+  margin: 3px 0 0 !important;
+  padding: 0 .5% 0 0 !important;
   overflow: hidden !important;
   color: rgba(250,248,242,.98) !important;
   font-family: Georgia, "Times New Roman", serif !important;
-  font-size: clamp(7.2px, 1.95vw, 10.6px) !important;
+  font-size: clamp(6.8px, 1.78vw, 9.6px) !important;
   font-style: italic !important;
   font-weight: 500 !important;
-  line-height: 1.29 !important;
-  letter-spacing: .002em !important;
+  line-height: 1.20 !important;
+  letter-spacing: 0 !important;
   overflow-wrap: break-word !important;
   word-break: normal !important;
   hyphens: none !important;
 }
 
 @media (max-width: 360px) {
+  .home-v3-mode .hm3-now-copy {
+    left: 53.7% !important;
+    width: 30.2% !important;
+    padding-left: 1.4% !important;
+    padding-right: 1.6% !important;
+  }
   .home-v3-mode .hm3-pov {
-    font-size: clamp(7px, 1.9vw, 9.8px) !important;
-    line-height: 1.25 !important;
+    font-size: clamp(6.6px, 1.75vw, 9.2px) !important;
+    line-height: 1.18 !important;
   }
 }
 
