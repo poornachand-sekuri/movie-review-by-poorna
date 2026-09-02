@@ -1,7 +1,7 @@
 import { mountComments } from './comments.js';
 
 const ASSET_BASE = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v3/mobile';
-const ASSET_VERSION = '20260902-frame-marquee-17';
+const ASSET_VERSION = '20260902-home-canonical-23';
 const state = { movies: [] };
 const $ = (selector, root = document) => root.querySelector(selector);
 
@@ -62,84 +62,13 @@ function section(file, className, ariaLabel) {
   return wrap;
 }
 
-function fitPovText(container) {
-  if (!container || !container.textContent.trim()) return;
-  const maxPx = Number.parseFloat(getComputedStyle(container).fontSize) || 13;
-  const minPx = 8;
-  container.style.fontSize = `${maxPx}px`;
-  if (container.scrollHeight <= container.clientHeight + 1) return;
-
-  let low = minPx;
-  let high = maxPx;
-  let best = minPx;
-  for (let i = 0; i < 12; i += 1) {
-    const mid = (low + high) / 2;
-    container.style.fontSize = `${mid}px`;
-    if (container.scrollHeight <= container.clientHeight + 1) {
-      best = mid;
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-  container.style.fontSize = `${best}px`;
-}
-
-function wirePovAutoFit(pov) {
-  const fit = () => requestAnimationFrame(() => fitPovText(pov));
-  fit();
-  document.fonts?.ready?.then(fit).catch(() => {});
-  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(pov);
-  else window.addEventListener('resize', fit, { passive: true });
-}
-
 function cardTitle(className, text) {
   const title = document.createElement('strong');
   title.className = className;
   title.title = text;
   title.setAttribute('aria-label', text);
-
-  const track = document.createElement('span');
-  track.className = 'hm3-title-track';
-  const copy = document.createElement('span');
-  copy.className = 'hm3-title-copy';
-  copy.textContent = text;
-  track.append(copy);
-  title.append(track);
+  title.textContent = text;
   return title;
-}
-
-function fitCardMarquee(title) {
-  const track = title.querySelector('.hm3-title-track');
-  if (!track) return;
-  while (track.children.length > 1) track.lastElementChild.remove();
-  title.classList.remove('is-marquee');
-  title.style.removeProperty('--hm3-marquee-duration');
-
-  const copy = track.firstElementChild;
-  if (!copy || title.clientWidth <= 0) return;
-  if (copy.scrollWidth <= title.clientWidth + 1) return;
-
-  const duplicate = copy.cloneNode(true);
-  duplicate.setAttribute('aria-hidden', 'true');
-  track.append(duplicate);
-  title.classList.add('is-marquee');
-  const seconds = Math.max(6, Math.min(12, (copy.scrollWidth + 18) / 16));
-  title.style.setProperty('--hm3-marquee-duration', `${seconds.toFixed(2)}s`);
-}
-
-function wireCardMarquees(root) {
-  const titles = [...root.querySelectorAll('.hm3-recent-title, .hm3-prev-title')];
-  if (!titles.length) return;
-  const fit = () => requestAnimationFrame(() => titles.forEach(fitCardMarquee));
-  fit();
-  document.fonts?.ready?.then(fit).catch(() => {});
-  if ('ResizeObserver' in window) {
-    const observer = new ResizeObserver(fit);
-    titles.forEach(title => observer.observe(title));
-  } else {
-    window.addEventListener('resize', fit, { passive: true });
-  }
 }
 
 function recentCard(movie) {
@@ -154,7 +83,6 @@ function recentCard(movie) {
 
   const info = document.createElement('span');
   info.className = 'hm3-recent-info';
-
   const title = cardTitle('hm3-recent-title', movie.t);
 
   const rating = document.createElement('span');
@@ -179,7 +107,6 @@ function previousCard(movie) {
 
   const info = document.createElement('span');
   info.className = 'hm3-prev-info';
-
   const title = cardTitle('hm3-prev-title', movie.t);
 
   const rating = document.createElement('span');
@@ -190,70 +117,6 @@ function previousCard(movie) {
   info.append(title, rating);
   link.append(poster, info);
   return link;
-}
-
-function renderSearchResults(query = '') {
-  const target = $('#searchResults');
-  if (!target) return;
-  target.replaceChildren();
-  const q = query.trim().toLocaleLowerCase();
-
-  state.movies
-    .filter(movie => !q || movie.t.toLocaleLowerCase().includes(q) || String(movie.l || '').toLocaleLowerCase().includes(q))
-    .slice(0, 30)
-    .forEach(movie => {
-      const a = document.createElement('a');
-      a.className = 'search-result';
-      a.href = reviewHref(movie);
-      a.textContent = movie.t;
-      const small = document.createElement('small');
-      small.textContent = `${movie.l || ''}${movie.rd ? ` • ${formatDate(movie.rd)}` : ''}`;
-      a.append(small);
-      target.append(a);
-    });
-}
-
-function wireGlobalNavigation(menuButton, searchButton) {
-  const drawer = $('#menuDrawer');
-  const backdrop = $('#drawerBackdrop');
-  const dialog = $('#searchDialog');
-
-  const openMenu = () => {
-    drawer.dataset.open = 'true';
-    drawer.setAttribute('aria-hidden', 'false');
-    backdrop.hidden = false;
-  };
-  const closeMenu = () => {
-    drawer.dataset.open = 'false';
-    drawer.setAttribute('aria-hidden', 'true');
-    backdrop.hidden = true;
-  };
-  const openSearch = () => {
-    renderSearchResults('');
-    if (typeof dialog.showModal === 'function') dialog.showModal();
-    else dialog.setAttribute('open', '');
-    requestAnimationFrame(() => $('#searchInput')?.focus());
-  };
-  const closeSearch = () => {
-    if (typeof dialog.close === 'function') dialog.close();
-    else dialog.removeAttribute('open');
-  };
-
-  menuButton.addEventListener('click', openMenu);
-  searchButton.addEventListener('click', openSearch);
-  $('#menuClose')?.addEventListener('click', closeMenu);
-  backdrop?.addEventListener('click', closeMenu);
-  $('#searchClose')?.addEventListener('click', closeSearch);
-  $('#searchInput')?.addEventListener('input', event => renderSearchResults(event.target.value));
-
-  $('.drawer-nav')?.addEventListener('click', event => {
-    const action = event.target.closest('[data-action]')?.dataset.action;
-    if (!action) return;
-    closeMenu();
-    if (action === 'search' || action === 'browse' || action === 'languages') openSearch();
-  });
-
-  return { openSearch };
 }
 
 function buildCommentsOverlay(shareSection) {
@@ -276,7 +139,6 @@ function buildCommentsOverlay(shareSection) {
   name.autocomplete = 'name';
   name.placeholder = 'Name';
   name.setAttribute('aria-label', 'Name');
-
   identity.append(name);
 
   const comment = document.createElement('textarea');
@@ -327,9 +189,10 @@ async function buildHome() {
 
   stage.append(top, nowSection, recentSection, previousSection, shareSection, bottom);
 
-  const menu = makeHotspot('hm3-menu', 'Open menu');
-  const search = makeHotspot('hm3-search', 'Search reviews');
-  top.append(menu, search);
+  top.append(
+    makeHotspot('hm3-menu', 'Go to Home'),
+    makeHotspot('hm3-search', 'Browse reviews in Cini Cafe')
+  );
 
   const nowPoster = document.createElement('a');
   nowPoster.className = 'hm3-now-poster';
@@ -359,21 +222,17 @@ async function buildHome() {
 
   nowCopy.append(title, meta, povLabel, pov);
   nowSection.append(nowPoster, nowCopy);
-
-  const readReview = makeHotspot('hm3-read-review', `Read ${now.t} review`, reviewHref(now));
-  nowSection.append(readReview);
+  nowSection.append(makeHotspot('hm3-read-review', `Read ${now.t} review`, reviewHref(now)));
 
   const recentGrid = document.createElement('div');
   recentGrid.className = 'hm3-recent-grid';
   recent.forEach(movie => recentGrid.append(recentCard(movie)));
-  recentSection.append(recentGrid);
-  recentSection.append(makeHotspot('hm3-recent-view-all', 'View all recent reviews'));
+  recentSection.append(recentGrid, makeHotspot('hm3-recent-view-all', 'View all recent reviews'));
 
   const previousGrid = document.createElement('div');
   previousGrid.className = 'hm3-previous-grid';
   previous.forEach(movie => previousGrid.append(previousCard(movie)));
-  previousSection.append(previousGrid);
-  previousSection.append(makeHotspot('hm3-previous-view-all', 'View all previously reviewed movies'));
+  previousSection.append(previousGrid, makeHotspot('hm3-previous-view-all', 'View all previously reviewed movies'));
 
   const commentsOverlay = buildCommentsOverlay(shareSection);
 
@@ -384,11 +243,8 @@ async function buildHome() {
 
   page.append(stage);
   $('#content').replaceChildren(page);
-  $('#app').setAttribute('aria-busy', 'false');
+  $('#app')?.setAttribute('aria-busy', 'false');
 
-  wireGlobalNavigation(menu, search);
-  wirePovAutoFit(pov);
-  wireCardMarquees(page);
   await mountComments({ targetType: 'home', targetId: 'home', root: commentsOverlay });
 }
 
@@ -410,7 +266,8 @@ async function loadMovies() {
       lastError = error;
     }
   }
-  throw lastError || new Error('Could not load review data.');
+
+  throw lastError || new Error('Could not load reviews.');
 }
 
 async function init() {
@@ -418,8 +275,12 @@ async function init() {
     state.movies = await loadMovies();
     await buildHome();
   } catch (error) {
-    $('#content').innerHTML = `<section class="loading-card">${error.message || 'Unable to load the Home page.'}</section>`;
-    $('#app').setAttribute('aria-busy', 'false');
+    console.error(error);
+    const content = $('#content');
+    if (content) {
+      content.innerHTML = '<section class="loading-card" role="alert">Unable to load reviews. Please refresh and try again.</section>';
+    }
+    $('#app')?.setAttribute('aria-busy', 'false');
   }
 }
 
