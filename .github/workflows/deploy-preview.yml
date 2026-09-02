@@ -103,3 +103,51 @@ jobs:
           console.log(`API smoke tests passed. Preview: ${process.env.PREVIEW_URL}`);
           console.log(`Compact list: ${list.items.length} rows; detail: ${detail.review.title}; search: ${search.items.length} result(s).`);
           NODE
+
+      - name: Smoke-test Lounge pages and artwork
+        shell: bash
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
+        run: |
+          set -euo pipefail
+
+          curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors "$PREVIEW_URL/" > /tmp/lounge.html
+          curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors "$PREVIEW_URL/search?q=Kantara" > /tmp/cafe.html
+          curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors "$PREVIEW_URL/review/dc" > /tmp/review.html
+
+          asset_base='https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res''ponsive'
+          for file in \
+            01_background.avif \
+            02_top_menu_section.avif \
+            03_now_reviewed_section.avif \
+            04_recent_reviews_section.avif \
+            05_previously_reviewed.avif \
+            06_share_your_opinion.avif \
+            07_bottom_navigation.avif
+          do
+            echo "Checking artwork: $file"
+            curl --fail --silent --show-error --location --retry 4 --retry-delay 1 --retry-all-errors \
+              --output /dev/null "$asset_base/$file"
+          done
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const lounge = fs.readFileSync('/tmp/lounge.html', 'utf8');
+          const cafe = fs.readFileSync('/tmp/cafe.html', 'utf8');
+          const review = fs.readFileSync('/tmp/review.html', 'utf8');
+
+          const count = (html, token) => html.split(token).length - 1;
+
+          if (!lounge.includes('Movie Reviews By Poorna')) throw new Error('Lounge title is missing.');
+          if (!lounge.includes('03_now_reviewed_section.avif')) throw new Error('Now Reviewed artwork is missing.');
+          if (!lounge.includes('04_recent_reviews_section.avif')) throw new Error('Recent Reviews artwork is missing.');
+          if (!lounge.includes('05_previously_reviewed.avif')) throw new Error('Previous Reviews artwork is missing.');
+          if (!lounge.includes('06_share_your_opinion.avif')) throw new Error('Opinion artwork is missing.');
+          if (count(lounge, 'class="recent-card ') !== 4) throw new Error('Lounge did not render exactly 4 recent review cards.');
+          if (count(lounge, 'class="previous-card ') !== 4) throw new Error('Lounge did not render exactly 4 previous review cards.');
+          if (!lounge.includes('name="robots" content="noindex,nofollow"')) throw new Error('Preview noindex metadata is missing.');
+          if (!cafe.includes('Kantara')) throw new Error('Cini Cafe search page did not render search results.');
+          if (!review.includes('Screening Room') || !review.includes('DC')) throw new Error('Review click-through did not render DC.');
+
+          console.log('Live page smoke tests passed: Lounge, artwork, Cini Cafe and review click-through.');
+          NODE
