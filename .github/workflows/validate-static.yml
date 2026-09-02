@@ -44,6 +44,7 @@ jobs:
 
           const runtimeRoots = [
             'index.html',
+            'cine-cafe',
             'admin',
             'assets',
             'src',
@@ -135,10 +136,22 @@ jobs:
             throw new Error(`Review image asset violation(s):\n${violations.join('\n')}`);
           }
 
-          const config = fs.readFileSync('assets/js/config.js', 'utf8');
-          const requiredUiBase = `https://${allowedHost}/ui/pages/content/v2/mobile`;
-          if (!config.includes(`uiAssetBase: '${requiredUiBase}'`)) {
-            throw new Error(`UI artwork must use owned R2 base ${requiredUiBase}`);
+          const canonicalFrontendFiles = [
+            'assets/js/home-v3.js',
+            'assets/css/home-v3-stable.css',
+            'assets/js/content-v3.js',
+            'assets/css/content-v3-stable.css',
+            'cine-cafe/index.html'
+          ];
+          const combined = canonicalFrontendFiles.map(file => fs.readFileSync(file, 'utf8')).join('\n');
+          if (!combined.includes(`https://${allowedHost}/ui/pages/home/v3/mobile`)) {
+            throw new Error('Home V3 artwork must use the owned R2 custom domain.');
+          }
+          if (!combined.includes(`https://${allowedHost}/ui/pages/content/v3`)) {
+            throw new Error('Content V3 artwork must use the owned R2 custom domain.');
+          }
+          if (!combined.includes(`https://${allowedHost}/ui/pages/cine-cafe/v3/mobile`)) {
+            throw new Error('Cini Cafe V3 artwork must use the owned R2 custom domain.');
           }
 
           const wrangler = fs.readFileSync('wrangler.jsonc', 'utf8');
@@ -149,7 +162,70 @@ jobs:
             throw new Error('Admin review uploads must use the custom R2 public domain.');
           }
 
-          console.log(`Validated ${reviews.length} reviews: poster/body images and Admin R2 ownership are correct.`);
+          console.log(`Validated ${reviews.length} reviews and canonical V3 R2 ownership.`);
+          NODE
+
+      - name: Reject obsolete frontend layers
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+
+          const obsolete = [
+            'assets/css/final-overrides.css',
+            'assets/css/home-comments.css',
+            'assets/css/home-mobile-polish.css',
+            'assets/css/home-v3-adjustments.css',
+            'assets/css/home-v3-nav-polish.css',
+            'assets/css/home-v3-fidelity-fixes.css',
+            'assets/css/home-v3-final-containment.css',
+            'assets/css/home-v3-title-pov-21.css',
+            'assets/js/home-comments.js',
+            'assets/js/home-v3-adjustments.js',
+            'assets/js/home-v3-nav-polish.js',
+            'assets/js/home-v3-final-containment.js',
+            'assets/css/content-v3-fidelity.css',
+            'assets/css/content-v3-polish.css',
+            'assets/css/content-v3-reaction-layout.css',
+            'assets/css/content-v3-fidelity-fixes.css',
+            'assets/css/content-v3-title-pov.css',
+            'assets/js/content-v3-pov-fit.js',
+            'assets/js/content-v3-polish.js',
+            'assets/js/content-v3-title-marquee.js',
+            'assets/css/cine-cafe-special.css',
+            'assets/css/cine-cafe-v3-fix.css',
+            'assets/css/cine-cafe-v3-pagination.css',
+            'assets/css/cine-cafe-v3-polish.css',
+            'assets/css/cine-cafe-v3-fidelity-fixes.css',
+            'assets/js/cine-cafe-v3-polish.js',
+            'assets/js/app.js',
+            'assets/js/config.js',
+            'assets/js/ui-patch.js',
+            'assets/js/navigation.js'
+          ];
+          const existing = obsolete.filter(file => fs.existsSync(file));
+          if (existing.length) {
+            throw new Error(`Obsolete frontend layer(s) must stay deleted:\n${existing.join('\n')}`);
+          }
+
+          const entrypoints = [
+            'index.html',
+            'cine-cafe/index.html',
+            'assets/js/bootstrap-home-v3.js'
+          ].map(file => fs.readFileSync(file, 'utf8')).join('\n');
+          const forbiddenRefs = [
+            /content\/v2/i,
+            /content-v2/i,
+            /-fidelity/i,
+            /-polish/i,
+            /-final-containment/i,
+            /home-v3-adjustments/i,
+            /home-v3-nav-polish/i
+          ];
+          const matches = forbiddenRefs.filter(pattern => pattern.test(entrypoints));
+          if (matches.length) {
+            throw new Error(`Canonical entrypoints contain legacy frontend reference(s): ${matches.join(', ')}`);
+          }
+          console.log('Canonical V3 entrypoints contain no obsolete patch/version layers.');
           NODE
 
       - name: Validate preserved JSON data
@@ -170,10 +246,7 @@ jobs:
             throw new Error('related-review-rules.json does not match the expected schema');
           }
 
-          const missingCast = reviews
-            .filter(review => !castCrew.records[review.s])
-            .map(review => review.s);
-
+          const missingCast = reviews.filter(review => !castCrew.records[review.s]).map(review => review.s);
           if (missingCast.length) {
             throw new Error(`Missing Cast & Crew records: ${missingCast.join(', ')}`);
           }
@@ -184,21 +257,31 @@ jobs:
       - name: Verify required frontend files
         run: |
           test -f index.html
+          test -f cine-cafe/index.html
           test -f admin/index.html
           test -f admin/admin.css
           test -f admin/admin.js
           test -f assets/css/site.css
-          test -f assets/css/final-overrides.css
-          test -f assets/js/config.js
-          test -f assets/js/app.js
+          test -f assets/css/navigation.css
+          test -f assets/css/home-v3.css
+          test -f assets/css/home-v3-stable.css
+          test -f assets/css/content-v3.css
+          test -f assets/css/content-v3-stable.css
+          test -f assets/css/cine-cafe.css
+          test -f assets/css/cine-cafe-stable.css
           test -f assets/js/bootstrap-home-v3.js
           test -f assets/js/home-v3.js
-          test -f assets/js/home-comments.js
+          test -f assets/js/home-v3-runtime.js
+          test -f assets/js/content-v3.js
+          test -f assets/js/content-v3-runtime.js
+          test -f assets/js/content-v3-asset-path.js
           test -f assets/js/live-reactions.js
           test -f assets/js/comments.js
           test -f assets/js/analytics.js
+          test -f assets/js/cine-cafe-scale.js
           test -f assets/js/cine-cafe.js
-          test -f assets/js/navigation.js
+          test -f assets/js/cine-cafe-runtime.js
+          test -f docs/V3-RUNTIME-ARCHITECTURE.md
           test -f src/admin-console.js
           test -f src/analytics-store.js
           test -f src/worker.js
