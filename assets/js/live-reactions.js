@@ -9,7 +9,7 @@ function reactionStorageKey(slug) {
 function getLegacyReaction(slug) {
   try {
     const parsed = JSON.parse(localStorage.getItem(reactionStorageKey(slug)) || '{}');
-    const myVote = parsed?.myVote === 'like' || parsed?.myVote === 'dislike' ? parsed.myVote : null;
+    const myVote = parsed?.myVote === 'like' || parsed.myVote === 'dislike' ? parsed.myVote : null;
     return { myVote };
   } catch {
     return { myVote: null };
@@ -60,12 +60,12 @@ async function requestReaction(slug, vote = null) {
 }
 
 function paint(values) {
-  const like = document.querySelector('.like-count');
-  const dislike = document.querySelector('.dislike-count');
-  if (!like || !dislike) return;
+  const likes = [...document.querySelectorAll('.like-count')];
+  const dislikes = [...document.querySelectorAll('.dislike-count')];
+  if (!likes.length || !dislikes.length) return;
 
-  like.textContent = String(values.like);
-  dislike.textContent = String(values.dislike);
+  likes.forEach(node => { node.textContent = String(values.like); });
+  dislikes.forEach(node => { node.textContent = String(values.dislike); });
   document.querySelectorAll('.reaction-button').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.vote === values.myVote));
     button.removeAttribute('title');
@@ -73,10 +73,7 @@ function paint(values) {
 }
 
 function paintUnavailable() {
-  const like = document.querySelector('.like-count');
-  const dislike = document.querySelector('.dislike-count');
-  if (like) like.textContent = '—';
-  if (dislike) dislike.textContent = '—';
+  document.querySelectorAll('.like-count, .dislike-count').forEach(node => { node.textContent = '—'; });
   document.querySelectorAll('.reaction-button').forEach(button => {
     button.setAttribute('title', 'Live reaction counts are temporarily unavailable');
   });
@@ -112,8 +109,6 @@ document.addEventListener('click', async event => {
   const button = event.target.closest?.('.reaction-button');
   if (!button) return;
 
-  // The original preview handler is still attached by app.js. Capture the click here
-  // so only the live persistent endpoint is allowed to mutate reaction state.
   event.preventDefault();
   event.stopImmediatePropagation();
 
