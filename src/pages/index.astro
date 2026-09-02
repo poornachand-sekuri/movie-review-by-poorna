@@ -43,7 +43,11 @@ const featuredPov = featured?.excerpt?.trim() || featured?.verdict?.trim() || ''
   description="The Lounge at Movie Reviews By Poorna — latest reviews, recent reviews and cinema notes."
 >
   <main class="lounge-page">
-    <div class="lounge-backdrop" aria-hidden="true"></div>
+    <div
+      class="lounge-backdrop"
+      style={`background-image:url("${art('01_background.avif')}")`}
+      aria-hidden="true"
+    ></div>
     <div class="lounge-shade" aria-hidden="true"></div>
 
     <div class="lounge-stage">
@@ -250,9 +254,9 @@ const featuredPov = featured?.excerpt?.trim() || featured?.verdict?.trim() || ''
 
   <script>
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const animations = new Map();
+    const animations = new Map<HTMLElement, Animation>();
 
-    function fitMarquee(element) {
+    function fitMarquee(element: HTMLElement) {
       const track = element.querySelector('span');
       if (!(track instanceof HTMLElement)) return;
 
@@ -282,24 +286,21 @@ const featuredPov = featured?.excerpt?.trim() || featured?.verdict?.trim() || ''
       animations.set(element, animation);
     }
 
-    const marqueeTitles = [...document.querySelectorAll('[data-title-marquee]')];
-    const fitAllMarquees = () => marqueeTitles.forEach((element) => {
-      if (element instanceof HTMLElement) fitMarquee(element);
-    });
+    const marqueeTitles = [...document.querySelectorAll<HTMLElement>('[data-title-marquee]')];
+    const fitAllMarquees = () => marqueeTitles.forEach(fitMarquee);
 
     requestAnimationFrame(fitAllMarquees);
     document.fonts?.ready?.then(fitAllMarquees).catch(() => {});
-    motionQuery.addEventListener?.('change', fitAllMarquees);
+    motionQuery.addEventListener('change', () => fitAllMarquees());
+    window.addEventListener('resize', fitAllMarquees, { passive: true });
 
-    if ('ResizeObserver' in window) {
-      const observer = new ResizeObserver(fitAllMarquees);
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => fitAllMarquees());
       marqueeTitles.forEach((element) => observer.observe(element));
-    } else {
-      window.addEventListener('resize', fitAllMarquees, { passive: true });
     }
 
-    const form = document.querySelector('[data-opinion-form]');
-    const status = document.querySelector('[data-opinion-status]');
+    const form = document.querySelector<HTMLFormElement>('[data-opinion-form]');
+    const status = document.querySelector<HTMLElement>('[data-opinion-status]');
     form?.addEventListener('submit', (event) => {
       event.preventDefault();
       if (status) status.textContent = 'Comment submission will be enabled with the interaction cutover.';
