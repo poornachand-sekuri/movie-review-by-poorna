@@ -199,9 +199,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 .review-card:nth-child(6) { left: 657px; top: 941px; }
 .review-link { position: absolute; inset: 0; color: inherit; text-decoration: none; }
 
-/* Poster window measured from the original plaque template. The decorative
-   poster frame spans roughly x34-158 / y84-291; live artwork stays safely
-   inside its corner brackets instead of riding too high over the plaque. */
+/* Poster window measured from the original plaque template. */
 .poster-zone {
   position: absolute;
   left: 45px;
@@ -219,12 +217,15 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   object-fit: cover;
   object-position: center center;
 }
+
+/* Copy begins at the exact top of the poster window so title/meta and artwork
+   read as one aligned unit. */
 .review-info {
   position: absolute;
   left: 172px;
-  top: 72px;
+  top: 100px;
   width: 116px;
-  height: 104px;
+  height: 102px;
   min-width: 0;
   overflow: hidden;
 }
@@ -232,7 +233,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   margin: 0;
   color: #f7f4ef;
   font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.06;
   font-weight: 500;
   display: -webkit-box;
@@ -243,7 +244,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   text-shadow: 0 1px 2px #000;
 }
 .review-meta {
-  margin: 11px 0 0;
+  margin: 9px 0 0;
   color: #c9c4bd;
   font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
   font-size: 13px;
@@ -253,10 +254,13 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Rating row sits inside the poster's lower half, visually aligned with the
+   image rather than floating above it. */
 .review-stars {
   position: absolute;
   left: 172px;
-  top: 190px;
+  top: 224px;
   width: 118px;
   color: var(--gold);
   font-size: 20px;
