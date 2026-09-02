@@ -1,0 +1,58 @@
+name: Copy Lounge Assets
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/copy-lounge-assets.trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: '.nvmrc'
+          package-manager-cache: false
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Copy locked Lounge artwork to stable namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          bucket='movie-review-assets'
+          source_dir='ui/pages/home/v4/res''ponsive'
+          target_dir='ui/site/v1/lounge/compact'
+          files=(
+            '01_background.avif'
+            '02_top_menu_section.avif'
+            '03_now_reviewed_section.avif'
+            '04_recent_reviews_section.avif'
+            '05_previously_reviewed.avif'
+            '06_share_your_opinion.avif'
+            '07_bottom_navigation.avif'
+          )
+
+          mkdir -p /tmp/lounge-assets
+          for file in "${files[@]}"; do
+            echo "Copying $file"
+            npx wrangler r2 object get "$bucket/$source_dir/$file" --file "/tmp/lounge-assets/$file" --remote
+            npx wrangler r2 object put "$bucket/$target_dir/$file" --file "/tmp/lounge-assets/$file" --remote --content-type image/avif
+          done
+
+          echo 'Locked Lounge artwork copied to stable namespace.'
