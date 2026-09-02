@@ -1,16 +1,18 @@
-/* Screenshot-calibrated Home V3 runtime polish.
-   Keeps the full My POV visible and runs long card titles as one intact ticker. */
+/* Home V3 runtime repair.
+   Keeps My POV fully inside its AVIF ticket and makes long card titles readable
+   without duplicated or concatenated marquee fragments. */
 
 const titleAnimations = new WeakMap();
+let resizeTimer = 0;
 
 function fitFullPov(pov) {
   if (!pov || !pov.textContent.trim() || pov.clientWidth <= 0 || pov.clientHeight <= 0) return;
 
-  /* Remove the earlier Home fitter's inline value first so every recalculation
-     starts from the CSS design size instead of progressively shrinking. */
+  /* Always restart from the CSS design size. The original Home fitter may have
+     written an inline size; clearing it prevents progressive shrink on refits. */
   pov.style.removeProperty('font-size');
-  const cssMax = Number.parseFloat(getComputedStyle(pov).fontSize) || 9.8;
-  const minPx = 5.25;
+  const cssMax = Number.parseFloat(getComputedStyle(pov).fontSize) || 8;
+  const minPx = 4.4;
 
   const fits = px => {
     pov.style.fontSize = `${px}px`;
@@ -20,9 +22,9 @@ function fitFullPov(pov) {
   if (fits(cssMax)) return;
 
   let low = minPx;
-  let high = cssMax;
+  let high = Math.max(cssMax, minPx);
   let best = minPx;
-  for (let i = 0; i < 16; i += 1) {
+  for (let i = 0; i < 18; i += 1) {
     const mid = (low + high) / 2;
     if (fits(mid)) {
       best = mid;
@@ -42,71 +44,83 @@ function stopTitleAnimation(copy) {
   copy.style.removeProperty('transform');
 }
 
-function fitSingleTitleTicker(title) {
+function fitReadableTitle(title) {
   const track = title?.querySelector('.hm3-title-track');
   if (!track) return;
 
-  /* Core Home V3 may have produced a continuity copy. One visual copy is more
-     reliable in narrow cinema tickets and avoids the broken text seen on iOS. */
+  /* The core helper can add a continuity copy. Remove it: on narrow iPhone
+     cards it was producing merged fragments such as RTSLITTLE / OGT... */
   while (track.children.length > 1) track.lastElementChild.remove();
   const copy = track.firstElementChild;
   if (!copy) return;
 
   stopTitleAnimation(copy);
   title.classList.remove('is-marquee');
+  title.style.textAlign = 'center';
 
   const viewportWidth = title.clientWidth;
   const textWidth = copy.scrollWidth;
   if (viewportWidth <= 0 || textWidth <= viewportWidth + 1) return;
 
   title.classList.add('is-marquee');
+  title.style.textAlign = 'left';
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  /* Pixel endpoints make the complete title enter from the right, traverse the
-     ticket once, and leave fully on the left before repeating. */
-  const startX = viewportWidth + 4;
-  const endX = -(textWidth + 4);
-  const distance = startX - endX;
-  const duration = Math.max(7000, Math.min(15000, (distance / 24) * 1000));
+  /* Show the beginning of the real title first, hold briefly, then reveal the
+     rest right-to-left. At the end it pauses before resetting to the beginning.
+     No second copy is ever visible, so the title cannot look concatenated. */
+  const overflow = Math.max(0, textWidth - viewportWidth);
+  const duration = Math.max(8500, Math.min(15000, 7000 + overflow * 45));
   const animation = copy.animate(
     [
-      { transform: `translateX(${startX}px)` },
-      { transform: `translateX(${endX}px)` }
+      { transform: 'translateX(0)', offset: 0 },
+      { transform: 'translateX(0)', offset: 0.16 },
+      { transform: `translateX(${-overflow}px)`, offset: 0.84 },
+      { transform: `translateX(${-overflow}px)`, offset: 1 }
     ],
     { duration, iterations: Infinity, easing: 'linear' }
   );
   titleAnimations.set(copy, animation);
 }
 
-function installFinalContainmentRuntime() {
-  const page = document.querySelector('.hm3-page');
+function refitHome(page) {
   const pov = page?.querySelector('.hm3-pov');
   const titles = page ? [...page.querySelectorAll('.hm3-recent-title, .hm3-prev-title')] : [];
-  if (!page || !pov || !titles.length) return false;
+  if (!pov || !titles.length) return;
+  fitFullPov(pov);
+  titles.forEach(fitReadableTitle);
+}
 
-  const refit = () => requestAnimationFrame(() => {
-    fitFullPov(pov);
-    titles.forEach(fitSingleTitleTicker);
-  });
+function installFinalContainmentRuntime() {
+  const page = document.querySelector('.hm3-page');
+  if (!page) return false;
 
+  const refit = () => requestAnimationFrame(() => refitHome(page));
+
+  /* Run after the core Home builder, then again after any late font/layout work
+     so this final containment pass always wins over the older fitters. */
   refit();
-  document.fonts?.ready?.then(refit).catch(() => {});
+  setTimeout(refit, 120);
+  setTimeout(refit, 600);
+  document.fonts?.ready?.then(() => {
+    refit();
+    setTimeout(refit, 80);
+  }).catch(() => {});
 
-  if ('ResizeObserver' in window) {
-    const resizeObserver = new ResizeObserver(refit);
-    resizeObserver.observe(pov);
-    titles.forEach(title => resizeObserver.observe(title));
-  } else {
-    window.addEventListener('resize', refit, { passive: true });
-  }
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(refit, 90);
+  }, { passive: true });
 
-  /* If the original marquee helper recreates a duplicate after a responsive
-     change, clean it immediately and restore the measured single-copy ticker. */
-  const mutationObserver = new MutationObserver(mutations => {
+  /* If the older marquee helper recreates a duplicate title after a responsive
+     recalculation, clean it and restore the single-copy ticker immediately. */
+  const titleObserver = new MutationObserver(mutations => {
     if (!mutations.some(mutation => mutation.type === 'childList')) return;
     refit();
   });
-  titles.forEach(title => mutationObserver.observe(title, { childList: true, subtree: true }));
+  page.querySelectorAll('.hm3-recent-title, .hm3-prev-title').forEach(title => {
+    titleObserver.observe(title, { childList: true, subtree: true });
+  });
 
   return true;
 }
