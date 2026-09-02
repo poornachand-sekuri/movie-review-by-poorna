@@ -1,0 +1,107 @@
+---
+import SiteFrame from '../layouts/SiteFrame.astro';
+import { searchReviews } from '../lib/data/reviews';
+
+export const prerender = false;
+
+const query = Astro.url.searchParams.get('q')?.trim() ?? '';
+const results = query ? await searchReviews(query, { limit: 20 }) : [];
+---
+
+<SiteFrame title="Cini Cafe — Movie Reviews By Poorna">
+  <main class="search-shell">
+    <a class="back-link" href="/">← Lounge</a>
+    <h1>Cini Cafe</h1>
+    <form method="get" action="/search">
+      <label for="review-search">Search reviews</label>
+      <div class="search-row">
+        <input id="review-search" name="q" value={query} autocomplete="off" />
+        <button type="submit">Search</button>
+      </div>
+    </form>
+
+    {query && <p class="result-count">{results.length} result{results.length === 1 ? '' : 's'} for “{query}”</p>}
+
+    <div class="results">
+      {results.map((review) => (
+        <a class="result" href={`/review/${encodeURIComponent(review.slug)}`}>
+          <strong>{review.title}</strong>
+          <span>{review.language ?? '—'}</span>
+        </a>
+      ))}
+    </div>
+  </main>
+</SiteFrame>
+
+<style>
+  .search-shell {
+    width: min(100% - 2rem, 52rem);
+    margin-inline: auto;
+    padding-block: 2rem 5rem;
+  }
+
+  .back-link {
+    color: #d7d4cf;
+    text-decoration: none;
+  }
+
+  h1 {
+    margin: 1rem 0 2rem;
+  }
+
+  form {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  label,
+  .result-count,
+  .result span {
+    color: #aaa7a1;
+  }
+
+  .search-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem;
+  }
+
+  input,
+  button {
+    min-height: 2.75rem;
+    border: 1px solid #393939;
+    background: #0b0b0b;
+    color: #f3f2ef;
+  }
+
+  input {
+    padding-inline: 0.8rem;
+  }
+
+  button {
+    padding-inline: 1.1rem;
+    border-color: #8d1116;
+    cursor: pointer;
+  }
+
+  .result-count {
+    margin-top: 1.5rem;
+  }
+
+  .results {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .result {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid #242424;
+    background: #080808;
+    color: #f3f2ef;
+    text-decoration: none;
+  }
+</style>
