@@ -1,36 +1,48 @@
-/* Final Content V3 mobile fidelity corrections based on production screenshots. */
+/* Content V3 fidelity corrections based on the latest production screenshots. */
 
-/* Reactions: place the live number on the same visual centre-line as the baked
-   thumb artwork. 10% sat above the icon; 50% sat below it on iPhone Safari.
-   30% is the measured centre between those two rendered positions. */
-html.content-v3-active .cv3-reaction span {
+/* Reactions: retain the measured icon centre-line, but give the number a clear
+   breathing gap to the right of each baked thumb. Use a restrained champagne
+   tone and condensed cinema typography instead of a generic bright white. */
+html.content-v3-active .cv3-reaction span,
+html.content-v3-active .cv3-popup-reaction span {
   right: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 1.05em !important;
+  height: 1.1em !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #dbc79d !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: .075em !important;
+  text-align: center !important;
+  text-shadow: 0 1px 2px #000, 0 0 4px rgba(118,18,22,.28) !important;
+  pointer-events: none !important;
+}
+
+html.content-v3-active .cv3-reaction span {
   top: 30% !important;
   transform: translate(-50%, -50%) !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.1em;
-  height: 1.15em;
-  margin: 0;
-  padding: 0;
-  color: #f4f1eb;
-  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-  font-size: clamp(9px, 2.55vw, 14px);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: .025em;
-  text-align: center;
-  text-shadow: 0 1px 2px #000;
-  pointer-events: none;
+  font-size: clamp(8px, 2.12vw, 12px) !important;
 }
-html.content-v3-active .cv3-like span { left: 55% !important; }
-html.content-v3-active .cv3-dislike span { left: 37% !important; }
+html.content-v3-active .cv3-like span { left: 60% !important; }
+html.content-v3-active .cv3-dislike span { left: 43% !important; }
+
+html.content-v3-active .cv3-popup-reaction span {
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  font-size: clamp(11px, 2.55vw, 20px) !important;
+}
+html.content-v3-active .cv3-popup-like span { left: 63% !important; }
+html.content-v3-active .cv3-popup-dislike span { left: 45% !important; }
 
 /* Keep the finalized mobile Share artwork at its native proportion and map
    each interactive zone to the actual visual centre of its icon/label cell. */
 html.content-v3-active .cv3-share {
-  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/04_share_this_review.avif?v=20260902-fidelity-16') !important;
+  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/04_share_this_review.avif?v=20260902-fidelity-17') !important;
   background-size: 100% 100% !important;
   background-position: 50% 50% !important;
 }
@@ -52,71 +64,101 @@ html.content-v3-active .cv3-share-status {
   font-size: clamp(5px, 1.15vw, 7px);
 }
 
-/* Share Your Opinion: force the finalized mobile artwork and let the artwork
-   provide the visible controls. Runtime comment/form DOM remains underneath
-   as the API source, while either half opens the larger popover. */
+/* Share Your Opinion verification: this is intentionally the finalized
+   Content V3 mobile asset `06_share_your_opinion.avif`. The AVIF supplies the
+   Recent Comments and Add Your Comment chrome; runtime DOM only fills the
+   interior content windows and drives the popover/API behaviour. */
 html.content-v3-active .cv3-comments {
-  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/06_share_your_opinion.avif?v=20260902-fidelity-16') !important;
+  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/06_share_your_opinion.avif?v=20260902-fidelity-17') !important;
   background-size: 100% 100% !important;
   background-position: 50% 50% !important;
 }
 
-/* Compact static preview: no extra nested boxes fighting the AVIF artwork. */
+/* Compact preview is clipped strictly inside the Recent Comments window. */
 html.content-v3-active .cv3-comments .comment-list {
-  left: 5.5% !important;
-  top: 27% !important;
-  width: 39.2% !important;
-  height: 43% !important;
-  box-sizing: border-box;
-  padding: 3.2% 4.2% !important;
-  display: grid;
-  align-content: center;
-  gap: 5%;
-  overflow: hidden;
+  left: 6.0% !important;
+  top: 29.2% !important;
+  width: 38.4% !important;
+  height: 46.2% !important;
+  box-sizing: border-box !important;
+  padding: 2.6% 3.4% !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 4% !important;
+  overflow: hidden !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
 }
+
 html.content-v3-active .cv3-comments .comment-card {
-  min-height: 0;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  gap: 1px 4px !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  color: #dcd8d2;
-  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-  font-size: clamp(5.2px, 1.22vw, 7.4px) !important;
-  line-height: 1.16 !important;
+  color: #cfc9c0 !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
+  font-size: clamp(4.6px, 1.02vw, 6.4px) !important;
+  font-weight: 400 !important;
+  line-height: 1.18 !important;
+  overflow: hidden !important;
 }
-html.content-v3-active .cv3-comments .comment-card:nth-child(n+3) { display: none; }
+
+/* The page only needs one compact preview; all comments remain available in
+   the dedicated popover opened by tapping the section. */
+html.content-v3-active .cv3-comments .comment-card:nth-child(n+2) { display: none !important; }
+
 html.content-v3-active .cv3-comments .comment-card strong {
-  color: #f3eee8;
-  font-weight: 700;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #e3ddd4 !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
+  font-size: clamp(4.9px, 1.10vw, 6.8px) !important;
+  font-weight: 600 !important;
+  line-height: 1.12 !important;
+  letter-spacing: .018em !important;
 }
 html.content-v3-active .cv3-comments .comment-card p {
-  margin: 1px 0 0;
-  color: #d5d0ca;
-  line-height: 1.18 !important;
+  grid-column: 1 / -1 !important;
+  margin: 2px 0 0 !important;
+  color: #c8c2b9 !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
+  font-size: clamp(4.5px, .99vw, 6.2px) !important;
+  font-weight: 400 !important;
+  line-height: 1.2 !important;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
   -webkit-line-clamp: 2 !important;
+  overflow: hidden !important;
 }
 html.content-v3-active .cv3-comments .comment-card time {
-  color: #928d87;
-  font-size: .82em;
+  color: #8e8982 !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
+  font-size: clamp(3.8px, .82vw, 5.2px) !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
 }
 html.content-v3-active .cv3-comments .comment-empty {
   margin: 0 !important;
-  padding: 0 3% !important;
+  padding: 5% 2% !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
-  color: #b9b3ac;
-  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-  font-size: clamp(5.3px, 1.24vw, 7.5px) !important;
-  font-weight: 500;
-  line-height: 1.25 !important;
-  text-align: left;
+  color: #aaa49c !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
+  font-size: clamp(4.6px, 1.02vw, 6.4px) !important;
+  font-weight: 400 !important;
+  line-height: 1.24 !important;
+  text-align: left !important;
   box-shadow: none !important;
 }
 
@@ -130,7 +172,7 @@ html.content-v3-active .cv3-comments .comment-status {
   visibility: hidden !important;
 }
 
-/* Invisible, generous tap zones. Do not draw additional pills over the AVIF. */
+/* Invisible generous tap zones; no extra pills are drawn over the AVIF. */
 html.content-v3-active .cv3-comments-open {
   top: 18% !important;
   height: 76% !important;

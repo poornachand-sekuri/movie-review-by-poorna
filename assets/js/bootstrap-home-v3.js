@@ -13,8 +13,8 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260902-home-aspect-fit-15';
-const CONTENT_VERSION = '20260902-content-fidelity-16';
+const HOME_VERSION = '20260902-home-frame-marquee-17';
+const CONTENT_VERSION = '20260902-content-polish-17';
 
 if (isHome) {
   [
