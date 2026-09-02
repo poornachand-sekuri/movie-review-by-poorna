@@ -7,59 +7,56 @@
   <meta name="description" content="Movie Reviews By Poorna">
   <title>Cini Cafe | Movie Reviews By Poorna</title>
   <link rel="preconnect" href="https://assets.moviereviewbypoorna.com" crossorigin>
-  <link rel="preload" as="image" href="https://assets.moviereviewbypoorna.com/ui/pages/cine-cafe/v3/mobile/Cini_Cafe_Master_RT.avif" fetchpriority="high">
-  <link rel="stylesheet" href="/assets/css/cine-cafe.css?v=20260902-v3-1">
+  <link rel="preload" as="image" href="https://assets.moviereviewbypoorna.com/ui/pages/cine-cafe/v2/mobile/Cini_Cafe_Master.avif" fetchpriority="high">
+  <link rel="stylesheet" href="/assets/css/cine-cafe.css?v=20260902-cafe-v3-1">
+  <link rel="stylesheet" href="/assets/css/navigation.css?v=20260901-nav-3">
 </head>
 <body>
   <main class="cine-cafe-page" aria-label="Cini Cafe review search">
     <section class="cine-cafe-stage" id="cineCafeStage" aria-busy="true">
       <a class="hotspot hotspot-menu" href="/" aria-label="Back to Lounge"></a>
       <button class="hotspot hotspot-search" id="headerSearch" type="button" aria-label="Focus search"></button>
+      <a class="hotspot hotspot-lounge" href="/" aria-label="Lounge"></a>
+      <span class="hotspot hotspot-cafe" aria-hidden="true"></span>
 
       <form class="search-overlay" id="searchForm" role="search">
         <label class="sr-only" for="cineSearch">Search reviews</label>
         <input id="cineSearch" type="search" autocomplete="off" placeholder="Search movies, actors, directors…">
       </form>
 
-      <section class="filter-overlay" aria-label="Review filters">
+      <div class="filters-layer" aria-label="Review filters">
         <label class="filter-control filter-language">
-          <span class="sr-only">Language</span>
-          <select id="languageFilter" aria-label="Filter by language">
-            <option value="">Language</option>
-          </select>
+          <span id="languageLabel">Language</span>
+          <select id="languageFilter" aria-label="Filter by language"></select>
         </label>
         <label class="filter-control filter-year">
-          <span class="sr-only">Year</span>
-          <select id="yearFilter" aria-label="Filter by year">
-            <option value="">Year</option>
-          </select>
+          <span id="yearLabel">Year</span>
+          <select id="yearFilter" aria-label="Filter by year"></select>
         </label>
         <label class="filter-control filter-sort">
-          <span class="sr-only">Sort by</span>
+          <span id="sortLabel">Latest</span>
           <select id="sortFilter" aria-label="Sort reviews">
-            <option value="latest">Sort By</option>
+            <option value="latest">Latest</option>
             <option value="oldest">Oldest</option>
-            <option value="title-asc">Title A–Z</option>
-            <option value="title-desc">Title Z–A</option>
+            <option value="title-az">Title A–Z</option>
+            <option value="title-za">Title Z–A</option>
           </select>
         </label>
-        <button class="filter-clear" id="clearFilters" type="button" aria-label="Clear filters"></button>
-      </section>
+        <button class="clear-filter" id="clearFilters" type="button" aria-label="Clear search and filters"></button>
+      </div>
 
-      <p class="result-count" id="resultCount" aria-live="polite">
-        <span id="resultRange"></span>
-        <span id="resultTotal"></span>
+      <p class="result-count" aria-live="polite">
+        <span class="serving-range" id="servingRange"></span>
+        <span class="serving-total" id="servingTotal"></span>
       </p>
 
       <section class="results-layer" id="resultsLayer" aria-label="Review results"></section>
       <nav class="pagination-layer" id="pagination" aria-label="Review pages"></nav>
       <p class="empty-state" id="emptyState" hidden>No reviews match your search.</p>
-
-      <a class="bottom-hotspot bottom-lounge" href="/" aria-label="Lounge"></a>
-      <a class="bottom-hotspot bottom-cafe" href="/cine-cafe/" aria-label="Cini Cafe" aria-current="page"></a>
     </section>
   </main>
 
-  <script type="module" src="/assets/js/cine-cafe.js?v=20260902-v3-1"></script>
+  <script src="/assets/js/navigation.js?v=20260901-nav-3"></script>
+  <script type="module" src="/assets/js/cine-cafe.js?v=20260902-cafe-v3-1"></script>
 </body>
 </html>
