@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "join_key": "slug",
+  "field_order": [
+    "actors",
+    "actresses",
+    "directors",
+    "music_directors"
+  ],
+  "records": {
+    "foundation-sample": [
+      ["Actor One"],
+      ["Actress One"],
+      ["Director One"],
+      ["Composer One"]
+    ]
+  }
+}
