@@ -1,0 +1,363 @@
+/* Home V3 canonical runtime stylesheet.
+   This is the only Home override layer loaded after home-v3.css.
+   The AVIF artwork remains the visual source of truth; runtime content is kept
+   inside measured safe zones and never paints across the baked red rails. */
+
+:root {
+  --hm3-gold-deep:#9a6819;
+  --hm3-gold-mid:#d4a43b;
+  --hm3-gold-light:#fff0a8;
+}
+
+.home-v3-mode .hm3-recent-card,
+.home-v3-mode .hm3-prev-card,
+.home-v3-mode .hm3-recent-poster,
+.home-v3-mode .hm3-prev-poster {
+  background:transparent !important;
+}
+
+/* Header consistency. */
+.home-v3-mode .hm3-logo-home {
+  position:absolute;
+  z-index:55;
+  left:22%;
+  top:8%;
+  width:56%;
+  height:84%;
+  background:transparent;
+  text-decoration:none;
+}
+.home-v3-mode .hm3-logo-home:focus-visible {
+  outline:2px solid var(--hm3-red-bright);
+  outline-offset:-2px;
+}
+
+/* ---------------- Now Reviewed ---------------- */
+.home-v3-mode .hm3-now-copy {
+  left:53.9% !important;
+  top:21.8% !important;
+  width:30% !important;
+  height:61% !important;
+  right:auto !important;
+  bottom:auto !important;
+  box-sizing:border-box !important;
+  padding:1.5% 1.9% 1.7% !important;
+  display:grid !important;
+  grid-template-rows:auto auto auto minmax(0,1fr) !important;
+  align-content:stretch !important;
+  overflow:hidden !important;
+}
+.home-v3-mode .hm3-now-title,
+.home-v3-mode .hm3-now-meta,
+.home-v3-mode .hm3-now-label,
+.home-v3-mode .hm3-pov {
+  box-sizing:border-box !important;
+  max-width:100% !important;
+}
+.home-v3-mode .hm3-now-title {
+  margin:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;
+  font-size:clamp(9px,2.35vw,13px) !important;
+  font-weight:800 !important;
+  line-height:1.02 !important;
+  letter-spacing:.025em !important;
+  text-transform:uppercase !important;
+}
+.home-v3-mode .hm3-now-meta {
+  margin:3px 0 0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-family:Arial,sans-serif !important;
+  font-size:clamp(5.8px,1.48vw,8.4px) !important;
+  line-height:1.08 !important;
+}
+.home-v3-mode .hm3-now-label {
+  margin-top:4px !important;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;
+  font-size:clamp(6.1px,1.55vw,8.7px) !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  letter-spacing:.075em !important;
+}
+.home-v3-mode .hm3-pov {
+  width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:3px 0 0 !important;
+  padding:0 .5% 0 0 !important;
+  overflow:hidden !important;
+  color:rgba(250,248,242,.98) !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:clamp(8.2px,2.08vw,11px) !important;
+  font-style:italic !important;
+  font-weight:500 !important;
+  line-height:1.20 !important;
+  letter-spacing:0 !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  hyphens:none !important;
+}
+
+/* ---------------- Recent Reviews ----------------
+   Poster, title and rating are independent zones. The poster ends before the
+   copy band begins, so no title can overlap the artwork. */
+.home-v3-mode .hm3-recent-poster {
+  position:absolute !important;
+  left:11.8% !important;
+  right:11.8% !important;
+  top:9% !important;
+  bottom:38% !important;
+  width:auto !important;
+  height:auto !important;
+  display:grid !important;
+  place-items:center !important;
+  overflow:hidden !important;
+}
+.home-v3-mode .hm3-recent-poster img {
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  object-fit:contain !important;
+  object-position:50% 50% !important;
+  transform:none !important;
+}
+.home-v3-mode .hm3-recent-info {
+  position:absolute !important;
+  z-index:8 !important;
+  left:11.8% !important;
+  right:11.8% !important;
+  top:64% !important;
+  bottom:10.5% !important;
+  min-height:0 !important;
+  box-sizing:border-box !important;
+  display:grid !important;
+  grid-template-rows:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:2px !important;
+  padding:3.2% 4% 3.8% !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+  background:rgba(2,2,2,.965) !important;
+  border-top:1px solid rgba(174,18,24,.34) !important;
+  text-align:center !important;
+}
+.home-v3-mode .hm3-recent-title {
+  height:2.15em !important;
+  min-height:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+  white-space:normal !important;
+  color:#f8f4ed !important;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;
+  font-size:clamp(5.8px,1.45vw,8px) !important;
+  font-weight:800 !important;
+  line-height:1.04 !important;
+  letter-spacing:.012em !important;
+  text-transform:uppercase !important;
+  text-align:center !important;
+  text-shadow:0 1px 2px #000 !important;
+}
+.home-v3-mode .hm3-recent-stars {
+  display:block !important;
+  margin:0 !important;
+  font-size:clamp(5.8px,1.4vw,7.8px) !important;
+  line-height:1 !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+}
+
+/* ---------------- Previously Reviewed ---------------- */
+.home-v3-mode .hm3-prev-poster {
+  position:absolute !important;
+  left:10.4% !important;
+  right:10.4% !important;
+  top:10% !important;
+  bottom:40% !important;
+  width:auto !important;
+  height:auto !important;
+  display:grid !important;
+  place-items:center !important;
+  overflow:hidden !important;
+}
+.home-v3-mode .hm3-prev-poster img {
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  object-fit:contain !important;
+  object-position:50% 50% !important;
+  transform:none !important;
+}
+.home-v3-mode .hm3-prev-info {
+  position:absolute !important;
+  z-index:8 !important;
+  left:10.4% !important;
+  right:10.4% !important;
+  top:62% !important;
+  bottom:10.5% !important;
+  min-height:0 !important;
+  box-sizing:border-box !important;
+  display:grid !important;
+  grid-template-rows:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:2px !important;
+  padding:3% 4% 3.6% !important;
+  overflow:hidden !important;
+  pointer-events:none !important;
+  background:rgba(2,2,2,.97) !important;
+  border-top:1px solid rgba(174,18,24,.30) !important;
+  text-align:center !important;
+}
+.home-v3-mode .hm3-prev-title {
+  height:2.15em !important;
+  min-height:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+  white-space:normal !important;
+  color:#f8f4ed !important;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;
+  font-size:clamp(5px,1.2vw,6.9px) !important;
+  font-weight:800 !important;
+  line-height:1.04 !important;
+  letter-spacing:.01em !important;
+  text-transform:uppercase !important;
+  text-align:center !important;
+  text-shadow:0 1px 2px #000 !important;
+}
+.home-v3-mode .hm3-prev-stars {
+  display:block !important;
+  margin:0 !important;
+  font-size:clamp(5px,1.15vw,6.6px) !important;
+  line-height:1 !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+}
+
+/* Neutralise all legacy title-ticker structures. Long titles are fitted into
+   a static two-line band by the canonical runtime. */
+.home-v3-mode .hm3-title-track,
+.home-v3-mode .hm3-title-copy,
+.home-v3-mode .hm3-title-scroll {
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  padding:0 !important;
+  margin:0 !important;
+  white-space:normal !important;
+  overflow:visible !important;
+  transform:none !important;
+  animation:none !important;
+  will-change:auto !important;
+}
+.home-v3-mode .hm3-title-copy + .hm3-title-copy { display:none !important; }
+
+.home-v3-mode .hm3-recent-stars,
+.home-v3-mode .hm3-prev-stars {
+  background:linear-gradient(180deg,var(--hm3-gold-light) 0%,#f3cf68 26%,var(--hm3-gold-mid) 54%,var(--hm3-gold-deep) 78%,#e3b84f 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent !important;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.75)) drop-shadow(0 0 2px rgba(224,170,54,.30));
+}
+
+/* Home comments retain one field row and the finalized AVIF composition. */
+.home-v3-mode .hm3-comment-identity { grid-template-columns:1fr !important; }
+.home-v3-mode .hm3-comment-identity input { width:100%;border-left:0 !important; }
+
+/* ---------------- Enlarged section viewer ---------------- */
+.home-v3-mode .hm3-now-section,
+.home-v3-mode .hm3-recent-section,
+.home-v3-mode .hm3-previous-section,
+.home-v3-mode .hm3-share-section { cursor:zoom-in; }
+html.hm3-section-modal-open,
+body.hm3-section-modal-open { overflow:hidden !important;overscroll-behavior:none; }
+.home-v3-mode .hm3-section-modal {
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  box-sizing:border-box;
+  display:grid;
+  place-items:center;
+  padding:30px 6px 18px;
+  background:rgba(0,0,0,.86);
+  -webkit-backdrop-filter:blur(5px) saturate(.9);
+  backdrop-filter:blur(5px) saturate(.9);
+}
+.home-v3-mode .hm3-section-modal-shell {
+  position:relative;
+  max-width:97vw;
+}
+.home-v3-mode .hm3-section-modal-card.hm3-section-wrap {
+  position:relative;
+  width:100% !important;
+  aspect-ratio:var(--hm3-popup-aspect,1.6);
+  margin:0 !important;
+  flex:none !important;
+  cursor:default;
+  filter:drop-shadow(0 16px 34px rgba(0,0,0,.72));
+}
+.home-v3-mode .hm3-section-modal-card .hm3-section-art {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+}
+.home-v3-mode .hm3-section-placeholder.hm3-section-wrap {
+  position:relative;
+  aspect-ratio:var(--hm3-source-aspect,1.6);
+  height:auto;
+  margin-inline:auto;
+  flex:0 0 auto;
+  visibility:hidden;
+  pointer-events:none;
+}
+.home-v3-mode .hm3-section-modal-close {
+  position:absolute;
+  z-index:120;
+  top:-13px;
+  right:2px;
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  padding:0 0 2px;
+  border:2px solid rgba(211,18,24,.85);
+  border-radius:50%;
+  background:rgba(5,5,7,.96);
+  color:#fff;
+  box-shadow:0 0 0 5px rgba(211,18,24,.20),0 4px 14px rgba(0,0,0,.65);
+  font:700 24px/1 Arial,sans-serif;
+  cursor:pointer;
+}
+.home-v3-mode .hm3-section-modal-close:focus-visible {
+  outline:2px solid #fff;
+  outline-offset:3px;
+}
+
+/* Popup uses the same geometry but JS scales typography relative to the actual
+   enlargement factor, so title/meta/POV grow with the ticket rather than with
+   the browser viewport. */
+.home-v3-mode .hm3-section-modal-card .hm3-now-copy { overflow:hidden !important; }
+
+@media (max-width:360px) {
+  .home-v3-mode .hm3-now-copy { left:53.7% !important;width:30.2% !important;padding-left:1.35% !important;padding-right:1.55% !important; }
+  .home-v3-mode .hm3-pov { line-height:1.17 !important; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .home-v3-mode .hm3-section-modal,
+  .home-v3-mode .hm3-section-modal-shell { animation:none !important; }
+}
