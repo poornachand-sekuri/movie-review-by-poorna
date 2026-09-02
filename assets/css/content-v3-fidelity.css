@@ -27,35 +27,29 @@ html.content-v3-active .content-page{width:min(100%,520px)!important}
   font-size:clamp(10px,2.8vw,17px);line-height:1;letter-spacing:.075em;
   color:#f4c25e;filter:drop-shadow(0 1px 1px #000);
 }
-
-/* Cast & Crew runtime rows read as one inset subsection under the baked Cast & Crew heading. */
 .cv3-cast{
-  left:40.0%;right:6.35%;top:50.5%;bottom:20.7%;
-  box-sizing:border-box;padding-left:2.2%;
-  display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:0;align-items:stretch;
-  border-left:1px solid rgba(184,29,36,.50);
-  background:linear-gradient(90deg,rgba(132,12,18,.08),rgba(132,12,18,0) 72%);
+  left:40.2%;right:6.3%;top:50.5%;bottom:20.7%;
+  display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:0;
+  align-items:stretch;padding-left:3.2%;box-sizing:border-box;
+  border-left:1px solid rgba(182,24,30,.72);
 }
 .cv3-cast-row{
-  position:relative;display:grid;grid-template-columns:28% minmax(0,1fr);gap:4%;align-items:center;min-height:0;
+  display:grid;grid-template-columns:32% minmax(0,1fr);gap:4%;align-items:center;min-height:0;
+  border-bottom:1px solid rgba(182,24,30,.16);
 }
-.cv3-cast-row:not(:last-child)::after{
-  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:rgba(255,255,255,.045);
-}
+.cv3-cast-row:last-child{border-bottom:0}
 .cv3-cast-row span{
-  font-family:"Arial Narrow",Arial,sans-serif;font-size:clamp(6.1px,1.52vw,9.1px);font-weight:600;line-height:1;
-  letter-spacing:.045em;color:#c52028;text-transform:uppercase;text-shadow:0 1px 1px #000;
+  font-family:"Arial Narrow",Arial,sans-serif;font-size:clamp(6.2px,1.55vw,9.3px);font-weight:600;line-height:1;
+  letter-spacing:.025em;color:#bc2026;text-transform:uppercase;text-shadow:0 1px 1px #000;
 }
 .cv3-cast-row strong{
-  font-family:Arial,sans-serif;font-size:clamp(6.5px,1.64vw,9.8px);font-weight:500;line-height:1.12;
-  color:#f0ede8;text-shadow:0 1px 1px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:Arial,sans-serif;font-size:clamp(6.4px,1.62vw,9.6px);font-weight:400;line-height:1.12;
+  color:#f1efeb;text-shadow:0 1px 1px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-
-/* POV keeps the retro face, but uses a clean soft-white tone; JS dynamically fits the full text. */
 .cv3-pov{
-  left:18.0%;right:6.4%;top:82.55%;bottom:4.0%;
-  font-family:Georgia,"Times New Roman",serif;font-size:clamp(8.8px,2.24vw,13px);font-weight:600;line-height:1.28;
-  letter-spacing:.012em;color:#f3f2ee;text-shadow:0 1px 1px #000,0 0 3px rgba(255,255,255,.055);
+  left:18.0%;right:6.4%;top:82.15%;bottom:3.45%;box-sizing:border-box;padding:1px 1px 2px 0;
+  font-family:Georgia,"Times New Roman",serif;font-size:clamp(8.8px,2.24vw,13px);font-weight:700;line-height:1.24;
+  letter-spacing:.008em;color:#f4f4f1;text-shadow:0 1px 1px #000,0 0 3px rgba(255,255,255,.06);
   -webkit-line-clamp:3;
 }
 
@@ -95,6 +89,16 @@ html.content-v3-active .content-page{width:min(100%,520px)!important}
 .cv3-comments .comment-empty{font-size:clamp(5.4px,1.3vw,8px);color:#aaa}
 .cv3-comments .comment-form{left:50.5%;right:2.35%}
 .cv3-comments .comment-form input,.cv3-comments .comment-form textarea{font-family:Arial,sans-serif;font-size:clamp(5.8px,1.38vw,8.5px);font-weight:400}
+
+/* Mobile-only geometry: give POV more vertical breathing room and enlarge the popup theater/screen. */
+@media (max-width:699px){
+  .cv3-pov{top:81.45%;bottom:2.85%;line-height:1.22;padding-top:0;padding-bottom:3px}
+  .cv3-popup-theater{left:1.5vw!important;top:3dvh!important;width:97vw!important;height:94dvh!important}
+  .cv3-popup-review{left:8.6%!important;right:8.6%!important;top:12.2%!important;bottom:29.2%!important;padding:2.8% 3.3%!important;font-size:clamp(14px,4vw,20px)!important;line-height:1.55!important}
+  .cv3-popup-exit{right:3.2%!important;top:2.15%!important;width:20%!important;height:6.2%!important}
+  .cv3-popup-reaction{bottom:3.35%!important;height:11.4%!important;width:38%!important}
+  .cv3-popup-like{left:10.5%!important}.cv3-popup-dislike{right:10.5%!important}
+}
 
 /* Keep the mobile page at the same 520px shell used by the revamped Home even on desktop preview. */
 @media (min-width:700px){html.content-v3-active .content-page{width:min(100%,520px)!important}}
