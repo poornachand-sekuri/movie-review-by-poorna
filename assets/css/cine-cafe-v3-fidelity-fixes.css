@@ -4,12 +4,12 @@
    Start an opaque mask immediately AFTER the heart, cover the full dash run,
    then render the live numeric count on the same baseline. */
 .cine-cafe-page .review-likes {
-  left: 72px !important;
+  left: 76px !important;
   top: 281px !important;
-  width: 96px !important;
+  width: 90px !important;
   height: 30px !important;
   box-sizing: border-box;
-  padding: 0 0 0 39px !important;
+  padding: 0 0 0 34px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
