@@ -73,3 +73,42 @@ jobs:
 
           integrity=$(sqlite3 /tmp/movie-review.db "PRAGMA integrity_check;")
           test "$integrity" = "ok"
+
+      - name: Prove importer against preserved production catalogue
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --no-tags --depth=1 origin main
+          git show FETCH_HEAD:public/data/index.json > /tmp/legacy-reviews.json
+          git show FETCH_HEAD:public/data/cast-crew.json > /tmp/legacy-credits.json
+
+          node scripts/build-legacy-seed.mjs \
+            /tmp/legacy-reviews.json \
+            /tmp/legacy-credits.json \
+            /tmp/legacy-seed.sql
+
+          sqlite3 /tmp/legacy-import.db < migrations/0001_core_content.sql
+          sqlite3 /tmp/legacy-import.db < migrations/0002_review_search.sql
+          sqlite3 /tmp/legacy-import.db < /tmp/legacy-seed.sql
+
+          expected_reviews=$(node -e "const r=require('/tmp/legacy-reviews.json'); process.stdout.write(String(r.length))")
+          expected_gallery=$(node -e "const r=require('/tmp/legacy-reviews.json'); process.stdout.write(String(r.reduce((n,x)=>n+(Array.isArray(x.gallery)?x.gallery.length:0),0)))")
+          expected_credits=$(node -e "const c=require('/tmp/legacy-credits.json'); process.stdout.write(String(Object.values(c.records||{}).reduce((n,groups)=>n+(Array.isArray(groups)?groups.reduce((m,g)=>m+(Array.isArray(g)?g.filter(Boolean).length:0),0):0),0)))")
+
+          actual_reviews=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM reviews;")
+          actual_gallery=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM review_gallery;")
+          actual_credits=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM review_credits;")
+          audit_rows=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM legacy_import_audit;")
+          unique_slugs=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(DISTINCT lower(slug)) FROM reviews;")
+
+          test "$actual_reviews" = "$expected_reviews"
+          test "$actual_gallery" = "$expected_gallery"
+          test "$actual_credits" = "$expected_credits"
+          test "$audit_rows" = "$expected_reviews"
+          test "$unique_slugs" = "$expected_reviews"
+
+          integrity=$(sqlite3 /tmp/legacy-import.db "PRAGMA integrity_check;")
+          test "$integrity" = "ok"
+
+          echo "Validated $actual_reviews preserved reviews, $actual_credits credits and $actual_gallery gallery items against the new schema."
