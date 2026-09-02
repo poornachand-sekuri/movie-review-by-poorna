@@ -90,8 +90,8 @@ function fitOneTitle(title) {
 
   const computed = getComputedStyle(title);
   const startSize = Number.parseFloat(computed.fontSize) || 16;
-  const minSize = 9.5;
-  const lineHeightRatio = 1.05;
+  const minSize = 8.5;
+  const lineHeightRatio = 1.06;
 
   const measure = title.cloneNode(true);
   Object.assign(measure.style, {
@@ -168,12 +168,10 @@ function makeCard(movie, index) {
   const likes = document.createElement('div');
   likes.className = 'review-likes';
   likes.setAttribute('aria-label', `${likeValue} likes`);
-  const likeCount = document.createElement('span');
-  likeCount.textContent = String(likeValue);
-  likes.append(likeCount);
+  likes.textContent = String(likeValue);
 
-  info.append(title, meta, stars, likes);
-  link.append(posterZone, info);
+  info.append(title, meta);
+  link.append(posterZone, info, stars, likes);
   article.append(link);
   return article;
 }
