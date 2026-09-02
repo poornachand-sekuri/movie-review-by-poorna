@@ -14,10 +14,10 @@ This preview Worker is temporary code isolation, not a permanent second environm
 
 Use one content database only:
 
-- Database: `movie-review-by-poorna-staging-db`
+- Database: `movie-review-by-poorna-content`
 - Binding: `CONTENT_DB`
 
-The database name reflects when it was created, but it is the single canonical D1 database planned for the new site. Do not create a second production D1 database at cutover.
+This database is the single canonical D1 database planned for the new site. Do not create a second production D1 database at cutover.
 
 After approval, the production Worker binds to this same database.
 
