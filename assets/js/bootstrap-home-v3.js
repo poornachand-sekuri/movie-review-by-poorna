@@ -14,7 +14,7 @@ const HOME_ASSETS = [
   '07_bottom_navigation.avif'
 ];
 const HOME_VERSION = '20260902-home-comments-name-only-11';
-const CONTENT_VERSION = '20260902-content-v3-runtime-5';
+const CONTENT_VERSION = '20260902-content-v3-runtime-6';
 
 if (isHome) {
   [
