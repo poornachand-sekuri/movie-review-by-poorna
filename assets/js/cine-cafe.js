@@ -30,15 +30,8 @@ function normalizeCastRecord(slug) {
 
 function searchableText(movie) {
   const cast = normalizeCastRecord(movie.s);
-  return [
-    movie.t,
-    movie.l,
-    yearOf(movie),
-    ...(cast.actors || []),
-    ...(cast.actresses || []),
-    ...(cast.directors || []),
-    ...(cast.music_directors || [])
-  ].filter(Boolean).join(' ').toLocaleLowerCase();
+  return [movie.t, movie.l, yearOf(movie), ...(cast.actors || []), ...(cast.actresses || []), ...(cast.directors || []), ...(cast.music_directors || [])]
+    .filter(Boolean).join(' ').toLocaleLowerCase();
 }
 
 function starString(rating) {
@@ -64,9 +57,7 @@ function filteredMovies() {
     return true;
   });
 
-  const latest = (a, b) =>
-    String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || '')) ||
-    Number(b.i || 0) - Number(a.i || 0);
+  const latest = (a, b) => String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || '')) || Number(b.i || 0) - Number(a.i || 0);
   const oldest = (a, b) => -latest(a, b);
   const titleAZ = (a, b) => String(a.t || '').localeCompare(String(b.t || ''), undefined, { sensitivity: 'base' });
   const titleZA = (a, b) => -titleAZ(a, b);
@@ -90,25 +81,14 @@ function fitOneTitle(title) {
 
   const computed = getComputedStyle(title);
   const startSize = Number.parseFloat(computed.fontSize) || 17;
-  const minSize = 12.5;
-  const lineHeightRatio = 1.07;
+  const minSize = 13.5;
+  const lineHeightRatio = 1.08;
 
   const measure = title.cloneNode(true);
   Object.assign(measure.style, {
-    position: 'fixed',
-    visibility: 'hidden',
-    pointerEvents: 'none',
-    left: '-9999px',
-    top: '0',
-    width: `${title.clientWidth}px`,
-    height: 'auto',
-    maxHeight: 'none',
-    overflow: 'visible',
-    display: 'block',
-    webkitLineClamp: 'unset',
-    webkitBoxOrient: 'unset',
-    whiteSpace: 'normal',
-    lineHeight: String(lineHeightRatio)
+    position: 'fixed', visibility: 'hidden', pointerEvents: 'none', left: '-9999px', top: '0',
+    width: `${title.clientWidth}px`, height: 'auto', maxHeight: 'none', overflow: 'visible', display: 'block',
+    webkitLineClamp: 'unset', webkitBoxOrient: 'unset', whiteSpace: 'normal', lineHeight: String(lineHeightRatio)
   });
   document.body.append(measure);
 
@@ -126,9 +106,7 @@ function fitOneTitle(title) {
   title.style.maxHeight = `${Math.max(minSize, size) * lineHeightRatio * 3.05}px`;
 }
 
-function fitReviewTitles() {
-  document.querySelectorAll('.review-title').forEach(fitOneTitle);
-}
+function fitReviewTitles() { document.querySelectorAll('.review-title').forEach(fitOneTitle); }
 
 function makeCard(movie, index) {
   const article = document.createElement('article');
@@ -207,7 +185,6 @@ function renderPagination(totalPages) {
       nav.append(empty);
       continue;
     }
-
     const button = document.createElement('button');
     button.className = `page-button${page === state.page ? ' current' : ''}`;
     button.type = 'button';
@@ -238,24 +215,15 @@ function setPage(page) {
 function syncFilterLabels() {
   $('#languageLabel').textContent = state.language || 'Language';
   $('#yearLabel').textContent = state.year || 'Year';
-  const sortNames = {
-    latest: 'Latest',
-    oldest: 'Oldest',
-    'title-az': 'Title A–Z',
-    'title-za': 'Title Z–A'
-  };
+  const sortNames = { latest: 'Latest', oldest: 'Oldest', 'title-az': 'Title A–Z', 'title-za': 'Title Z–A' };
   $('#sortLabel').textContent = sortNames[state.sort] || 'Latest';
 }
 
 function populateFilters() {
-  const languages = [...new Set(state.movies.map(movie => String(movie.l || '').trim()).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b));
+  const languages = [...new Set(state.movies.map(movie => String(movie.l || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   const years = [...new Set(state.movies.map(yearOf).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
-
-  const languageSelect = $('#languageFilter');
-  const yearSelect = $('#yearFilter');
-  languageSelect.replaceChildren(new Option('All Languages', ''), ...languages.map(value => new Option(value, value)));
-  yearSelect.replaceChildren(new Option('All Years', ''), ...years.map(value => new Option(value, value)));
+  $('#languageFilter').replaceChildren(new Option('All Languages', ''), ...languages.map(value => new Option(value, value)));
+  $('#yearFilter').replaceChildren(new Option('All Years', ''), ...years.map(value => new Option(value, value)));
 }
 
 function render() {
@@ -282,43 +250,15 @@ function render() {
 function bindControls() {
   $('#headerSearch').addEventListener('click', () => $('#cineSearch').focus());
   $('#searchForm').addEventListener('submit', event => event.preventDefault());
-  $('#cineSearch').addEventListener('input', event => {
-    state.query = event.target.value;
-    state.page = 1;
-    render();
-  });
-
-  $('#languageFilter').addEventListener('change', event => {
-    state.language = event.target.value;
-    state.page = 1;
-    render();
-  });
-
-  $('#yearFilter').addEventListener('change', event => {
-    state.year = event.target.value;
-    state.page = 1;
-    render();
-  });
-
-  $('#sortFilter').addEventListener('change', event => {
-    state.sort = event.target.value;
-    state.page = 1;
-    render();
-  });
-
+  $('#cineSearch').addEventListener('input', event => { state.query = event.target.value; state.page = 1; render(); });
+  $('#languageFilter').addEventListener('change', event => { state.language = event.target.value; state.page = 1; render(); });
+  $('#yearFilter').addEventListener('change', event => { state.year = event.target.value; state.page = 1; render(); });
+  $('#sortFilter').addEventListener('change', event => { state.sort = event.target.value; state.page = 1; render(); });
   $('#clearFilters').addEventListener('click', () => {
-    state.query = '';
-    state.language = '';
-    state.year = '';
-    state.sort = 'latest';
-    state.page = 1;
-    $('#cineSearch').value = '';
-    $('#languageFilter').value = '';
-    $('#yearFilter').value = '';
-    $('#sortFilter').value = 'latest';
+    state.query = ''; state.language = ''; state.year = ''; state.sort = 'latest'; state.page = 1;
+    $('#cineSearch').value = ''; $('#languageFilter').value = ''; $('#yearFilter').value = ''; $('#sortFilter').value = 'latest';
     render();
   });
-
   window.addEventListener('resize', () => requestAnimationFrame(fitReviewTitles));
 }
 
@@ -333,9 +273,7 @@ async function loadMovies() {
       const movies = Array.isArray(payload) ? payload : payload?.reviews;
       if (Array.isArray(movies) && movies.length) return movies;
       throw new Error(`${source} contained no reviews`);
-    } catch (error) {
-      lastError = error;
-    }
+    } catch (error) { lastError = error; }
   }
   throw lastError || new Error('Could not load review data.');
 }
@@ -343,10 +281,7 @@ async function loadMovies() {
 async function init() {
   bindControls();
   try {
-    const [movies, castResponse] = await Promise.all([
-      loadMovies(),
-      fetch(`${DATA_BASE}/cast-crew.json`)
-    ]);
+    const [movies, castResponse] = await Promise.all([loadMovies(), fetch(`${DATA_BASE}/cast-crew.json`)]);
     if (!castResponse.ok) throw new Error('Could not load cast and crew data.');
     state.movies = movies;
     state.castCrew = await castResponse.json();
