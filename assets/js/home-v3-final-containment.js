@@ -1,49 +1,12 @@
-/* Home V3 runtime polish (v21).
-   One final fitter owns My POV sizing and one final ticker owns long card titles.
-   This avoids the competing/duplicated effects that previously made text look
-   cramped or concatenated on iPhone Safari. */
+/* Home V3 stable text runtime (v22).
+   The core Home builder still installs its original ResizeObservers. To avoid
+   those older observers fighting the final layout, this runtime replaces the
+   live POV/title nodes once after render; the legacy observers remain attached
+   only to detached nodes. From that point there is one POV fitter and one title
+   animator controlling the visible UI. */
 
 const titleAnimations = new WeakMap();
 let resizeTimer = 0;
-
-function fitFullPov(pov) {
-  if (!pov || !pov.textContent.trim() || pov.clientWidth <= 0 || pov.clientHeight <= 0) return;
-
-  /* Always restart from the CSS preferred size so repeated ResizeObserver/font
-     callbacks cannot progressively shrink the copy. */
-  pov.style.removeProperty('font-size');
-  const preferredPx = Number.parseFloat(getComputedStyle(pov).fontSize) || 10;
-  const readableFloorPx = Math.min(preferredPx, 7.2);
-
-  const fits = px => {
-    pov.style.fontSize = `${px}px`;
-    return pov.scrollHeight <= pov.clientHeight + 1 && pov.scrollWidth <= pov.clientWidth + 1;
-  };
-
-  if (fits(preferredPx)) return;
-
-  /* Shrink only as much as required, and never below the readable design floor.
-     The ticket has enough vertical room for ordinary POV lengths, so the result
-     should normally stay very close to the preferred size. */
-  if (!fits(readableFloorPx)) {
-    pov.style.fontSize = `${readableFloorPx}px`;
-    return;
-  }
-
-  let low = readableFloorPx;
-  let high = preferredPx;
-  let best = readableFloorPx;
-  for (let i = 0; i < 16; i += 1) {
-    const mid = (low + high) / 2;
-    if (fits(mid)) {
-      best = mid;
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-  pov.style.fontSize = `${best}px`;
-}
 
 function stopTitleAnimation(copy) {
   const active = titleAnimations.get(copy);
@@ -53,12 +16,107 @@ function stopTitleAnimation(copy) {
   copy.style.removeProperty('transform');
 }
 
-function fitReadableTitle(title) {
+function replaceLegacyBoundNodes(page) {
+  const oldPov = page.querySelector('.hm3-pov');
+  const oldTitles = [...page.querySelectorAll('.hm3-recent-title, .hm3-prev-title')];
+  if (!oldPov || !oldTitles.length) return null;
+
+  const pov = oldPov.cloneNode(true);
+  oldPov.replaceWith(pov);
+
+  const titles = oldTitles.map(oldTitle => {
+    const title = oldTitle.cloneNode(true);
+    const track = title.querySelector('.hm3-title-track');
+    if (track) {
+      while (track.children.length > 1) track.lastElementChild.remove();
+    }
+    oldTitle.replaceWith(title);
+    return title;
+  });
+
+  return { pov, titles };
+}
+
+function applyPovMetrics(pov, fontPx, lineRatio) {
+  pov.style.fontSize = `${fontPx}px`;
+  pov.style.lineHeight = `${(fontPx * lineRatio).toFixed(3)}px`;
+}
+
+function povFits(pov) {
+  return pov.scrollHeight <= pov.clientHeight + 1 && pov.scrollWidth <= pov.clientWidth + 1;
+}
+
+function findLargestFittingFont(pov, low, high, lineRatio) {
+  let best = low;
+  for (let i = 0; i < 18; i += 1) {
+    const mid = (low + high) / 2;
+    applyPovMetrics(pov, mid, lineRatio);
+    if (povFits(pov)) {
+      best = mid;
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  applyPovMetrics(pov, best, lineRatio);
+  return best;
+}
+
+function fitFullPov(pov) {
+  if (!pov || !pov.textContent.trim() || pov.clientWidth <= 0 || pov.clientHeight <= 0) return;
+
+  pov.style.removeProperty('font-size');
+  pov.style.removeProperty('line-height');
+
+  const computed = getComputedStyle(pov);
+  const preferredPx = Number.parseFloat(computed.fontSize) || 7;
+  const preferredLinePx = Number.parseFloat(computed.lineHeight) || preferredPx * 1.2;
+  const preferredRatio = Math.max(1.08, Math.min(1.28, preferredLinePx / preferredPx));
+  const softFloorPx = Math.min(preferredPx, 6.35);
+  const hardFloorPx = Math.min(softFloorPx, 5.7);
+  const minimumLineRatio = 1.08;
+
+  applyPovMetrics(pov, preferredPx, preferredRatio);
+  if (povFits(pov)) return;
+
+  /* First protect the intended typography: keep the normal line-height and only
+     reduce font size as much as necessary down to the readable soft floor. */
+  applyPovMetrics(pov, softFloorPx, preferredRatio);
+  if (povFits(pov)) {
+    findLargestFittingFont(pov, softFloorPx, preferredPx, preferredRatio);
+    return;
+  }
+
+  /* If a long POV still needs space, tighten line-height before making the font
+     materially smaller. This keeps the copy feeling full-sized rather than
+     compressed into a tiny block. */
+  let selectedRatio = preferredRatio;
+  for (let ratio = preferredRatio - 0.02; ratio >= minimumLineRatio - 0.001; ratio -= 0.02) {
+    const safeRatio = Math.max(minimumLineRatio, ratio);
+    applyPovMetrics(pov, softFloorPx, safeRatio);
+    selectedRatio = safeRatio;
+    if (povFits(pov)) {
+      findLargestFittingFont(pov, softFloorPx, preferredPx, safeRatio);
+      return;
+    }
+  }
+
+  /* Emergency range only: current production POVs should normally never reach
+     this branch, but if a future review is unusually long we prefer complete
+     visible copy over clipping the last lines. */
+  applyPovMetrics(pov, hardFloorPx, selectedRatio);
+  if (povFits(pov)) {
+    findLargestFittingFont(pov, hardFloorPx, softFloorPx, selectedRatio);
+    return;
+  }
+
+  applyPovMetrics(pov, hardFloorPx, minimumLineRatio);
+}
+
+function fitSlowTitle(title) {
   const track = title?.querySelector('.hm3-title-track');
   if (!track) return;
 
-  /* The core helper may create a continuity copy. Remove it so there is never a
-     second title that can visually join the first one. */
   while (track.children.length > 1) track.lastElementChild.remove();
   const copy = track.firstElementChild;
   if (!copy) return;
@@ -76,73 +134,86 @@ function fitReadableTitle(title) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   const overflow = Math.max(0, textWidth - viewportWidth);
-  const fullyExited = -(textWidth + 18);
-  const duration = Math.max(10000, Math.min(17000, 9000 + overflow * 55));
+  const fullyExited = -(textWidth + 22);
+  const duration = Math.max(30000, Math.min(45000, 30000 + overflow * 120));
 
-  /* Timeline:
-     0–18%  : show the beginning of the title
-     18–60% : scroll to reveal the ending
-     60–72% : hold the ending
-     72–82% : move the title completely off the left edge
-     82–100%: deliberate blank gap before the title restarts
-     This creates a visible breathing space between the last and first letters. */
+  /* Deliberately slow, readable cinema ticker:
+     0–16%   hold the beginning of the title
+     16–61%  slow right-to-left reveal
+     61–70%  hold the ending
+     70–76%  move completely off the left edge
+     76–100% blank breathing gap before the next cycle begins
+     There is one copy only, so the last word can never run directly into the
+     first word of the next cycle. */
   const animation = copy.animate(
     [
       { transform: 'translateX(0)', offset: 0 },
-      { transform: 'translateX(0)', offset: 0.18 },
-      { transform: `translateX(${-overflow}px)`, offset: 0.60 },
-      { transform: `translateX(${-overflow}px)`, offset: 0.72 },
-      { transform: `translateX(${fullyExited}px)`, offset: 0.82 },
+      { transform: 'translateX(0)', offset: 0.16 },
+      { transform: `translateX(${-overflow}px)`, offset: 0.61 },
+      { transform: `translateX(${-overflow}px)`, offset: 0.70 },
+      { transform: `translateX(${fullyExited}px)`, offset: 0.76 },
       { transform: `translateX(${fullyExited}px)`, offset: 1 }
     ],
     { duration, iterations: Infinity, easing: 'linear' }
   );
+
   titleAnimations.set(copy, animation);
 }
 
-function refitHome(page) {
-  const pov = page?.querySelector('.hm3-pov');
-  const titles = page ? [...page.querySelectorAll('.hm3-recent-title, .hm3-prev-title')] : [];
-  if (!pov || !titles.length) return;
-  fitFullPov(pov);
-  titles.forEach(fitReadableTitle);
-}
+function bindStableRuntime(page) {
+  if (!page || page.dataset.hm3StableTextBound === 'true') return;
+  page.dataset.hm3StableTextBound = 'true';
 
-function installFinalContainmentRuntime() {
-  const page = document.querySelector('.hm3-page');
-  if (!page) return false;
+  const live = replaceLegacyBoundNodes(page);
+  if (!live) {
+    delete page.dataset.hm3StableTextBound;
+    return;
+  }
 
-  const refit = () => requestAnimationFrame(() => refitHome(page));
+  const { pov, titles } = live;
+  const refit = () => requestAnimationFrame(() => {
+    fitFullPov(pov);
+    titles.forEach(fitSlowTitle);
+  });
 
   refit();
-  setTimeout(refit, 140);
-  setTimeout(refit, 650);
+  setTimeout(refit, 120);
+  setTimeout(refit, 600);
   document.fonts?.ready?.then(() => {
     refit();
-    setTimeout(refit, 100);
+    setTimeout(refit, 120);
   }).catch(() => {});
 
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(refit, 110);
+    resizeTimer = window.setTimeout(refit, 160);
   }, { passive: true });
 
-  /* Neutralise any later duplicate title created by the older core marquee
-     observer and immediately restore the single-copy animation. */
-  const titleObserver = new MutationObserver(mutations => {
-    if (!mutations.some(mutation => mutation.type === 'childList')) return;
-    refit();
-  });
-  page.querySelectorAll('.hm3-recent-title, .hm3-prev-title').forEach(title => {
-    titleObserver.observe(title, { childList: true, subtree: true });
-  });
+  /* Observe stable section geometry rather than the text nodes themselves. That
+     avoids self-triggered resize loops when the fitter changes font metrics. */
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(refit);
+    const targets = [
+      page.querySelector('.hm3-now-section'),
+      page.querySelector('.hm3-recent-section'),
+      page.querySelector('.hm3-previous-section')
+    ].filter(Boolean);
+    targets.forEach(target => observer.observe(target));
+  }
+}
 
+function installStableRuntime() {
+  const page = document.querySelector('.hm3-page');
+  if (!page) return false;
+  /* Wait until the Home builder finishes attaching its original observers, then
+     replace the visible text nodes so those legacy observers cannot affect them. */
+  setTimeout(() => bindStableRuntime(page), 0);
   return true;
 }
 
-if (!installFinalContainmentRuntime()) {
+if (!installStableRuntime()) {
   const observer = new MutationObserver(() => {
-    if (!installFinalContainmentRuntime()) return;
+    if (!installStableRuntime()) return;
     observer.disconnect();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
