@@ -1,73 +1,31 @@
-# Movie Reviews By Poorna
+# Movie Review By Poorna — Fresh Rebuild
 
-This branch contains the new mobile-first content-page frontend built from scratch around the finalized AVIF artwork.
+This branch is a clean implementation. Existing production frontend code is reference-only and must not be copied into this branch.
 
-## Data sources
+## Architecture priorities
 
-The preserved review data remains authoritative and is not rewritten by the frontend:
+1. Visual Quality
+2. Cross-device layout quality
+3. Performance
+4. Maintainability
 
-- `public/data/index.json` — review/movie data
-- `public/data/cast-crew.json` — actor, actress, director and music-director enrichment
-- `public/data/related-review-rules.json` — Related Reviews ranking rules
+## Site concept
 
-## UI artwork
+Movie Review By Poorna is designed as one virtual movie theater with connected spaces:
 
-Production artwork is served from Cloudflare R2 through:
+- Home: The Lobby
+- Individual Review: The Screening Room
+- Search: The Movie Café
+- Admin: The Projection Booth
 
-`https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile/`
+All pages must share one cinematic design language while each space retains its own purpose and mood.
 
-The exact filenames are configured in `assets/js/config.js`.
+## Implementation rules
 
-The R2 UI namespace is split by page type so Home and Content artwork stay separate:
-
-- `ui/pages/home/...`
-- `ui/pages/content/...`
-
-Do not restore old frontend CSS/JS from `pre-clean-reset-backup-20260830` into this implementation.
-
-## Current frontend behavior
-
-- mobile-first content page
-- finalized Top Logo/Header artwork
-- clapboard top overlaps the body so the two assets read as one component
-- poster is always `object-fit: contain`; no cropping
-- Movie Title, language, release date, Cast & Crew, stars and My POV are live data
-- Like/Dislike uses persistent shared counts through the same-origin `/api/reactions` endpoint
-- Theater uses Top + stretchable Middle + Bottom/Seats
-- review font size does not shrink for longer reviews
-- no review scrollbar and no Read More
-- Related Reviews are ranked from `cast-crew.json` + `related-review-rules.json`
-- Related posters are contained within the reel windows
-- fixed gap between Related Reviews and Share Your Opinion
-- Comments artwork uses the final extra textarea-to-submit spacing
-
-## Preview routing
-
-A review can be opened with:
-
-`/?review=<slug>`
-
-If no slug is supplied, the newest record in `index.json` is shown.
-
-## Likes / dislikes
-
-Production reactions are persisted by `src/worker.js` using one SQLite-backed Cloudflare Durable Object per review slug.
-
-- `GET /api/reactions?slug=<movie-slug>` returns shared Like/Dislike totals plus this browser's current vote.
-- `POST /api/reactions` accepts `{ "slug": "...", "vote": "like" | "dislike" }`.
-- a first-party voter cookie ensures repeated clicks from the same browser do not inflate totals.
-- switching Like to Dislike (or vice versa) updates the existing vote instead of adding a second vote.
-- `assets/js/live-reactions.js` migrates an existing browser-local preview vote into the shared store once, then removes the legacy local value.
-- unknown review slugs are rejected against the live review catalog.
-
-The Worker and static assets remain in the same Cloudflare deployment, so no cross-origin API configuration is required.
-
-## Comments
-
-Comment persistence/moderation is still intentionally separate and is not enabled by the reactions backend. `CONFIG.apiBase` remains blank for the existing comments preview flow.
-
-See `docs/API-CONTRACT.md` for the intended comments API and moderation contract.
-
-## R2 structure
-
-See `docs/R2-ASSETS.md` before uploading or removing AVIF files.
+- AVIF artwork provides cinematic appearance and visual framing.
+- HTML owns semantic content and accessibility.
+- CSS owns layout, sizing, spacing, and adaptation across viewport/container sizes.
+- TypeScript is preferred for application logic and contracts.
+- Client-side JavaScript must be minimized and justified.
+- Review content and existing review media are migrated as data, not by copying old UI implementation.
+- Production `main` remains untouched until the rebuild is approved.
