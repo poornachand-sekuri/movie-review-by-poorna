@@ -53,10 +53,12 @@ async function submitComment(targetType, targetId, form) {
     target: target.type,
     target_id: target.id,
     name: String(data.get('name') || '').trim(),
-    email: String(data.get('email') || '').trim(),
     comment: String(data.get('comment') || '').trim(),
     website: String(data.get('website') || '').trim()
   };
+
+  const email = String(data.get('email') || '').trim();
+  if (email) payload.email = email;
 
   const response = await fetch(COMMENTS_ENDPOINT, {
     method: 'POST',
