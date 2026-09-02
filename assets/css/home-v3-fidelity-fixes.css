@@ -1,6 +1,6 @@
-/* Final Home V3 mobile fidelity pass.
-   The poster slots are fixed artwork windows. Fill those exact windows without
-   cropping any source pixels, even when a source image has an unusual aspect. */
+/* Home V3 poster fidelity pass.
+   Review artwork must stay completely visible and keep its natural aspect ratio.
+   The black cinema window absorbs any letterboxing; no poster is cropped or stretched. */
 
 .home-v3-mode .hm3-recent-card {
   grid-template-rows: 72% 28%;
@@ -17,8 +17,10 @@
   min-width: 0;
   min-height: 0;
   padding: 0;
+  display: grid;
+  place-items: center;
   overflow: hidden;
-  background: #050505;
+  background: #030303;
 }
 
 .home-v3-mode .hm3-recent-poster img,
@@ -26,17 +28,19 @@
   display: block;
   width: 100% !important;
   height: 100% !important;
-  min-width: 100%;
-  min-height: 100%;
-  max-width: none;
-  max-height: none;
-  margin: 0;
-  object-fit: fill !important;
-  object-position: 50% 50%;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+  aspect-ratio: auto !important;
   transform: none !important;
 }
 
-/* Keep copy below the image window and never let title/rating push the image. */
+/* Keep title/rating in their own lower strip so copy can never resize or
+   distort the image window. */
 .home-v3-mode .hm3-recent-info,
 .home-v3-mode .hm3-prev-info {
   min-height: 0;
