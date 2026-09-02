@@ -1,0 +1,98 @@
+---
+import SiteFrame from '../../layouts/SiteFrame.astro';
+import { getReviewBySlug } from '../../lib/data/reviews';
+
+export const prerender = false;
+
+const slug = Astro.params.slug ?? '';
+const review = await getReviewBySlug(slug);
+
+if (!review) {
+  return Astro.redirect('/');
+}
+
+const dateFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+function formatDate(value: string | null): string {
+  if (!value) return '—';
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
+}
+---
+
+<SiteFrame title={`${review.title} — Movie Reviews By Poorna`}>
+  <main class="review-shell">
+    <a class="back-link" href="/">← Lounge</a>
+    <header>
+      <p class="eyebrow">Screening Room</p>
+      <h1>{review.title}</h1>
+      <p class="meta">{review.language ?? '—'} · {formatDate(review.releaseDate)}</p>
+    </header>
+
+    {review.posterUrl && <img class="poster" src={review.posterUrl} alt={`${review.title} poster`} />}
+    {review.verdict && <p class="verdict">{review.verdict}</p>}
+    <article class="review-copy" set:html={review.bodyHtml}></article>
+  </main>
+</SiteFrame>
+
+<style>
+  .review-shell {
+    width: min(100% - 2rem, 52rem);
+    margin-inline: auto;
+    padding-block: 2rem 5rem;
+  }
+
+  .back-link {
+    color: #d7d4cf;
+    text-decoration: none;
+  }
+
+  header {
+    margin-top: 1.5rem;
+  }
+
+  .eyebrow {
+    margin-bottom: 0.45rem;
+    color: #df2027;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin-bottom: 0.5rem;
+    line-height: 1.05;
+  }
+
+  .meta {
+    color: #aaa7a1;
+  }
+
+  .poster {
+    width: min(70vw, 18rem);
+    margin: 2rem auto;
+    border: 1px solid #292929;
+  }
+
+  .verdict {
+    margin: 2rem 0;
+    font-size: 1.2rem;
+    font-style: italic;
+  }
+
+  .review-copy {
+    color: #e2dfd8;
+    line-height: 1.72;
+  }
+
+  .review-copy :global(img) {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
