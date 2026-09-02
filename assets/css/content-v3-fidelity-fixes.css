@@ -1,10 +1,11 @@
 /* Final Content V3 mobile fidelity corrections based on production screenshots. */
 
-/* Reactions: the thumb artwork is baked near the TOP of each reaction hit area.
-   Keep each live count on that same visual baseline, immediately to the right. */
+/* Reactions: place the live number on the same visual centre-line as the baked
+   thumb artwork. 10% sat above the icon; 50% sat below it on iPhone Safari.
+   30% is the measured centre between those two rendered positions. */
 html.content-v3-active .cv3-reaction span {
   right: auto !important;
-  top: 10% !important;
+  top: 30% !important;
   transform: translate(-50%, -50%) !important;
   display: inline-flex;
   align-items: center;
@@ -29,7 +30,7 @@ html.content-v3-active .cv3-dislike span { left: 37% !important; }
 /* Keep the finalized mobile Share artwork at its native proportion and map
    each interactive zone to the actual visual centre of its icon/label cell. */
 html.content-v3-active .cv3-share {
-  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/04_share_this_review.avif?v=20260902-fidelity-15') !important;
+  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/04_share_this_review.avif?v=20260902-fidelity-16') !important;
   background-size: 100% 100% !important;
   background-position: 50% 50% !important;
 }
@@ -55,7 +56,7 @@ html.content-v3-active .cv3-share-status {
    provide the visible controls. Runtime comment/form DOM remains underneath
    as the API source, while either half opens the larger popover. */
 html.content-v3-active .cv3-comments {
-  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/06_share_your_opinion.avif?v=20260902-fidelity-15') !important;
+  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/06_share_your_opinion.avif?v=20260902-fidelity-16') !important;
   background-size: 100% 100% !important;
   background-position: 50% 50% !important;
 }
