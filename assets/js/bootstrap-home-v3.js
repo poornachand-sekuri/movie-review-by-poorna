@@ -13,7 +13,7 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260902-home-frame-safe-18';
+const HOME_VERSION = '20260902-home-poster-pov-19';
 const CONTENT_VERSION = '20260902-content-polish-17';
 
 if (isHome) {
@@ -21,7 +21,8 @@ if (isHome) {
     `/assets/css/home-v3.css?v=${HOME_VERSION}`,
     `/assets/css/home-v3-adjustments.css?v=${HOME_VERSION}`,
     `/assets/css/home-v3-nav-polish.css?v=${HOME_VERSION}`,
-    `/assets/css/home-v3-fidelity-fixes.css?v=${HOME_VERSION}`
+    `/assets/css/home-v3-fidelity-fixes.css?v=${HOME_VERSION}`,
+    `/assets/css/home-v3-final-containment.css?v=${HOME_VERSION}`
   ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
@@ -41,6 +42,7 @@ if (isHome) {
     import(`./home-v3.js?v=${HOME_VERSION}`),
     import(`./home-v3-adjustments.js?v=${HOME_VERSION}`),
     import(`./home-v3-nav-polish.js?v=${HOME_VERSION}`),
+    import(`./home-v3-final-containment.js?v=${HOME_VERSION}`),
     import('./analytics.js')
   ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {

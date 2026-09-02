@@ -1,0 +1,171 @@
+/* Home V3 final containment layer based on iPhone production screenshots.
+   Dynamic media and copy are deliberately inset from the baked AVIF artwork so
+   red rails remain visible and text never crosses ticket borders. */
+
+/* Recent Reviews: the AVIF itself supplies the black frame interior. Keeping
+   the runtime wrapper transparent means it cannot cover the red inner rail. */
+.home-v3-mode .hm3-recent-poster {
+  left: 11.5% !important;
+  right: 10.8% !important;
+  top: 8.8% !important;
+  bottom: 8.8% !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+.home-v3-mode .hm3-recent-poster img {
+  position: absolute !important;
+  left: 8% !important;
+  right: 8% !important;
+  top: 3.5% !important;
+  width: 84% !important;
+  height: 69% !important;
+  max-width: 84% !important;
+  max-height: 69% !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 0 !important;
+}
+
+/* Previously Reviewed uses a similar safe image window. */
+.home-v3-mode .hm3-prev-poster {
+  left: 9.6% !important;
+  right: 9.6% !important;
+  top: 9.8% !important;
+  bottom: 8.8% !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+.home-v3-mode .hm3-prev-poster img {
+  position: absolute !important;
+  left: 9% !important;
+  right: 9% !important;
+  top: 4% !important;
+  width: 82% !important;
+  height: 66% !important;
+  max-width: 82% !important;
+  max-height: 66% !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 0 !important;
+}
+
+/* Title/rating are isolated from the poster image and stay farther away from
+   the red rails. */
+.home-v3-mode .hm3-recent-info {
+  left: 16.5% !important;
+  right: 15.8% !important;
+  bottom: 11.4% !important;
+  height: 24.5% !important;
+  padding: 6.5% 2.5% 3.4% !important;
+  gap: 3px !important;
+  background: linear-gradient(180deg, rgba(3,3,3,0), rgba(3,3,3,.82) 36%, rgba(3,3,3,.98) 100%) !important;
+}
+
+.home-v3-mode .hm3-prev-info {
+  left: 15.5% !important;
+  right: 15.5% !important;
+  bottom: 11.2% !important;
+  height: 25% !important;
+  padding: 6.8% 2.5% 3.6% !important;
+  gap: 3px !important;
+  background: linear-gradient(180deg, rgba(3,3,3,0), rgba(3,3,3,.82) 36%, rgba(3,3,3,.98) 100%) !important;
+}
+
+.home-v3-mode .hm3-recent-title,
+.home-v3-mode .hm3-prev-title {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  line-height: 1.08 !important;
+  min-height: 1.08em !important;
+}
+
+.home-v3-mode .hm3-recent-title { font-size: clamp(5.6px, 1.42vw, 7.8px) !important; }
+.home-v3-mode .hm3-prev-title { font-size: clamp(5px, 1.18vw, 6.6px) !important; }
+
+/* The companion JS moves one intact title copy with measured pixel endpoints.
+   Disable the older CSS ticker to avoid clipped/duplicated fragments. */
+.home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy:first-child,
+.home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy:first-child {
+  animation: none !important;
+  padding-left: 0 !important;
+}
+
+.home-v3-mode .hm3-title-track {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+.home-v3-mode .hm3-title-copy {
+  display: inline-block !important;
+  width: max-content !important;
+  max-width: none !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  transform: none;
+}
+
+.home-v3-mode .hm3-title-copy + .hm3-title-copy { display: none !important; }
+
+/* Now Reviewed / My POV: use the real right-hand red ticket window rather than
+   the old narrow 27% runtime box, which was clipping most of the POV. */
+.home-v3-mode .hm3-now-copy {
+  left: 39.8% !important;
+  right: 19.0% !important;
+  top: 20.8% !important;
+  bottom: 15.8% !important;
+  width: auto !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  padding: 2.2% 4.2% 2.8% !important;
+  display: grid !important;
+  grid-template-rows: auto auto auto minmax(0,1fr) !important;
+  align-content: stretch !important;
+  overflow: hidden !important;
+}
+
+.home-v3-mode .hm3-now-title {
+  font-size: clamp(10px, 2.8vw, 16px) !important;
+  line-height: 1.02 !important;
+}
+
+.home-v3-mode .hm3-now-meta {
+  margin-top: 4px !important;
+  font-size: clamp(6px, 1.58vw, 9px) !important;
+}
+
+.home-v3-mode .hm3-now-label {
+  margin-top: 6px !important;
+  font-size: clamp(6px, 1.55vw, 9px) !important;
+}
+
+.home-v3-mode .hm3-pov {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 4px 0 0 !important;
+  padding: 0 1.5% 0 0 !important;
+  overflow: hidden !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: auto;
+  font-size: clamp(6.2px, 1.72vw, 9.8px) !important;
+  line-height: 1.23 !important;
+}
+
+@media (max-width: 360px) {
+  .home-v3-mode .hm3-now-copy {
+    left: 39.5% !important;
+    right: 18.7% !important;
+    padding-left: 3.8% !important;
+    padding-right: 3.8% !important;
+  }
+  .home-v3-mode .hm3-pov { line-height: 1.19 !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-v3-mode .hm3-title-copy { transform: none !important; }
+}
