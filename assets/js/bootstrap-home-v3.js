@@ -13,13 +13,14 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260902-home-comments-name-only-11';
-const CONTENT_VERSION = '20260902-content-v3-runtime-8';
+const HOME_VERSION = '20260902-home-read-more-route-13';
+const CONTENT_VERSION = '20260902-content-v3-reaction-inline-12';
 
 if (isHome) {
   [
     `/assets/css/home-v3.css?v=${HOME_VERSION}`,
-    `/assets/css/home-v3-adjustments.css?v=${HOME_VERSION}`
+    `/assets/css/home-v3-adjustments.css?v=${HOME_VERSION}`,
+    `/assets/css/home-v3-nav-polish.css?v=${HOME_VERSION}`
   ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
@@ -38,12 +39,15 @@ if (isHome) {
   Promise.all([
     import(`./home-v3.js?v=${HOME_VERSION}`),
     import(`./home-v3-adjustments.js?v=${HOME_VERSION}`),
+    import(`./home-v3-nav-polish.js?v=${HOME_VERSION}`),
     import('./analytics.js')
   ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {
   [
     `/assets/css/content-v3.css?v=${CONTENT_VERSION}`,
-    `/assets/css/content-v3-fidelity.css?v=${CONTENT_VERSION}`
+    `/assets/css/content-v3-fidelity.css?v=${CONTENT_VERSION}`,
+    `/assets/css/content-v3-polish.css?v=${CONTENT_VERSION}`,
+    `/assets/css/content-v3-reaction-layout.css?v=${CONTENT_VERSION}`
   ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
@@ -54,7 +58,8 @@ if (isHome) {
   Promise.all([
     import(`./content-v3-asset-path.js?v=${CONTENT_VERSION}`),
     import(`./content-v3-pov-fit.js?v=${CONTENT_VERSION}`),
-    import(`./content-v3.js?v=${CONTENT_VERSION}`)
+    import(`./content-v3.js?v=${CONTENT_VERSION}`),
+    import(`./content-v3-polish.js?v=${CONTENT_VERSION}`)
   ]).then(async () => {
     const [, comments] = await Promise.all([
       import(`./live-reactions.js?v=${CONTENT_VERSION}`),

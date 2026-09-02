@@ -73,7 +73,10 @@ function paint(values) {
 }
 
 function paintUnavailable() {
-  document.querySelectorAll('.like-count, .dislike-count').forEach(node => { node.textContent = '—'; });
+  document.querySelectorAll('.like-count, .dislike-count').forEach(node => {
+    node.textContent = '';
+    node.setAttribute('aria-label', 'Reaction count temporarily unavailable');
+  });
   document.querySelectorAll('.reaction-button').forEach(button => {
     button.setAttribute('title', 'Live reaction counts are temporarily unavailable');
   });
