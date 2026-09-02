@@ -7,6 +7,11 @@ on:
         description: 'Type INITIALIZE to apply schema and import the live review catalogue.'
         required: true
         type: string
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/init-content-db.trigger'
 
 permissions:
   contents: read
@@ -17,7 +22,7 @@ concurrency:
 
 jobs:
   initialize:
-    if: ${{ inputs.confirm == 'INITIALIZE' }}
+    if: ${{ github.event_name == 'push' || inputs.confirm == 'INITIALIZE' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
