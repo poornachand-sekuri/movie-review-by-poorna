@@ -42,9 +42,11 @@ All pages share one cinematic design language while each space retains its own p
 - The branch contains no production frontend implementation from `main`.
 - D1 schema migrations and deterministic legacy import tooling are present.
 - Automated validation covers TypeScript, Astro build, Cloudflare dry-run, migration/import smoke tests and database integrity.
-- The preserved and current live catalogues have been reconciled at 136 reviews with no differences at the time of audit.
+- The preserved and current live catalogues were reconciled at 136 reviews with no differences immediately before migration.
 - `CONTENT_DB` is configured for `movie-review-by-poorna-content`.
-- No real review content has been copied into D1 yet.
+- The canonical D1 database now contains 136 verified reviews and 698 verified credits.
+- All 136 imported source hashes matched the live catalogue at migration time.
+- The one-time database initialization workflow and trigger were removed after successful verification.
 - Production `main` and existing review media remain untouched.
 
 ## Implementation rules
