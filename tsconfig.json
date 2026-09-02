@@ -4,6 +4,7 @@
     "allowJs": false,
     "checkJs": false,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "types": ["./worker-configuration.d.ts"]
   }
 }
