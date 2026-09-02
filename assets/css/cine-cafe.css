@@ -105,9 +105,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 .search-overlay input:not(:placeholder-shown) { background: #050505; color: var(--white); }
 .search-overlay input:focus:not(:placeholder-shown) { color: var(--white); }
 
-/* Filter controls are positioned directly on the native 1023x1537 canvas.
-   Text centers were measured from the approved populated reference: x236,
-   x433, x637 and x834, with a shared baseline around y470. */
+/* Filter controls are positioned directly on the native 1023x1537 canvas. */
 .filters-layer { position: absolute; inset: 0; z-index: 51; }
 .filter-control,
 .clear-filter {
@@ -164,8 +162,6 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   appearance: none;
 }
 
-/* Dynamic values replace only the two tiny baked dashes. Their centers are
-   x465 and x560, exactly between SERVING / OF / REVIEWS. */
 .result-count {
   position: absolute;
   z-index: 49;
@@ -197,7 +193,6 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 
 .results-layer { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
 .review-card { position: absolute; width: 310px; height: 320px; pointer-events: auto; }
-/* Exact frame origins measured from the approved master. */
 .review-card:nth-child(1) { left: 30px; top: 610px; }
 .review-card:nth-child(2) { left: 348px; top: 610px; }
 .review-card:nth-child(3) { left: 657px; top: 610px; }
@@ -206,16 +201,13 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 .review-card:nth-child(6) { left: 657px; top: 941px; }
 .review-link { position: absolute; inset: 0; color: inherit; text-decoration: none; }
 
-/* Result content is split into non-overlapping poster, copy, rating and like
-   zones. The shorter poster preserves the baked heart at the lower-left. */
+/* Every poster fills the exact same fixed slot so all six top/bottom edges align. */
 .poster-zone {
   position: absolute;
   left: 32px;
   top: 70px;
   width: 128px;
   height: 178px;
-  display: grid;
-  place-items: center;
   overflow: hidden;
   background: #080808;
   border-radius: 2px;
@@ -224,8 +216,8 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
+  object-position: center top;
 }
 .review-info {
   position: absolute;
@@ -274,17 +266,19 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
   text-shadow: 0 1px 3px #000;
 }
-/* Baked heart occupies roughly x47-75,y253-278. Mask only the dash region
-   immediately to its right and render the live count on that same baseline. */
+
+/* The baked dash placeholder is exactly around x84-120 / y297-298 in each plaque.
+   Mask the whole dash strip and put the live count immediately after the heart. */
 .review-likes {
   position: absolute;
-  left: 83px;
-  top: 252px;
-  width: 46px;
-  height: 27px;
+  left: 79px;
+  top: 286px;
+  width: 68px;
+  height: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-left: 7px;
   background: #090909;
   color: #f4f1eb;
   font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
@@ -294,7 +288,6 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
 }
 
-/* Navigation / pagination is already accepted; preserve the measured version. */
 .pagination-layer { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
 .pagination-layer > * {
   position: absolute;
@@ -353,7 +346,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   text-align: center;
   border: 1px solid rgba(239, 23, 28, .45);
   border-radius: 8px;
-  background: rgba(5, 5, 5, .96);
+  background: rgba(5, 5, 5,.96);
   color: var(--white);
   font-size: 18px;
 }
