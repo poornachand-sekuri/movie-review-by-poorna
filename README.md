@@ -24,18 +24,27 @@ All pages share one cinematic design language while each space retains its own p
 
 - Astro + TypeScript for the application layer.
 - Cloudflare Workers for edge rendering and APIs.
-- D1 for canonical structured review content after verified migration.
-- R2 for review media and versioned AVIF UI artwork.
-- Durable Objects for interaction state such as reactions, comments and analytics unless measurements justify a different design.
+- One D1 database for canonical structured review content after verified migration.
+- The existing R2 media store is reused with isolated, versioned paths for new AVIF UI artwork.
+- Durable Objects remain the interaction-state mechanism for reactions, comments and analytics unless measurements justify a different design.
+
+## Cost-conscious deployment model
+
+- No permanent staging/production data duplication.
+- `cinema-rebuild` deploys temporarily to `movie-review-by-poorna-preview` while the current live site remains untouched.
+- The single D1 database currently created as `movie-review-by-poorna-staging-db` becomes the content database for the new site; a second production D1 database will not be created.
+- At cutover, the approved production Worker will bind to the same D1 database and the temporary preview Worker can be removed.
+- No Cloudflare Images or KV runtime dependency is enabled.
+- Additional paid services or duplicated storage are not introduced without an explicit cost/performance review.
 
 ## Current status
 
 - The branch contains no production frontend implementation from `main`.
-- The Astro/Cloudflare toolchain is pinned and isolated to the staging Worker name `movie-review-by-poorna-staging`.
 - D1 schema migrations and deterministic legacy import tooling are present.
 - Automated validation covers TypeScript, Astro build, Cloudflare dry-run, migration/import smoke tests and database integrity.
+- The preserved and current live catalogues have been reconciled at 136 reviews with no differences at the time of audit.
 - No real review content has been copied into D1 yet.
-- Production `main`, the current live catalogue and existing R2 review media remain untouched.
+- Production `main` and existing review media remain untouched.
 
 ## Implementation rules
 
