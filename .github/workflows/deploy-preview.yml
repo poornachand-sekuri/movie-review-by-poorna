@@ -65,17 +65,22 @@ jobs:
         run: |
           set -euo pipefail
 
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 \
-            "$PREVIEW_URL/api/health" > /tmp/health.json
+          fetch_json() {
+            local label="$1"
+            local path="$2"
+            local output="$3"
 
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 \
-            "$PREVIEW_URL/api/reviews?limit=5" > /tmp/reviews.json
+            echo "Checking $label: $PREVIEW_URL$path"
+            curl --fail --silent --show-error \
+              --retry 10 --retry-delay 2 --retry-all-errors \
+              "$PREVIEW_URL$path" > "$output"
+          }
 
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 \
-            "$PREVIEW_URL/api/reviews/dc" > /tmp/detail.json
-
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 \
-            "$PREVIEW_URL/api/search?q=Kantara&limit=5" > /tmp/search.json
+          sleep 3
+          fetch_json 'health' '/api/health' /tmp/health.json
+          fetch_json 'compact review list' '/api/reviews?limit=5' /tmp/reviews.json
+          fetch_json 'review detail' '/api/reviews/dc' /tmp/detail.json
+          fetch_json 'full-text search' '/api/search?q=Kantara&limit=5' /tmp/search.json
 
           node <<'NODE'
           const fs = require('node:fs');
