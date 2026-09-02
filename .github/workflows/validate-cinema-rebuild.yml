@@ -28,8 +28,8 @@ jobs:
           node-version-file: '.nvmrc'
           package-manager-cache: false
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Enforce runtime guardrails
         run: npm run check:guardrails
