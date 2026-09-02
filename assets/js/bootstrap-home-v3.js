@@ -2,43 +2,65 @@ const url = new URL(location.href);
 const hasReview = url.searchParams.has('review');
 const pathParts = url.pathname.split('/').filter(Boolean);
 const isHome = !hasReview && pathParts.length === 0;
-const HOME_MASTER = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v2/mobile/luxury_movie_review_theatre_dashboard_MASTER_LOCKED.avif?v=20260901-master-v3';
+
+const HOME_ASSET_BASE = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v3/mobile';
+const HOME_ASSETS = [
+  '01_background.avif',
+  '02_top_menu_section.avif',
+  '03_now_reviewed_section.avif',
+  '04_recent_reviews_section.avif',
+  '05_previously_reviewed.avif',
+  '06_share_your_opinion.avif',
+  '07_bottom_navigation.avif'
+];
+const HOME_VERSION = '20260902-home-comments-name-only-11';
+const CONTENT_VERSION = '20260902-content-v3-runtime-8';
 
 if (isHome) {
-  const styles = [
-    '/assets/css/home-v3.css?v=20260901-master-v3',
-    '/assets/css/home-mobile-polish.css?v=20260901-home-comments-2',
-    '/assets/css/home-comments.css?v=20260901-home-comments-2'
-  ];
-
-  styles.forEach(href => {
+  [
+    `/assets/css/home-v3.css?v=${HOME_VERSION}`,
+    `/assets/css/home-v3-adjustments.css?v=${HOME_VERSION}`
+  ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
     css.href = href;
     document.head.append(css);
   });
 
-  // Discover the large Home artwork early, but let the browser balance it
-  // against critical CSS and the compact review catalogue on slower networks.
-  const masterPreload = document.createElement('link');
-  masterPreload.rel = 'preload';
-  masterPreload.as = 'image';
-  masterPreload.href = HOME_MASTER;
-  document.head.append(masterPreload);
+  HOME_ASSETS.slice(0, 3).forEach(file => {
+    const preload = document.createElement('link');
+    preload.rel = 'preload';
+    preload.as = 'image';
+    preload.href = `${HOME_ASSET_BASE}/${file}?v=${HOME_VERSION}`;
+    document.head.append(preload);
+  });
 
   Promise.all([
-    import('./home-v3.js?v=20260901-home-comments-2')
-      .then(() => import('./home-comments.js?v=20260901-home-comments-2')),
+    import(`./home-v3.js?v=${HOME_VERSION}`),
+    import(`./home-v3-adjustments.js?v=${HOME_VERSION}`),
     import('./analytics.js')
   ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {
-  import('./app.js').then(async () => {
-    const [, , comments] = await Promise.all([
-      import('./ui-patch.js'),
-      import('./live-reactions.js'),
-      import('./comments.js'),
+  [
+    `/assets/css/content-v3.css?v=${CONTENT_VERSION}`,
+    `/assets/css/content-v3-fidelity.css?v=${CONTENT_VERSION}`
+  ].forEach(href => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = href;
+    document.head.append(css);
+  });
+
+  Promise.all([
+    import(`./content-v3-asset-path.js?v=${CONTENT_VERSION}`),
+    import(`./content-v3-pov-fit.js?v=${CONTENT_VERSION}`),
+    import(`./content-v3.js?v=${CONTENT_VERSION}`)
+  ]).then(async () => {
+    const [, comments] = await Promise.all([
+      import(`./live-reactions.js?v=${CONTENT_VERSION}`),
+      import(`./comments.js?v=${CONTENT_VERSION}`),
       import('./analytics.js')
     ]);
     comments.mountReviewComments();
-  });
+  }).catch(error => console.error('Unable to load the Content V3 page:', error));
 }
