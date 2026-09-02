@@ -80,9 +80,9 @@ function fitOneTitle(title) {
   title.style.maxHeight = '';
 
   const computed = getComputedStyle(title);
-  const startSize = Number.parseFloat(computed.fontSize) || 17;
-  const minSize = 13.5;
-  const lineHeightRatio = 1.08;
+  const startSize = Number.parseFloat(computed.fontSize) || 19;
+  const minSize = 14;
+  const lineHeightRatio = 1.06;
 
   const measure = title.cloneNode(true);
   Object.assign(measure.style, {
@@ -215,8 +215,8 @@ function setPage(page) {
 function syncFilterLabels() {
   $('#languageLabel').textContent = state.language || 'Language';
   $('#yearLabel').textContent = state.year || 'Year';
-  const sortNames = { latest: 'Latest', oldest: 'Oldest', 'title-az': 'Title A–Z', 'title-za': 'Title Z–A' };
-  $('#sortLabel').textContent = sortNames[state.sort] || 'Latest';
+  const sortNames = { latest: 'Sort By', oldest: 'Oldest', 'title-az': 'Title A–Z', 'title-za': 'Title Z–A' };
+  $('#sortLabel').textContent = sortNames[state.sort] || 'Sort By';
 }
 
 function populateFilters() {
