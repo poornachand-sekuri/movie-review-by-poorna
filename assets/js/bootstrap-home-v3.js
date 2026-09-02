@@ -13,7 +13,7 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260902-home-title-pov-21';
+const HOME_VERSION = '20260902-home-stable-text-22';
 const CONTENT_VERSION = '20260902-content-polish-17';
 
 if (isHome) {
