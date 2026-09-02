@@ -1,137 +1,308 @@
 ---
-import LobbyReviewCard from '../components/lobby/LobbyReviewCard.astro';
 import SiteFrame from '../layouts/SiteFrame.astro';
 import { listReviews } from '../lib/data/reviews';
 import '../styles/lobby.css';
 
 export const prerender = false;
 
-const reviews = await listReviews({ limit: 13 });
+const reviews = await listReviews({ limit: 9 });
 const featured = reviews[0] ?? null;
 const recent = reviews.slice(1, 5);
-const archive = reviews.slice(5, 13);
+const previous = reviews.slice(5, 9);
 
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
+const artBase = 'https://assets.moviereviewbypoorna.com/ui/site/v1/lounge/compact';
+const art = (file: string) => `${artBase}/${file}`;
+
+const dateFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: '2-digit',
   month: 'short',
   year: 'numeric',
+  timeZone: 'UTC',
 });
 
-function formatDate(value: string): string {
+function formatDate(value: string | null): string {
+  if (!value) return '—';
   const date = new Date(`${value}T00:00:00Z`);
   return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
 }
+
+function starText(rating: number | null): string {
+  const filled = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
+  return `${'★'.repeat(filled)}${'☆'.repeat(5 - filled)}`;
+}
+
+function reviewTarget(slug: string): string {
+  return `/review/${encodeURIComponent(slug)}`;
+}
+
+const featuredPov = featured?.excerpt?.trim() || featured?.verdict?.trim() || '';
 ---
 
-<SiteFrame>
-  <main class="lobby">
-    <header class="lobby__header">
-      <div class="shell lobby__header-inner">
-        <p class="lobby__brand">Movie Review By Poorna</p>
-        <p class="lobby__room-label">The Lobby</p>
-      </div>
-    </header>
+<SiteFrame
+  title="Movie Reviews By Poorna"
+  description="The Lounge at Movie Reviews By Poorna — latest reviews, recent reviews and cinema notes."
+>
+  <main class="lounge-page">
+    <div class="lounge-backdrop" aria-hidden="true"></div>
+    <div class="lounge-shade" aria-hidden="true"></div>
 
-    {
-      featured ? (
-        <section class="lobby__feature" aria-labelledby="latest-review-title">
-          <div class="shell lobby__feature-grid">
-            <div class="lobby__feature-poster">
+    <div class="lounge-stage">
+      <h1 class="visually-hidden">Movie Reviews By Poorna</h1>
+
+      <section class="lounge-panel lounge-panel--banner" aria-label="Lounge navigation">
+        <div class="lounge-banner-crop">
+          <img
+            class="lounge-panel__art"
+            src={art('02_top_menu_section.avif')}
+            alt=""
+            width="2172"
+            height="724"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
+          <a class="lounge-nav-hit lounge-nav-hit--left" href="/" aria-label="Lounge home"></a>
+          <a class="lounge-nav-hit lounge-nav-hit--right" href="/search" aria-label="Open Cini Cafe"></a>
+        </div>
+      </section>
+
+      {
+        featured ? (
+          <section class="lounge-panel lounge-panel--now" aria-labelledby="now-reviewed-heading">
+            <h2 id="now-reviewed-heading" class="visually-hidden">Now Reviewed</h2>
+            <img
+              class="lounge-panel__art"
+              src={art('03_now_reviewed_section.avif')}
+              alt=""
+              width="1597"
+              height="985"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+            />
+
+            <div class="now-poster" aria-label={`${featured.title} poster`}>
               {featured.posterUrl ? (
-                <img
-                  src={featured.posterUrl}
-                  alt={`${featured.title} poster`}
-                  width="800"
-                  height="1200"
-                  loading="eager"
-                  fetchpriority="high"
-                  decoding="async"
-                />
+                <img src={featured.posterUrl} alt={`${featured.title} poster`} decoding="async" />
               ) : (
-                <div class="lobby__feature-poster-fallback" aria-hidden="true"></div>
+                <span class="poster-fallback" aria-hidden="true"></span>
               )}
             </div>
 
-            <div class="lobby__feature-copy">
-              <p class="lobby__eyebrow">Latest review</p>
-              <h1 class="lobby__feature-title" id="latest-review-title">
-                {featured.title}
-              </h1>
-
-              <p class="lobby__feature-meta">
-                <span>{featured.language ?? 'Language not listed'}</span>
-                <span aria-hidden="true">·</span>
-                <span>{formatDate(featured.reviewedDate)}</span>
-                {featured.rating !== null && (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <span class="lobby__feature-rating">{featured.rating}/5</span>
-                  </>
-                )}
-              </p>
-
-              {featured.verdict && <p class="lobby__feature-verdict">{featured.verdict}</p>}
-              {featured.excerpt && <p class="lobby__feature-excerpt">{featured.excerpt}</p>}
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section class="shell lobby__feature">
-          <h1>Movie Review By Poorna</h1>
-          <p>No published reviews are available yet.</p>
-        </section>
-      )
-    }
-
-    {
-      recent.length > 0 && (
-        <section class="lobby__section" aria-labelledby="recent-reviews-title">
-          <div class="shell">
-            <div class="lobby__section-heading">
-              <div>
-                <p class="lobby__section-kicker">On the board</p>
-                <h2 id="recent-reviews-title">Recent reviews</h2>
-              </div>
+            <div class="now-details">
+              <h2 class="now-title">{featured.title}</h2>
+              <dl class="now-meta">
+                <div>
+                  <dt>Release Date</dt>
+                  <dd>{formatDate(featured.releaseDate)}</dd>
+                </div>
+                <div>
+                  <dt>Watched In</dt>
+                  <dd>{featured.language ?? '—'}</dd>
+                </div>
+                <div class="now-meta__rating">
+                  <dt>Rating</dt>
+                  <dd aria-label={`${Math.round(Number(featured.rating) || 0)} out of 5 stars`}>
+                    {starText(featured.rating)}
+                  </dd>
+                </div>
+              </dl>
             </div>
 
-            <div class="lobby__cards">
-              {recent.map((review) => <LobbyReviewCard review={review} />)}
-            </div>
-          </div>
-        </section>
-      )
-    }
-
-    {
-      archive.length > 0 && (
-        <section class="lobby__section" aria-labelledby="archive-title">
-          <div class="shell">
-            <div class="lobby__section-heading">
-              <div>
-                <p class="lobby__section-kicker">From the reel shelf</p>
-                <h2 id="archive-title">Previously reviewed</h2>
-              </div>
+            <div class="now-pov">
+              <span class="now-pov__label"><span aria-hidden="true">◉</span> My POV</span>
+              <p>{featuredPov || 'Review note coming soon.'}</p>
             </div>
 
-            <div class="lobby__archive">
-              {archive.map((review) => (
-                <article class="lobby__archive-item">
-                  <h3>{review.title}</h3>
-                  <p class="lobby__archive-meta">
-                    {review.language ?? '—'} · {formatDate(review.reviewedDate)}
-                  </p>
-                </article>
+            <a class="now-read-hit" href={reviewTarget(featured.slug)} aria-label={`Read ${featured.title} review`}>
+              <span class="visually-hidden">Read review</span>
+            </a>
+          </section>
+        ) : (
+          <section class="lounge-empty" aria-live="polite">No published reviews are available yet.</section>
+        )
+      }
+
+      {
+        recent.length > 0 && (
+          <section class="lounge-panel lounge-panel--recent" aria-labelledby="recent-heading">
+            <h2 id="recent-heading" class="visually-hidden">Recent Reviews</h2>
+            <img
+              class="lounge-panel__art"
+              src={art('04_recent_reviews_section.avif')}
+              alt=""
+              width="1672"
+              height="941"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <div class="recent-overlay">
+              {recent.map((review, index) => (
+                <a
+                  class={`recent-card recent-card--${index + 1}`}
+                  href={reviewTarget(review.slug)}
+                  aria-label={`Read ${review.title} review`}
+                >
+                  <span class="recent-card__poster">
+                    {review.posterUrl ? (
+                      <img src={review.posterUrl} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <span class="poster-fallback" aria-hidden="true"></span>
+                    )}
+                  </span>
+                  <span class="recent-card__title" data-title-marquee>
+                    <span>{review.title}</span>
+                  </span>
+                  <span
+                    class="recent-card__stars"
+                    aria-label={`${Math.round(Number(review.rating) || 0)} out of 5 stars`}
+                  >
+                    {starText(review.rating)}
+                  </span>
+                </a>
               ))}
             </div>
-          </div>
-        </section>
-      )
+
+            <a class="section-view-all section-view-all--recent" href="/search" aria-label="View all recent reviews"></a>
+          </section>
+        )
+      }
+
+      {
+        previous.length > 0 && (
+          <section class="lounge-panel lounge-panel--previous" aria-labelledby="previous-heading">
+            <h2 id="previous-heading" class="visually-hidden">Previously Reviewed</h2>
+            <img
+              class="lounge-panel__art"
+              src={art('05_previously_reviewed.avif')}
+              alt=""
+              width="1811"
+              height="868"
+              loading="lazy"
+              decoding="async"
+            />
+
+            <div class="previous-overlay">
+              {previous.map((review, index) => (
+                <a
+                  class={`previous-card previous-card--${index + 1}`}
+                  href={reviewTarget(review.slug)}
+                  aria-label={`Read ${review.title} review`}
+                >
+                  {review.posterUrl ? (
+                    <img src={review.posterUrl} alt={`${review.title} poster`} loading="lazy" decoding="async" />
+                  ) : (
+                    <span class="poster-fallback" aria-hidden="true"></span>
+                  )}
+                </a>
+              ))}
+            </div>
+
+            <a class="section-view-all section-view-all--previous" href="/search" aria-label="View all previous reviews"></a>
+          </section>
+        )
+      }
+
+      <section class="lounge-panel lounge-panel--opinion" aria-labelledby="opinion-heading">
+        <h2 id="opinion-heading" class="visually-hidden">Share Your Opinion</h2>
+        <img
+          class="lounge-panel__art"
+          src={art('06_share_your_opinion.avif')}
+          alt=""
+          width="2025"
+          height="777"
+          loading="lazy"
+          decoding="async"
+        />
+
+        <div class="comments-window" aria-label="Recent comments" aria-live="polite"></div>
+
+        <form class="opinion-form" data-opinion-form>
+          <label class="visually-hidden" for="lounge-comment-name">Your name</label>
+          <input id="lounge-comment-name" name="name" maxlength="80" placeholder="Your name" autocomplete="name" />
+
+          <label class="visually-hidden" for="lounge-comment-text">Your comment</label>
+          <textarea id="lounge-comment-text" name="comment" maxlength="1500" placeholder="Your comment"></textarea>
+
+          <button type="submit" aria-label="Submit comment"></button>
+          <p class="visually-hidden" data-opinion-status aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="lounge-panel lounge-panel--banner lounge-panel--bottom" aria-label="Lounge navigation">
+        <div class="lounge-banner-crop">
+          <img
+            class="lounge-panel__art"
+            src={art('07_bottom_navigation.avif')}
+            alt=""
+            width="2048"
+            height="682"
+            loading="lazy"
+            decoding="async"
+          />
+          <a class="lounge-nav-hit lounge-nav-hit--left" href="/" aria-label="Lounge home"></a>
+          <a class="lounge-nav-hit lounge-nav-hit--right" href="/search" aria-label="Open Cini Cafe"></a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const animations = new Map();
+
+    function fitMarquee(element) {
+      const track = element.querySelector('span');
+      if (!(track instanceof HTMLElement)) return;
+
+      animations.get(element)?.cancel();
+      animations.delete(element);
+      track.style.transform = 'translateX(0)';
+      element.classList.remove('is-moving');
+
+      const overflow = Math.max(0, track.scrollWidth - element.clientWidth);
+      if (overflow <= 1 || motionQuery.matches) return;
+
+      const travelMs = Math.max(3500, Math.min(9000, overflow * 36));
+      const totalMs = 1000 + travelMs + 1000;
+      const startOffset = 1000 / totalMs;
+      const endOffset = (1000 + travelMs) / totalMs;
+
+      element.classList.add('is-moving');
+      const animation = track.animate(
+        [
+          { transform: 'translateX(0)', offset: 0 },
+          { transform: 'translateX(0)', offset: startOffset },
+          { transform: `translateX(-${overflow}px)`, offset: endOffset },
+          { transform: `translateX(-${overflow}px)`, offset: 1 },
+        ],
+        { duration: totalMs, iterations: Infinity, easing: 'linear' },
+      );
+      animations.set(element, animation);
     }
 
-    <footer class="lobby__footer">
-      <div class="shell">
-        <p>Movie Review By Poorna</p>
-      </div>
-    </footer>
-  </main>
+    const marqueeTitles = [...document.querySelectorAll('[data-title-marquee]')];
+    const fitAllMarquees = () => marqueeTitles.forEach((element) => {
+      if (element instanceof HTMLElement) fitMarquee(element);
+    });
+
+    requestAnimationFrame(fitAllMarquees);
+    document.fonts?.ready?.then(fitAllMarquees).catch(() => {});
+    motionQuery.addEventListener?.('change', fitAllMarquees);
+
+    if ('ResizeObserver' in window) {
+      const observer = new ResizeObserver(fitAllMarquees);
+      marqueeTitles.forEach((element) => observer.observe(element));
+    } else {
+      window.addEventListener('resize', fitAllMarquees, { passive: true });
+    }
+
+    const form = document.querySelector('[data-opinion-form]');
+    const status = document.querySelector('[data-opinion-status]');
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (status) status.textContent = 'Comment submission will be enabled with the interaction cutover.';
+    });
+  </script>
 </SiteFrame>
