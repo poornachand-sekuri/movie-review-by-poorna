@@ -76,7 +76,6 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   outline-offset: 2px;
 }
 
-/* Search is already visually correct. The approved AVIF supplies the idle hint. */
 .search-overlay {
   position: absolute;
   z-index: 50;
@@ -105,7 +104,6 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 .search-overlay input:not(:placeholder-shown) { background: #050505; color: var(--white); }
 .search-overlay input:focus:not(:placeholder-shown) { color: var(--white); }
 
-/* Filter controls are positioned directly on the native 1023x1537 canvas. */
 .filters-layer { position: absolute; inset: 0; z-index: 51; }
 .filter-control,
 .clear-filter {
@@ -201,13 +199,15 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 .review-card:nth-child(6) { left: 657px; top: 941px; }
 .review-link { position: absolute; inset: 0; color: inherit; text-decoration: none; }
 
-/* Every poster fills the exact same fixed slot so all six top/bottom edges align. */
+/* Poster window measured from the original plaque template. The decorative
+   poster frame spans roughly x34-158 / y84-291; live artwork stays safely
+   inside its corner brackets instead of riding too high over the plaque. */
 .poster-zone {
   position: absolute;
-  left: 32px;
-  top: 70px;
-  width: 128px;
-  height: 178px;
+  left: 45px;
+  top: 100px;
+  width: 106px;
+  height: 176px;
   overflow: hidden;
   background: #080808;
   border-radius: 2px;
@@ -217,7 +217,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center center;
 }
 .review-info {
   position: absolute;
@@ -267,8 +267,6 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   text-shadow: 0 1px 3px #000;
 }
 
-/* The baked dash placeholder is exactly around x84-120 / y297-298 in each plaque.
-   Mask the whole dash strip and put the live count immediately after the heart. */
 .review-likes {
   position: absolute;
   left: 79px;
@@ -344,9 +342,9 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   margin: 0;
   padding: 24px;
   text-align: center;
-  border: 1px solid rgba(239, 23, 28, .45);
+  border: 1px solid rgba(239,23,28,.45);
   border-radius: 8px;
-  background: rgba(5, 5, 5,.96);
+  background: rgba(5,5,5,.96);
   color: var(--white);
   font-size: 18px;
 }
