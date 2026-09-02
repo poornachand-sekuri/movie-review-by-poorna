@@ -122,9 +122,8 @@
 .home-v3-mode .hm3-prev-title { font-size: clamp(5.1px, 1.22vw, 6.8px) !important; }
 
 /* A single-copy ticker is deliberately used. The previous duplicated marquee
-   could show fragments of both copies at once in narrow cards. Short/medium
-   names are first auto-shrunk by JS and remain stationary; only genuinely long
-   titles get this right-to-left ticker. */
+   could show fragments of both copies at once in narrow cards. JS may still
+   create its continuity copy, but CSS suppresses that second visual copy. */
 .home-v3-mode .hm3-title-track {
   display: block !important;
   width: 100% !important;
@@ -142,8 +141,12 @@
   will-change: transform;
 }
 
-.home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy,
-.home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy {
+.home-v3-mode .hm3-title-copy + .hm3-title-copy {
+  display: none !important;
+}
+
+.home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy:first-child,
+.home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy:first-child {
   padding-left: 100% !important;
   animation: hm3-title-marquee-single var(--hm3-marquee-duration, 8s) linear infinite !important;
 }
@@ -195,12 +198,13 @@
   overflow-wrap: break-word !important;
   word-break: normal !important;
   hyphens: auto;
+  font-size: clamp(7.4px, 1.95vw, 10.8px) !important;
   line-height: 1.28 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy,
-  .home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy {
+  .home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy:first-child,
+  .home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy:first-child {
     animation: none !important;
     padding-left: 0 !important;
   }
