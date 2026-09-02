@@ -10,6 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "check": "astro check",
+    "check:guardrails": "node scripts/check-runtime-guardrails.mjs",
     "preview": "astro preview",
     "cf:types": "wrangler types",
     "deploy:staging": "astro build && wrangler deploy"
