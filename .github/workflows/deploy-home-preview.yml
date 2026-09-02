@@ -1,9 +1,10 @@
-name: Deploy Home Lounge Preview
+name: Deploy V3 Consolidation Preview
 
 on:
   push:
     branches:
       - home-lounge-v3-redesign
+      - v3-runtime-consolidation-20260902
   workflow_dispatch:
 
 permissions:
