@@ -27,6 +27,26 @@ document.addEventListener('click', event => {
   location.assign('/');
 }, true);
 
+function installResultNavigation(results) {
+  if (!results || results.dataset.reviewNavigationMounted === 'true') return;
+  results.dataset.reviewNavigationMounted = 'true';
+
+  results.addEventListener('click', event => {
+    const card = event.target.closest?.('.review-card');
+    if (!card || !results.contains(card)) return;
+    const link = card.querySelector('.review-link');
+    if (!link?.href) return;
+
+    /* Preserve normal desktop modifier-click behaviour, while making a regular
+       mobile tap anywhere inside the visual result plaque deterministic. */
+    if (event.button && event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    event.preventDefault();
+    location.assign(link.href);
+  });
+}
+
 function slugForCard(card) {
   const link = card.querySelector('.review-link');
   if (!link) return '';
@@ -104,6 +124,7 @@ function install() {
   const results = document.querySelector('#resultsLayer');
   if (!stageReady || !results) return false;
 
+  installResultNavigation(results);
   hydrateVisibleCards();
   const observer = new MutationObserver(hydrateVisibleCards);
   observer.observe(results, { childList: true });
