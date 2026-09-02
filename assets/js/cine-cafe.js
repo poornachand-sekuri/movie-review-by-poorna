@@ -7,6 +7,9 @@ const state = {
   movies: [],
   castCrew: null,
   query: '',
+  language: '',
+  year: '',
+  sort: 'latest',
   page: 1
 };
 
@@ -27,15 +30,8 @@ function normalizeCastRecord(slug) {
 
 function searchableText(movie) {
   const cast = normalizeCastRecord(movie.s);
-  return [
-    movie.t,
-    movie.l,
-    yearOf(movie),
-    ...(cast.actors || []),
-    ...(cast.actresses || []),
-    ...(cast.directors || []),
-    ...(cast.music_directors || [])
-  ].filter(Boolean).join(' ').toLocaleLowerCase();
+  return [movie.t, movie.l, yearOf(movie), ...(cast.actors || []), ...(cast.actresses || []), ...(cast.directors || []), ...(cast.music_directors || [])]
+    .filter(Boolean).join(' ').toLocaleLowerCase();
 }
 
 function starString(rating) {
@@ -54,12 +50,24 @@ function localLikes(slug) {
 
 function filteredMovies() {
   const q = state.query.trim().toLocaleLowerCase();
-  return state.movies
-    .filter(movie => !q || searchableText(movie).includes(q))
-    .sort((a, b) =>
-      String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || '')) ||
-      Number(b.i || 0) - Number(a.i || 0)
-    );
+  const list = state.movies.filter(movie => {
+    if (q && !searchableText(movie).includes(q)) return false;
+    if (state.language && String(movie.l || '') !== state.language) return false;
+    if (state.year && yearOf(movie) !== state.year) return false;
+    return true;
+  });
+
+  const latest = (a, b) => String(b.rd || b.d || '').localeCompare(String(a.rd || a.d || '')) || Number(b.i || 0) - Number(a.i || 0);
+  const oldest = (a, b) => -latest(a, b);
+  const titleAZ = (a, b) => String(a.t || '').localeCompare(String(b.t || ''), undefined, { sensitivity: 'base' });
+  const titleZA = (a, b) => -titleAZ(a, b);
+
+  if (state.sort === 'oldest') list.sort(oldest);
+  else if (state.sort === 'title-az') list.sort(titleAZ);
+  else if (state.sort === 'title-za') list.sort(titleZA);
+  else list.sort(latest);
+
+  return list;
 }
 
 function fitOneTitle(title) {
@@ -72,26 +80,15 @@ function fitOneTitle(title) {
   title.style.maxHeight = '';
 
   const computed = getComputedStyle(title);
-  const startSize = Number.parseFloat(computed.fontSize) || 16;
-  const minSize = 9.5;
-  const lineHeightRatio = 1.04;
+  const startSize = Number.parseFloat(computed.fontSize) || 19;
+  const minSize = 14;
+  const lineHeightRatio = 1.06;
 
   const measure = title.cloneNode(true);
   Object.assign(measure.style, {
-    position: 'fixed',
-    visibility: 'hidden',
-    pointerEvents: 'none',
-    left: '-9999px',
-    top: '0',
-    width: `${title.clientWidth}px`,
-    height: 'auto',
-    maxHeight: 'none',
-    overflow: 'visible',
-    display: 'block',
-    webkitLineClamp: 'unset',
-    webkitBoxOrient: 'unset',
-    whiteSpace: 'normal',
-    lineHeight: String(lineHeightRatio)
+    position: 'fixed', visibility: 'hidden', pointerEvents: 'none', left: '-9999px', top: '0',
+    width: `${title.clientWidth}px`, height: 'auto', maxHeight: 'none', overflow: 'visible', display: 'block',
+    webkitLineClamp: 'unset', webkitBoxOrient: 'unset', whiteSpace: 'normal', lineHeight: String(lineHeightRatio)
   });
   document.body.append(measure);
 
@@ -109,9 +106,7 @@ function fitOneTitle(title) {
   title.style.maxHeight = `${Math.max(minSize, size) * lineHeightRatio * 3.05}px`;
 }
 
-function fitReviewTitles() {
-  document.querySelectorAll('.review-title').forEach(fitOneTitle);
-}
+function fitReviewTitles() { document.querySelectorAll('.review-title').forEach(fitOneTitle); }
 
 function makeCard(movie, index) {
   const article = document.createElement('article');
@@ -127,7 +122,7 @@ function makeCard(movie, index) {
   const poster = document.createElement('img');
   poster.src = movie.m;
   poster.alt = `${movie.t} poster`;
-  poster.loading = index < 2 ? 'eager' : 'lazy';
+  poster.loading = index < 3 ? 'eager' : 'lazy';
   poster.decoding = 'async';
   posterZone.append(poster);
 
@@ -150,15 +145,11 @@ function makeCard(movie, index) {
   const likeValue = localLikes(movie.s);
   const likes = document.createElement('div');
   likes.className = 'review-likes';
-  likes.hidden = likeValue <= 0;
   likes.setAttribute('aria-label', `${likeValue} likes`);
-  likes.textContent = '♥';
-  const likeCount = document.createElement('span');
-  likeCount.textContent = String(likeValue);
-  likes.append(likeCount);
+  likes.textContent = String(likeValue);
 
-  info.append(title, meta, stars, likes);
-  link.append(posterZone, info);
+  info.append(title, meta);
+  link.append(posterZone, info, stars, likes);
   article.append(link);
   return article;
 }
@@ -173,11 +164,6 @@ function pageWindow(current, total) {
 function renderPagination(totalPages) {
   const nav = $('#pagination');
   nav.replaceChildren();
-
-  if (totalPages <= 1) {
-    nav.hidden = true;
-    return;
-  }
   nav.hidden = false;
 
   const previous = document.createElement('button');
@@ -199,7 +185,6 @@ function renderPagination(totalPages) {
       nav.append(empty);
       continue;
     }
-
     const button = document.createElement('button');
     button.className = `page-button${page === state.page ? ' current' : ''}`;
     button.type = 'button';
@@ -227,6 +212,20 @@ function setPage(page) {
   stage.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
+function syncFilterLabels() {
+  $('#languageLabel').textContent = state.language || 'Language';
+  $('#yearLabel').textContent = state.year || 'Year';
+  const sortNames = { latest: 'Sort By', oldest: 'Oldest', 'title-az': 'Title A–Z', 'title-za': 'Title Z–A' };
+  $('#sortLabel').textContent = sortNames[state.sort] || 'Sort By';
+}
+
+function populateFilters() {
+  const languages = [...new Set(state.movies.map(movie => String(movie.l || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const years = [...new Set(state.movies.map(yearOf).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
+  $('#languageFilter').replaceChildren(new Option('All Languages', ''), ...languages.map(value => new Option(value, value)));
+  $('#yearFilter').replaceChildren(new Option('All Years', ''), ...years.map(value => new Option(value, value)));
+}
+
 function render() {
   const movies = filteredMovies();
   const totalPages = Math.max(1, Math.ceil(movies.length / PAGE_SIZE));
@@ -234,17 +233,16 @@ function render() {
 
   const start = (state.page - 1) * PAGE_SIZE;
   const visible = movies.slice(start, start + PAGE_SIZE);
-  const layer = $('#resultsLayer');
-  layer.replaceChildren(...visible.map(makeCard));
+  $('#resultsLayer').replaceChildren(...visible.map(makeCard));
 
   const first = movies.length ? start + 1 : 0;
   const last = Math.min(start + PAGE_SIZE, movies.length);
-  $('#resultCount').textContent = movies.length
-    ? `Serving ${first}–${last} of ${movies.length} reviews`
-    : 'Serving 0 reviews';
+  $('#servingRange').textContent = movies.length ? `${first}–${last}` : '0';
+  $('#servingTotal').textContent = String(movies.length);
 
   $('#emptyState').hidden = movies.length !== 0;
   renderPagination(totalPages);
+  syncFilterLabels();
   stage.setAttribute('aria-busy', 'false');
   requestAnimationFrame(fitReviewTitles);
 }
@@ -252,28 +250,46 @@ function render() {
 function bindControls() {
   $('#headerSearch').addEventListener('click', () => $('#cineSearch').focus());
   $('#searchForm').addEventListener('submit', event => event.preventDefault());
-  $('#cineSearch').addEventListener('input', event => {
-    state.query = event.target.value;
-    state.page = 1;
+  $('#cineSearch').addEventListener('input', event => { state.query = event.target.value; state.page = 1; render(); });
+  $('#languageFilter').addEventListener('change', event => { state.language = event.target.value; state.page = 1; render(); });
+  $('#yearFilter').addEventListener('change', event => { state.year = event.target.value; state.page = 1; render(); });
+  $('#sortFilter').addEventListener('change', event => { state.sort = event.target.value; state.page = 1; render(); });
+  $('#clearFilters').addEventListener('click', () => {
+    state.query = ''; state.language = ''; state.year = ''; state.sort = 'latest'; state.page = 1;
+    $('#cineSearch').value = ''; $('#languageFilter').value = ''; $('#yearFilter').value = ''; $('#sortFilter').value = 'latest';
     render();
   });
   window.addEventListener('resize', () => requestAnimationFrame(fitReviewTitles));
 }
 
+async function loadMovies() {
+  const sources = ['/data/catalog.json', '/data/index.json'];
+  let lastError = null;
+  for (const source of sources) {
+    try {
+      const response = await fetch(source, { headers: { accept: 'application/json' } });
+      if (!response.ok) throw new Error(`Could not load ${source}`);
+      const payload = await response.json();
+      const movies = Array.isArray(payload) ? payload : payload?.reviews;
+      if (Array.isArray(movies) && movies.length) return movies;
+      throw new Error(`${source} contained no reviews`);
+    } catch (error) { lastError = error; }
+  }
+  throw lastError || new Error('Could not load review data.');
+}
+
 async function init() {
   bindControls();
   try {
-    const [moviesResponse, castResponse] = await Promise.all([
-      fetch('/data/catalog.json'),
-      fetch(`${DATA_BASE}/cast-crew.json`)
-    ]);
-    if (!moviesResponse.ok || !castResponse.ok) throw new Error('Could not load review data.');
-    state.movies = await moviesResponse.json();
+    const [movies, castResponse] = await Promise.all([loadMovies(), fetch(`${DATA_BASE}/cast-crew.json`)]);
+    if (!castResponse.ok) throw new Error('Could not load cast and crew data.');
+    state.movies = movies;
     state.castCrew = await castResponse.json();
+    populateFilters();
     render();
   } catch (error) {
     $('#emptyState').hidden = false;
-    $('#emptyState').textContent = error.message || 'Unable to load Cine Café.';
+    $('#emptyState').textContent = error.message || 'Unable to load Cini Cafe.';
     stage.setAttribute('aria-busy', 'false');
   }
 }
