@@ -1,0 +1,152 @@
+/* Content V3 canonical override layer.
+   Loaded after content-v3.css. It replaces the previous fidelity/polish/fix
+   cascade with one set of measured values so browsers cannot resolve different
+   font/geometry rules depending on timing or viewport chrome. */
+
+html.content-v3-active .content-page { width:min(100%,520px) !important; }
+
+/* Navigation */
+.cv3-logo-hit {
+  position:absolute;z-index:7;left:23%;top:8%;width:54%;height:84%;
+  border:0;background:transparent;color:transparent;text-decoration:none;
+}
+.cv3-logo-hit:focus-visible { outline:2px solid #f21b23;outline-offset:-2px; }
+
+/* Clapboard */
+.cv3-title {
+  left:5.8%;right:auto;top:69.55%;width:29.7%;height:6.55%;
+  box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 5%;
+  background:rgba(3,3,3,.96);border-top:1px solid rgba(194,20,27,.72);border-bottom:1px solid rgba(194,20,27,.45);
+  border-radius:0 0 5px 5px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 -3px 9px rgba(0,0,0,.62);
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-size:clamp(9px,2.45vw,14px);font-weight:700;line-height:1;
+  letter-spacing:.035em;color:#f0ede7;text-shadow:0 1px 2px #000;text-transform:uppercase;white-space:nowrap;z-index:4;
+}
+.cv3-title-track { display:block;flex:0 0 auto;white-space:nowrap;text-align:center;will-change:transform; }
+.cv3-title.is-marquee { justify-content:flex-start; }
+.cv3-title.is-marquee .cv3-title-track { animation:cv3-title-pan var(--cv3-title-duration,7s) ease-in-out 1s infinite alternate;text-align:left; }
+@keyframes cv3-title-pan { from{transform:translateX(0)} to{transform:translateX(calc(-1 * var(--cv3-title-shift,0px)))} }
+
+.cv3-poster { left:5.55%;top:15.2%;width:30.2%;height:61.7%;object-fit:contain;object-position:center;background:#030303; }
+.cv3-language,.cv3-release {
+  left:57.8%;right:7.2%;font-family:Arial,sans-serif;font-size:clamp(7.5px,1.9vw,11px);font-weight:500;line-height:1.15;
+  color:#e7e3dd;text-shadow:0 1px 1px #000;
+}
+.cv3-language { top:18%; }.cv3-release { top:27.25%; }
+.cv3-rating { left:57.8%;right:7.2%;top:36.45%;font-size:clamp(10px,2.8vw,17px);line-height:1;letter-spacing:.075em;color:#f4c25e;filter:drop-shadow(0 1px 1px #000); }
+.cv3-cast {
+  left:40.2%;right:6.3%;top:50.5%;bottom:20.7%;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:0;
+  align-items:stretch;padding-left:3.2%;box-sizing:border-box;border-left:1px solid rgba(182,24,30,.72);
+}
+.cv3-cast-row { display:grid;grid-template-columns:32% minmax(0,1fr);gap:4%;align-items:center;min-height:0;border-bottom:1px solid rgba(182,24,30,.16); }
+.cv3-cast-row:last-child { border-bottom:0; }
+.cv3-cast-row span { font-family:"Arial Narrow",Arial,sans-serif;font-size:clamp(6.2px,1.55vw,9.3px);font-weight:600;line-height:1;letter-spacing:.025em;color:#bc2026;text-transform:uppercase;text-shadow:0 1px 1px #000; }
+.cv3-cast-row strong { font-family:Arial,sans-serif;font-size:clamp(6.4px,1.62vw,9.6px);font-weight:400;line-height:1.12;color:#f1efeb;text-shadow:0 1px 1px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+
+/* My POV: one preferred CSS size, then one canonical JS fitter only shrinks on
+   genuine overflow. No visualViewport/address-bar resize listener is used. */
+.cv3-pov {
+  left:18.8%;right:7.1%;top:81.55%;bottom:2.95%;box-sizing:border-box;padding:0 1px 2px 0;
+  display:block !important;overflow:hidden !important;-webkit-line-clamp:unset !important;-webkit-box-orient:initial !important;
+  font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif;
+  font-size:clamp(10px,2.55vw,14px);font-weight:600;line-height:1.18;letter-spacing:.01em;
+  color:#f3f0ea;text-shadow:0 1px 2px #000;overflow-wrap:break-word;word-break:normal;hyphens:none;
+}
+
+/* Theater preview + popup */
+.cv3-inline-review {
+  left:17.3%;right:17%;top:23.2%;height:29.2%;font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif;
+  font-size:clamp(10px,2.67vw,14px);font-weight:500;line-height:1.38;letter-spacing:.012em;color:#e8e4de;text-shadow:0 1px 2px #000;-webkit-line-clamp:4;
+}
+.cv3-expand-cue {
+  position:absolute;z-index:6;left:34.5%;right:34.5%;top:56.4%;min-height:7.1%;display:flex;align-items:center;justify-content:center;
+  box-sizing:border-box;padding:1.1% 2%;border:1px solid rgba(224,24,30,.72);border-radius:999px;
+  background:linear-gradient(180deg,rgba(47,4,6,.96),rgba(8,3,3,.96));box-shadow:0 0 10px rgba(218,20,27,.26),inset 0 1px 0 rgba(255,255,255,.08);
+  color:#ff4248;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-size:clamp(6.5px,1.6vw,9.5px);font-weight:800;line-height:1;letter-spacing:.085em;text-align:center;text-transform:uppercase;text-shadow:0 1px 2px #000;pointer-events:none;
+}
+.cv3-popup-theater { left:1.5vw !important;top:3dvh !important;width:97vw !important;height:94dvh !important; }
+.cv3-popup-review {
+  left:8.6% !important;right:8.6% !important;top:12.2% !important;bottom:29.2% !important;padding:2.8% 3.3% !important;
+  font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif !important;font-size:clamp(14px,4vw,20px) !important;font-weight:500 !important;line-height:1.55 !important;letter-spacing:.012em;color:#f1eee8;
+}
+.cv3-popup-exit { right:3.2% !important;top:2.15% !important;width:20% !important;height:6.2% !important; }
+.cv3-popup-reaction { bottom:3.35% !important;height:11.4% !important;width:38% !important; }
+.cv3-popup-like { left:10.5% !important; }.cv3-popup-dislike { right:10.5% !important; }
+
+/* Reactions */
+html.content-v3-active .cv3-reaction span,
+html.content-v3-active .cv3-popup-reaction span {
+  right:auto !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;
+  min-width:1.05em !important;height:1.1em !important;margin:0 !important;padding:0 !important;
+  color:#dbc79d !important;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;font-weight:600 !important;
+  line-height:1 !important;letter-spacing:.075em !important;text-align:center !important;text-shadow:0 1px 2px #000,0 0 4px rgba(118,18,22,.28) !important;pointer-events:none !important;
+}
+html.content-v3-active .cv3-reaction span { top:30% !important;transform:translate(-50%,-50%) !important;font-size:clamp(8px,2.12vw,12px) !important; }
+html.content-v3-active .cv3-like span { left:60% !important; }
+html.content-v3-active .cv3-dislike span { left:43% !important; }
+html.content-v3-active .cv3-popup-reaction span { top:50% !important;transform:translate(-50%,-50%) !important;font-size:clamp(11px,2.55vw,20px) !important; }
+html.content-v3-active .cv3-popup-like span { left:63% !important; }
+html.content-v3-active .cv3-popup-dislike span { left:45% !important; }
+
+/* Share This Review */
+html.content-v3-active .cv3-share {
+  background-image:url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/04_share_this_review.avif?v=20260902-canonical-1') !important;
+  background-size:100% 100% !important;background-position:50% 50% !important;
+}
+html.content-v3-active .cv3-share-hit { top:31% !important;width:17% !important;height:64% !important; }
+html.content-v3-active .cv3-share-hit:nth-of-type(1){left:7.4% !important}.cv3-share-hit:nth-of-type(2){left:24.4% !important}.cv3-share-hit:nth-of-type(3){left:40.9% !important}.cv3-share-hit:nth-of-type(4){left:57.8% !important}.cv3-share-hit:nth-of-type(5){left:74.2% !important}
+
+/* Related Reviews */
+.cv3-related-grid { left:14.7%;right:14.7%;top:31.2%;bottom:12.8%;gap:1.55%; }
+.cv3-related-card { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6% 5%;background:transparent;text-align:center; }
+.cv3-related-card img { display:none !important; }
+.cv3-related-card span { width:100%;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-family:"Arial Narrow",Arial,sans-serif;font-size:clamp(5.5px,1.38vw,8.2px);font-weight:700;line-height:1.08;color:#efede8;text-transform:uppercase;overflow:hidden;text-shadow:0 1px 1px #000; }
+.cv3-related-card small { margin-top:5%;font-family:Arial,sans-serif;font-size:clamp(5.2px,1.27vw,7.5px);line-height:1;color:#f4c25e;text-shadow:0 1px 1px #000; }
+
+/* Share Your Opinion: use only the finalized AVIF chrome. */
+html.content-v3-active .cv3-comments {
+  background-image:url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/06_share_your_opinion.avif?v=20260902-canonical-1') !important;
+  background-size:100% 100% !important;background-position:50% 50% !important;
+}
+html.content-v3-active .cv3-comments .comment-list {
+  left:6% !important;top:29.2% !important;width:38.4% !important;height:46.2% !important;box-sizing:border-box !important;
+  padding:2.6% 3.4% !important;display:grid !important;align-content:start !important;gap:4% !important;overflow:hidden !important;
+  border:0 !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;
+}
+html.content-v3-active .cv3-comments .comment-card {
+  min-width:0 !important;min-height:0 !important;grid-template-columns:minmax(0,1fr) auto !important;gap:1px 4px !important;padding:0 !important;
+  border:0 !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;color:#cfc9c0 !important;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;font-size:clamp(4.6px,1.02vw,6.4px) !important;font-weight:400 !important;line-height:1.18 !important;overflow:hidden !important;
+}
+html.content-v3-active .cv3-comments .comment-card:nth-child(n+2) { display:none !important; }
+html.content-v3-active .cv3-comments .comment-card strong { min-width:0 !important;overflow:hidden !important;text-overflow:ellipsis !important;white-space:nowrap !important;color:#e3ddd4 !important;font-size:clamp(4.9px,1.10vw,6.8px) !important;font-weight:600 !important;line-height:1.12 !important; }
+html.content-v3-active .cv3-comments .comment-card p { grid-column:1/-1 !important;margin:2px 0 0 !important;color:#c8c2b9 !important;font-size:clamp(4.5px,.99vw,6.2px) !important;font-weight:400 !important;line-height:1.2 !important;display:-webkit-box !important;-webkit-box-orient:vertical !important;-webkit-line-clamp:2 !important;overflow:hidden !important; }
+html.content-v3-active .cv3-comments .comment-card time { color:#8e8982 !important;font-size:clamp(3.8px,.82vw,5.2px) !important;font-weight:400 !important;line-height:1 !important;white-space:nowrap !important; }
+html.content-v3-active .cv3-comments .comment-empty { margin:0 !important;padding:5% 2% !important;border:0 !important;background:transparent !important;color:#aaa49c !important;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;font-size:clamp(4.6px,1.02vw,6.4px) !important;font-weight:400 !important;line-height:1.24 !important;text-align:left !important; }
+html.content-v3-active .cv3-comments .comment-form { opacity:0 !important;pointer-events:none !important; }
+html.content-v3-active .cv3-comments .comment-status { visibility:hidden !important; }
+.cv3-comments-open { position:absolute;z-index:8;top:18% !important;height:76% !important;border:0;padding:0;background:transparent !important;box-shadow:none !important;color:transparent;cursor:pointer; }
+.cv3-comments-open-recent { left:2.7% !important;width:44.8% !important; }.cv3-comments-open-add { right:1.8% !important;width:48.2% !important; }
+.cv3-comments-open::after { display:none !important;content:none !important; }
+
+/* Comments popover */
+.cv3-comments-popover { width:min(92vw,470px);max-width:92vw;max-height:84dvh;margin:auto;padding:0;overflow:hidden;border:1px solid rgba(207,25,31,.72);border-radius:14px;background:#070707;color:#f2efe9;box-shadow:0 22px 70px rgba(0,0,0,.86),0 0 24px rgba(178,12,18,.25); }
+.cv3-comments-popover::backdrop { background:rgba(0,0,0,.82);backdrop-filter:blur(4px); }
+.cv3-comments-popover-shell { position:relative;max-height:84dvh;overflow:auto;padding:18px 16px 16px;background:radial-gradient(circle at 50% -10%,rgba(137,10,15,.24),transparent 42%),linear-gradient(180deg,#0d0d0d,#050505 58%,#090303); }
+.cv3-comments-popover-head { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(184,20,26,.42); }
+.cv3-comments-popover-title { margin:0;color:#f5f1eb;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-size:18px;font-weight:800;letter-spacing:.08em;text-transform:uppercase; }
+.cv3-comments-popover-close { width:34px;height:34px;border:1px solid rgba(184,20,26,.48);border-radius:50%;background:#0c0c0c;color:#f35b60;font-size:22px;line-height:1; }
+.cv3-comments-popover-tabs { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px; }
+.cv3-comments-popover-tab { min-height:38px;border:1px solid rgba(135,17,21,.48);border-radius:7px;background:#0a0a0a;color:#bdb8b1;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase; }
+.cv3-comments-popover-tab[aria-selected="true"] { border-color:rgba(228,31,37,.84);background:linear-gradient(180deg,#5f070a,#260305);color:#fff; }
+.cv3-comments-popover-panel[hidden] { display:none !important; }
+.cv3-comments-popover-list { display:grid;gap:10px;max-height:52dvh;overflow:auto;padding-right:2px; }
+.cv3-comments-popover-list .comment-card { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;padding:12px 13px;border:1px solid rgba(150,18,23,.48);border-radius:8px;background:linear-gradient(180deg,rgba(26,26,26,.94),rgba(7,7,7,.96));box-shadow:inset 3px 0 0 #9b0b0f;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif; }
+.cv3-comments-popover-list .comment-card strong { color:#fff;font-size:15px; }.cv3-comments-popover-list .comment-card p { grid-column:1/-1;margin:0;color:#ddd8d2;font-size:14px;line-height:1.42; }.cv3-comments-popover-list .comment-card time { color:#9e9992;font-size:11px; }
+.cv3-comments-popover-list .comment-empty { margin:0;padding:18px;border:1px solid rgba(140,17,22,.4);border-radius:8px;background:#0a0a0a;color:#bdb8b2;font:500 14px/1.4 "Arial Narrow","Roboto Condensed",Arial,sans-serif; }
+.cv3-comments-popover-form { display:grid;gap:10px; }.cv3-comments-popover-form label { color:#ce3035;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase; }
+.cv3-comments-popover-form input,.cv3-comments-popover-form textarea { width:100%;box-sizing:border-box;border:1px solid rgba(120,17,21,.55);border-radius:7px;background:#0c0c0c;color:#f6f2ec;padding:11px 12px;outline:0;font:500 15px/1.35 "Arial Narrow","Roboto Condensed",Arial,sans-serif;caret-color:#ef171c; }
+.cv3-comments-popover-form textarea { min-height:132px;resize:vertical; }.cv3-comments-popover-submit { min-height:44px;margin-top:2px;border:1px solid rgba(238,46,52,.72);border-radius:7px;background:linear-gradient(180deg,#a80f14,#570509 62%,#2a0204);color:#fff;font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-size:13px;font-weight:900;letter-spacing:.08em;text-transform:uppercase; }
+.cv3-comments-popover-status { min-height:18px;margin:0;color:#c8c3bd;font:500 12px/1.4 "Arial Narrow","Roboto Condensed",Arial,sans-serif;text-align:center; }
+
+@media (min-width:700px) { html.content-v3-active .content-page { width:min(100%,520px) !important; } }
+@media (prefers-reduced-motion:reduce) { .cv3-title.is-marquee .cv3-title-track { animation:none; }.cv3-title.is-marquee { overflow-x:auto;scrollbar-width:none; } }
