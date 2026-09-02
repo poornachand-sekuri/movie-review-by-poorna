@@ -1,0 +1,23 @@
+/* Cini Cafe canonical override layer. */
+.hotspot-logo { left:286px;top:10px;width:452px;height:84px; }
+.hotspot-logo:focus-visible { outline:2px solid #ef171c;outline-offset:-2px; }
+
+/* The full-canvas filter layer must never swallow movie-card taps. */
+.cine-cafe-page .filters-layer { pointer-events:none !important; }
+.cine-cafe-page .filter-control,
+.cine-cafe-page .clear-filter { pointer-events:auto !important; }
+.cine-cafe-page .review-card,
+.cine-cafe-page .review-link { touch-action:manipulation; }
+.cine-cafe-page .review-link { z-index:1; }
+
+/* Mask the decorative baked dash/pill and render only the live numeric count
+   on the heart centre-line. */
+.cine-cafe-page .review-likes {
+  left:76px !important;top:279px !important;width:90px !important;height:34px !important;
+  box-sizing:border-box;padding:0 0 0 20px !important;display:flex !important;align-items:center !important;justify-content:flex-start !important;
+  border:0 !important;border-radius:0 !important;background:#050505 !important;color:#f4f0ea !important;box-shadow:none !important;
+  font-family:"Arial Narrow","Roboto Condensed",Arial,sans-serif !important;font-size:15px !important;font-weight:700 !important;line-height:1 !important;
+  letter-spacing:.015em !important;text-align:left !important;text-shadow:0 1px 2px #000 !important;white-space:nowrap;pointer-events:none !important;
+}
+.cine-cafe-page .review-likes[data-loading="true"],
+.cine-cafe-page .review-likes[data-unavailable="true"] { color:transparent !important; }
