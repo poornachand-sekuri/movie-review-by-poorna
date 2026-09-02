@@ -109,7 +109,7 @@ function buildPage(movie) {
 
     <section class="cv3-asset cv3-clapboard" style="--asset:url('${asset('02_clapboard_details.avif')}')" aria-label="Movie details">
       <img class="cv3-poster" src="${movie.m}" alt="${movie.t} poster">
-      <div class="cv3-title">${movie.t}</div>
+      <div class="cv3-title"><span class="cv3-title-track">${movie.t}</span></div>
       <div class="cv3-language">${movie.l || '—'}</div>
       <div class="cv3-release">${formatDate(movie.rd)}</div>
       <div class="cv3-rating" aria-label="${Math.round(Number(movie.r)||0)} out of 5 stars">${stars(movie.r)}</div>
@@ -182,6 +182,36 @@ function renderRelated(grid, movie) {
     a.href = `/?review=${encodeURIComponent(item.movie.s)}`;
     a.innerHTML = `<img src="${item.movie.m}" alt="${item.movie.t} poster" loading="lazy"><span>${item.movie.t}</span><small>${stars(item.movie.r)}</small>`;
     grid.append(a);
+  }
+}
+
+function setupTitleMarquee(root) {
+  const box = $('.cv3-title', root);
+  const track = $('.cv3-title-track', root);
+  if (!box || !track) return;
+  let frame = 0;
+  const update = () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      box.classList.remove('is-marquee');
+      box.style.removeProperty('--cv3-title-shift');
+      box.style.removeProperty('--cv3-title-duration');
+      const available = Math.max(0, box.clientWidth - 8);
+      const overflow = Math.ceil(track.scrollWidth - available);
+      if (overflow > 2) {
+        const shift = overflow + 14;
+        box.style.setProperty('--cv3-title-shift', `${shift}px`);
+        box.style.setProperty('--cv3-title-duration', `${Math.max(5.5, Math.min(11, shift / 12)).toFixed(1)}s`);
+        box.classList.add('is-marquee');
+      }
+    });
+  };
+  update();
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(update);
+    observer.observe(box);
+  } else {
+    window.addEventListener('resize', update, { passive: true });
   }
 }
 
@@ -272,6 +302,7 @@ async function init() {
   setupMenuAndSearch();
   setupPopup(root);
   setupSharing(root, movie);
+  setupTitleMarquee(root);
   $('#app')?.setAttribute('aria-busy','false');
 }
 
