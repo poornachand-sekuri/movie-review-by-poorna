@@ -27,26 +27,35 @@ html.content-v3-active .content-page{width:min(100%,520px)!important}
   font-size:clamp(10px,2.8vw,17px);line-height:1;letter-spacing:.075em;
   color:#f4c25e;filter:drop-shadow(0 1px 1px #000);
 }
+
+/* Cast & Crew runtime rows read as one inset subsection under the baked Cast & Crew heading. */
 .cv3-cast{
-  left:39.05%;right:6.3%;top:50.8%;bottom:20.7%;
-  display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:0;
-  align-items:stretch;
+  left:40.0%;right:6.35%;top:50.5%;bottom:20.7%;
+  box-sizing:border-box;padding-left:2.2%;
+  display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:0;align-items:stretch;
+  border-left:1px solid rgba(184,29,36,.50);
+  background:linear-gradient(90deg,rgba(132,12,18,.08),rgba(132,12,18,0) 72%);
 }
 .cv3-cast-row{
-  display:grid;grid-template-columns:31% minmax(0,1fr);gap:4%;align-items:center;min-height:0;
+  position:relative;display:grid;grid-template-columns:28% minmax(0,1fr);gap:4%;align-items:center;min-height:0;
+}
+.cv3-cast-row:not(:last-child)::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:rgba(255,255,255,.045);
 }
 .cv3-cast-row span{
-  font-family:"Arial Narrow",Arial,sans-serif;font-size:clamp(6.2px,1.55vw,9.3px);font-weight:600;line-height:1;
-  letter-spacing:.025em;color:#ef2b31;text-transform:uppercase;text-shadow:0 1px 1px #000;
+  font-family:"Arial Narrow",Arial,sans-serif;font-size:clamp(6.1px,1.52vw,9.1px);font-weight:600;line-height:1;
+  letter-spacing:.045em;color:#c52028;text-transform:uppercase;text-shadow:0 1px 1px #000;
 }
 .cv3-cast-row strong{
-  font-family:Arial,sans-serif;font-size:clamp(6.4px,1.62vw,9.6px);font-weight:400;line-height:1.12;
-  color:#e7e3dd;text-shadow:0 1px 1px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:Arial,sans-serif;font-size:clamp(6.5px,1.64vw,9.8px);font-weight:500;line-height:1.12;
+  color:#f0ede8;text-shadow:0 1px 1px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+
+/* POV keeps the retro face, but uses a clean soft-white tone; JS dynamically fits the full text. */
 .cv3-pov{
   left:18.0%;right:6.4%;top:82.55%;bottom:4.0%;
-  font-family:Georgia,"Times New Roman",serif;font-size:clamp(8.8px,2.24vw,13px);font-weight:700;line-height:1.28;
-  letter-spacing:.012em;color:#f2e6c9;text-shadow:0 1px 1px #000,0 0 5px rgba(225,173,86,.12);
+  font-family:Georgia,"Times New Roman",serif;font-size:clamp(8.8px,2.24vw,13px);font-weight:600;line-height:1.28;
+  letter-spacing:.012em;color:#f3f2ee;text-shadow:0 1px 1px #000,0 0 3px rgba(255,255,255,.055);
   -webkit-line-clamp:3;
 }
 
