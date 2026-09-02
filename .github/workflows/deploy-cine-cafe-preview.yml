@@ -1,0 +1,49 @@
+name: Deploy Cini Cafe Preview
+
+on:
+  push:
+    branches:
+      - cine-cafe-v3-mobile-redesign
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Create temporary preview config
+        run: |
+          cat > wrangler.cine-cafe-preview.jsonc <<'EOF'
+          {
+            "$schema": "node_modules/wrangler/config-schema.json",
+            "name": "movie-review-by-poorna-cine-cafe-preview",
+            "main": "src/worker-entry.js",
+            "compatibility_date": "2026-08-30",
+            "assets": {
+              "directory": "./dist",
+              "binding": "ASSETS",
+              "html_handling": "auto-trailing-slash",
+              "not_found_handling": "single-page-application"
+            }
+          }
+          EOF
+
+      - name: Deploy isolated Cloudflare temporary preview Worker
+        run: npx wrangler deploy --temporary --config wrangler.cine-cafe-preview.jsonc
