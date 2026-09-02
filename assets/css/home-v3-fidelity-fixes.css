@@ -1,6 +1,6 @@
-/* Home V3 fidelity: respect the red inner frames baked into the Recent Reviews
-   and Previously Reviewed AVIF artwork. Runtime cards must never paint over
-   those red rails; only the actual interior window gets an opaque surface. */
+/* Home V3 fidelity: use the red inner rails baked into the Recent Reviews and
+   Previously Reviewed AVIFs as hard visual boundaries. Runtime media/copy must
+   stay inside those rails and never paint over them. */
 
 .home-v3-mode .hm3-recent-card,
 .home-v3-mode .hm3-prev-card {
@@ -9,14 +9,15 @@
   background: transparent !important;
 }
 
-/* Recent Reviews ticket: keep a deliberate safety inset on all four sides so
-   the baked red inner box stays continuously visible around the live poster. */
+/* The previous pass was still too close to the left rail on iPhone Safari.
+   Use a larger symmetrical safety gutter so the red frame is visible on every
+   side even with the rounded/slanted ticket corners. */
 .home-v3-mode .hm3-recent-poster {
   position: absolute !important;
-  left: 7.4% !important;
-  right: 7.4% !important;
-  top: 6.8% !important;
-  bottom: 6.6% !important;
+  left: 12.4% !important;
+  right: 11.8% !important;
+  top: 9.4% !important;
+  bottom: 9.2% !important;
   width: auto !important;
   height: auto !important;
   min-width: 0 !important;
@@ -28,13 +29,12 @@
   background: #030303 !important;
 }
 
-/* Previously Reviewed reel cells have a slightly tighter red inner window. */
 .home-v3-mode .hm3-prev-poster {
   position: absolute !important;
-  left: 6.2% !important;
-  right: 6.2% !important;
-  top: 8.2% !important;
-  bottom: 6.4% !important;
+  left: 10.4% !important;
+  right: 10.4% !important;
+  top: 10.6% !important;
+  bottom: 9.6% !important;
   width: auto !important;
   height: auto !important;
   min-width: 0 !important;
@@ -62,8 +62,9 @@
   transform: none !important;
 }
 
-/* Movie title + stars now float over the lower part of the poster instead of
-   taking a separate row that can cover/break the AVIF frame. */
+/* Title and rating float over the poster, but their own dark strip is also
+   inset from the red rails. Keep title and stars on separate rows so they can
+   never collide. */
 .home-v3-mode .hm3-recent-info,
 .home-v3-mode .hm3-prev-info {
   position: absolute !important;
@@ -72,91 +73,135 @@
   min-height: 0 !important;
   overflow: hidden !important;
   pointer-events: none !important;
-  display: grid !important;
-  align-content: end !important;
-  justify-items: stretch !important;
-  gap: 1px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+  gap: 2px !important;
   text-align: center !important;
-  background: linear-gradient(180deg, rgba(3,3,3,0), rgba(3,3,3,.82) 34%, rgba(3,3,3,.97) 100%) !important;
+  background: linear-gradient(180deg, rgba(3,3,3,0), rgba(3,3,3,.76) 30%, rgba(3,3,3,.97) 100%) !important;
 }
 
 .home-v3-mode .hm3-recent-info {
-  left: 7.4% !important;
-  right: 7.4% !important;
-  bottom: 6.6% !important;
-  height: 29% !important;
-  padding: 8% 3.5% 4.2% !important;
+  left: 12.4% !important;
+  right: 11.8% !important;
+  bottom: 9.2% !important;
+  height: 28% !important;
+  padding: 8.5% 4% 4.2% !important;
 }
 
 .home-v3-mode .hm3-prev-info {
-  left: 6.2% !important;
-  right: 6.2% !important;
-  bottom: 6.4% !important;
+  left: 10.4% !important;
+  right: 10.4% !important;
+  bottom: 9.6% !important;
   height: 32% !important;
-  padding: 9% 3.5% 4.5% !important;
+  padding: 9% 4% 4.8% !important;
 }
 
 .home-v3-mode .hm3-recent-title,
 .home-v3-mode .hm3-prev-title {
   position: relative !important;
   display: block !important;
+  flex: 0 0 auto !important;
   width: 100% !important;
   min-width: 0 !important;
+  min-height: 1.08em !important;
   overflow: hidden !important;
   white-space: nowrap !important;
   text-overflow: clip !important;
   color: #f7f3eb !important;
   font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif !important;
   font-weight: 800 !important;
-  line-height: 1.05 !important;
-  letter-spacing: .015em !important;
+  line-height: 1.08 !important;
+  letter-spacing: .012em !important;
   text-transform: uppercase !important;
   text-shadow: 0 1px 2px #000, 0 0 4px rgba(0,0,0,.95) !important;
 }
 
-.home-v3-mode .hm3-recent-title { font-size: clamp(6px, 1.55vw, 8.4px) !important; }
-.home-v3-mode .hm3-prev-title { font-size: clamp(5.5px, 1.32vw, 7.3px) !important; }
+.home-v3-mode .hm3-recent-title { font-size: clamp(5.8px, 1.48vw, 8px) !important; }
+.home-v3-mode .hm3-prev-title { font-size: clamp(5.1px, 1.22vw, 6.8px) !important; }
 
+/* A single-copy ticker is deliberately used. The previous duplicated marquee
+   could show fragments of both copies at once in narrow cards. Short/medium
+   names are first auto-shrunk by JS and remain stationary; only genuinely long
+   titles get this right-to-left ticker. */
 .home-v3-mode .hm3-title-track {
-  display: inline-flex;
-  width: max-content;
-  max-width: none;
-  align-items: center;
-  will-change: transform;
+  display: block !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
 .home-v3-mode .hm3-title-copy {
-  flex: 0 0 auto;
-  padding-right: 18px;
+  display: inline-block !important;
+  width: max-content !important;
+  max-width: none !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  transform: translateX(0);
+  will-change: transform;
 }
 
-.home-v3-mode .hm3-recent-title:not(.is-marquee) .hm3-title-copy,
-.home-v3-mode .hm3-prev-title:not(.is-marquee) .hm3-title-copy {
-  padding-right: 0;
+.home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy,
+.home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy {
+  padding-left: 100% !important;
+  animation: hm3-title-marquee-single var(--hm3-marquee-duration, 8s) linear infinite !important;
 }
 
-.home-v3-mode .hm3-recent-title.is-marquee .hm3-title-track,
-.home-v3-mode .hm3-prev-title.is-marquee .hm3-title-track {
-  animation: hm3-title-marquee var(--hm3-marquee-duration, 8s) linear infinite;
-}
-
-@keyframes hm3-title-marquee {
+@keyframes hm3-title-marquee-single {
   from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  to { transform: translateX(-100%); }
 }
 
 .home-v3-mode .hm3-recent-stars,
 .home-v3-mode .hm3-prev-stars {
   display: block !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
   color: #e7b54d !important;
   text-align: center !important;
   white-space: nowrap !important;
+  line-height: 1 !important;
   text-shadow: 0 1px 2px #000 !important;
 }
 
+/* Now Reviewed / My POV: keep every glyph inside the ticket's right-hand red
+   copy box. Narrow the runtime copy window and add an internal safety gutter;
+   the auto-fit routine handles height without allowing horizontal spill. */
+.home-v3-mode .hm3-now-copy {
+  left: 55.1% !important;
+  top: 23.6% !important;
+  width: 27.1% !important;
+  height: 57.4% !important;
+  box-sizing: border-box !important;
+  padding: 2.2% 4.8% 2.6% !important;
+  overflow: hidden !important;
+}
+
+.home-v3-mode .hm3-now-title,
+.home-v3-mode .hm3-now-meta,
+.home-v3-mode .hm3-now-label,
+.home-v3-mode .hm3-pov {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+.home-v3-mode .hm3-pov {
+  width: 100% !important;
+  height: 49% !important;
+  margin: 4px 0 0 !important;
+  padding: 0 2.5% 0 0 !important;
+  overflow: hidden !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: auto;
+  line-height: 1.28 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .home-v3-mode .hm3-recent-title.is-marquee .hm3-title-track,
-  .home-v3-mode .hm3-prev-title.is-marquee .hm3-title-track {
+  .home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy,
+  .home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy {
     animation: none !important;
+    padding-left: 0 !important;
   }
 }
