@@ -48,8 +48,8 @@ html.content-v3-active .content-page{width:min(100%,520px)!important}
 }
 .cv3-pov{
   left:18.0%;right:6.4%;top:82.15%;bottom:3.45%;box-sizing:border-box;padding:1px 1px 2px 0;
-  font-family:Georgia,"Times New Roman",serif;font-size:clamp(8.8px,2.24vw,13px);font-weight:700;line-height:1.24;
-  letter-spacing:.008em;color:#f4f4f1;text-shadow:0 1px 1px #000,0 0 3px rgba(255,255,255,.06);
+  font-family:Georgia,"Times New Roman",serif;font-size:clamp(9.6px,2.45vw,14px);font-weight:700;line-height:1.2;
+  letter-spacing:.006em;color:#f4f4f1;text-shadow:0 1px 1px #000,0 0 3px rgba(255,255,255,.06);
   -webkit-line-clamp:3;
 }
 
@@ -58,9 +58,9 @@ html.content-v3-active .content-page{width:min(100%,520px)!important}
 
 /* Theater preview: readable but understated; the artwork remains dominant. */
 .cv3-inline-review{
-  left:18.2%;right:18.2%;top:26.5%;height:25.5%;
-  font-family:Georgia,"Times New Roman",serif;font-size:clamp(7.1px,1.78vw,10.6px);font-weight:400;line-height:1.46;
-  color:#d9d5cf;text-shadow:0 1px 1px #000;-webkit-line-clamp:4;
+  left:16.4%;right:16.4%;top:24.2%;height:30.5%;
+  font-family:Georgia,"Times New Roman",serif;font-size:clamp(8.6px,2.12vw,12.6px);font-weight:400;line-height:1.42;
+  color:#e6e2dc;text-shadow:0 1px 1px #000;-webkit-line-clamp:4;
 }
 .cv3-reaction span{top:35%;font-size:clamp(8px,2vw,12px);font-weight:500;color:#e7e3dd}
 .cv3-like span{left:59%}.cv3-dislike span{right:59%}
@@ -90,9 +90,10 @@ html.content-v3-active .content-page{width:min(100%,520px)!important}
 .cv3-comments .comment-form{left:50.5%;right:2.35%}
 .cv3-comments .comment-form input,.cv3-comments .comment-form textarea{font-family:Arial,sans-serif;font-size:clamp(5.8px,1.38vw,8.5px);font-weight:400}
 
-/* Mobile-only geometry: give POV more vertical breathing room and enlarge the popup theater/screen. */
+/* Mobile-only geometry: keep POV readable and enlarge inline theater text without leaving the safe zones. */
 @media (max-width:699px){
-  .cv3-pov{top:81.45%;bottom:2.85%;line-height:1.22;padding-top:0;padding-bottom:3px}
+  .cv3-pov{top:81.45%;bottom:2.85%;line-height:1.16;padding-top:0;padding-bottom:2px;font-size:clamp(10.5px,2.75vw,14.5px)}
+  .cv3-inline-review{left:15.4%;right:15.4%;top:22.9%;height:34%;font-size:clamp(10.5px,2.85vw,15px);line-height:1.42}
   .cv3-popup-theater{left:1.5vw!important;top:3dvh!important;width:97vw!important;height:94dvh!important}
   .cv3-popup-review{left:8.6%!important;right:8.6%!important;top:12.2%!important;bottom:29.2%!important;padding:2.8% 3.3%!important;font-size:clamp(14px,4vw,20px)!important;line-height:1.55!important}
   .cv3-popup-exit{right:3.2%!important;top:2.15%!important;width:20%!important;height:6.2%!important}
