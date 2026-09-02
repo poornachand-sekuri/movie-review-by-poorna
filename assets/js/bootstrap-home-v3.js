@@ -14,7 +14,7 @@ const HOME_ASSETS = [
   '07_bottom_navigation.avif'
 ];
 const HOME_VERSION = '20260902-home-comments-name-only-11';
-const CONTENT_VERSION = '20260902-content-v3-runtime-4';
+const CONTENT_VERSION = '20260902-content-v3-runtime-5';
 
 if (isHome) {
   [
@@ -53,6 +53,7 @@ if (isHome) {
 
   Promise.all([
     import(`./content-v3-asset-path.js?v=${CONTENT_VERSION}`),
+    import(`./content-v3-pov-fit.js?v=${CONTENT_VERSION}`),
     import(`./content-v3.js?v=${CONTENT_VERSION}`)
   ]).then(async () => {
     const [, comments] = await Promise.all([
