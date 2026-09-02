@@ -7,13 +7,13 @@
     "node": ">=24.0.0 <25"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "check": "astro check",
+    "dev": "wrangler types && astro dev",
+    "build": "wrangler types && astro build",
+    "check": "wrangler types && astro check",
     "check:guardrails": "node scripts/check-runtime-guardrails.mjs",
-    "preview": "astro preview",
+    "preview": "wrangler types && astro preview",
     "cf:types": "wrangler types",
-    "deploy:staging": "astro build && wrangler deploy"
+    "deploy:preview": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.6",
