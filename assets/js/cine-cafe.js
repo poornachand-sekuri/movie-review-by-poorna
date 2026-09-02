@@ -89,9 +89,9 @@ function fitOneTitle(title) {
   title.style.maxHeight = '';
 
   const computed = getComputedStyle(title);
-  const startSize = Number.parseFloat(computed.fontSize) || 16;
-  const minSize = 8.5;
-  const lineHeightRatio = 1.06;
+  const startSize = Number.parseFloat(computed.fontSize) || 17;
+  const minSize = 12.5;
+  const lineHeightRatio = 1.07;
 
   const measure = title.cloneNode(true);
   Object.assign(measure.style, {
@@ -186,11 +186,6 @@ function pageWindow(current, total) {
 function renderPagination(totalPages) {
   const nav = $('#pagination');
   nav.replaceChildren();
-
-  if (totalPages <= 1) {
-    nav.hidden = true;
-    return;
-  }
   nav.hidden = false;
 
   const previous = document.createElement('button');
