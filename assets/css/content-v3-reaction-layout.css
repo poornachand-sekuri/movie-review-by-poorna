@@ -1,0 +1,45 @@
+/* Final reaction-count placement for Content V3.
+   Keep the live number beside each baked thumb icon in both the inline theater
+   and expanded theater instead of placing it underneath the icon. */
+html.content-v3-active .cv3-reaction span,
+html.content-v3-active .cv3-popup-reaction span {
+  right: auto !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25em;
+  height: 1.25em;
+  margin: 0;
+  padding: 0;
+  color: #f4f1eb;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .035em;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+
+/* The baked like icon sits around the middle of its left reaction hit area;
+   move the count just to its right. */
+html.content-v3-active .cv3-like span { left: 58% !important; }
+
+/* The baked dislike icon is left-of-centre in the mirrored hit area;
+   move the count just to its right. */
+html.content-v3-active .cv3-dislike span { left: 40% !important; }
+
+/* Expanded theater uses the same visual relationship. */
+html.content-v3-active .cv3-popup-like span { left: 58% !important; }
+html.content-v3-active .cv3-popup-dislike span { left: 40% !important; }
+
+@media (max-width: 699px) {
+  html.content-v3-active .cv3-reaction span {
+    font-size: clamp(9px, 2.55vw, 14px);
+  }
+  html.content-v3-active .cv3-popup-reaction span {
+    font-size: clamp(12px, 3vw, 22px);
+  }
+}

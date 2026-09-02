@@ -1,0 +1,339 @@
+/* Content V3 mobile polish: typography, interaction affordances, comments popover and navigation consistency. */
+
+.cv3-logo-hit {
+  position: absolute;
+  z-index: 7;
+  left: 23%;
+  top: 8%;
+  width: 54%;
+  height: 84%;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  text-decoration: none;
+}
+.cv3-logo-hit:focus-visible { outline: 2px solid #f21b23; outline-offset: -2px; }
+
+/* Use the same condensed, cinematic sans face across POV, review preview and the full-screen review. */
+.cv3-pov {
+  left: 18.8%;
+  right: 7.1%;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(9.4px, 2.38vw, 13.8px);
+  font-weight: 600;
+  line-height: 1.24;
+  letter-spacing: .012em;
+  color: #f3f0ea;
+  text-shadow: 0 1px 2px #000;
+}
+
+.cv3-inline-review {
+  left: 17.3%;
+  right: 17.0%;
+  top: 23.2%;
+  height: 28.7%;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(9.4px, 2.48vw, 14px);
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: .012em;
+  color: #e8e4de;
+  text-shadow: 0 1px 2px #000;
+  -webkit-line-clamp: 4;
+}
+
+.cv3-expand-cue {
+  position: absolute;
+  z-index: 6;
+  left: 34.5%;
+  right: 34.5%;
+  top: 56.4%;
+  min-height: 7.1%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 1.1% 2%;
+  border: 1px solid rgba(224, 24, 30, .72);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(47, 4, 6, .96), rgba(8, 3, 3, .96));
+  box-shadow: 0 0 10px rgba(218, 20, 27, .26), inset 0 1px 0 rgba(255,255,255,.08);
+  color: #ff4248;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(6.5px, 1.6vw, 9.5px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .085em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px #000, 0 0 7px rgba(242,27,35,.28);
+  pointer-events: none;
+}
+
+.cv3-popup-review {
+  left: 9.4%;
+  right: 9.4%;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: .012em;
+  color: #f1eee8;
+}
+
+/* Put live counts visually under/with their baked icon instead of floating toward the centre divider. */
+.cv3-reaction span,
+.cv3-popup-reaction span {
+  right: auto !important;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: .045em;
+  color: #f4f1eb;
+  text-shadow: 0 1px 2px #000;
+}
+.cv3-reaction span { top: 58%; transform: translateX(-50%); }
+.cv3-like span { left: 41% !important; }
+.cv3-dislike span { left: 26% !important; }
+.cv3-popup-reaction span { top: 61%; transform: translateX(-50%); }
+.cv3-popup-like span { left: 42% !important; }
+.cv3-popup-dislike span { left: 27% !important; }
+
+/* Comments preview is wrapped as part of the cinema UI instead of sitting as loose text. */
+.cv3-comments .comment-list {
+  left: 5.5%;
+  top: 24.5%;
+  width: 39.7%;
+  height: 53%;
+  box-sizing: border-box;
+  padding: 2.1% 2.2%;
+  gap: 4%;
+  border: 1px solid rgba(157, 17, 22, .36);
+  border-radius: 5px;
+  background: linear-gradient(180deg, rgba(14,14,14,.82), rgba(3,3,3,.88));
+  box-shadow: inset 0 0 12px rgba(0,0,0,.74);
+}
+.cv3-comments .comment-card {
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 2px 6px;
+  padding: 3.4% 3.8%;
+  border: 1px solid rgba(120, 15, 19, .34);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(27,27,27,.82), rgba(5,5,5,.86));
+  color: #dcd8d2;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(5.5px,1.32vw,8px);
+  line-height: 1.2;
+  box-shadow: inset 3px 0 0 rgba(155, 11, 15, .54);
+}
+.cv3-comments .comment-card strong { color: #f5f1ea; font-weight: 700; }
+.cv3-comments .comment-card p { color: #d9d5cf; line-height: 1.22; }
+.cv3-comments .comment-card time { color: #9e9891; font-size: .88em; }
+.cv3-comments .comment-empty {
+  margin: 0;
+  padding: 8% 6%;
+  border: 1px solid rgba(120,15,19,.26);
+  border-radius: 4px;
+  background: rgba(8,8,8,.76);
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  line-height: 1.28;
+}
+
+/* Static form remains as the source form for the API; mobile taps open the larger popover editor. */
+.cv3-comments .comment-form { pointer-events: none; }
+.cv3-comments-open {
+  position: absolute;
+  z-index: 8;
+  top: 19.5%;
+  height: 70%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+}
+.cv3-comments-open-recent { left: 3.4%; width: 43.8%; }
+.cv3-comments-open-add { right: 2.1%; width: 47.2%; }
+.cv3-comments-open::after {
+  position: absolute;
+  left: 50%;
+  bottom: 2.5%;
+  transform: translateX(-50%);
+  min-width: 42%;
+  padding: 2.2% 5%;
+  border: 1px solid rgba(198, 24, 30, .55);
+  border-radius: 999px;
+  background: rgba(7,7,7,.9);
+  box-shadow: 0 0 8px rgba(211,18,24,.18);
+  color: #d92b30;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(5.5px, 1.24vw, 7.6px);
+  font-weight: 800;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cv3-comments-open-recent::after { content: "View Comments"; }
+.cv3-comments-open-add::after { content: "Add Comment"; }
+.cv3-comments-open:focus-visible { outline: 2px solid #f21b23; outline-offset: -3px; }
+
+.cv3-comments-popover {
+  width: min(92vw, 470px);
+  max-width: 92vw;
+  max-height: 84dvh;
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(207, 25, 31, .72);
+  border-radius: 14px;
+  background: #070707;
+  color: #f2efe9;
+  box-shadow: 0 22px 70px rgba(0,0,0,.86), 0 0 24px rgba(178,12,18,.25);
+}
+.cv3-comments-popover::backdrop {
+  background: rgba(0,0,0,.82);
+  backdrop-filter: blur(4px);
+}
+.cv3-comments-popover-shell {
+  position: relative;
+  max-height: 84dvh;
+  overflow: auto;
+  padding: 18px 16px 16px;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(137, 10, 15, .24), transparent 42%),
+    linear-gradient(180deg, #0d0d0d, #050505 58%, #090303);
+}
+.cv3-comments-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(184, 20, 26, .42);
+}
+.cv3-comments-popover-title {
+  margin: 0;
+  color: #f5f1eb;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.cv3-comments-popover-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(184,20,26,.48);
+  border-radius: 50%;
+  background: #0c0c0c;
+  color: #f35b60;
+  font-size: 22px;
+  line-height: 1;
+}
+.cv3-comments-popover-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.cv3-comments-popover-tab {
+  min-height: 38px;
+  border: 1px solid rgba(135,17,21,.48);
+  border-radius: 7px;
+  background: #0a0a0a;
+  color: #bdb8b1;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.cv3-comments-popover-tab[aria-selected="true"] {
+  border-color: rgba(228,31,37,.84);
+  background: linear-gradient(180deg, #5f070a, #260305);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(210,18,24,.22);
+}
+.cv3-comments-popover-panel[hidden] { display: none !important; }
+.cv3-comments-popover-list {
+  display: grid;
+  gap: 10px;
+  max-height: 52dvh;
+  overflow: auto;
+  padding-right: 2px;
+}
+.cv3-comments-popover-list .comment-card {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 5px 10px;
+  padding: 12px 13px;
+  border: 1px solid rgba(150,18,23,.48);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(26,26,26,.94), rgba(7,7,7,.96));
+  box-shadow: inset 3px 0 0 #9b0b0f;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+}
+.cv3-comments-popover-list .comment-card strong { color: #fff; font-size: 15px; }
+.cv3-comments-popover-list .comment-card p { grid-column: 1 / -1; margin: 0; color: #ddd8d2; font-size: 14px; line-height: 1.42; }
+.cv3-comments-popover-list .comment-card time { color: #9e9992; font-size: 11px; }
+.cv3-comments-popover-list .comment-empty {
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(140,17,22,.4);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #bdb8b2;
+  font: 500 14px/1.4 "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+}
+.cv3-comments-popover-form { display: grid; gap: 10px; }
+.cv3-comments-popover-form label {
+  color: #ce3035;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.cv3-comments-popover-form input,
+.cv3-comments-popover-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(120, 17, 21, .55);
+  border-radius: 7px;
+  background: #0c0c0c;
+  color: #f6f2ec;
+  padding: 11px 12px;
+  outline: 0;
+  font: 500 15px/1.35 "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  caret-color: #ef171c;
+}
+.cv3-comments-popover-form textarea { min-height: 132px; resize: vertical; }
+.cv3-comments-popover-form input:focus,
+.cv3-comments-popover-form textarea:focus { border-color: #d61a20; box-shadow: 0 0 0 2px rgba(214,26,32,.12); }
+.cv3-comments-popover-submit {
+  min-height: 44px;
+  margin-top: 2px;
+  border: 1px solid rgba(238, 46, 52, .72);
+  border-radius: 7px;
+  background: linear-gradient(180deg, #a80f14, #570509 62%, #2a0204);
+  color: #fff;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 0 14px rgba(184,16,22,.18);
+}
+.cv3-comments-popover-status {
+  min-height: 18px;
+  margin: 0;
+  color: #c8c3bd;
+  font: 500 12px/1.4 "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  text-align: center;
+}
+
+@media (max-width: 699px) {
+  .cv3-pov { left: 18.9%; right: 7.2%; font-size: clamp(10px, 2.62vw, 14px); line-height: 1.2; }
+  .cv3-inline-review { left: 17.6%; right: 17.2%; top: 23.0%; height: 29.2%; font-size: clamp(10px, 2.67vw, 14.4px); line-height: 1.36; }
+  .cv3-popup-review { left: 9.3% !important; right: 9.3% !important; font-size: clamp(13.5px, 3.75vw, 19px) !important; line-height: 1.52 !important; }
+}
