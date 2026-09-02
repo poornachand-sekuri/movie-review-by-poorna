@@ -3,5 +3,13 @@
   "name": "movie-review-by-poorna-staging",
   "compatibility_date": "2026-09-02",
   "workers_dev": true,
-  "preview_urls": false
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "CONTENT_DB",
+      "database_name": "movie-review-by-poorna-staging-db",
+      "database_id": "4519e5e4-47dc-4a99-ac54-b1beae205877",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
