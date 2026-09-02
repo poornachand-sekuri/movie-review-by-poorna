@@ -14,6 +14,7 @@ const HOME_ASSETS = [
   '07_bottom_navigation.avif'
 ];
 const HOME_VERSION = '20260902-home-comments-name-only-11';
+const CONTENT_VERSION = '20260902-content-v3-runtime-1';
 
 if (isHome) {
   [
@@ -40,13 +41,17 @@ if (isHome) {
     import('./analytics.js')
   ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {
-  import('./app.js').then(async () => {
-    const [, , comments] = await Promise.all([
-      import('./ui-patch.js'),
-      import('./live-reactions.js'),
-      import('./comments.js'),
+  const css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = `/assets/css/content-v3.css?v=${CONTENT_VERSION}`;
+  document.head.append(css);
+
+  import(`./content-v3.js?v=${CONTENT_VERSION}`).then(async () => {
+    const [, comments] = await Promise.all([
+      import(`./live-reactions.js?v=${CONTENT_VERSION}`),
+      import(`./comments.js?v=${CONTENT_VERSION}`),
       import('./analytics.js')
     ]);
     comments.mountReviewComments();
-  });
+  }).catch(error => console.error('Unable to load the Content V3 page:', error));
 }
