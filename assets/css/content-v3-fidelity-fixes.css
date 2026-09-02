@@ -1,0 +1,150 @@
+/* Final Content V3 mobile fidelity corrections based on production screenshots. */
+
+/* Reactions: the thumb artwork is baked near the TOP of each reaction hit area.
+   Keep each live count on that same visual baseline, immediately to the right. */
+html.content-v3-active .cv3-reaction span {
+  right: auto !important;
+  top: 10% !important;
+  transform: translate(-50%, -50%) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1em;
+  height: 1.15em;
+  margin: 0;
+  padding: 0;
+  color: #f4f1eb;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(9px, 2.55vw, 14px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .025em;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+html.content-v3-active .cv3-like span { left: 55% !important; }
+html.content-v3-active .cv3-dislike span { left: 37% !important; }
+
+/* Keep the finalized mobile Share artwork at its native proportion and map
+   each interactive zone to the actual visual centre of its icon/label cell. */
+html.content-v3-active .cv3-share {
+  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/04_share_this_review.avif?v=20260902-fidelity-15') !important;
+  background-size: 100% 100% !important;
+  background-position: 50% 50% !important;
+}
+html.content-v3-active .cv3-share-hit {
+  top: 31% !important;
+  width: 17% !important;
+  height: 64% !important;
+}
+html.content-v3-active .cv3-share-hit:nth-of-type(1) { left: 7.4% !important; }
+html.content-v3-active .cv3-share-hit:nth-of-type(2) { left: 24.4% !important; }
+html.content-v3-active .cv3-share-hit:nth-of-type(3) { left: 40.9% !important; }
+html.content-v3-active .cv3-share-hit:nth-of-type(4) { left: 57.8% !important; }
+html.content-v3-active .cv3-share-hit:nth-of-type(5) { left: 74.2% !important; }
+html.content-v3-active .cv3-share-status {
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(5px, 1.15vw, 7px);
+}
+
+/* Share Your Opinion: force the finalized mobile artwork and let the artwork
+   provide the visible controls. Runtime comment/form DOM remains underneath
+   as the API source, while either half opens the larger popover. */
+html.content-v3-active .cv3-comments {
+  background-image: url('https://assets.moviereviewbypoorna.com/ui/pages/content/v3/mobile/06_share_your_opinion.avif?v=20260902-fidelity-15') !important;
+  background-size: 100% 100% !important;
+  background-position: 50% 50% !important;
+}
+
+/* Compact static preview: no extra nested boxes fighting the AVIF artwork. */
+html.content-v3-active .cv3-comments .comment-list {
+  left: 5.5% !important;
+  top: 27% !important;
+  width: 39.2% !important;
+  height: 43% !important;
+  box-sizing: border-box;
+  padding: 3.2% 4.2% !important;
+  display: grid;
+  align-content: center;
+  gap: 5%;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html.content-v3-active .cv3-comments .comment-card {
+  min-height: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #dcd8d2;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(5.2px, 1.22vw, 7.4px) !important;
+  line-height: 1.16 !important;
+}
+html.content-v3-active .cv3-comments .comment-card:nth-child(n+3) { display: none; }
+html.content-v3-active .cv3-comments .comment-card strong {
+  color: #f3eee8;
+  font-weight: 700;
+}
+html.content-v3-active .cv3-comments .comment-card p {
+  margin: 1px 0 0;
+  color: #d5d0ca;
+  line-height: 1.18 !important;
+  -webkit-line-clamp: 2 !important;
+}
+html.content-v3-active .cv3-comments .comment-card time {
+  color: #928d87;
+  font-size: .82em;
+}
+html.content-v3-active .cv3-comments .comment-empty {
+  margin: 0 !important;
+  padding: 0 3% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #b9b3ac;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(5.3px, 1.24vw, 7.5px) !important;
+  font-weight: 500;
+  line-height: 1.25 !important;
+  text-align: left;
+  box-shadow: none !important;
+}
+
+/* The baked fields/button remain visible. Hide duplicate browser controls but
+   keep them mounted so the popover can submit through the existing API form. */
+html.content-v3-active .cv3-comments .comment-form {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+html.content-v3-active .cv3-comments .comment-status {
+  visibility: hidden !important;
+}
+
+/* Invisible, generous tap zones. Do not draw additional pills over the AVIF. */
+html.content-v3-active .cv3-comments-open {
+  top: 18% !important;
+  height: 76% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html.content-v3-active .cv3-comments-open-recent {
+  left: 2.7% !important;
+  width: 44.8% !important;
+}
+html.content-v3-active .cv3-comments-open-add {
+  right: 1.8% !important;
+  width: 48.2% !important;
+}
+html.content-v3-active .cv3-comments-open::after {
+  display: none !important;
+  content: none !important;
+}
