@@ -8,19 +8,20 @@ function fitPov(pov) {
   const height = pov.clientHeight;
   if (!width || !height) return;
 
-  // The approved artwork provides a fixed POV safe zone. Remove line-clamping and
-  // fit the complete runtime text into that exact zone for the current rendered size.
   pov.style.display = 'block';
   pov.style.webkitLineClamp = 'unset';
   pov.style.webkitBoxOrient = 'initial';
   pov.style.overflow = 'hidden';
 
-  const maxSize = Math.min(15.5, Math.max(9, width * 0.04));
-  const minSize = Math.min(maxSize, Math.max(5.25, width * 0.015));
+  const mobile = window.matchMedia('(max-width: 699px)').matches;
+  const maxSize = Math.min(mobile ? 13.5 : 15.5, Math.max(mobile ? 8 : 9, width * (mobile ? 0.033 : 0.04)));
+  const minSize = Math.min(maxSize, Math.max(mobile ? 5 : 5.25, width * (mobile ? 0.013 : 0.015)));
+  const heightReserve = mobile ? 5 : 3;
+  const widthReserve = 2;
 
   const fits = () => (
-    pov.scrollHeight <= pov.clientHeight + 1 &&
-    pov.scrollWidth <= pov.clientWidth + 1
+    pov.scrollHeight <= Math.max(0, pov.clientHeight - heightReserve) &&
+    pov.scrollWidth <= Math.max(0, pov.clientWidth - widthReserve)
   );
 
   pov.style.fontSize = `${maxSize}px`;
@@ -33,7 +34,7 @@ function fitPov(pov) {
   let high = maxSize;
   let best = minSize;
 
-  for (let i = 0; i < 12; i += 1) {
+  for (let i = 0; i < 14; i += 1) {
     const mid = (low + high) / 2;
     pov.style.fontSize = `${mid}px`;
     if (fits()) {
@@ -44,7 +45,7 @@ function fitPov(pov) {
     }
   }
 
-  pov.style.fontSize = `${best.toFixed(2)}px`;
+  pov.style.fontSize = `${Math.max(minSize, best - (mobile ? 0.18 : 0.08)).toFixed(2)}px`;
   pov.dataset.povFit = best <= minSize + 0.15 ? 'minimum' : 'fitted';
 }
 
@@ -64,11 +65,13 @@ function mountPov(pov) {
   if ('ResizeObserver' in window) {
     const resizeObserver = new ResizeObserver(scheduleFit);
     resizeObserver.observe(clapboard);
+    resizeObserver.observe(pov);
   } else {
     window.addEventListener('resize', scheduleFit, { passive: true });
   }
 
   window.visualViewport?.addEventListener('resize', scheduleFit, { passive: true });
+  window.addEventListener('orientationchange', scheduleFit, { passive: true });
   document.fonts?.ready?.then(scheduleFit).catch(() => {});
 }
 
