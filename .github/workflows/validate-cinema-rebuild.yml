@@ -1,0 +1,74 @@
+name: Validate Cinema Rebuild
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cinema-rebuild-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Enforce runtime guardrails
+        run: npm run check:guardrails
+
+      - name: Validate migration script syntax
+        run: node --check scripts/build-legacy-seed.mjs
+
+      - name: Type-check Astro and TypeScript
+        run: npm run check
+
+      - name: Build application
+        run: npm run build
+
+      - name: Validate Cloudflare bundle
+        run: npx wrangler deploy --dry-run
+
+      - name: Install SQLite test runner
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y sqlite3
+
+      - name: Smoke-test schema and importer
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node scripts/build-legacy-seed.mjs \
+            tests/fixtures/reviews.json \
+            tests/fixtures/cast-crew.json \
+            /tmp/seed.sql
+
+          sqlite3 /tmp/movie-review.db < migrations/0001_core_content.sql
+          sqlite3 /tmp/movie-review.db < migrations/0002_review_search.sql
+          sqlite3 /tmp/movie-review.db < /tmp/seed.sql
+
+          counts=$(sqlite3 /tmp/movie-review.db "SELECT (SELECT COUNT(*) FROM reviews) || '|' || (SELECT COUNT(*) FROM review_credits) || '|' || (SELECT COUNT(*) FROM review_gallery);")
+          test "$counts" = "1|4|2"
+
+          search_count=$(sqlite3 /tmp/movie-review.db "SELECT COUNT(*) FROM review_search WHERE review_search MATCH 'schema';")
+          test "$search_count" = "1"
+
+          integrity=$(sqlite3 /tmp/movie-review.db "PRAGMA integrity_check;")
+          test "$integrity" = "ok"
