@@ -76,8 +76,9 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   outline-offset: 2px;
 }
 
-/* Search: cover only the baked placeholder text area. The artwork's icon,
-   separator and outer frame remain completely untouched. */
+/* The approved AVIF already contains the idle search hint. Keep the runtime
+   input completely transparent until a real query exists so there is never a
+   duplicate or mismatched placeholder. */
 .search-overlay {
   position: absolute;
   z-index: 50;
@@ -86,7 +87,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   width: 575px;
   height: 66px;
   margin: 0;
-  background: #020202;
+  background: transparent;
 }
 .search-overlay input {
   display: block;
@@ -95,16 +96,22 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   border: 0;
   outline: 0;
   padding: 0 4px;
-  background: #020202;
-  color: var(--white);
+  background: transparent;
+  color: transparent;
   font-size: 19px;
   font-weight: 400;
   line-height: 66px;
   caret-color: var(--red);
 }
-.search-overlay input::placeholder { color: #aaa6a1; opacity: 1; }
+.search-overlay input::placeholder { color: transparent; opacity: 0; }
+.search-overlay input:not(:placeholder-shown) {
+  background: #050505;
+  color: var(--white);
+}
+.search-overlay input:focus:not(:placeholder-shown) { color: var(--white); }
 
-/* Filter labels occupy only the empty label portions of the baked buttons. */
+/* Exact label zones inside the four baked filter buttons. Icons and chevrons
+   remain entirely in the AVIF. */
 .filters-layer {
   position: absolute;
   z-index: 51;
@@ -131,17 +138,24 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   left: 606px;
   width: 142px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-left: 58px;
-  padding-right: 7px;
-  color: #f5f2ed;
+  color: transparent;
   font-size: 15px;
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: .02em;
+}
+.clear-filter::after {
+  content: 'CLEAR';
+  position: absolute;
+  left: 38px;
+  right: 18px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5f2ed;
 }
 .filter-control > span {
   position: absolute;
@@ -161,8 +175,8 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   pointer-events: none;
 }
 .filter-language > span { left: 58px; right: 28px; }
-.filter-year > span { left: 58px; right: 27px; }
-.filter-sort > span { left: 60px; right: 28px; }
+.filter-year > span { left: 68px; right: 45px; }
+.filter-sort > span { left: 70px; right: 55px; }
 .filter-control select {
   position: absolute;
   inset: 0;
@@ -173,8 +187,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   appearance: none;
 }
 
-/* The baked dashes are at x=459 and x=555. These masks are deliberately
-   tiny so the surrounding black texture and typography stay intact. */
+/* Measured value slots around the baked SERVING / OF / REVIEWS labels. */
 .result-count {
   position: absolute;
   z-index: 49;
@@ -192,53 +205,54 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 .serving-range,
 .serving-total {
   position: absolute;
-  top: 544px;
-  height: 30px;
+  top: 517px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000;
+  background: #050505;
   white-space: nowrap;
+  box-shadow: 0 0 5px 2px #050505;
 }
-.serving-range { left: 441px; width: 43px; }
-.serving-total { left: 537px; width: 43px; }
+.serving-range { left: 423px; width: 58px; }
+.serving-total { left: 519px; width: 52px; }
 
 .results-layer { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
 .review-card { position: absolute; width: 310px; height: 320px; pointer-events: auto; }
 .review-card:nth-child(1) { left: 30px; top: 610px; }
 .review-card:nth-child(2) { left: 340px; top: 610px; }
 .review-card:nth-child(3) { left: 650px; top: 610px; }
-.review-card:nth-child(4) { left: 30px; top: 930px; }
-.review-card:nth-child(5) { left: 340px; top: 930px; }
-.review-card:nth-child(6) { left: 650px; top: 930px; }
+.review-card:nth-child(4) { left: 30px; top: 945px; }
+.review-card:nth-child(5) { left: 340px; top: 945px; }
+.review-card:nth-child(6) { left: 650px; top: 945px; }
 .review-link { position: absolute; inset: 0; color: inherit; text-decoration: none; }
 
-/* Measured interior layout of each 310x320 plaque. */
+/* One exact plaque template, reused unchanged for all six results. */
 .poster-zone {
   position: absolute;
   left: 30px;
-  top: 66px;
-  width: 128px;
-  height: 194px;
+  top: 62px;
+  width: 139px;
+  height: 202px;
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: #070707;
-  border-radius: 2px;
+  background: #090909;
+  border-radius: 1px;
 }
 .poster-zone img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: center center;
 }
 .review-info {
   position: absolute;
-  left: 170px;
-  top: 68px;
-  width: 120px;
-  height: 115px;
+  left: 169px;
+  top: 64px;
+  width: 116px;
+  height: 122px;
   min-width: 0;
   overflow: hidden;
 }
@@ -247,7 +261,7 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
   color: #f8f6f2;
   font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
   font-size: 17px;
-  line-height: 1.07;
+  line-height: 1.08;
   font-weight: 700;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -267,38 +281,39 @@ button, input, select { font: inherit; -webkit-tap-highlight-color: transparent;
 }
 .review-stars {
   position: absolute;
-  left: 170px;
-  top: 205px;
-  width: 122px;
+  left: 169px;
+  top: 200px;
+  width: 120px;
   color: var(--gold);
   font-size: 17px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: .3px;
+  letter-spacing: .25px;
   white-space: nowrap;
   text-shadow: 0 1px 3px #000;
 }
-/* Heart occupies x48-73 and dashes x84-124 inside the plaque. */
+/* Preserve the large baked heart; only erase its dash placeholder and place
+   the live count on the same visual baseline. */
 .review-likes {
   position: absolute;
-  left: 80px;
-  top: 282px;
-  width: 50px;
-  height: 27px;
+  left: 78px;
+  top: 274px;
+  width: 56px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #090909;
+  box-shadow: 0 0 4px 2px #090909;
   color: #f4f1eb;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
-  border-radius: 2px;
 }
 
-/* Pagination crop is exactly x=180,y=1250,w=640,h=130. We cover only
-   the four button interiors, preserving the original borders/arrows/dots. */
+/* Pagination was already visually close; keep the measured baked-control
+   reuse intact. */
 .pagination-layer { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
 .pagination-layer > * {
   position: absolute;
