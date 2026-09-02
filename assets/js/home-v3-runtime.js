@@ -1,12 +1,12 @@
 /* Home V3 canonical runtime.
-   One runtime owns navigation, section popovers, POV fitting and card title
-   fitting. Legacy observers installed by home-v3.js are detached by replacing
-   the visible text nodes once after render. */
+   One runtime owns navigation, section popovers, POV fitting and movie-title
+   motion. Base home-v3.js is renderer-only, so no competing text observers run. */
 
 const CAFE_HREF = '/cine-cafe/';
 const PREVIEW_REVIEW_ORIGIN = 'https://moviereviewbypoorna.com';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const titleAnimations = new WeakMap();
 let resizeTimer = 0;
 
 function waitForHome() {
@@ -19,33 +19,7 @@ function waitForHome() {
       observer.disconnect();
       resolve(page);
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-  });
-}
-
-function detachLegacyObservedText(page) {
-  const selectors = ['.hm3-pov', '.hm3-recent-title', '.hm3-prev-title'];
-  selectors.forEach(selector => {
-    $$(selector, page).forEach(node => {
-      if (node.dataset.canonicalText === 'true') return;
-      const clone = node.cloneNode(true);
-      clone.dataset.canonicalText = 'true';
-      clone.classList.remove('is-marquee', 'is-overflowing', 'hm3-scroll-title');
-      clone.style.removeProperty('--hm3-marquee-duration');
-      clone.style.removeProperty('--hm3-scroll-distance');
-      clone.style.removeProperty('font-size');
-      clone.style.removeProperty('line-height');
-      const track = $('.hm3-title-track', clone);
-      if (track) {
-        while (track.children.length > 1) track.lastElementChild.remove();
-        const copy = $('.hm3-title-copy', track);
-        if (copy) {
-          copy.style.removeProperty('transform');
-          copy.getAnimations?.().forEach(animation => animation.cancel());
-        }
-      }
-      node.replaceWith(clone);
-    });
+    observer.observe(document.documentElement, { childList:true, subtree:true });
   });
 }
 
@@ -75,16 +49,15 @@ function fitPov(pov, options = {}) {
 
   pov.style.removeProperty('font-size');
   pov.style.removeProperty('line-height');
-  const css = getComputedStyle(pov);
-  const cssPreferred = Number.parseFloat(css.fontSize) || 9;
+  const cssPreferred = Number.parseFloat(getComputedStyle(pov).fontSize) || 9;
   const preferred = Number(options.preferred) > 0 ? Number(options.preferred) : cssPreferred;
-  const softFloor = Number(options.softFloor) > 0 ? Number(options.softFloor) : Math.max(6.8, preferred * 0.78);
-  const emergencyFloor = Number(options.emergencyFloor) > 0 ? Number(options.emergencyFloor) : Math.max(5.6, preferred * 0.62);
+  const softFloor = Number(options.softFloor) > 0 ? Number(options.softFloor) : Math.max(6.8, preferred * .78);
+  const emergencyFloor = Number(options.emergencyFloor) > 0 ? Number(options.emergencyFloor) : Math.max(5.6, preferred * .62);
 
   const stages = [
-    { line: 1.20, floor: softFloor },
-    { line: 1.15, floor: softFloor },
-    { line: 1.10, floor: emergencyFloor }
+    { line:1.20, floor:softFloor },
+    { line:1.15, floor:softFloor },
+    { line:1.10, floor:emergencyFloor }
   ];
 
   for (const stage of stages) {
@@ -98,37 +71,93 @@ function fitPov(pov, options = {}) {
     }
   }
 
-  /* Last-resort containment. This path is intentionally rare and exists only
-     for unusually long future POV copy; it always prefers complete text over
-     silently clipping the ending. */
   pov.style.lineHeight = '1.06';
   binaryFit(pov, 4.9, Math.max(emergencyFloor, 5.2), 1.06, 14);
 }
 
+function stopTitleAnimation(title) {
+  const active = titleAnimations.get(title);
+  if (active) active.cancel();
+  titleAnimations.delete(title);
+  title.getAnimations?.().forEach(animation => animation.cancel());
+  title.style.removeProperty('transform');
+}
+
+function naturalTitleWidth(title) {
+  const probe = document.createElement('span');
+  const style = getComputedStyle(title);
+  probe.textContent = title.textContent;
+  probe.style.position = 'fixed';
+  probe.style.left = '-10000px';
+  probe.style.top = '0';
+  probe.style.visibility = 'hidden';
+  probe.style.whiteSpace = 'nowrap';
+  probe.style.fontFamily = style.fontFamily;
+  probe.style.fontSize = style.fontSize;
+  probe.style.fontWeight = style.fontWeight;
+  probe.style.letterSpacing = style.letterSpacing;
+  probe.style.textTransform = style.textTransform;
+  document.body.append(probe);
+  const width = probe.getBoundingClientRect().width;
+  probe.remove();
+  return width;
+}
+
 function fitCardTitle(title) {
-  if (!title?.isConnected || !title.textContent.trim() || !title.clientWidth || !title.clientHeight) return;
-  title.classList.remove('is-marquee', 'is-overflowing', 'hm3-scroll-title');
-  title.style.removeProperty('--hm3-marquee-duration');
-  title.style.removeProperty('--hm3-scroll-distance');
-  const track = $('.hm3-title-track', title);
-  if (track) {
-    while (track.children.length > 1) track.lastElementChild.remove();
-    const copy = $('.hm3-title-copy', track);
-    if (copy) {
-      copy.style.removeProperty('transform');
-      copy.getAnimations?.().forEach(animation => animation.cancel());
+  if (!title?.isConnected || !title.textContent.trim() || !title.clientWidth) return;
+  stopTitleAnimation(title);
+  title.classList.remove('is-marquee');
+  title.style.removeProperty('font-size');
+  title.style.removeProperty('white-space');
+  title.style.removeProperty('display');
+  title.style.removeProperty('justify-content');
+  title.style.removeProperty('text-align');
+  title.style.removeProperty('height');
+
+  const preferred = Number.parseFloat(getComputedStyle(title).fontSize) || 7;
+  const available = title.clientWidth;
+  const natural = naturalTitleWidth(title);
+
+  /* Short titles stay centred and static. Long titles use one copy only; the
+     title band is completely separate from the poster, so motion can never
+     overlap the artwork or rating row. */
+  if (natural <= available + 1 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const isPrevious = title.classList.contains('hm3-prev-title');
+    const floor = isPrevious ? 4.15 : 4.75;
+    title.style.fontSize = `${preferred}px`;
+    if (!fitsBox(title)) {
+      title.style.fontSize = `${floor}px`;
+      if (fitsBox(title)) binaryFit(title, floor, preferred, 1.04, 14);
     }
+    return;
   }
 
-  title.style.removeProperty('font-size');
-  const preferred = Number.parseFloat(getComputedStyle(title).fontSize) || 7;
-  const isPrevious = title.classList.contains('hm3-prev-title');
-  const floor = isPrevious ? 4.15 : 4.75;
+  title.classList.add('is-marquee');
+  title.style.setProperty('display', 'block', 'important');
+  title.style.setProperty('white-space', 'nowrap', 'important');
+  title.style.setProperty('height', '1.25em', 'important');
+  title.style.setProperty('text-align', 'left', 'important');
   title.style.fontSize = `${preferred}px`;
-  if (fitsBox(title)) return;
-  title.style.fontSize = `${floor}px`;
-  if (!fitsBox(title)) return;
-  binaryFit(title, floor, preferred, 1.04, 14);
+
+  const textWidth = naturalTitleWidth(title);
+  const overflow = Math.max(1, textWidth - available);
+  const fullyExited = -(textWidth + Math.max(22, available * .38));
+  const duration = Math.max(34000, Math.min(52000, 34000 + overflow * 95));
+
+  /* 0–20%: readable opening pause
+     20–66%: very slow right-to-left travel
+     66–75%: ending pause
+     75–82%: move completely out
+     82–100%: blank breathing gap before restart. */
+  const animation = title.animate([
+    { transform:'translateX(0)', offset:0 },
+    { transform:'translateX(0)', offset:.20 },
+    { transform:`translateX(${-overflow}px)`, offset:.66 },
+    { transform:`translateX(${-overflow}px)`, offset:.75 },
+    { transform:`translateX(${fullyExited}px)`, offset:.82 },
+    { transform:`translateX(${fullyExited}px)`, offset:1 }
+  ], { duration, iterations:Infinity, easing:'linear' });
+  titleAnimations.set(title, animation);
 }
 
 function fitAll(page) {
@@ -188,10 +217,7 @@ function snapshotTypography(source) {
   return Object.fromEntries(selectors.map(selector => {
     const node = $(selector, source);
     const style = node ? getComputedStyle(node) : null;
-    return [selector, node && style ? {
-      fontSize: Number.parseFloat(style.fontSize) || 0,
-      lineHeight: Number.parseFloat(style.lineHeight) || 0
-    } : null];
+    return [selector, node && style ? { fontSize:Number.parseFloat(style.fontSize) || 0 } : null];
   }));
 }
 
@@ -211,8 +237,8 @@ function applyPopupTypography(source, typography, scale) {
     const preferred = base * scale;
     fitPov(pov, {
       preferred,
-      softFloor: Math.max(base * 1.08, preferred * 0.76),
-      emergencyFloor: Math.max(base, preferred * 0.62)
+      softFloor:Math.max(base * 1.08, preferred * .76),
+      emergencyFloor:Math.max(base, preferred * .62)
     });
   }
 }
@@ -261,7 +287,7 @@ function wireExpandableSection(page, selector, options = {}) {
     const viewportWidth = Math.max(280, window.innerWidth || document.documentElement.clientWidth || 520);
     const viewportHeight = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 720);
     const aspect = Number(options.popupAspect) > 0 ? Number(options.popupAspect) : sourceAspect;
-    const maxWidth = Math.min(viewportWidth * 0.97, 720);
+    const maxWidth = Math.min(viewportWidth * .97, 720);
     const availableHeight = Math.max(220, viewportHeight - 62);
     const fittedWidth = Math.max(240, Math.min(maxWidth, availableHeight * aspect));
     shell.style.width = `${Math.floor(fittedWidth)}px`;
@@ -269,7 +295,7 @@ function wireExpandableSection(page, selector, options = {}) {
 
     requestAnimationFrame(() => {
       if (options.fitPov && typography) {
-        const scale = Math.max(1.18, Math.min(1.85, fittedWidth / Math.max(sourceWidth, 1)));
+        const scale = Math.max(1.20, Math.min(1.85, fittedWidth / Math.max(sourceWidth, 1)));
         applyPopupTypography(source, typography, scale);
       }
       $$('.hm3-recent-title, .hm3-prev-title', source).forEach(fitCardTitle);
@@ -334,9 +360,7 @@ function wireExpandableSection(page, selector, options = {}) {
 
 function wireExpandableSections(page) {
   wireExpandableSection(page, '.hm3-now-section', {
-    label:'Now Reviewed',
-    popupAspect:1.60,
-    fitPov:true,
+    label:'Now Reviewed',popupAspect:1.60,fitPov:true,
     preserveInteractive:'.hm3-now-poster, .hm3-read-review, a, button, input, textarea, select, label, form'
   });
   wireExpandableSection(page, '.hm3-recent-section', { label:'Recent Reviews' });
@@ -349,7 +373,6 @@ function wireExpandableSections(page) {
 
 async function install() {
   const page = await waitForHome();
-  detachLegacyObservedText(page);
   wireNavigation(page);
   wireExpandableSections(page);
 
@@ -357,11 +380,11 @@ async function install() {
   refit();
   setTimeout(refit, 120);
   setTimeout(refit, 650);
-  document.fonts?.ready?.then(() => { refit(); setTimeout(refit, 80); }).catch(() => {});
+  document.fonts?.ready?.then(() => { refit();setTimeout(refit, 80); }).catch(() => {});
 
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(refit, 120);
+    resizeTimer = window.setTimeout(refit, 140);
   }, { passive:true });
 }
 
