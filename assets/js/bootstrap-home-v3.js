@@ -14,7 +14,7 @@ const HOME_ASSETS = [
   '07_bottom_navigation.avif'
 ];
 const HOME_VERSION = '20260902-home-comments-name-only-11';
-const CONTENT_VERSION = '20260902-content-v3-runtime-3';
+const CONTENT_VERSION = '20260902-content-v3-runtime-4';
 
 if (isHome) {
   [
@@ -41,10 +41,15 @@ if (isHome) {
     import('./analytics.js')
   ]).catch(error => console.error('Unable to load the Home page:', error));
 } else {
-  const css = document.createElement('link');
-  css.rel = 'stylesheet';
-  css.href = `/assets/css/content-v3.css?v=${CONTENT_VERSION}`;
-  document.head.append(css);
+  [
+    `/assets/css/content-v3.css?v=${CONTENT_VERSION}`,
+    `/assets/css/content-v3-fidelity.css?v=${CONTENT_VERSION}`
+  ].forEach(href => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = href;
+    document.head.append(css);
+  });
 
   Promise.all([
     import(`./content-v3-asset-path.js?v=${CONTENT_VERSION}`),
