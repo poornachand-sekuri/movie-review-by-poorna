@@ -44,9 +44,11 @@ All pages share one cinematic design language while each space retains its own p
 - Automated validation covers TypeScript, Astro build, Cloudflare dry-run, migration/import smoke tests and database integrity.
 - The preserved and current live catalogues were reconciled at 136 reviews with no differences immediately before migration.
 - `CONTENT_DB` is configured for `movie-review-by-poorna-content`.
-- The canonical D1 database now contains 136 verified reviews and 698 verified credits.
+- The canonical D1 database contains 136 verified reviews and 698 verified credits.
 - All 136 imported source hashes matched the live catalogue at migration time.
-- The one-time database initialization workflow and trigger were removed after successful verification.
+- The server read layer is implemented for compact review lists, full review detail/credits/gallery, and FTS5 search.
+- The read APIs have been deployed to the temporary Worker and live-smoke-tested against D1: compact list, `DC` detail and `Kantara` search all passed.
+- Preview Worker: `https://movie-review-by-poorna-preview.poornarocks.workers.dev`.
 - Production `main` and existing review media remain untouched.
 
 ## Implementation rules
