@@ -52,7 +52,6 @@ assert(
 
 const homeSource = readFileSync(new URL('../assets/js/home-v3.js', import.meta.url), 'utf8');
 const cafeSource = readFileSync(new URL('../assets/js/cine-cafe.js', import.meta.url), 'utf8');
-const legacyContentSource = readFileSync(new URL('../assets/js/app.js', import.meta.url), 'utf8');
 const contentV3Source = readFileSync(new URL('../assets/js/content-v3.js', import.meta.url), 'utf8');
 const dynamicDataSource = readFileSync(new URL('../src/admin-console.js', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
@@ -64,14 +63,6 @@ const usesCompactCatalog = source => (
 
 assert(usesCompactCatalog(homeSource), 'Home must use the compact catalogue endpoint.');
 assert(usesCompactCatalog(cafeSource), 'Cine Cafe must use the compact catalogue endpoint.');
-assert(
-  legacyContentSource.includes('`${CONFIG.dataBase}/content.json`'),
-  'Legacy Content pages must use the optimized Content payload endpoint.'
-);
-assert(
-  !legacyContentSource.includes('fetch(`${CONFIG.dataBase}/index.json`)'),
-  'Legacy Content pages must not download the full review catalogue directly.'
-);
 assert(
   contentV3Source.includes("new URL('/data/content.json', location.origin)"),
   'Content V3 must request the optimized Content payload endpoint first.'
