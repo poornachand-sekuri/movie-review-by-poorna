@@ -1,7 +1,7 @@
 import { mountComments } from './comments.js';
 
 const ASSET_BASE = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v3/mobile';
-const ASSET_VERSION = '20260902-selected-cinema-lounge-6';
+const ASSET_VERSION = '20260902-frame-marquee-17';
 const state = { movies: [] };
 const $ = (selector, root = document) => root.querySelector(selector);
 
@@ -93,6 +93,55 @@ function wirePovAutoFit(pov) {
   else window.addEventListener('resize', fit, { passive: true });
 }
 
+function cardTitle(className, text) {
+  const title = document.createElement('strong');
+  title.className = className;
+  title.title = text;
+  title.setAttribute('aria-label', text);
+
+  const track = document.createElement('span');
+  track.className = 'hm3-title-track';
+  const copy = document.createElement('span');
+  copy.className = 'hm3-title-copy';
+  copy.textContent = text;
+  track.append(copy);
+  title.append(track);
+  return title;
+}
+
+function fitCardMarquee(title) {
+  const track = title.querySelector('.hm3-title-track');
+  if (!track) return;
+  while (track.children.length > 1) track.lastElementChild.remove();
+  title.classList.remove('is-marquee');
+  title.style.removeProperty('--hm3-marquee-duration');
+
+  const copy = track.firstElementChild;
+  if (!copy || title.clientWidth <= 0) return;
+  if (copy.scrollWidth <= title.clientWidth + 1) return;
+
+  const duplicate = copy.cloneNode(true);
+  duplicate.setAttribute('aria-hidden', 'true');
+  track.append(duplicate);
+  title.classList.add('is-marquee');
+  const seconds = Math.max(6, Math.min(12, (copy.scrollWidth + 18) / 16));
+  title.style.setProperty('--hm3-marquee-duration', `${seconds.toFixed(2)}s`);
+}
+
+function wireCardMarquees(root) {
+  const titles = [...root.querySelectorAll('.hm3-recent-title, .hm3-prev-title')];
+  if (!titles.length) return;
+  const fit = () => requestAnimationFrame(() => titles.forEach(fitCardMarquee));
+  fit();
+  document.fonts?.ready?.then(fit).catch(() => {});
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(fit);
+    titles.forEach(title => observer.observe(title));
+  } else {
+    window.addEventListener('resize', fit, { passive: true });
+  }
+}
+
 function recentCard(movie) {
   const link = document.createElement('a');
   link.className = 'hm3-recent-card';
@@ -106,9 +155,7 @@ function recentCard(movie) {
   const info = document.createElement('span');
   info.className = 'hm3-recent-info';
 
-  const title = document.createElement('strong');
-  title.className = 'hm3-recent-title';
-  title.textContent = movie.t;
+  const title = cardTitle('hm3-recent-title', movie.t);
 
   const rating = document.createElement('span');
   rating.className = 'hm3-stars hm3-recent-stars';
@@ -133,9 +180,7 @@ function previousCard(movie) {
   const info = document.createElement('span');
   info.className = 'hm3-prev-info';
 
-  const title = document.createElement('strong');
-  title.className = 'hm3-prev-title';
-  title.textContent = movie.t;
+  const title = cardTitle('hm3-prev-title', movie.t);
 
   const rating = document.createElement('span');
   rating.className = 'hm3-stars hm3-prev-stars';
@@ -343,6 +388,7 @@ async function buildHome() {
 
   wireGlobalNavigation(menu, search);
   wirePovAutoFit(pov);
+  wireCardMarquees(page);
   await mountComments({ targetType: 'home', targetId: 'home', root: commentsOverlay });
 }
 
