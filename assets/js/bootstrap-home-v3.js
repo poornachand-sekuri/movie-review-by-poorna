@@ -13,7 +13,7 @@ const HOME_ASSETS = [
   '06_share_your_opinion.avif',
   '07_bottom_navigation.avif'
 ];
-const HOME_VERSION = '20260902-home-frame-marquee-17';
+const HOME_VERSION = '20260902-home-redframe-pov-18';
 const CONTENT_VERSION = '20260902-content-polish-17';
 
 if (isHome) {
@@ -21,7 +21,8 @@ if (isHome) {
     `/assets/css/home-v3.css?v=${HOME_VERSION}`,
     `/assets/css/home-v3-adjustments.css?v=${HOME_VERSION}`,
     `/assets/css/home-v3-nav-polish.css?v=${HOME_VERSION}`,
-    `/assets/css/home-v3-fidelity-fixes.css?v=${HOME_VERSION}`
+    `/assets/css/home-v3-fidelity-fixes.css?v=${HOME_VERSION}`,
+    `/assets/css/home-v3-redframe-pov-final.css?v=${HOME_VERSION}`
   ].forEach(href => {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
