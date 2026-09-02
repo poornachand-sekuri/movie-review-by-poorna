@@ -14,9 +14,9 @@ function fitPov(pov) {
   pov.style.overflow = 'hidden';
 
   const mobile = window.matchMedia('(max-width: 699px)').matches;
-  const maxSize = Math.min(mobile ? 13.5 : 15.5, Math.max(mobile ? 8 : 9, width * (mobile ? 0.033 : 0.04)));
-  const minSize = Math.min(maxSize, Math.max(mobile ? 5 : 5.25, width * (mobile ? 0.013 : 0.015)));
-  const heightReserve = mobile ? 5 : 3;
+  const maxSize = Math.min(mobile ? 14.5 : 15.5, Math.max(mobile ? 11 : 9, width * (mobile ? 0.038 : 0.04)));
+  const minSize = Math.min(maxSize, Math.max(mobile ? 9.5 : 5.25, width * (mobile ? 0.024 : 0.015)));
+  const heightReserve = mobile ? 2 : 3;
   const widthReserve = 2;
 
   const fits = () => (
@@ -45,7 +45,7 @@ function fitPov(pov) {
     }
   }
 
-  pov.style.fontSize = `${Math.max(minSize, best - (mobile ? 0.18 : 0.08)).toFixed(2)}px`;
+  pov.style.fontSize = `${Math.max(minSize, best - (mobile ? 0.04 : 0.08)).toFixed(2)}px`;
   pov.dataset.povFit = best <= minSize + 0.15 ? 'minimum' : 'fitted';
 }
 
