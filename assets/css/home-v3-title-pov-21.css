@@ -1,0 +1,187 @@
+/* Home V3 title + POV polish (v21)
+   This layer is intentionally last in the Home stylesheet stack. It reserves
+   independent zones for poster artwork and movie copy, and keeps My POV large
+   and readable while still fitting inside the baked ticket frame. */
+
+/* -------- Recent / Previously Reviewed: no title-over-poster overlap -------- */
+.home-v3-mode .hm3-recent-poster,
+.home-v3-mode .hm3-prev-poster {
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+.home-v3-mode .hm3-recent-poster img {
+  position: absolute !important;
+  left: 8.5% !important;
+  right: 8.5% !important;
+  top: 4.5% !important;
+  width: 83% !important;
+  height: 58% !important;
+  max-width: 83% !important;
+  max-height: 58% !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+}
+
+.home-v3-mode .hm3-prev-poster img {
+  position: absolute !important;
+  left: 9% !important;
+  right: 9% !important;
+  top: 5% !important;
+  width: 82% !important;
+  height: 56% !important;
+  max-width: 82% !important;
+  max-height: 56% !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: 50% 50% !important;
+}
+
+/* Put title + stars in a dedicated lower band, with a visible gap below the
+   poster. The band never extends into the image viewport. */
+.home-v3-mode .hm3-recent-info,
+.home-v3-mode .hm3-prev-info {
+  position: absolute !important;
+  z-index: 6 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  text-align: center !important;
+  gap: 3px !important;
+  background: rgba(3,3,3,.94) !important;
+  border-top: 1px solid rgba(155,11,15,.28) !important;
+}
+
+.home-v3-mode .hm3-recent-info {
+  left: 15.8% !important;
+  right: 15.8% !important;
+  top: 67% !important;
+  bottom: 10.6% !important;
+  height: auto !important;
+  padding: 3.5% 2.8% 3.8% !important;
+}
+
+.home-v3-mode .hm3-prev-info {
+  left: 14.8% !important;
+  right: 14.8% !important;
+  top: 65.5% !important;
+  bottom: 10.6% !important;
+  height: auto !important;
+  padding: 3.5% 2.8% 3.8% !important;
+}
+
+.home-v3-mode .hm3-recent-title,
+.home-v3-mode .hm3-prev-title {
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 1.12em !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: clip !important;
+  line-height: 1.12 !important;
+  text-align: center !important;
+}
+
+.home-v3-mode .hm3-recent-title { font-size: clamp(5.7px, 1.42vw, 7.9px) !important; }
+.home-v3-mode .hm3-prev-title { font-size: clamp(5.1px, 1.2vw, 6.9px) !important; }
+
+.home-v3-mode .hm3-title-track {
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+.home-v3-mode .hm3-title-copy {
+  display: inline-block !important;
+  width: max-content !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  transform: translateX(0);
+  will-change: transform;
+}
+
+/* There must never be a second visible copy; JS supplies a blank pause between
+   the end and beginning of a long title instead. */
+.home-v3-mode .hm3-title-copy + .hm3-title-copy { display: none !important; }
+.home-v3-mode .hm3-recent-title.is-marquee,
+.home-v3-mode .hm3-prev-title.is-marquee { text-align: left !important; }
+.home-v3-mode .hm3-recent-title.is-marquee .hm3-title-copy:first-child,
+.home-v3-mode .hm3-prev-title.is-marquee .hm3-title-copy:first-child {
+  animation: none !important;
+  padding-left: 0 !important;
+}
+
+/* -------- Now Reviewed / My POV: readable dynamic sizing -------- */
+.home-v3-mode .hm3-now-copy {
+  left: 54.2% !important;
+  top: 22.6% !important;
+  width: 29.4% !important;
+  height: 59.8% !important;
+  right: auto !important;
+  bottom: auto !important;
+  box-sizing: border-box !important;
+  padding: 1.8% 2.4% 2.2% !important;
+  display: grid !important;
+  grid-template-rows: auto auto auto minmax(0,1fr) !important;
+  align-content: stretch !important;
+  overflow: hidden !important;
+}
+
+.home-v3-mode .hm3-now-title {
+  margin: 0 !important;
+  font-size: clamp(9.5px, 2.5vw, 13.5px) !important;
+  line-height: 1.04 !important;
+}
+
+.home-v3-mode .hm3-now-meta {
+  margin: 4px 0 0 !important;
+  font-size: clamp(6.2px, 1.58vw, 8.8px) !important;
+  line-height: 1.1 !important;
+}
+
+.home-v3-mode .hm3-now-label {
+  margin-top: 6px !important;
+  font-size: clamp(6.4px, 1.62vw, 9px) !important;
+  line-height: 1 !important;
+}
+
+.home-v3-mode .hm3-pov {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 5px 0 0 !important;
+  padding: 0 2.5% 0 0 !important;
+  overflow: hidden !important;
+  color: rgba(250,248,242,.98) !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(7.2px, 1.95vw, 10.6px) !important;
+  font-style: italic !important;
+  font-weight: 500 !important;
+  line-height: 1.29 !important;
+  letter-spacing: .002em !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+@media (max-width: 360px) {
+  .home-v3-mode .hm3-pov {
+    font-size: clamp(7px, 1.9vw, 9.8px) !important;
+    line-height: 1.25 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-v3-mode .hm3-title-copy { transform: none !important; }
+}
