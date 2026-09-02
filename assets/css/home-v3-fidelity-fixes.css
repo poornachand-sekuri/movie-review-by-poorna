@@ -1,0 +1,45 @@
+/* Final Home V3 mobile fidelity pass.
+   The poster slots are fixed artwork windows. Fill those exact windows without
+   cropping any source pixels, even when a source image has an unusual aspect. */
+
+.home-v3-mode .hm3-recent-card {
+  grid-template-rows: 72% 28%;
+}
+
+.home-v3-mode .hm3-prev-card {
+  grid-template-rows: 70% 30%;
+}
+
+.home-v3-mode .hm3-recent-poster,
+.home-v3-mode .hm3-prev-poster {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #050505;
+}
+
+.home-v3-mode .hm3-recent-poster img,
+.home-v3-mode .hm3-prev-poster img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100%;
+  min-height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  object-fit: fill !important;
+  object-position: 50% 50%;
+  transform: none !important;
+}
+
+/* Keep copy below the image window and never let title/rating push the image. */
+.home-v3-mode .hm3-recent-info,
+.home-v3-mode .hm3-prev-info {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
