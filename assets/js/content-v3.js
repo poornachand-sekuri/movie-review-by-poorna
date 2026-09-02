@@ -281,18 +281,43 @@ function setupSharing(root, movie) {
   }));
 }
 
+async function loadReviewPayload(slug) {
+  const contentUrl = new URL('/data/content.json', location.origin);
+  if (slug) contentUrl.searchParams.set('review', slug);
+
+  try {
+    const response = await fetch(contentUrl, { headers:{accept:'application/json'} });
+    if (!response.ok) throw new Error('Optimized Content payload unavailable');
+    const payload = await response.json();
+    if (!Array.isArray(payload?.reviews) || !payload.reviews.length || !payload.active) {
+      throw new Error('Optimized Content payload is invalid');
+    }
+    return payload;
+  } catch (optimizedError) {
+    const response = await fetch('/data/index.json', { headers:{accept:'application/json'} });
+    if (!response.ok) throw optimizedError;
+    const reviews = await response.json();
+    if (!Array.isArray(reviews) || !reviews.length) throw optimizedError;
+    return {
+      reviews,
+      active: reviews.find(movie => movie.s === slug) || reviews[0]
+    };
+  }
+}
+
 async function init() {
   document.documentElement.classList.add('content-v3-active');
   $('#brandHeader')?.setAttribute('hidden','');
-  const [moviesRes, castRes, rulesRes] = await Promise.all([
-    fetch('/data/index.json', { headers:{accept:'application/json'} }),
+  const slug = requestedSlug();
+  const [reviewPayload, castRes, rulesRes] = await Promise.all([
+    loadReviewPayload(slug),
     fetch('/data/cast-crew.json', { headers:{accept:'application/json'} }),
     fetch('/data/related-review-rules.json', { headers:{accept:'application/json'} })
   ]);
-  if (!moviesRes.ok || !castRes.ok || !rulesRes.ok) throw new Error('Unable to load review data');
-  [state.movies, state.castCrew, state.rules] = await Promise.all([moviesRes.json(), castRes.json(), rulesRes.json()]);
-  const slug = requestedSlug();
-  const movie = state.movies.find(m => m.s === slug) || state.movies[0];
+  if (!castRes.ok || !rulesRes.ok) throw new Error('Unable to load review data');
+  [state.castCrew, state.rules] = await Promise.all([castRes.json(), rulesRes.json()]);
+  state.movies = reviewPayload.reviews;
+  const movie = reviewPayload.active || state.movies.find(m => m.s === slug) || state.movies[0];
   if (!movie) throw new Error('Review not found');
   state.activeMovie = movie;
   document.title = `${movie.t} — Movie Reviews By Poorna`;
