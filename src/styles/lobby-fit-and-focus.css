@@ -48,16 +48,16 @@
   visibility: visible;
   padding: 0 clamp(0.72rem, 1.9cqw, 1.05rem);
 
-  border: 1px solid rgba(202, 218, 195, 0.48);
+  border: 1px solid rgba(229, 190, 120, 0.5);
   border-radius: 0.16rem;
   background:
-    linear-gradient(180deg, rgba(13, 24, 15, 0.98), rgba(4, 10, 6, 0.98));
+    linear-gradient(180deg, rgba(48, 14, 17, 0.98), rgba(11, 5, 7, 0.99));
   box-shadow:
-    inset 0 0 0 1px rgba(173, 255, 183, 0.08),
-    inset 0 0 0.48rem rgba(111, 255, 130, 0.08),
-    0 0 0.42rem rgba(96, 255, 120, 0.19),
-    0 0 0.92rem rgba(70, 255, 104, 0.16),
-    0 0.28rem 0.78rem rgba(0, 0, 0, 0.66);
+    inset 0 0 0 1px rgba(255, 211, 128, 0.08),
+    inset 0 0 0.48rem rgba(255, 185, 92, 0.07),
+    0 0 0.42rem rgba(227, 28, 36, 0.18),
+    0 0 0.94rem rgba(208, 116, 38, 0.16),
+    0 0.28rem 0.78rem rgba(0, 0, 0, 0.68);
 
   color: transparent;
   font-size: 0;
@@ -66,10 +66,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Luminous theatre EXIT lettering. */
+/* Warm tungsten theatre EXIT lettering. */
 .lounge-panel.is-lounge-focused > .lounge-focus-close::before {
   content: "EXIT";
-  color: #c8ffc9;
+  color: #ffd27a;
   font-family: "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(0.72rem, 1.9cqw, 0.98rem);
   font-weight: 760;
@@ -78,8 +78,8 @@
   text-indent: 0.17em;
   text-transform: uppercase;
   text-shadow:
-    0 0 0.18rem rgba(177, 255, 184, 0.78),
-    0 0 0.46rem rgba(86, 255, 111, 0.46);
+    0 0 0.18rem rgba(255, 219, 143, 0.78),
+    0 0 0.46rem rgba(230, 151, 55, 0.48);
   pointer-events: none;
 }
 
@@ -88,10 +88,10 @@
   content: "";
   width: clamp(0.34rem, 0.92cqw, 0.48rem);
   height: clamp(0.34rem, 0.92cqw, 0.48rem);
-  border-top: 1.5px solid rgba(200, 255, 201, 0.9);
-  border-right: 1.5px solid rgba(200, 255, 201, 0.9);
+  border-top: 1.5px solid rgba(255, 215, 132, 0.94);
+  border-right: 1.5px solid rgba(255, 215, 132, 0.94);
   transform: rotate(45deg);
-  filter: drop-shadow(0 0 0.2rem rgba(95, 255, 117, 0.55));
+  filter: drop-shadow(0 0 0.2rem rgba(229, 151, 55, 0.58));
   pointer-events: none;
 }
 
@@ -102,20 +102,20 @@
 }
 
 .lounge-panel.is-lounge-focused > .lounge-focus-close:focus-visible {
-  outline: 2px solid rgba(159, 255, 170, 0.95);
+  outline: 2px solid rgba(255, 205, 109, 0.96);
   outline-offset: 3px;
 }
 
 @media (hover: hover) {
   .lounge-panel.is-lounge-focused > .lounge-focus-close:hover {
     background:
-      linear-gradient(180deg, rgba(15, 30, 18, 0.99), rgba(4, 12, 7, 0.99));
+      linear-gradient(180deg, rgba(61, 17, 21, 0.99), rgba(13, 6, 8, 0.99));
     box-shadow:
-      inset 0 0 0 1px rgba(173, 255, 183, 0.12),
-      inset 0 0 0.56rem rgba(111, 255, 130, 0.11),
-      0 0 0.52rem rgba(96, 255, 120, 0.26),
-      0 0 1.05rem rgba(70, 255, 104, 0.22),
-      0 0.3rem 0.86rem rgba(0, 0, 0, 0.68);
+      inset 0 0 0 1px rgba(255, 211, 128, 0.12),
+      inset 0 0 0.56rem rgba(255, 185, 92, 0.1),
+      0 0 0.54rem rgba(227, 28, 36, 0.24),
+      0 0 1.08rem rgba(208, 116, 38, 0.22),
+      0 0.3rem 0.86rem rgba(0, 0, 0, 0.7);
   }
 }
 
