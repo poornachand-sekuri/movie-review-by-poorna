@@ -68,7 +68,7 @@
 
 /*
  * Read More / View All already exist in the AVIF artwork. Keep only transparent
- * click targets above them. No live glow, fill, replacement text or filter.
+ * click targets above them; decorative illumination is handled separately below.
  */
 .now-read-hit,
 .section-view-all {
@@ -97,6 +97,64 @@
 .now-read-hit:active,
 .section-view-all:active {
   transform: none;
+}
+
+/*
+ * Always-on READ MORE illumination.
+ *
+ * The locked AVIF itself is never dimmed, filtered or covered. These two
+ * pseudo-elements redraw only the baked READ MORE slice, use that same artwork
+ * as a luminance mask, then let drop-shadow radiate from the surviving glyph
+ * pixels. Layered clip paths keep all unrelated artwork completely untouched.
+ *
+ * If luminance masking is unavailable, the enhancement stays off rather than
+ * falling back to a rectangular glow.
+ */
+.lounge-panel--now::before,
+.lounge-panel--now::after {
+  content: none;
+}
+
+@supports (mask-mode: luminance) {
+  .lounge-panel--now::before,
+  .lounge-panel--now::after {
+    content: "";
+    position: absolute;
+    z-index: 8;
+    inset: 0;
+    pointer-events: none;
+    background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_now_reviewed_section.avif?v=lounge-20260903-03") 0 0 / 100% 100% no-repeat;
+    -webkit-mask-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_now_reviewed_section.avif?v=lounge-20260903-03");
+    mask-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_now_reviewed_section.avif?v=lounge-20260903-03");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    mask-mode: luminance;
+    mix-blend-mode: screen;
+  }
+
+  /* Tight core: crisp illumination directly around READ MORE + arrow. */
+  .lounge-panel--now::before {
+    clip-path: polygon(79% 85.2%, 93.2% 85.2%, 93.2% 92.4%, 79% 92.4%);
+    filter:
+      brightness(1.72)
+      contrast(1.16)
+      saturate(1.72)
+      drop-shadow(0 0 0.07rem rgba(255, 126, 116, 0.98))
+      drop-shadow(0 0 0.24rem rgba(227, 28, 36, 0.9));
+  }
+
+  /* Wider halo: softer light with room to breathe around the glyph shapes. */
+  .lounge-panel--now::after {
+    clip-path: polygon(77.4% 83.8%, 94.5% 83.8%, 94.5% 94%, 77.4% 94%);
+    opacity: 0.78;
+    filter:
+      brightness(1.48)
+      saturate(1.55)
+      drop-shadow(0 0 0.3rem rgba(227, 28, 36, 0.82))
+      drop-shadow(0 0 0.64rem rgba(227, 28, 36, 0.58));
+  }
 }
 
 /*
