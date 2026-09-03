@@ -5,6 +5,7 @@ import '../styles/lobby.css';
 import '../styles/lobby-content.css';
 import '../styles/lobby-corners.css';
 import '../styles/lobby-polish.css';
+import '../styles/lobby-fit-and-focus.css';
 
 export const prerender = false;
 
@@ -333,7 +334,7 @@ const featuredPov = featured?.verdict?.trim() || '';
       closeButton.type = 'button';
       closeButton.tabIndex = -1;
       closeButton.setAttribute('aria-label', 'Close enlarged section');
-      closeButton.textContent = '×';
+      closeButton.textContent = '✕';
 
       const focusStage = document.createElement('div');
       focusStage.className = 'lounge-focus-stage';
@@ -361,6 +362,7 @@ const featuredPov = featured?.verdict?.trim() || '';
         focusedSection = section;
         focusStage.appendChild(section);
         section.classList.add('is-lounge-focused');
+        section.appendChild(closeButton);
         focusLayer.classList.add('is-open');
         focusLayer.setAttribute('aria-hidden', 'false');
         document.documentElement.classList.add('lounge-focus-open');
@@ -378,6 +380,8 @@ const featuredPov = featured?.verdict?.trim() || '';
         if (!parent) return;
 
         const section = focusedSection;
+        closeButton.tabIndex = -1;
+        focusLayer.insertBefore(closeButton, focusStage);
         section.classList.remove('is-lounge-focused');
         parent.replaceChild(section, placeholder);
         focusedSection = null;
@@ -385,7 +389,6 @@ const featuredPov = featured?.verdict?.trim() || '';
         focusLayer.classList.remove('is-open');
         focusLayer.setAttribute('aria-hidden', 'true');
         document.documentElement.classList.remove('lounge-focus-open');
-        closeButton.tabIndex = -1;
 
         requestAnimationFrame(() => {
           fitAllMarquees();
