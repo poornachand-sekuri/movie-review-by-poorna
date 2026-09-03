@@ -360,3 +360,20 @@ html.lounge-focus-open body {
     animation: none;
   }
 }
+
+/*
+ * Background ambience: reveal more of the locked Lounge artwork without letting
+ * it compete with the centered content panels. Only the runtime shade is lifted.
+ */
+.lounge-shade {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.02),
+      rgba(0, 0, 0, 0.14) 28%,
+      rgba(0, 0, 0, 0.20) 50%,
+      rgba(0, 0, 0, 0.14) 72%,
+      rgba(0, 0, 0, 0.02)
+    ),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.10));
+}
