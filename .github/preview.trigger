@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Use edgeless CTA glow, simplify POV typography, and restructure Recent cards so posters extend to a title row directly above the stars.
+Remove all CTA visual overlays and open the My POV text area while preserving safe spacing around the label and baked Read More artwork.
