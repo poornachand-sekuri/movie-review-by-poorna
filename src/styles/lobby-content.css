@@ -159,6 +159,7 @@
   width: 24%;
   height: 100%;
   shape-outside: polygon(100% 68%, 100% 100%, 0 100%, 0 68%);
+  shape-margin: 2px;
 }
 
 .recent-card {
@@ -284,5 +285,6 @@
   .now-pov p::before {
     width: 25%;
     shape-outside: polygon(100% 66%, 100% 100%, 0 100%, 0 66%);
+    shape-margin: 2px;
   }
 }
