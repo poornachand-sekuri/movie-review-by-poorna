@@ -3,7 +3,7 @@
 /*
  * Locked typography system:
  * - Movie titles: condensed cinematic display stack in soft cinema ivory.
- * - My POV: classic film-magazine serif stack in warm parchment.
+ * - My POV: high-legibility cinematic editorial stack in warm parchment.
  * - Sizes are tuned to the actual Lounge ticket geometry and mobile constraints.
  */
 .now-title,
@@ -18,7 +18,7 @@
   font-size: clamp(0.94rem, 2.72cqw, 1.95rem);
 }
 
-/* POV: classic, readable film-magazine typography with the full usable panel height. */
+/* POV: readable cinema-editorial typography with the full usable panel height. */
 .now-pov {
   width: 90.8%;
   height: 23.4%;
@@ -35,13 +35,16 @@
 }
 
 .now-pov p {
+  display: block;
   margin: 0;
   padding-inline: 0.42em;
   box-sizing: border-box;
-  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(0.75rem, 1.58cqw, 0.88rem);
-  line-height: 1.36;
-  letter-spacing: 0.003em;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.34;
+  letter-spacing: 0.004em;
   color: #f1e4cc;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.75);
 }
@@ -57,10 +60,10 @@
  * margin. Every other part of the POV panel remains available to the copy.
  */
 .now-pov::before {
-  width: 22%;
+  width: 18%;
   height: 100%;
   shape-outside: polygon(0 73%, 100% 73%, 100% 100%, 0 100%);
-  shape-margin: clamp(4px, 0.34cqw, 6px);
+  shape-margin: clamp(3px, 0.24cqw, 4px);
 }
 
 /*
@@ -190,7 +193,7 @@
   .now-pov p {
     padding-inline: 0.34em;
     font-size: clamp(0.75rem, 1.58cqw, 0.88rem);
-    line-height: 1.36;
+    line-height: 1.34;
   }
 
   .now-pov__label {
@@ -199,9 +202,9 @@
   }
 
   .now-pov::before {
-    width: 22%;
+    width: 18%;
     shape-outside: polygon(0 73%, 100% 73%, 100% 100%, 0 100%);
-    shape-margin: clamp(4px, 0.32cqw, 6px);
+    shape-margin: clamp(3px, 0.22cqw, 4px);
   }
 
   .recent-card {
