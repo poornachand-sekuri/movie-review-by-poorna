@@ -121,7 +121,7 @@
   grid-template-rows: auto minmax(0, 1fr);
   align-content: stretch;
   row-gap: clamp(0.12rem, 0.4cqw, 0.34rem);
-  padding: 1.2% 16.5% 1.15% 2.2%;
+  padding: 1.2% 2.3% 1.15% 2.2%;
 }
 
 .now-pov__label {
@@ -138,10 +138,9 @@
 
 .now-pov p {
   margin: 0;
+  max-height: 5.36em;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
+  display: block;
   align-self: center;
   color: #f5f2ec;
   font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
@@ -152,6 +151,14 @@
   letter-spacing: 0.012em;
   text-wrap: pretty;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.94);
+}
+
+.now-pov p::before {
+  content: "";
+  float: right;
+  width: 24%;
+  height: 100%;
+  shape-outside: polygon(100% 68%, 100% 100%, 0 100%, 0 68%);
 }
 
 .recent-card {
@@ -264,12 +271,18 @@
   .now-pov {
     padding-top: 1.05%;
     padding-left: 2.25%;
-    padding-right: 16.5%;
+    padding-right: 2.25%;
     padding-bottom: 1.05%;
   }
 
   .now-pov p {
     font-size: clamp(0.5rem, 1.18cqw, 0.88rem);
     line-height: 1.32;
+    max-height: 5.28em;
+  }
+
+  .now-pov p::before {
+    width: 25%;
+    shape-outside: polygon(100% 66%, 100% 100%, 0 100%, 0 66%);
   }
 }
