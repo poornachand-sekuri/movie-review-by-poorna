@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Remove CTA backgrounds and highlight only the Read More and View All text with subtle glow, underline, and interaction emphasis.
+Polish POV sizing, brighten only baked artwork CTAs, blend Recent card layers, roll every Recent title right-to-left with an end pause, and give Previous posters a monochrome film-reel treatment.
