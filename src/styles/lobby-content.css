@@ -116,33 +116,34 @@
     0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-/* Keep the original metallic rings visible and tint only the dark centres. */
+/* Jewel-like cores sized to sit strictly inside the original metallic rings. */
 .lounge-panel--now::before,
 .lounge-panel--now::after {
   content: "";
   position: absolute;
   z-index: 3;
   left: 48.45%;
-  width: 2.55%;
+  width: 1.92%;
   aspect-ratio: 1;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   background:
-    radial-gradient(circle at 38% 34%, rgba(235, 151, 67, 0.86) 0 12%, rgba(184, 29, 34, 0.9) 34%, rgba(73, 7, 10, 0.96) 70%, rgba(8, 3, 4, 0.98) 100%);
+    radial-gradient(circle at 35% 28%, #fff0d7 0 3%, #ffad55 5% 13%, #ff313a 26%, #b10813 55%, #540409 78%, #160102 100%);
   box-shadow:
-    inset 0 0 0.22em rgba(255, 215, 164, 0.14),
-    0 0 0.42em rgba(227, 28, 36, 0.24);
+    inset 0 0 0.16em rgba(255, 244, 222, 0.22),
+    0 0 0.22em rgba(255, 45, 52, 0.46),
+    0 0 0.48em rgba(255, 87, 35, 0.18);
 }
 
 .lounge-panel--now::before {
-  top: 24.8%;
+  top: 24.72%;
 }
 
 .lounge-panel--now::after {
-  top: 61.7%;
+  top: 61.62%;
   background:
-    radial-gradient(circle at 38% 34%, rgba(210, 98, 50, 0.82) 0 11%, rgba(169, 20, 27, 0.92) 34%, rgba(62, 5, 8, 0.97) 72%, rgba(7, 3, 3, 0.99) 100%);
+    radial-gradient(circle at 35% 28%, #ffe9ce 0 3%, #ff8d42 5% 12%, #f52530 26%, #990710 56%, #450307 79%, #120102 100%);
 }
 
 .now-pov {
