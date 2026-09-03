@@ -139,6 +139,7 @@ export async function listReviews(options: ReviewListOptions = {}): Promise<read
   const limit = clampInteger(options.limit, DEFAULT_LIST_LIMIT, 1, MAX_LIST_LIMIT);
   const offset = clampInteger(options.offset, 0, 0, 10_000);
   const language = options.language?.trim().slice(0, 80) || null;
+  const orderBy = options.order === 'added' ? 'created_at DESC, id DESC' : 'reviewed_date DESC, id DESC';
 
   const statement = language
     ? db
@@ -147,7 +148,7 @@ export async function listReviews(options: ReviewListOptions = {}): Promise<read
            FROM reviews
            WHERE status = 'published'
              AND language COLLATE NOCASE = ?1
-           ORDER BY reviewed_date DESC, id DESC
+           ORDER BY ${orderBy}
            LIMIT ?2 OFFSET ?3`,
         )
         .bind(language, limit, offset)
@@ -156,7 +157,7 @@ export async function listReviews(options: ReviewListOptions = {}): Promise<read
           `SELECT ${SUMMARY_COLUMNS}
            FROM reviews
            WHERE status = 'published'
-           ORDER BY reviewed_date DESC, id DESC
+           ORDER BY ${orderBy}
            LIMIT ?1 OFFSET ?2`,
         )
         .bind(limit, offset);
