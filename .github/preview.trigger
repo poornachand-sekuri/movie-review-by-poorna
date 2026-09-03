@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Revert only the My POV auto-fit and CTA glow experiments; keep the last stable transparent CTA hit zones and simpler POV styling while leaving all other Lounge refinements untouched.
+Increase only the My POV body text to the agreed safe readable size while keeping the My POV label, CTA treatment, artwork and all other Lounge geometry unchanged.
