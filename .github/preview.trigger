@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Make the My POV label slightly larger and increase the spacing before the POV text without changing other Lounge geometry.
+Increase the My POV label size and add a clearly visible separation between the label divider and the POV text.
