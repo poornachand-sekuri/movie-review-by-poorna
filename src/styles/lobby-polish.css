@@ -1,0 +1,170 @@
+/* Final Lounge polish layered after the measured artwork geometry. */
+
+/* POV: retain the handwritten note feel, but keep the copy compact enough to breathe. */
+.now-pov {
+  font-family: "Bradley Hand", "Chalkboard SE", "Segoe Print", "Marker Felt", cursive;
+  font-size: clamp(0.5rem, 1.16cqw, 0.88rem);
+  line-height: 1.56;
+  color: #eadfc8;
+}
+
+.now-pov p {
+  font-size: 1em;
+  line-height: inherit;
+}
+
+.now-pov__label {
+  margin-right: 1.5em;
+}
+
+/*
+ * Read More / View All already exist in the artwork. Never redraw their words.
+ * Brighten only the raster underneath the click target, with no visible fill.
+ */
+.now-read-hit,
+.section-view-all {
+  display: block;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: transparent;
+  transition: transform 140ms ease;
+}
+
+.now-read-hit::after,
+.section-view-all::after {
+  content: none !important;
+  display: none !important;
+}
+
+.now-read-hit::before,
+.section-view-all::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.001);
+  -webkit-backdrop-filter: brightness(1.32) saturate(1.16) contrast(1.04);
+  backdrop-filter: brightness(1.32) saturate(1.16) contrast(1.04);
+  filter: drop-shadow(0 0 0.2rem rgba(227, 28, 36, 0.36));
+  transition:
+    -webkit-backdrop-filter 140ms ease,
+    backdrop-filter 140ms ease,
+    filter 140ms ease;
+}
+
+.now-read-hit::before {
+  inset: 18% 3% 18% 10%;
+}
+
+.section-view-all--recent::before {
+  inset: 25% 2% 25% 18%;
+}
+
+.section-view-all--previous::before {
+  inset: 24% 2% 24% 16%;
+}
+
+.now-read-hit:active,
+.section-view-all:active {
+  transform: translateX(1px) scale(0.99);
+}
+
+.now-read-hit:active::before,
+.section-view-all:active::before {
+  -webkit-backdrop-filter: brightness(1.48) saturate(1.24) contrast(1.06);
+  backdrop-filter: brightness(1.48) saturate(1.24) contrast(1.06);
+  filter: drop-shadow(0 0 0.28rem rgba(227, 28, 36, 0.5));
+}
+
+@media (hover: hover) {
+  .now-read-hit:hover::before,
+  .section-view-all:hover::before {
+    -webkit-backdrop-filter: brightness(1.42) saturate(1.22) contrast(1.05);
+    backdrop-filter: brightness(1.42) saturate(1.22) contrast(1.05);
+    filter: drop-shadow(0 0 0.26rem rgba(227, 28, 36, 0.46));
+  }
+}
+
+/*
+ * Recent cards should read as one ticket. Feather the poster into the artwork's
+ * charcoal field instead of ending it with a hard horizontal seam.
+ */
+.recent-card {
+  isolation: isolate;
+}
+
+.recent-card__poster {
+  position: relative;
+  background: transparent;
+}
+
+.recent-card__poster::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 21%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 8, 8, 0) 0%,
+    rgba(8, 8, 8, 0.22) 36%,
+    rgba(8, 8, 8, 0.72) 76%,
+    rgba(8, 8, 8, 0.96) 100%
+  );
+}
+
+.recent-card__title,
+.recent-card__stars {
+  position: relative;
+  z-index: 3;
+  background: transparent;
+  box-shadow: none;
+}
+
+.recent-card__title {
+  justify-content: flex-start;
+  color: #f4eee4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.96);
+}
+
+.recent-card__stars {
+  text-shadow: 0 0 0.24rem rgba(227, 28, 36, 0.2);
+}
+
+.recent-card::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 1.2rem rgba(0, 0, 0, 0.2);
+}
+
+/* Previously Reviewed: a restrained monochrome print inside the illuminated reel. */
+.previous-card img {
+  filter: grayscale(1) contrast(1.1) brightness(0.92) sepia(0.06);
+  opacity: 0.97;
+  transition: filter 180ms ease, brightness 180ms ease;
+}
+
+@media (hover: hover) {
+  .previous-card:hover img {
+    filter: grayscale(1) contrast(1.12) brightness(0.99) sepia(0.05);
+  }
+}
+
+@media (max-width: 42rem) {
+  .now-pov {
+    font-size: clamp(0.48rem, 1.1cqw, 0.82rem);
+    line-height: 1.58;
+  }
+
+  .now-pov__label {
+    margin-right: 1.55em;
+  }
+}
