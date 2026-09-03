@@ -41,7 +41,9 @@
 }
 
 .now-pov__label {
-  margin-right: 1.12em;
+  display: flex;
+  margin-right: 0;
+  margin-bottom: 0.5em;
 }
 
 /*
@@ -185,7 +187,8 @@
   }
 
   .now-pov__label {
-    margin-right: 1.16em;
+    margin-right: 0;
+    margin-bottom: 0.48em;
   }
 
   .now-pov::before {
