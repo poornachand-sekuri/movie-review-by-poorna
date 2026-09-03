@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Apply the final Lounge typography system consistently to Now Reviewed and Recent Review movie titles, and use the selected vintage editorial serif treatment for My POV without changing geometry or artwork.
+Deploy the locked Lounge typography family, colors and sizes consistently for Now Reviewed and Recent Review movie titles, with the selected vintage editorial serif treatment for My POV and no geometry or artwork changes.
