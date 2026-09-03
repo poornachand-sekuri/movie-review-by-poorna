@@ -138,7 +138,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   align-content: stretch;
-  row-gap: clamp(0.2rem, 0.56cqw, 0.44rem);
+  row-gap: clamp(0.34rem, 0.82cqw, 0.66rem);
   padding: 1.2% 2.3% 1.15% 2.2%;
 }
 
@@ -146,13 +146,13 @@
   position: relative;
   width: max-content;
   margin: 0;
-  padding: 0.16em 0.52em;
+  padding: 0.18em 0.58em;
   border-left-width: 1px;
   font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(0.36rem, 0.72cqw, 0.58rem);
-  font-weight: 780;
+  font-size: clamp(0.42rem, 0.84cqw, 0.66rem);
+  font-weight: 800;
   letter-spacing: 0.085em;
-  opacity: 0.92;
+  opacity: 0.94;
 }
 
 .now-pov__label::after {
@@ -322,11 +322,11 @@
     padding-left: 2.25%;
     padding-right: 2.25%;
     padding-bottom: 1.05%;
-    row-gap: clamp(0.18rem, 0.52cqw, 0.4rem);
+    row-gap: clamp(0.3rem, 0.72cqw, 0.56rem);
   }
 
   .now-pov__label {
-    font-size: clamp(0.38rem, 0.76cqw, 0.6rem);
+    font-size: clamp(0.44rem, 0.86cqw, 0.68rem);
   }
 
   .now-pov p {
