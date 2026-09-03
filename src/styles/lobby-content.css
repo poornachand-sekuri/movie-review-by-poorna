@@ -66,28 +66,32 @@
 
 .now-meta > div:nth-child(1) {
   left: 5%;
-  top: 56%;
+  top: 50.5%;
   transform: translateY(-50%);
 }
 
 .now-meta > div:nth-child(2) {
   right: 5%;
-  top: 56%;
+  top: 50.5%;
   transform: translateY(-50%);
 }
 
 .now-meta dt {
-  font-size: clamp(0.32rem, 0.6cqw, 0.5rem);
-  font-weight: 650;
-  line-height: 1;
-  letter-spacing: 0.045em;
-  opacity: 0.72;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .now-meta dd {
-  margin-top: 0.34em;
-  font-size: clamp(0.58rem, 1.32cqw, 1.02rem);
-  font-weight: 760;
+  margin: 0;
+  font-size: clamp(0.68rem, 1.5cqw, 1.14rem);
+  font-weight: 780;
   line-height: 1.05;
   letter-spacing: 0.015em;
   color: #fffaf1;
@@ -97,24 +101,56 @@
 .now-meta .now-meta__rating {
   left: 0;
   right: 0;
-  bottom: 4.5%;
+  bottom: 5.5%;
   width: 100%;
   transform: none;
   text-align: center;
 }
 
-.now-meta__rating dt {
-  font-size: clamp(0.3rem, 0.54cqw, 0.46rem);
-}
-
 .now-meta__rating dd {
-  margin-top: 0.25em;
+  margin: 0;
   color: var(--lounge-red);
-  font-size: clamp(0.72rem, 1.72cqw, 1.3rem);
+  font-size: clamp(0.78rem, 1.82cqw, 1.38rem);
   letter-spacing: 0.09em;
   text-shadow:
     0 0 0.36em rgba(227, 28, 36, 0.28),
     0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.now-pov {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  row-gap: clamp(0.12rem, 0.38cqw, 0.32rem);
+  padding: 1.15% 17% 1.05% 2.0%;
+}
+
+.now-pov__label {
+  width: max-content;
+  margin: 0;
+  padding: 0.14em 0.5em;
+  border-left-width: 1px;
+  font-size: clamp(0.32rem, 0.64cqw, 0.52rem);
+  font-weight: 760;
+  letter-spacing: 0.075em;
+  opacity: 0.9;
+}
+
+.now-pov p {
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  align-self: start;
+  color: #fffaf2;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(0.58rem, 1.42cqw, 1.05rem);
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.23;
+  letter-spacing: 0.005em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.92);
 }
 
 .recent-card {
@@ -216,10 +252,21 @@
 
   .now-meta > div:nth-child(1),
   .now-meta > div:nth-child(2) {
-    top: 57%;
+    top: 51%;
   }
 
   .now-meta .now-meta__rating {
-    bottom: 3.5%;
+    bottom: 4.5%;
+  }
+
+  .now-pov {
+    padding-top: 1.0%;
+    padding-left: 2.1%;
+    padding-right: 16.5%;
+  }
+
+  .now-pov p {
+    font-size: clamp(0.55rem, 1.38cqw, 0.96rem);
+    line-height: 1.2;
   }
 }
