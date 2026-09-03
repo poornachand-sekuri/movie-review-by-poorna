@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Tighten only the My POV Read More keep-out zone so lower lines can use more horizontal space while preserving a small safety margin around the baked Read More artwork.
+Test a slightly tighter My POV Read More keep-out zone so the word worked can stay on the same line if space permits, with this change isolated for easy revert.
