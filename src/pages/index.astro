@@ -302,39 +302,16 @@ const featuredPov = featured?.verdict?.trim() || '';
       animations.set(element, animation);
     }
 
-    const povPanel = document.querySelector<HTMLElement>('.now-pov');
-
-    function fitPov() {
-      if (!povPanel) return;
-
-      povPanel.style.removeProperty('font-size');
-      const baseSize = Number.parseFloat(getComputedStyle(povPanel).fontSize);
-      if (!Number.isFinite(baseSize) || baseSize <= 0) return;
-
-      const minSize = baseSize * 0.78;
-      let currentSize = baseSize;
-      let attempts = 0;
-
-      while (povPanel.scrollHeight > povPanel.clientHeight + 1 && currentSize > minSize && attempts < 12) {
-        currentSize = Math.max(minSize, currentSize * 0.96);
-        povPanel.style.fontSize = `${currentSize}px`;
-        attempts += 1;
-      }
-    }
-
     const marqueeTitles = [...document.querySelectorAll<HTMLElement>('[data-title-marquee]')];
-    const fitDynamicContent = () => {
-      marqueeTitles.forEach(fitMarquee);
-      fitPov();
-    };
+    const fitAllMarquees = () => marqueeTitles.forEach(fitMarquee);
 
-    requestAnimationFrame(fitDynamicContent);
-    document.fonts?.ready?.then(fitDynamicContent).catch(() => {});
-    motionQuery.addEventListener('change', () => fitDynamicContent());
-    window.addEventListener('resize', fitDynamicContent, { passive: true });
+    requestAnimationFrame(fitAllMarquees);
+    document.fonts?.ready?.then(fitAllMarquees).catch(() => {});
+    motionQuery.addEventListener('change', () => fitAllMarquees());
+    window.addEventListener('resize', fitAllMarquees, { passive: true });
 
     if (typeof ResizeObserver !== 'undefined') {
-      const observer = new ResizeObserver(() => marqueeTitles.forEach(fitMarquee));
+      const observer = new ResizeObserver(() => fitAllMarquees());
       marqueeTitles.forEach((element) => observer.observe(element));
     }
 
