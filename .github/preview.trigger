@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Remove all CTA visual overlays and open the My POV text area while preserving safe spacing around the label and baked Read More artwork.
+Finalize My POV editorial flow with runtime auto-fit and add glyph-shaped transparent glow to the baked Read More and View All artwork text.
