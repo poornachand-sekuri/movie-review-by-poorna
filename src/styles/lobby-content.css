@@ -9,7 +9,7 @@
   aspect-ratio: 1742 / 903;
 }
 
-/* Use the same proven framing pattern as Previously Reviewed: frame-sized box + tiny inner clip. */
+/* Match the proven Previous framing pattern, tuned tighter for the larger Now ticket window. */
 .now-poster {
   left: 8.892%;
   top: 17.056%;
@@ -29,7 +29,7 @@
   object-fit: cover;
   object-position: center;
   transform: none;
-  clip-path: inset(clamp(1.5px, 0.22cqw, 3.5px) round 7.5%);
+  clip-path: inset(clamp(1px, 0.12cqw, 2px) round 5.2%);
 }
 
 .now-details {
@@ -217,7 +217,7 @@
   width: 15.670%;
 }
 
-/* Same framing logic as Previous; only the two top poster corners are rounded. */
+/* Same framing pattern as Previous; tuned shallower for the top poster corners only. */
 .recent-card__poster {
   min-height: 0;
   display: block;
@@ -234,11 +234,11 @@
   object-position: center;
   transform: none;
   clip-path: inset(
-    clamp(1.5px, 0.22cqw, 3.5px)
-    clamp(1.5px, 0.22cqw, 3.5px)
+    clamp(1px, 0.12cqw, 2px)
+    clamp(1px, 0.12cqw, 2px)
     0
-    clamp(1.5px, 0.22cqw, 3.5px)
-    round 7.5% 7.5% 0 0
+    clamp(1px, 0.12cqw, 2px)
+    round 5.2% 5.2% 0 0
   );
 }
 
