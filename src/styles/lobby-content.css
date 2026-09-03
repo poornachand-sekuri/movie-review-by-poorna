@@ -66,13 +66,13 @@
 
 .now-meta > div:nth-child(1) {
   left: 5%;
-  top: 53%;
+  top: 56%;
   transform: translateY(-50%);
 }
 
 .now-meta > div:nth-child(2) {
   right: 5%;
-  top: 53%;
+  top: 56%;
   transform: translateY(-50%);
 }
 
@@ -109,8 +109,12 @@
 
 .now-meta__rating dd {
   margin-top: 0.25em;
+  color: var(--lounge-red);
   font-size: clamp(0.72rem, 1.72cqw, 1.3rem);
   letter-spacing: 0.09em;
+  text-shadow:
+    0 0 0.36em rgba(227, 28, 36, 0.28),
+    0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .recent-card {
@@ -212,7 +216,7 @@
 
   .now-meta > div:nth-child(1),
   .now-meta > div:nth-child(2) {
-    top: 54%;
+    top: 57%;
   }
 
   .now-meta .now-meta__rating {
