@@ -31,22 +31,21 @@
 .now-title {
   position: absolute;
   top: 7.5%;
-  left: 6%;
-  right: 6%;
+  left: 5%;
+  right: 5%;
   margin: 0;
-  max-height: 2.3em;
-  font-family: "Palatino Linotype", "Book Antiqua", Georgia, serif;
-  font-size: clamp(0.7rem, 2.22cqw, 1.72rem);
-  font-style: italic;
-  font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: 0.055em;
-  color: #fff9ee;
+  max-height: 2.15em;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.82rem, 2.55cqw, 1.95rem);
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.065em;
+  color: #f4f2ed;
   text-transform: uppercase;
   text-shadow:
-    0 0 0.45em rgba(227, 28, 36, 0.58),
-    0 0 0.9em rgba(227, 28, 36, 0.22),
-    0 2px 2px #000;
+    0 1px 2px #000,
+    0 0 0.28em rgba(255, 255, 255, 0.12);
 }
 
 .now-meta {
@@ -120,20 +119,21 @@
 .now-pov {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  align-content: start;
-  row-gap: clamp(0.12rem, 0.38cqw, 0.32rem);
-  padding: 1.15% 17% 1.05% 2.0%;
+  align-content: stretch;
+  row-gap: clamp(0.12rem, 0.4cqw, 0.34rem);
+  padding: 1.2% 16.5% 1.15% 2.2%;
 }
 
 .now-pov__label {
   width: max-content;
   margin: 0;
-  padding: 0.14em 0.5em;
+  padding: 0.12em 0.46em;
   border-left-width: 1px;
-  font-size: clamp(0.32rem, 0.64cqw, 0.52rem);
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.3rem, 0.6cqw, 0.5rem);
   font-weight: 760;
-  letter-spacing: 0.075em;
-  opacity: 0.9;
+  letter-spacing: 0.08em;
+  opacity: 0.82;
 }
 
 .now-pov p {
@@ -142,15 +142,16 @@
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
-  align-self: start;
-  color: #fffaf2;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(0.58rem, 1.42cqw, 1.05rem);
+  align-self: center;
+  color: #f5f2ec;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.52rem, 1.22cqw, 0.94rem);
   font-style: normal;
-  font-weight: 600;
-  line-height: 1.23;
-  letter-spacing: 0.005em;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.92);
+  font-weight: 560;
+  line-height: 1.34;
+  letter-spacing: 0.012em;
+  text-wrap: pretty;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.94);
 }
 
 .recent-card {
@@ -247,7 +248,8 @@
     top: 8.5%;
     left: 4%;
     right: 4%;
-    letter-spacing: 0.035em;
+    font-size: clamp(0.86rem, 2.68cqw, 1.9rem);
+    letter-spacing: 0.055em;
   }
 
   .now-meta > div:nth-child(1),
@@ -260,13 +262,14 @@
   }
 
   .now-pov {
-    padding-top: 1.0%;
-    padding-left: 2.1%;
+    padding-top: 1.05%;
+    padding-left: 2.25%;
     padding-right: 16.5%;
+    padding-bottom: 1.05%;
   }
 
   .now-pov p {
-    font-size: clamp(0.55rem, 1.38cqw, 0.96rem);
-    line-height: 1.2;
+    font-size: clamp(0.5rem, 1.18cqw, 0.88rem);
+    line-height: 1.32;
   }
 }
