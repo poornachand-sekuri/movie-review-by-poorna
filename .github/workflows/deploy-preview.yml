@@ -128,7 +128,7 @@ jobs:
             echo "Checking artwork: $file"
             output="/tmp/$file"
             curl --fail --silent --show-error --location --retry 4 --retry-delay 1 --retry-all-errors \
-              --output "$output" "$asset_base/$file"
+              --output "$output" "$asset_base/$file?verify=$GITHUB_SHA"
             file "$output" | grep -q 'AVIF Image' || {
               echo "Artwork payload is not a real AVIF: $file"
               file "$output"
@@ -161,6 +161,7 @@ jobs:
           if (!lounge.includes('04_recent_reviews_section.avif')) throw new Error('Recent Reviews artwork is missing.');
           if (!lounge.includes('05_previously_reviewed.avif')) throw new Error('Previous Reviews artwork is missing.');
           if (!lounge.includes('06_share_your_opinion.avif')) throw new Error('Opinion artwork is missing.');
+          if (!lounge.includes('lounge-20260903-03')) throw new Error('Latest Lounge artwork revision is missing.');
           if (count(lounge, 'class="recent-card ') !== 4) throw new Error('Lounge did not render exactly 4 recent review cards.');
           if (count(lounge, 'class="previous-card ') !== 4) throw new Error('Lounge did not render exactly 4 previous review cards.');
           if (!lounge.includes('name="robots" content="noindex,nofollow"')) throw new Error('Preview noindex metadata is missing.');
