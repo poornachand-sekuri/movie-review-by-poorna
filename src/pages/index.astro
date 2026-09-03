@@ -9,10 +9,21 @@ import '../styles/lobby-fit-and-focus.css';
 
 export const prerender = false;
 
-const reviews = await listReviews({ limit: 9 });
+const reviews = await listReviews({ limit: 17, order: 'added' });
 const featured = reviews[0] ?? null;
-const recent = reviews.slice(1, 5);
-const previous = reviews.slice(5, 9);
+const recent = reviews.slice(1, 9);
+const previous = reviews.slice(9, 17);
+
+function toPages<T>(items: readonly T[], pageSize: number): T[][] {
+  const pages: T[][] = [];
+  for (let index = 0; index < items.length; index += pageSize) {
+    pages.push(items.slice(index, index + pageSize));
+  }
+  return pages;
+}
+
+const recentPages = toPages(recent, 4);
+const previousPages = toPages(previous, 4);
 
 const artBase = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive';
 const artRevision = 'lounge-20260903-03';
@@ -149,31 +160,67 @@ const featuredPov = featured?.verdict?.trim() || '';
               decoding="async"
             />
 
-            <div class="recent-overlay">
-              {recent.map((review, index) => (
-                <a
-                  class={`recent-card recent-card--${index + 1}`}
-                  href={reviewTarget(review.slug)}
-                  aria-label={`Read ${review.title} review`}
-                >
-                  <span class="recent-card__poster">
-                    {review.posterUrl ? (
-                      <img src={review.posterUrl} alt="" loading="lazy" decoding="async" />
-                    ) : (
-                      <span class="poster-fallback" aria-hidden="true"></span>
-                    )}
-                  </span>
-                  <span class="recent-card__title" data-title-marquee>
-                    <span>{review.title}</span>
-                  </span>
-                  <span
-                    class="recent-card__stars"
-                    aria-label={`${Math.round(Number(review.rating) || 0)} out of 5 stars`}
+            <div class="recent-overlay review-carousel" data-review-carousel aria-label="Recent Reviews carousel">
+              <div class="review-carousel__viewport">
+                <div class="review-carousel__track" data-carousel-track>
+                  {recentPages.map((page, pageIndex) => (
+                    <div
+                      class="review-carousel__page"
+                      data-carousel-page
+                      aria-hidden={pageIndex === 0 ? 'false' : 'true'}
+                      inert={pageIndex === 0 ? undefined : true}
+                    >
+                      {page.map((review, index) => (
+                        <a
+                          class={`recent-card recent-card--${index + 1}`}
+                          href={reviewTarget(review.slug)}
+                          aria-label={`Read ${review.title} review`}
+                        >
+                          <span class="recent-card__poster">
+                            {review.posterUrl ? (
+                              <img src={review.posterUrl} alt="" loading="lazy" decoding="async" />
+                            ) : (
+                              <span class="poster-fallback" aria-hidden="true"></span>
+                            )}
+                          </span>
+                          <span class="recent-card__title" data-title-marquee>
+                            <span>{review.title}</span>
+                          </span>
+                          <span
+                            class="recent-card__stars"
+                            aria-label={`${Math.round(Number(review.rating) || 0)} out of 5 stars`}
+                          >
+                            {starText(review.rating)}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {recentPages.length > 1 && (
+                <>
+                  <button
+                    class="review-carousel__control review-carousel__control--prev"
+                    type="button"
+                    data-carousel-prev
+                    aria-label="Show previous Recent Reviews"
+                    disabled
                   >
-                    {starText(review.rating)}
-                  </span>
-                </a>
-              ))}
+                    <span aria-hidden="true">‹</span>
+                  </button>
+                  <button
+                    class="review-carousel__control review-carousel__control--next"
+                    type="button"
+                    data-carousel-next
+                    aria-label="Show next Recent Reviews"
+                  >
+                    <span aria-hidden="true">›</span>
+                  </button>
+                  <p class="visually-hidden" data-carousel-status aria-live="polite">Page 1 of {recentPages.length}</p>
+                </>
+              )}
             </div>
 
             <a class="section-view-all section-view-all--recent" href="/search" aria-label="View all recent reviews"></a>
@@ -195,20 +242,56 @@ const featuredPov = featured?.verdict?.trim() || '';
               decoding="async"
             />
 
-            <div class="previous-overlay">
-              {previous.map((review, index) => (
-                <a
-                  class={`previous-card previous-card--${index + 1}`}
-                  href={reviewTarget(review.slug)}
-                  aria-label={`Read ${review.title} review`}
-                >
-                  {review.posterUrl ? (
-                    <img src={review.posterUrl} alt={`${review.title} poster`} loading="lazy" decoding="async" />
-                  ) : (
-                    <span class="poster-fallback" aria-hidden="true"></span>
-                  )}
-                </a>
-              ))}
+            <div class="previous-overlay review-carousel" data-review-carousel aria-label="Previously Reviewed carousel">
+              <div class="review-carousel__viewport">
+                <div class="review-carousel__track" data-carousel-track>
+                  {previousPages.map((page, pageIndex) => (
+                    <div
+                      class="review-carousel__page"
+                      data-carousel-page
+                      aria-hidden={pageIndex === 0 ? 'false' : 'true'}
+                      inert={pageIndex === 0 ? undefined : true}
+                    >
+                      {page.map((review, index) => (
+                        <a
+                          class={`previous-card previous-card--${index + 1}`}
+                          href={reviewTarget(review.slug)}
+                          aria-label={`Read ${review.title} review`}
+                        >
+                          {review.posterUrl ? (
+                            <img src={review.posterUrl} alt={`${review.title} poster`} loading="lazy" decoding="async" />
+                          ) : (
+                            <span class="poster-fallback" aria-hidden="true"></span>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {previousPages.length > 1 && (
+                <>
+                  <button
+                    class="review-carousel__control review-carousel__control--prev"
+                    type="button"
+                    data-carousel-prev
+                    aria-label="Show previous Previously Reviewed movies"
+                    disabled
+                  >
+                    <span aria-hidden="true">‹</span>
+                  </button>
+                  <button
+                    class="review-carousel__control review-carousel__control--next"
+                    type="button"
+                    data-carousel-next
+                    aria-label="Show next Previously Reviewed movies"
+                  >
+                    <span aria-hidden="true">›</span>
+                  </button>
+                  <p class="visually-hidden" data-carousel-status aria-live="polite">Page 1 of {previousPages.length}</p>
+                </>
+              )}
             </div>
 
             <a class="section-view-all section-view-all--previous" href="/search" aria-label="View all previous reviews"></a>
@@ -315,6 +398,106 @@ const featuredPov = featured?.verdict?.trim() || '';
       const observer = new ResizeObserver(() => fitAllMarquees());
       marqueeTitles.forEach((element) => observer.observe(element));
     }
+
+    const reviewCarousels = [...document.querySelectorAll<HTMLElement>('[data-review-carousel]')];
+
+    reviewCarousels.forEach((carousel) => {
+      const track = carousel.querySelector<HTMLElement>('[data-carousel-track]');
+      const pages = [...carousel.querySelectorAll<HTMLElement>('[data-carousel-page]')];
+      const previousButton = carousel.querySelector<HTMLButtonElement>('[data-carousel-prev]');
+      const nextButton = carousel.querySelector<HTMLButtonElement>('[data-carousel-next]');
+      const status = carousel.querySelector<HTMLElement>('[data-carousel-status]');
+
+      if (!track || pages.length === 0) return;
+
+      let pageIndex = 0;
+      let pointerId: number | null = null;
+      let startX = 0;
+      let startY = 0;
+      let suppressClick = false;
+      let suppressTimer: number | undefined;
+
+      const setPage = (requestedIndex: number) => {
+        const nextIndex = Math.max(0, Math.min(pages.length - 1, requestedIndex));
+        pageIndex = nextIndex;
+        track.style.transform = `translate3d(${-pageIndex * 100}%, 0, 0)`;
+
+        pages.forEach((page, index) => {
+          const active = index === pageIndex;
+          page.setAttribute('aria-hidden', active ? 'false' : 'true');
+          if (active) page.removeAttribute('inert');
+          else page.setAttribute('inert', '');
+        });
+
+        if (previousButton) previousButton.disabled = pageIndex === 0;
+        if (nextButton) nextButton.disabled = pageIndex === pages.length - 1;
+        if (status) status.textContent = `Page ${pageIndex + 1} of ${pages.length}`;
+
+        requestAnimationFrame(fitAllMarquees);
+      };
+
+      previousButton?.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setPage(pageIndex - 1);
+      });
+
+      nextButton?.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setPage(pageIndex + 1);
+      });
+
+      carousel.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        const target = event.target;
+        if (target instanceof Element && target.closest('[data-carousel-prev], [data-carousel-next]')) return;
+
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startY = event.clientY;
+      });
+
+      carousel.addEventListener('pointerup', (event) => {
+        if (pointerId !== event.pointerId) return;
+
+        const deltaX = event.clientX - startX;
+        const deltaY = event.clientY - startY;
+        const threshold = Math.min(72, Math.max(32, carousel.clientWidth * 0.09));
+        const isHorizontalSwipe = Math.abs(deltaX) >= threshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.15;
+
+        pointerId = null;
+        if (!isHorizontalSwipe) return;
+
+        suppressClick = true;
+        if (suppressTimer !== undefined) window.clearTimeout(suppressTimer);
+        suppressTimer = window.setTimeout(() => {
+          suppressClick = false;
+          suppressTimer = undefined;
+        }, 450);
+
+        setPage(pageIndex + (deltaX < 0 ? 1 : -1));
+      });
+
+      carousel.addEventListener('pointercancel', () => {
+        pointerId = null;
+      });
+
+      carousel.addEventListener(
+        'click',
+        (event) => {
+          if (!suppressClick) return;
+          event.preventDefault();
+          event.stopPropagation();
+          suppressClick = false;
+          if (suppressTimer !== undefined) {
+            window.clearTimeout(suppressTimer);
+            suppressTimer = undefined;
+          }
+        },
+        true,
+      );
+
+      setPage(0);
+    });
 
     const loungePage = document.querySelector<HTMLElement>('.lounge-page');
     const focusableSections = [
