@@ -1,0 +1,29 @@
+name: Audit Lounge Artwork
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/art-audit.trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Audit locked R2 artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset_base='https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res''ponsive'
+          for file in 03_now_reviewed_section.avif 04_recent_reviews_section.avif 05_previously_reviewed.avif; do
+            output="/tmp/$file"
+            curl --fail --silent --show-error --location "$asset_base/$file" --output "$output"
+            echo "--- $file"
+            file "$output"
+            sha256sum "$output"
+            stat --printf='bytes=%s\n' "$output"
+          done
