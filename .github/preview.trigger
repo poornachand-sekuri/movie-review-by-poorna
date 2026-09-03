@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Finalize My POV editorial flow with runtime auto-fit and add glyph-shaped transparent glow to the baked Read More and View All artwork text.
+Revert only the My POV auto-fit and CTA glow experiments; keep the last stable transparent CTA hit zones and simpler POV styling while leaving all other Lounge refinements untouched.
