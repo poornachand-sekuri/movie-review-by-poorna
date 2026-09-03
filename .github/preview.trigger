@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Deploy the always-on baked READ MORE illumination using luminance-masked layered clip paths and drop-shadow, with no dimming, background overlay, box-shadow frame or change to the locked My POV/UI geometry.
+Deploy the reverted pre-glow Lounge state with the locked My POV UI preserved and the baked READ MORE artwork left untouched, with no illumination, brightness, overlay, replacement text or glow effects.
