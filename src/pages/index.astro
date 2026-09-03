@@ -13,17 +13,20 @@ const previous = reviews.slice(5, 9);
 const artBase = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive';
 const art = (file: string) => `${artBase}/${file}`;
 
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
+const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatDate(value: string | null): string {
   if (!value) return '—';
-  const date = new Date(`${value}T00:00:00Z`);
-  return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return value;
+
+  const [, year, monthValue, dayValue] = match;
+  const month = shortMonths[Number(monthValue) - 1];
+  const day = Number(dayValue);
+
+  if (!month || !Number.isInteger(day) || day < 1 || day > 31) return value;
+  return `${day} ${month} ${year}`;
 }
 
 function starText(rating: number | null): string {
@@ -35,7 +38,7 @@ function reviewTarget(slug: string): string {
   return `/review/${encodeURIComponent(slug)}`;
 }
 
-const featuredPov = featured?.excerpt?.trim() || featured?.verdict?.trim() || '';
+const featuredPov = featured?.verdict?.trim() || '';
 ---
 
 <SiteFrame
@@ -97,11 +100,11 @@ const featuredPov = featured?.excerpt?.trim() || featured?.verdict?.trim() || ''
               <h2 class="now-title">{featured.title}</h2>
               <dl class="now-meta">
                 <div>
-                  <dt>Release Date</dt>
+                  <dt>Released</dt>
                   <dd>{formatDate(featured.releaseDate)}</dd>
                 </div>
                 <div>
-                  <dt>Watched In</dt>
+                  <dt>Language</dt>
                   <dd>{featured.language ?? '—'}</dd>
                 </div>
                 <div class="now-meta__rating">
@@ -115,7 +118,7 @@ const featuredPov = featured?.excerpt?.trim() || featured?.verdict?.trim() || ''
 
             <div class="now-pov">
               <span class="now-pov__label"><span aria-hidden="true">◉</span> My POV</span>
-              <p>{featuredPov || 'Review note coming soon.'}</p>
+              <p>{featuredPov || 'POV coming soon.'}</p>
             </div>
 
             <a class="now-read-hit" href={reviewTarget(featured.slug)} aria-label={`Read ${featured.title} review`}>
