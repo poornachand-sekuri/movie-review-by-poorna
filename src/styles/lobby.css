@@ -127,9 +127,11 @@
   width: 31.9%;
   height: 44.8%;
   display: grid;
-  place-items: center;
+  place-items: stretch;
+  box-sizing: border-box;
+  padding: clamp(1px, 0.38cqw, 4px);
   overflow: hidden;
-  background: #080808;
+  background: transparent;
 }
 
 .now-poster img,
@@ -140,7 +142,7 @@
 }
 
 .now-poster img {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
 }
 
@@ -156,10 +158,11 @@
   width: 28.8%;
   height: 43.2%;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   align-content: center;
-  gap: clamp(0.2rem, 0.85cqw, 0.72rem);
-  padding: 2.2% 1.5%;
+  gap: clamp(0.2rem, 0.75cqw, 0.64rem);
+  box-sizing: border-box;
+  padding: 2.4% 1.8%;
   overflow: hidden;
   text-align: center;
   color: var(--lounge-white);
@@ -188,11 +191,16 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-content: center;
-  gap: clamp(0.15rem, 0.65cqw, 0.6rem) 4%;
+  align-items: start;
+  gap: clamp(0.15rem, 0.6cqw, 0.52rem) 6%;
 }
 
 .now-meta div {
   min-width: 0;
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  align-content: start;
 }
 
 .now-meta__rating {
@@ -202,31 +210,35 @@
 .now-meta dt,
 .now-meta dd {
   margin: 0;
+  max-width: 100%;
 }
 
 .now-meta dt {
   color: #c7c4be;
-  font-size: clamp(0.42rem, 0.88cqw, 0.72rem);
+  font-size: clamp(0.4rem, 0.82cqw, 0.68rem);
   font-weight: 700;
-  letter-spacing: 0.075em;
+  line-height: 1.05;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .now-meta dd {
-  margin-top: 0.15em;
+  margin-top: 0.18em;
   overflow: hidden;
   color: var(--lounge-white);
-  font-size: clamp(0.48rem, 1.12cqw, 0.92rem);
-  font-weight: 600;
-  line-height: 1.12;
+  font-size: clamp(0.46rem, 1.03cqw, 0.86rem);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.08;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .now-meta__rating dd {
   color: var(--lounge-red);
-  font-size: clamp(0.6rem, 1.55cqw, 1.18rem);
-  letter-spacing: 0.09em;
+  font-size: clamp(0.58rem, 1.48cqw, 1.12rem);
+  letter-spacing: 0.075em;
 }
 
 .now-pov {
@@ -236,6 +248,7 @@
   top: 70.5%;
   width: 84.1%;
   height: 17.4%;
+  box-sizing: border-box;
   padding: clamp(0.18rem, 0.7cqw, 0.58rem) 17% 0.25rem 1.8%;
   overflow: hidden;
   color: #e6e2dc;
@@ -299,9 +312,11 @@
   width: 16.9%;
   height: 65.1%;
   display: grid;
-  grid-template-rows: 60% 25% 15%;
+  grid-template-rows: minmax(0, 60fr) minmax(0, 25fr) minmax(0, 15fr);
+  box-sizing: border-box;
+  padding: clamp(1px, 0.32cqw, 4px);
   overflow: hidden;
-  background: #101011;
+  background: transparent;
   color: var(--lounge-white);
   text-decoration: none;
   pointer-events: auto;
@@ -314,28 +329,31 @@
 
 .recent-card__poster {
   min-height: 0;
+  display: block;
   overflow: hidden;
   background: #0d0d0e;
 }
 
 .recent-card__poster img,
 .recent-card__poster .poster-fallback {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 35%;
+  object-position: center;
 }
 
 .recent-card__title,
 .recent-card__stars {
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   background: linear-gradient(180deg, #101011, #090909);
 }
 
 .recent-card__title {
   display: flex;
   align-items: center;
-  overflow: hidden;
   padding-inline: 7%;
   font-family: "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(0.43rem, 1.05cqw, 0.78rem);
@@ -361,6 +379,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-inline: 4%;
   color: var(--lounge-red);
   font-size: clamp(0.48rem, 1.25cqw, 0.9rem);
   letter-spacing: 0.08em;
@@ -382,8 +401,10 @@
   top: 31.1%;
   width: 16.9%;
   height: 48.6%;
+  box-sizing: border-box;
+  padding: clamp(1px, 0.32cqw, 4px);
   overflow: hidden;
-  background: #0b0b0c;
+  background: transparent;
   text-decoration: none;
   pointer-events: auto;
 }
@@ -395,6 +416,7 @@
 
 .previous-card img,
 .previous-card .poster-fallback {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -511,11 +533,11 @@
   }
 
   .now-details {
-    padding-inline: 0.5%;
+    padding: 2.2% 1.0%;
   }
 
   .now-meta {
-    gap: 0.12rem 2%;
+    gap: 0.12rem 4%;
   }
 
   .now-pov {
