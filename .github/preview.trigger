@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Use smooth curved poster masks for Now Reviewed and Recent Reviews while leaving Previously Reviewed unchanged.
+Reuse the proven Previously Reviewed framing logic for Now Reviewed and Recent Reviews poster areas without changing the locked artwork.
