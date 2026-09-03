@@ -4,7 +4,7 @@
  * Locked typography system:
  * - Movie titles: condensed cinematic display stack in soft cinema ivory.
  * - My POV: classic film-magazine serif stack in warm parchment.
- * No layout geometry, sizing, ticker or artwork changes are introduced here.
+ * - Sizes are tuned to the actual Lounge ticket geometry and mobile constraints.
  */
 .now-title,
 .recent-card__title {
@@ -15,6 +15,7 @@
 
 .now-title {
   font-weight: 800;
+  font-size: clamp(0.94rem, 2.72cqw, 1.95rem);
 }
 
 /* POV: classic, readable film-magazine typography with the full usable panel height. */
@@ -34,7 +35,7 @@
 }
 
 .now-pov p {
-  font-size: clamp(0.66rem, 1.45cqw, 0.86rem);
+  font-size: clamp(0.67rem, 1.46cqw, 0.83rem);
   line-height: 1.42;
   color: inherit;
 }
@@ -133,7 +134,7 @@
   padding-inline: 5%;
   font-weight: 760;
   color: #f2ece3;
-  font-size: clamp(0.42rem, 0.94cqw, 0.72rem);
+  font-size: clamp(0.5rem, 1.02cqw, 0.74rem);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.96);
 }
 
@@ -167,6 +168,10 @@
 }
 
 @media (max-width: 42rem) {
+  .now-title {
+    font-size: clamp(0.94rem, 2.72cqw, 1.9rem);
+  }
+
   .now-pov {
     height: 23.4%;
     padding: 1.35% 2.05% 1.3% 2.05%;
@@ -175,7 +180,7 @@
   }
 
   .now-pov p {
-    font-size: clamp(0.66rem, 1.45cqw, 0.82rem);
+    font-size: clamp(0.67rem, 1.46cqw, 0.83rem);
     line-height: 1.42;
   }
 
@@ -194,6 +199,6 @@
   }
 
   .recent-card__title {
-    font-size: clamp(0.4rem, 0.9cqw, 0.68rem);
+    font-size: clamp(0.5rem, 1.02cqw, 0.72rem);
   }
 }
