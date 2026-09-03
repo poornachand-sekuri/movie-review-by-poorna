@@ -17,7 +17,7 @@
 }
 
 .now-pov p {
-  font-size: clamp(0.66rem, 1.45cqw, 0.86rem);
+  font-size: clamp(0.7rem, 1.52cqw, 0.88rem);
   line-height: 1.42;
   color: inherit;
 }
@@ -157,7 +157,7 @@
   }
 
   .now-pov p {
-    font-size: clamp(0.66rem, 1.45cqw, 0.82rem);
+    font-size: clamp(0.7rem, 1.52cqw, 0.84rem);
     line-height: 1.42;
   }
 
