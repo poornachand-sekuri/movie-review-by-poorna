@@ -22,42 +22,13 @@
 .now-poster img,
 .now-poster .poster-fallback {
   position: absolute;
-  inset: clamp(2px, 0.28cqw, 4px);
+  inset: clamp(4px, 0.42cqw, 6px);
   width: auto;
   height: auto;
   object-fit: cover;
   object-position: center;
   transform: none;
-  clip-path: polygon(
-    8% 0,
-    92% 0,
-    92% 1.5%,
-    96% 1.5%,
-    96% 4%,
-    98.5% 4%,
-    98.5% 8%,
-    100% 8%,
-    100% 92%,
-    98.5% 92%,
-    98.5% 96%,
-    96% 96%,
-    96% 98.5%,
-    92% 98.5%,
-    92% 100%,
-    8% 100%,
-    8% 98.5%,
-    4% 98.5%,
-    4% 96%,
-    1.5% 96%,
-    1.5% 92%,
-    0 92%,
-    0 8%,
-    1.5% 8%,
-    1.5% 4%,
-    4% 4%,
-    4% 1.5%,
-    8% 1.5%
-  );
+  border-radius: 10%;
 }
 
 .now-details {
@@ -253,34 +224,16 @@
 .recent-card__poster img,
 .recent-card__poster .poster-fallback {
   position: absolute;
-  top: clamp(2px, 0.28cqw, 4px);
-  left: clamp(2px, 0.28cqw, 4px);
-  right: clamp(2px, 0.28cqw, 4px);
+  top: clamp(4px, 0.4cqw, 6px);
+  left: clamp(4px, 0.4cqw, 6px);
+  right: clamp(4px, 0.4cqw, 6px);
   bottom: 0;
   width: auto;
   height: auto;
   object-fit: cover;
   object-position: center;
   transform: none;
-  border-radius: 0;
-  clip-path: polygon(
-    8% 0,
-    92% 0,
-    92% 1.5%,
-    96% 1.5%,
-    96% 4%,
-    98.5% 4%,
-    98.5% 8%,
-    100% 8%,
-    100% 100%,
-    0 100%,
-    0 8%,
-    1.5% 8%,
-    1.5% 4%,
-    4% 4%,
-    4% 1.5%,
-    8% 1.5%
-  );
+  border-radius: 12% 12% 0 0;
 }
 
 .recent-card__title,
