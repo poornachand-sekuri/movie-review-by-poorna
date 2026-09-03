@@ -1,0 +1,57 @@
+/* Runtime-only poster corner masks. Keep straight edges full and cut only decorative corners. */
+
+.now-poster {
+  --poster-corner-cut: clamp(10px, 1.6cqw, 22px);
+  background: transparent;
+  overflow: hidden;
+  -webkit-mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 0 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 100% / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 100% / 50.1% 50.1% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 0 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 100% / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 100% / 50.1% 50.1% no-repeat;
+}
+
+.now-poster img,
+.now-poster .poster-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+  clip-path: none;
+  transform: none;
+}
+
+.recent-card__poster {
+  --poster-corner-cut: clamp(8px, 1.2cqw, 17px);
+  background: transparent;
+  overflow: hidden;
+  -webkit-mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 51% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 51% no-repeat,
+    linear-gradient(#000 0 0) 0 100% / 100% 50% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 51% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 51% no-repeat,
+    linear-gradient(#000 0 0) 0 100% / 100% 50% no-repeat;
+}
+
+.recent-card__poster img,
+.recent-card__poster .poster-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+  clip-path: none;
+  transform: none;
+}
