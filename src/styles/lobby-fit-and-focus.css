@@ -139,3 +139,27 @@
 .lounge-backdrop {
   filter: brightness(1.16) saturate(1.14) contrast(1.02);
 }
+
+/*
+ * Normal Lounge section lift. The focused panel is moved outside .lounge-stage,
+ * so these rules affect browsing only and leave the approved popup treatment
+ * untouched. Lighten the AVIF artwork itself, not the live posters or text.
+ */
+.lounge-stage > .lounge-panel:not(.lounge-panel--banner) {
+  filter: drop-shadow(0 1rem 1.35rem rgba(0, 0, 0, 0.24));
+}
+
+.lounge-stage > .lounge-panel:not(.lounge-panel--banner) > .lounge-panel__art {
+  filter: brightness(1.07) saturate(1.06);
+}
+
+/* Preserve the title transition while letting more of the Recent poster show. */
+.lounge-stage > .lounge-panel--recent .recent-card__poster::after {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 8, 8, 0) 0%,
+    rgba(8, 8, 8, 0.1) 40%,
+    rgba(8, 8, 8, 0.44) 78%,
+    rgba(8, 8, 8, 0.65) 100%
+  );
+}
