@@ -319,23 +319,56 @@
 }
 
 /*
- * Call-to-action polish. The labels/arrows are baked into the artwork, so the
- * interactive hit areas add a restrained illuminated frame behind that art.
+ * The CTA words are part of the AVIF artwork. Keep the hit areas fully
+ * transparent and reinforce only the words themselves with a matching live
+ * text overlay. This preserves the artwork while making the actions inviting.
  */
 .now-read-hit,
 .section-view-all {
-  border: 1px solid rgba(240, 68, 73, 0.34);
-  background:
-    linear-gradient(90deg, rgba(95, 4, 8, 0.08), rgba(174, 10, 17, 0.16) 55%, rgba(95, 4, 8, 0.08));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.025),
-    inset 0 0 0.85rem rgba(198, 16, 23, 0.12),
-    0 0 0.62rem rgba(227, 28, 36, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #ff3d42;
+  transition: transform 130ms ease;
+}
+
+.now-read-hit::after,
+.section-view-all::after {
+  display: block;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.56rem, 1.5cqw, 1rem);
+  font-weight: 820;
+  line-height: 1;
+  letter-spacing: 0.105em;
+  color: rgba(255, 59, 65, 0.96);
+  text-transform: uppercase;
+  text-decoration-line: underline;
+  text-decoration-color: rgba(255, 74, 80, 0.5);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  white-space: nowrap;
+  text-shadow:
+    0 0 0.22rem rgba(227, 28, 36, 0.5),
+    0 0 0.55rem rgba(227, 28, 36, 0.2),
+    0 1px 2px rgba(0, 0, 0, 0.95);
   transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 120ms ease;
+    color 150ms ease,
+    text-shadow 150ms ease,
+    transform 150ms ease,
+    letter-spacing 150ms ease;
+  pointer-events: none;
+}
+
+.now-read-hit::after {
+  content: "READ MORE  ›";
+}
+
+.section-view-all::after {
+  content: "VIEW ALL  ›";
 }
 
 .now-read-hit {
@@ -343,7 +376,7 @@
   bottom: 5.45%;
   width: 19.4%;
   height: 7.35%;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .section-view-all--recent {
@@ -351,7 +384,7 @@
   top: 4.1%;
   width: 17.6%;
   height: 11.6%;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .section-view-all--previous {
@@ -359,29 +392,34 @@
   top: 4.55%;
   width: 16.8%;
   height: 12.8%;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .now-read-hit:active,
 .section-view-all:active {
-  transform: scale(0.98);
-  border-color: rgba(255, 94, 98, 0.64);
-  background: rgba(173, 11, 18, 0.22);
-  box-shadow:
-    inset 0 0 0.95rem rgba(227, 28, 36, 0.2),
-    0 0 0.82rem rgba(227, 28, 36, 0.3);
+  transform: scale(0.985);
+}
+
+.now-read-hit:active::after,
+.section-view-all:active::after {
+  color: #ff666a;
+  transform: translateX(2px);
+  text-shadow:
+    0 0 0.28rem rgba(255, 66, 72, 0.68),
+    0 0 0.7rem rgba(227, 28, 36, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.95);
 }
 
 @media (hover: hover) {
-  .now-read-hit:hover,
-  .section-view-all:hover {
-    transform: translateY(-1px);
-    border-color: rgba(255, 94, 98, 0.62);
-    background:
-      linear-gradient(90deg, rgba(112, 5, 10, 0.12), rgba(198, 15, 23, 0.24) 55%, rgba(112, 5, 10, 0.12));
-    box-shadow:
-      inset 0 0 1rem rgba(227, 28, 36, 0.18),
-      0 0 0.9rem rgba(227, 28, 36, 0.28);
+  .now-read-hit:hover::after,
+  .section-view-all:hover::after {
+    color: #ff555a;
+    letter-spacing: 0.12em;
+    transform: translateX(2px);
+    text-shadow:
+      0 0 0.28rem rgba(255, 66, 72, 0.64),
+      0 0 0.72rem rgba(227, 28, 36, 0.28),
+      0 1px 2px rgba(0, 0, 0, 0.95);
   }
 }
 
@@ -423,5 +461,11 @@
 
   .now-pov p {
     line-height: 1.52;
+  }
+
+  .now-read-hit::after,
+  .section-view-all::after {
+    font-size: clamp(0.52rem, 1.42cqw, 0.9rem);
+    letter-spacing: 0.1em;
   }
 }
