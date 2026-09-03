@@ -1,5 +1,14 @@
 /* Live Lounge content geometry measured against the finalized AVIF artwork. */
 
+/* Updated locked artwork keeps the Recent canvas size, slightly changes Now, and changes Previous. */
+.lounge-panel--now {
+  aspect-ratio: 1600 / 983;
+}
+
+.lounge-panel--previous {
+  aspect-ratio: 1742 / 903;
+}
+
 .now-poster {
   left: 8.892%;
   top: 17.056%;
@@ -174,12 +183,13 @@
   shape-margin: 2px;
 }
 
+/* The locked Recent artwork owns the full charcoal gradient below the poster. */
 .recent-card {
   top: 22.742%;
   height: 65.994%;
   padding: 0;
   clip-path: inset(0 round 4.25%);
-  background: #0d0d0e;
+  background: transparent;
 }
 
 .recent-card--1 {
@@ -215,7 +225,7 @@
 .recent-card__stars {
   box-sizing: border-box;
   width: 100%;
-  background: linear-gradient(180deg, #111113, #080809);
+  background: transparent;
 }
 
 .recent-card__title {
@@ -226,32 +236,33 @@
   padding-inline: 4%;
 }
 
+/* Previous-review poster windows re-measured against the locked 1742x903 filmstrip artwork. */
 .previous-card {
-  top: 32.028%;
-  height: 47.926%;
+  top: 31.229%;
+  height: 47.065%;
   padding: 0;
   clip-path: inset(0 round 4.5%);
-  background: #0b0b0c;
+  background: transparent;
 }
 
 .previous-card--1 {
-  left: 9.387%;
-  width: 16.510%;
+  left: 9.414%;
+  width: 16.016%;
 }
 
 .previous-card--2 {
-  left: 31.254%;
-  width: 16.510%;
+  left: 31.056%;
+  width: 16.131%;
 }
 
 .previous-card--3 {
-  left: 53.120%;
-  width: 16.179%;
+  left: 52.755%;
+  width: 16.073%;
 }
 
 .previous-card--4 {
-  left: 74.765%;
-  width: 16.400%;
+  left: 74.455%;
+  width: 16.188%;
 }
 
 .previous-card img,
