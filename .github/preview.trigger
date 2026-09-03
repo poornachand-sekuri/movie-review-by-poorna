@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Polish My POV with handwritten typography, clearer label spacing, and subtly illuminated Read More/View All CTA zones.
+Remove CTA backgrounds and highlight only the Read More and View All text with subtle glow, underline, and interaction emphasis.
