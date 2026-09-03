@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Deploy the reverted pre-glow Lounge state with the locked My POV UI preserved and the baked READ MORE artwork left untouched, with no illumination, brightness, overlay, replacement text or glow effects.
+Deploy the restored centered Lounge ambience framing with visible side gutters plus the reusable full-screen section focus view. Preserve all locked AVIF artwork, internal section geometry, My POV UI, READ MORE artwork and existing card/link actions.
