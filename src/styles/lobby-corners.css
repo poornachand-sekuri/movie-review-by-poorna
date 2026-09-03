@@ -55,3 +55,13 @@
   clip-path: none;
   transform: none;
 }
+
+/*
+ * Keep every Lounge content panel safely inside the background artwork's clear
+ * central lane. Navigation banners retain their current width. The focused
+ * state has its own !important width, so this affects normal browsing only.
+ */
+.lounge-stage > .lounge-panel:not(.lounge-panel--banner) {
+  width: min(calc(100% - clamp(0.75rem, 4vw, 1.5rem)), 72rem);
+  justify-self: center;
+}
