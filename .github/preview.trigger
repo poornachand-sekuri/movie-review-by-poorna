@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Increase only the My POV body text to the agreed safe readable size while keeping the My POV label, CTA treatment, artwork and all other Lounge geometry unchanged.
+Expand the My POV overlay to the full usable AVIF panel height and reserve only the bottom-right Read More footprint while leaving typography, artwork and all other Lounge sections unchanged.
