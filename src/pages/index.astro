@@ -333,14 +333,16 @@ const featuredPov = featured?.verdict?.trim() || '';
       const closeButton = document.createElement('button');
       closeButton.className = 'lounge-focus-close';
       closeButton.type = 'button';
+      closeButton.tabIndex = -1;
       closeButton.setAttribute('aria-label', 'Close enlarged section');
       closeButton.textContent = '×';
 
       const focusStage = document.createElement('div');
       focusStage.className = 'lounge-focus-stage';
 
-      focusLayer.append(closeButton, focusStage);
-      loungePage.append(focusLayer);
+      focusLayer.appendChild(closeButton);
+      focusLayer.appendChild(focusStage);
+      loungePage.appendChild(focusLayer);
 
       let focusedSection: HTMLElement | null = null;
       let placeholder: HTMLDivElement | null = null;
@@ -348,6 +350,8 @@ const featuredPov = featured?.verdict?.trim() || '';
 
       const openFocus = (section: HTMLElement) => {
         if (focusedSection) return;
+        const parent = section.parentElement;
+        if (!parent) return;
 
         const rect = section.getBoundingClientRect();
         placeholder = document.createElement('div');
@@ -355,13 +359,14 @@ const featuredPov = featured?.verdict?.trim() || '';
         placeholder.style.height = `${rect.height}px`;
         placeholder.style.maxWidth = `${rect.width}px`;
 
-        section.before(placeholder);
+        parent.insertBefore(placeholder, section);
         focusedSection = section;
-        focusStage.append(section);
+        focusStage.appendChild(section);
         section.classList.add('is-lounge-focused');
         focusLayer.classList.add('is-open');
         focusLayer.setAttribute('aria-hidden', 'false');
         document.documentElement.classList.add('lounge-focus-open');
+        closeButton.tabIndex = 0;
 
         requestAnimationFrame(() => {
           fitAllMarquees();
@@ -371,15 +376,18 @@ const featuredPov = featured?.verdict?.trim() || '';
 
       const closeFocus = () => {
         if (!focusedSection || !placeholder) return;
+        const parent = placeholder.parentElement;
+        if (!parent) return;
 
         const section = focusedSection;
         section.classList.remove('is-lounge-focused');
-        placeholder.replaceWith(section);
+        parent.replaceChild(section, placeholder);
         focusedSection = null;
         placeholder = null;
         focusLayer.classList.remove('is-open');
         focusLayer.setAttribute('aria-hidden', 'true');
         document.documentElement.classList.remove('lounge-focus-open');
+        closeButton.tabIndex = -1;
 
         requestAnimationFrame(() => {
           fitAllMarquees();
