@@ -9,14 +9,20 @@
   aspect-ratio: 1742 / 903;
 }
 
-/* Keep the dynamic poster visibly inside the red ticket frame. */
+/*
+ * Now Reviewed poster treatment:
+ * keep the dynamic poster deliberately inside the ornamental red frame instead
+ * of trying to trace the ticket's concave corner artwork. The surrounding dark
+ * matte is intentional and remains stable at every layout width.
+ */
 .now-poster {
+  --poster-mount-gap: clamp(8px, 0.9cqw, 12px);
   left: 8.892%;
   top: 17.056%;
   width: 32.185%;
   height: 45.584%;
   padding: 0;
-  background: transparent;
+  background: #050505;
   overflow: hidden;
   clip-path: none;
 }
@@ -24,14 +30,15 @@
 .now-poster img,
 .now-poster .poster-fallback {
   position: absolute;
-  inset: clamp(5px, 0.5cqw, 7px);
+  inset: var(--poster-mount-gap);
   width: auto;
   height: auto;
   object-fit: cover;
   object-position: center;
   transform: none;
   clip-path: none;
-  border-radius: 3.5%;
+  border-radius: clamp(2px, 0.24cqw, 4px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.035);
 }
 
 .now-details {
@@ -219,29 +226,37 @@
   width: 15.670%;
 }
 
-/* Physically inset the poster portion so its top corners cannot touch the red frame. */
+/*
+ * Recent Reviews poster mount:
+ * only the 60% poster zone is inset. Title and rating zones remain exactly
+ * where they were, so the card composition does not change.
+ */
 .recent-card__poster {
+  --poster-mount-x: clamp(5px, 0.58cqw, 8px);
+  --poster-mount-top: clamp(5px, 0.58cqw, 8px);
+  --poster-mount-bottom: clamp(3px, 0.32cqw, 5px);
   position: relative;
   min-height: 0;
   display: block;
   overflow: hidden;
-  background: transparent;
+  background: #070707;
 }
 
 .recent-card__poster img,
 .recent-card__poster .poster-fallback {
   position: absolute;
-  top: clamp(4px, 0.38cqw, 6px);
-  left: clamp(4px, 0.38cqw, 6px);
-  right: clamp(4px, 0.38cqw, 6px);
-  bottom: clamp(2px, 0.2cqw, 3px);
+  top: var(--poster-mount-top);
+  left: var(--poster-mount-x);
+  right: var(--poster-mount-x);
+  bottom: var(--poster-mount-bottom);
   width: auto;
   height: auto;
   object-fit: cover;
   object-position: center;
   transform: none;
   clip-path: none;
-  border-radius: 3.5% 3.5% 0 0;
+  border-radius: clamp(1px, 0.16cqw, 3px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 .recent-card__title,
