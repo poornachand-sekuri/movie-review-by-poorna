@@ -4,6 +4,7 @@ import { listReviews } from '../lib/data/reviews';
 import '../styles/lobby.css';
 import '../styles/lobby-content.css';
 import '../styles/lobby-corners.css';
+import '../styles/lobby-polish.css';
 
 export const prerender = false;
 
@@ -271,21 +272,30 @@ const featuredPov = featured?.verdict?.trim() || '';
       track.style.transform = 'translateX(0)';
       element.classList.remove('is-moving');
 
-      const overflow = Math.max(0, track.scrollWidth - element.clientWidth);
-      if (overflow <= 1 || motionQuery.matches) return;
+      if (motionQuery.matches) return;
 
-      const travelMs = Math.max(3500, Math.min(9000, overflow * 36));
-      const totalMs = 1000 + travelMs + 1000;
-      const startOffset = 1000 / totalMs;
-      const endOffset = (1000 + travelMs) / totalMs;
+      const containerWidth = element.clientWidth;
+      const trackWidth = track.scrollWidth;
+      if (containerWidth <= 0 || trackWidth <= 0) return;
+
+      const edgeGap = Math.max(8, containerWidth * 0.08);
+      const startX = containerWidth + edgeGap;
+      const endX = -trackWidth - edgeGap;
+      const travelDistance = startX - endX;
+      const pixelsPerSecond = 19;
+      const travelMs = Math.max(7000, Math.min(17000, (travelDistance / pixelsPerSecond) * 1000));
+      const pauseMs = 1450;
+      const totalMs = travelMs + pauseMs;
+      const endOffset = travelMs / totalMs;
 
       element.classList.add('is-moving');
+      track.style.transform = `translateX(${startX}px)`;
+
       const animation = track.animate(
         [
-          { transform: 'translateX(0)', offset: 0 },
-          { transform: 'translateX(0)', offset: startOffset },
-          { transform: `translateX(-${overflow}px)`, offset: endOffset },
-          { transform: `translateX(-${overflow}px)`, offset: 1 },
+          { transform: `translateX(${startX}px)`, offset: 0 },
+          { transform: `translateX(${endX}px)`, offset: endOffset },
+          { transform: `translateX(${endX}px)`, offset: 1 },
         ],
         { duration: totalMs, iterations: Infinity, easing: 'linear' },
       );
