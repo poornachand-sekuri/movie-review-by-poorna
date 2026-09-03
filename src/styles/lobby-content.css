@@ -140,15 +140,17 @@
  */
 .now-pov {
   display: block;
-  padding: 2.05% 2.45% 1.55% 2.35%;
-  color: #f5f2ec;
-  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(0.52rem, 1.22cqw, 0.94rem);
-  font-weight: 560;
-  line-height: 1.34;
+  padding: 1.7% 2.4% 1.45% 2.35%;
+  color: #eadfc8;
+  font-family: "Chalkboard SE", "Segoe Print", "Bradley Hand", "Marker Felt", cursive;
+  font-size: clamp(0.58rem, 1.36cqw, 1.04rem);
+  font-weight: 500;
+  line-height: 1.5;
   letter-spacing: 0.012em;
   text-wrap: pretty;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.94);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.96),
+    0 0 0.22em rgba(224, 196, 146, 0.08);
 }
 
 .now-pov::before {
@@ -156,8 +158,8 @@
   float: right;
   width: 24%;
   height: 100%;
-  shape-outside: inset(70% 0 0 0);
-  shape-margin: clamp(3px, 0.34cqw, 5px);
+  shape-outside: inset(68% 0 0 0);
+  shape-margin: clamp(5px, 0.5cqw, 8px);
   pointer-events: none;
 }
 
@@ -166,16 +168,17 @@
   display: inline-flex;
   align-items: center;
   width: max-content;
-  margin: 0 0.78em 0 0;
-  padding: 0.22em 0.62em;
+  margin: 0 1.35em 0 0;
+  padding: 0.25em 0.68em;
   border-left-width: 1px;
-  vertical-align: baseline;
+  vertical-align: 0.06em;
   font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
   font-size: 0.9em;
   font-weight: 820;
   line-height: 1.15;
   letter-spacing: 0.09em;
-  opacity: 0.96;
+  color: #f4eee4;
+  opacity: 0.98;
   white-space: nowrap;
 }
 
@@ -184,9 +187,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -0.24em;
+  bottom: -0.28em;
   height: 1px;
-  background: linear-gradient(90deg, rgba(227, 28, 36, 0.86), rgba(243, 242, 239, 0.32) 68%, transparent);
+  background: linear-gradient(90deg, rgba(227, 28, 36, 0.88), rgba(236, 221, 194, 0.34) 68%, transparent);
   pointer-events: none;
 }
 
@@ -195,10 +198,12 @@
   max-height: none;
   overflow: visible;
   display: inline;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
+  color: #eadfc8;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.012em;
   text-shadow: inherit;
 }
 
@@ -313,6 +318,73 @@
   clip-path: inset(clamp(1.5px, 0.22cqw, 3.5px) round 7.5%);
 }
 
+/*
+ * Call-to-action polish. The labels/arrows are baked into the artwork, so the
+ * interactive hit areas add a restrained illuminated frame behind that art.
+ */
+.now-read-hit,
+.section-view-all {
+  border: 1px solid rgba(240, 68, 73, 0.34);
+  background:
+    linear-gradient(90deg, rgba(95, 4, 8, 0.08), rgba(174, 10, 17, 0.16) 55%, rgba(95, 4, 8, 0.08));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+    inset 0 0 0.85rem rgba(198, 16, 23, 0.12),
+    0 0 0.62rem rgba(227, 28, 36, 0.18);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.now-read-hit {
+  right: 5.35%;
+  bottom: 5.45%;
+  width: 19.4%;
+  height: 7.35%;
+  border-radius: 999px;
+}
+
+.section-view-all--recent {
+  right: 1.35%;
+  top: 4.1%;
+  width: 17.6%;
+  height: 11.6%;
+  border-radius: 999px;
+}
+
+.section-view-all--previous {
+  right: 1.55%;
+  top: 4.55%;
+  width: 16.8%;
+  height: 12.8%;
+  border-radius: 999px;
+}
+
+.now-read-hit:active,
+.section-view-all:active {
+  transform: scale(0.98);
+  border-color: rgba(255, 94, 98, 0.64);
+  background: rgba(173, 11, 18, 0.22);
+  box-shadow:
+    inset 0 0 0.95rem rgba(227, 28, 36, 0.2),
+    0 0 0.82rem rgba(227, 28, 36, 0.3);
+}
+
+@media (hover: hover) {
+  .now-read-hit:hover,
+  .section-view-all:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 94, 98, 0.62);
+    background:
+      linear-gradient(90deg, rgba(112, 5, 10, 0.12), rgba(198, 15, 23, 0.24) 55%, rgba(112, 5, 10, 0.12));
+    box-shadow:
+      inset 0 0 1rem rgba(227, 28, 36, 0.18),
+      0 0 0.9rem rgba(227, 28, 36, 0.28);
+  }
+}
+
 @media (max-width: 42rem) {
   .now-title {
     top: 8.5%;
@@ -332,20 +404,24 @@
   }
 
   .now-pov {
-    padding: 1.85% 2.35% 1.45% 2.35%;
-    font-size: clamp(0.5rem, 1.18cqw, 0.88rem);
-    line-height: 1.32;
+    padding: 1.55% 2.35% 1.35% 2.35%;
+    font-size: clamp(0.58rem, 1.32cqw, 0.98rem);
+    line-height: 1.52;
   }
 
   .now-pov::before {
     width: 25%;
-    shape-outside: inset(68% 0 0 0);
-    shape-margin: clamp(3px, 0.32cqw, 5px);
+    shape-outside: inset(66% 0 0 0);
+    shape-margin: clamp(5px, 0.48cqw, 8px);
   }
 
   .now-pov__label {
-    margin-right: 0.72em;
-    padding: 0.22em 0.6em;
-    font-size: 0.94em;
+    margin-right: 1.45em;
+    padding: 0.25em 0.66em;
+    font-size: 0.9em;
+  }
+
+  .now-pov p {
+    line-height: 1.52;
   }
 }
