@@ -38,9 +38,12 @@
   margin: 0;
   padding-inline: 0.42em;
   box-sizing: border-box;
-  font-size: clamp(0.67rem, 1.46cqw, 0.83rem);
-  line-height: 1.42;
-  color: inherit;
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  font-size: clamp(0.75rem, 1.58cqw, 0.88rem);
+  line-height: 1.36;
+  letter-spacing: 0.003em;
+  color: #f1e4cc;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.75);
 }
 
 .now-pov__label {
@@ -186,8 +189,8 @@
 
   .now-pov p {
     padding-inline: 0.34em;
-    font-size: clamp(0.67rem, 1.46cqw, 0.83rem);
-    line-height: 1.42;
+    font-size: clamp(0.75rem, 1.58cqw, 0.88rem);
+    line-height: 1.36;
   }
 
   .now-pov__label {
