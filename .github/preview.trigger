@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Test only a slightly larger My POV body font while keeping line-height, geometry, Read More keep-out zone, artwork and every other Lounge section unchanged.
+Revert only the last My POV font-size test while keeping the improved POV geometry and Read More keep-out zone unchanged.
