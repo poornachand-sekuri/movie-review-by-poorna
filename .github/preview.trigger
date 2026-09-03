@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Polish POV sizing, brighten only baked artwork CTAs, blend Recent card layers, roll every Recent title right-to-left with an end pause, and give Previous posters a monochrome film-reel treatment.
+Use edgeless CTA glow, simplify POV typography, and restructure Recent cards so posters extend to a title row directly above the stars.
