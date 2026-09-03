@@ -162,11 +162,15 @@ jobs:
           if (!lounge.includes('05_previously_reviewed.avif')) throw new Error('Previous Reviews artwork is missing.');
           if (!lounge.includes('06_share_your_opinion.avif')) throw new Error('Opinion artwork is missing.');
           if (!lounge.includes('lounge-20260903-03')) throw new Error('Latest Lounge artwork revision is missing.');
-          if (count(lounge, 'class="recent-card ') !== 4) throw new Error('Lounge did not render exactly 4 recent review cards.');
-          if (count(lounge, 'class="previous-card ') !== 4) throw new Error('Lounge did not render exactly 4 previous review cards.');
+          if (count(lounge, 'class="recent-card ') !== 8) throw new Error('Lounge did not render exactly 8 recent review cards.');
+          if (count(lounge, 'class="previous-card ') !== 8) throw new Error('Lounge did not render exactly 8 previous review cards.');
+          if (count(lounge, 'data-review-carousel') !== 2) throw new Error('Lounge did not render both review carousels.');
+          if (count(lounge, 'data-carousel-next') !== 2 || count(lounge, 'data-carousel-prev') !== 2) {
+            throw new Error('Lounge carousel side controls are missing.');
+          }
           if (!lounge.includes('name="robots" content="noindex,nofollow"')) throw new Error('Preview noindex metadata is missing.');
           if (!cafe.includes('Kantara')) throw new Error('Cini Cafe search page did not render search results.');
           if (!review.includes('Screening Room') || !review.includes('DC')) throw new Error('Review click-through did not render DC.');
 
-          console.log('Live page smoke tests passed: Lounge, exact locked AVIF artwork, Cini Cafe and review click-through.');
+          console.log('Live page smoke tests passed: Lounge review paging, exact locked AVIF artwork, Cini Cafe and review click-through.');
           NODE
