@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Expand the My POV overlay to the full usable AVIF panel height and reserve only the bottom-right Read More footprint while leaving typography, artwork and all other Lounge sections unchanged.
+Align the My POV text canvas to the artwork frame width, use normal wrapping, and keep only the measured bottom-right Read More exclusion while leaving all other Lounge styling unchanged.
