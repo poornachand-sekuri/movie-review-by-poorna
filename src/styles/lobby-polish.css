@@ -31,9 +31,9 @@
  * margin. Every other part of the POV panel remains available to the copy.
  */
 .now-pov::before {
-  width: 24%;
+  width: 22%;
   height: 100%;
-  shape-outside: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+  shape-outside: polygon(0 73%, 100% 73%, 100% 100%, 0 100%);
   shape-margin: clamp(4px, 0.34cqw, 6px);
 }
 
@@ -166,8 +166,8 @@
   }
 
   .now-pov::before {
-    width: 24%;
-    shape-outside: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+    width: 22%;
+    shape-outside: polygon(0 73%, 100% 73%, 100% 100%, 0 100%);
     shape-margin: clamp(4px, 0.32cqw, 6px);
   }
 
