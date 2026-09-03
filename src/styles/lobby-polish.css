@@ -216,12 +216,13 @@
 }
 
 /*
- * Lounge framing: keep the section artwork centered inside the cinema ambience.
- * This deliberately overrides the earlier mobile near-edge-to-edge rule without
- * changing any section aspect ratio or internal overlay geometry.
+ * Lounge framing: align the section stack to the background artwork's central
+ * clear lane. The side ambience and designed lobby landmarks stay visible while
+ * every AVIF keeps its original aspect ratio and internal geometry.
  */
 .lounge-stage {
-  padding-inline: clamp(0.85rem, 4vw, 1.5rem);
+  padding-inline: clamp(1.1rem, 6.5vw, 2.5rem);
+  gap: clamp(1rem, 5.2vw, 2rem);
 }
 
 .lounge-panel {
@@ -361,19 +362,8 @@ html.lounge-focus-open body {
   }
 }
 
-/*
- * Background ambience: reveal more of the locked Lounge artwork without letting
- * it compete with the centered content panels. Only the runtime shade is lifted.
- */
+/* The background AVIF was designed at its final ambience level; render it raw. */
 .lounge-shade {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.02),
-      rgba(0, 0, 0, 0.14) 28%,
-      rgba(0, 0, 0, 0.20) 50%,
-      rgba(0, 0, 0, 0.14) 72%,
-      rgba(0, 0, 0, 0.02)
-    ),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.10));
+  display: none !important;
+  background: none !important;
 }
