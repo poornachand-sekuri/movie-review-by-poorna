@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Tighten Now Reviewed and Recent Reviews poster framing so images sit closer to the red borders while preserving the locked artwork.
+Inset Now Reviewed and Recent Reviews movie images so they sit visibly inside the red frames without touching the decorative corners.
