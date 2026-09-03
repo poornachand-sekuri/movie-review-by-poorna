@@ -126,9 +126,27 @@ jobs:
             07_bottom_navigation.avif
           do
             echo "Checking artwork: $file"
+            output="/tmp/$file"
             curl --fail --silent --show-error --location --retry 4 --retry-delay 1 --retry-all-errors \
-              --output /dev/null "$asset_base/$file"
+              --output "$output" "$asset_base/$file"
+            file "$output" | grep -q 'AVIF Image' || {
+              echo "Artwork payload is not a real AVIF: $file"
+              file "$output"
+              exit 1
+            }
           done
+
+          expected_now='42e06a283a9155ca41136d8cc139a667b0cd35e4dbcc23fc134822fb0ce4e275'
+          expected_recent='1e778374321e7cb87764741c4b2c1d284dce59949c988701505254fe81038150'
+          expected_previous='769d73bea77856cec3fb3b48f1ddc0070e95802f348bb4f07024be2f9d0a5390'
+
+          actual_now=$(sha256sum /tmp/03_now_reviewed_section.avif | awk '{print $1}')
+          actual_recent=$(sha256sum /tmp/04_recent_reviews_section.avif | awk '{print $1}')
+          actual_previous=$(sha256sum /tmp/05_previously_reviewed.avif | awk '{print $1}')
+
+          test "$actual_now" = "$expected_now" || { echo "Now Reviewed R2 object does not match the locked artwork."; exit 1; }
+          test "$actual_recent" = "$expected_recent" || { echo "Recent Reviews R2 object does not match the locked artwork."; exit 1; }
+          test "$actual_previous" = "$expected_previous" || { echo "Previously Reviewed R2 object does not match the locked artwork."; exit 1; }
 
           node <<'NODE'
           const fs = require('node:fs');
@@ -149,5 +167,5 @@ jobs:
           if (!cafe.includes('Kantara')) throw new Error('Cini Cafe search page did not render search results.');
           if (!review.includes('Screening Room') || !review.includes('DC')) throw new Error('Review click-through did not render DC.');
 
-          console.log('Live page smoke tests passed: Lounge, artwork, Cini Cafe and review click-through.');
+          console.log('Live page smoke tests passed: Lounge, exact locked AVIF artwork, Cini Cafe and review click-through.');
           NODE
