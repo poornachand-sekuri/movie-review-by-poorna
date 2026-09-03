@@ -116,15 +116,45 @@
     0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
+/* Keep the original metallic rings visible and tint only the dark centres. */
+.lounge-panel--now::before,
+.lounge-panel--now::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: 48.45%;
+  width: 2.55%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 34%, rgba(235, 151, 67, 0.86) 0 12%, rgba(184, 29, 34, 0.9) 34%, rgba(73, 7, 10, 0.96) 70%, rgba(8, 3, 4, 0.98) 100%);
+  box-shadow:
+    inset 0 0 0.22em rgba(255, 215, 164, 0.14),
+    0 0 0.42em rgba(227, 28, 36, 0.24);
+}
+
+.lounge-panel--now::before {
+  top: 24.8%;
+}
+
+.lounge-panel--now::after {
+  top: 61.7%;
+  background:
+    radial-gradient(circle at 38% 34%, rgba(210, 98, 50, 0.82) 0 11%, rgba(169, 20, 27, 0.92) 34%, rgba(62, 5, 8, 0.97) 72%, rgba(7, 3, 3, 0.99) 100%);
+}
+
 .now-pov {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   align-content: stretch;
-  row-gap: clamp(0.12rem, 0.4cqw, 0.34rem);
+  row-gap: clamp(0.2rem, 0.56cqw, 0.44rem);
   padding: 1.2% 2.3% 1.15% 2.2%;
 }
 
 .now-pov__label {
+  position: relative;
   width: max-content;
   margin: 0;
   padding: 0.16em 0.52em;
@@ -133,7 +163,18 @@
   font-size: clamp(0.36rem, 0.72cqw, 0.58rem);
   font-weight: 780;
   letter-spacing: 0.085em;
-  opacity: 0.9;
+  opacity: 0.92;
+}
+
+.now-pov__label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.28em;
+  width: clamp(2.4rem, 7.5cqw, 5.8rem);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(227, 28, 36, 0.82), rgba(243, 242, 239, 0.3) 62%, transparent);
+  pointer-events: none;
 }
 
 .now-pov p {
@@ -274,6 +315,7 @@
     padding-left: 2.25%;
     padding-right: 2.25%;
     padding-bottom: 1.05%;
+    row-gap: clamp(0.18rem, 0.52cqw, 0.4rem);
   }
 
   .now-pov__label {
