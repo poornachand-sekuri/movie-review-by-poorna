@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Flow the My POV label and text on the same line, use the available panel area, and keep a protected bottom-right zone around Read More.
+Polish My POV with handwritten typography, clearer label spacing, and subtly illuminated Read More/View All CTA zones.
