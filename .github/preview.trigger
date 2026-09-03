@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Inset Now Reviewed and Recent Reviews movie images so they sit visibly inside the red frames without touching the decorative corners.
+Use a deliberate inner-mount treatment for Now Reviewed and Recent Reviews posters so the ornamental red ticket frames stay fully visible.
