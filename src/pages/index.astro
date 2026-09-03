@@ -22,13 +22,12 @@ function formatDate(value: string | null): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return value;
 
-  const [, year, monthValue, dayValue] = match;
+  const [, , monthValue, dayValue] = match;
   const month = shortMonths[Number(monthValue) - 1];
   const day = Number(dayValue);
-  const yearShort = year?.slice(-2);
 
-  if (!month || !yearShort || !Number.isInteger(day) || day < 1 || day > 31) return value;
-  return `${String(day).padStart(2, '0')} ${month} '${yearShort}`;
+  if (!month || !Number.isInteger(day) || day < 1 || day > 31) return value;
+  return `${String(day).padStart(2, '0')} ${month}`;
 }
 
 function starText(rating: number | null): string {
