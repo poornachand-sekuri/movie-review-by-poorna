@@ -2,6 +2,7 @@
 
 /* POV: simple, readable cinema-note typography with the full usable panel height. */
 .now-pov {
+  width: 90.8%;
   height: 23.4%;
   padding: 1.45% 2.15% 1.35% 2.15%;
   overflow: hidden;
@@ -12,6 +13,7 @@
   line-height: 1.45;
   letter-spacing: 0.008em;
   color: #e9dfcd;
+  text-wrap: wrap;
 }
 
 .now-pov p {
