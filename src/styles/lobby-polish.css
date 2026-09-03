@@ -1,18 +1,35 @@
 /* Final Lounge polish layered after the measured artwork geometry. */
 
-/* POV: simple, readable cinema-note typography with the full usable panel height. */
+/*
+ * Locked typography system:
+ * - Movie titles: condensed cinematic display stack in soft cinema ivory.
+ * - My POV: classic film-magazine serif stack in warm parchment.
+ * No layout geometry, sizing, ticker or artwork changes are introduced here.
+ */
+.now-title,
+.recent-card__title {
+  font-family: "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-stretch: condensed;
+  color: #f2ece3;
+}
+
+.now-title {
+  font-weight: 800;
+}
+
+/* POV: classic, readable film-magazine typography with the full usable panel height. */
 .now-pov {
   width: 90.8%;
   height: 23.4%;
   padding: 1.45% 2.15% 1.35% 2.15%;
   overflow: hidden;
-  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: Baskerville, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   font-size: clamp(0.5rem, 1.12cqw, 0.86rem);
   font-style: normal;
-  font-weight: 520;
+  font-weight: 400;
   line-height: 1.45;
   letter-spacing: 0.008em;
-  color: #e9dfcd;
+  color: #e7d7ba;
   text-wrap: wrap;
 }
 
@@ -114,7 +131,8 @@
   justify-content: flex-start;
   align-items: center;
   padding-inline: 5%;
-  color: #f4eee4;
+  font-weight: 760;
+  color: #f2ece3;
   font-size: clamp(0.42rem, 0.94cqw, 0.72rem);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.96);
 }
