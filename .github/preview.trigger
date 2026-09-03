@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Deploy the safer upright Avenir Next My POV body treatment at the same readable size, with balanced paragraph insets and a tightened 18% Read More keep-out that preserves only the actual CTA footprint. Preserve the current My POV panel geometry, label placement and all Lounge artwork.
+Deploy the current upright Avenir Next My POV treatment with the review copy beginning on the same line as the My POV label after a deliberate gap. Preserve the readable body size, 18% Read More keep-out, panel geometry and all Lounge artwork.
