@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Deploy the Georgia-first My POV readability treatment with the approved larger body size, tighter line-height, warm ivory color and subtle dark separation shadow. Preserve the existing POV label placement, balanced left/right inset, Read More safe-zone geometry and all Lounge artwork.
+Deploy the safer upright Avenir Next My POV body treatment at the same readable size, with balanced paragraph insets and a tightened 18% Read More keep-out that preserves only the actual CTA footprint. Preserve the current My POV panel geometry, label placement and all Lounge artwork.
