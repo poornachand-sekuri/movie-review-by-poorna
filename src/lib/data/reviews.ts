@@ -139,7 +139,27 @@ export async function listReviews(options: ReviewListOptions = {}): Promise<read
   const limit = clampInteger(options.limit, DEFAULT_LIST_LIMIT, 1, MAX_LIST_LIMIT);
   const offset = clampInteger(options.offset, 0, 0, 10_000);
   const language = options.language?.trim().slice(0, 80) || null;
-  const orderBy = options.order === 'added' ? 'created_at DESC, id DESC' : 'reviewed_date DESC, id DESC';
+  const orderBy =
+    options.order === 'added'
+      ? `CASE
+           WHEN EXISTS (
+             SELECT 1
+             FROM legacy_import_audit legacy
+             WHERE legacy.review_id = reviews.id
+           ) THEN 1
+           ELSE 0
+         END ASC,
+         CASE
+           WHEN EXISTS (
+             SELECT 1
+             FROM legacy_import_audit legacy
+             WHERE legacy.review_id = reviews.id
+           ) THEN NULL
+           ELSE created_at
+         END DESC,
+         reviewed_date DESC,
+         id DESC`
+      : 'reviewed_date DESC, id DESC';
 
   const statement = language
     ? db
