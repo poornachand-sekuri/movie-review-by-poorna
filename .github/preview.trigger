@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Deploy the locked Lounge typography family, colors and sizes consistently for Now Reviewed and Recent Review movie titles, with the selected vintage editorial serif treatment for My POV. Keep the POV copy below its label and apply the balanced left/right paragraph inset without changing the current Read More safe-zone geometry or artwork.
+Deploy the Georgia-first My POV readability treatment with the approved larger body size, tighter line-height, warm ivory color and subtle dark separation shadow. Preserve the existing POV label placement, balanced left/right inset, Read More safe-zone geometry and all Lounge artwork.
