@@ -317,9 +317,7 @@ const featuredPov = featured?.verdict?.trim() || '';
 
     const loungePage = document.querySelector<HTMLElement>('.lounge-page');
     const focusableSections = [
-      ...document.querySelectorAll<HTMLElement>(
-        '.lounge-panel--now, .lounge-panel--recent, .lounge-panel--previous, .lounge-panel--opinion',
-      ),
+      ...document.querySelectorAll<HTMLElement>('.lounge-stage > .lounge-panel:not(.lounge-panel--banner)'),
     ];
 
     if (loungePage && focusableSections.length > 0) {
