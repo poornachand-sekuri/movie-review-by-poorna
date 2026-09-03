@@ -1,45 +1,92 @@
 /* Final Lounge polish layered after the measured artwork geometry. */
 
-/* POV: simple, readable cinema-note typography with more usable panel space. */
+/*
+ * My POV is the Lounge's editorial hero statement. Keep the badge stable, let
+ * the verdict flow naturally beside it, then reclaim the full line width after
+ * wrapping. Only the tiny bottom-right Read More footprint is reserved.
+ */
 .now-pov {
   padding: 1.45% 2.15% 1.35% 2.15%;
   font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(0.5rem, 1.12cqw, 0.86rem);
+  font-size: clamp(0.56rem, 1.26cqw, 0.96rem);
   font-style: normal;
-  font-weight: 520;
-  line-height: 1.45;
-  letter-spacing: 0.008em;
-  color: #e9dfcd;
+  font-weight: 580;
+  line-height: 1.5;
+  letter-spacing: 0.006em;
+  color: #f0e6d5;
+  text-wrap: pretty;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.96),
+    0 0 0.16rem rgba(239, 226, 205, 0.07);
 }
 
 .now-pov p {
-  font-size: 1em;
-  line-height: inherit;
+  display: inline;
+  margin: 0;
+  max-height: none;
+  overflow: visible;
   color: inherit;
+  font-family: inherit;
+  font-size: 1em;
+  font-style: normal;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
 }
 
 .now-pov__label {
-  margin-right: 1.12em;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38em;
+  width: max-content;
+  margin: 0 1.32em 0 0;
+  padding: 0.18em 0.5em 0.18em 0.34em;
+  border-left: 2px solid var(--lounge-red);
+  background: transparent;
+  vertical-align: 0.05em;
+  color: #f7f2e9;
+  font-family: "Arial Narrow", "Avenir Next Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.52rem, 1.04cqw, 0.84rem);
+  font-weight: 820;
+  line-height: 1.15;
+  letter-spacing: 0.095em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-/*
- * Reserve only the lowest-right corner for the baked Read More artwork.
- * The upper and middle width remain available to POV copy.
- */
+.now-pov__label > span {
+  color: var(--lounge-red);
+  text-shadow: 0 0 0.22rem rgba(227, 28, 36, 0.3);
+}
+
+.now-pov__label::after {
+  left: 0;
+  right: 0;
+  bottom: -0.22em;
+  opacity: 0.78;
+}
+
 .now-pov::before {
-  width: 19%;
+  width: 18%;
   height: 100%;
-  shape-outside: polygon(0 78%, 100% 78%, 100% 100%, 0 100%);
-  shape-margin: clamp(4px, 0.36cqw, 6px);
+  shape-outside: polygon(0 86%, 100% 86%, 100% 100%, 0 100%);
+  shape-margin: clamp(4px, 0.32cqw, 6px);
 }
 
 /*
- * Read More / View All already exist in the AVIF artwork. Keep only transparent
- * click targets above them. No live glow, fill, replacement text or filter.
+ * Read More / View All are already baked into the AVIF artwork. The live layer
+ * below is visually transparent: only the shadow cast by invisible glyphs is
+ * rendered, so the glow follows the letter shapes without creating any box,
+ * haze panel or duplicate visible wording.
  */
 .now-read-hit,
 .section-view-all {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: visible;
   border: 0;
   border-radius: 0;
@@ -51,19 +98,61 @@
 }
 
 .now-read-hit::before,
-.now-read-hit::after,
-.section-view-all::before,
-.section-view-all::after {
+.section-view-all::before {
   content: none !important;
   display: none !important;
-  background: none !important;
-  box-shadow: none !important;
-  filter: none !important;
 }
 
-.now-read-hit:active,
-.section-view-all:active {
-  transform: none;
+.now-read-hit::after,
+.section-view-all::after {
+  display: block !important;
+  pointer-events: none;
+  background: none !important;
+  border: 0;
+  box-shadow: none !important;
+  filter: none !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  font-family: "Arial Narrow", "Avenir Next Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow:
+    0 0 1px rgba(255, 76, 80, 0.46),
+    0 0 4px rgba(227, 28, 36, 0.25),
+    0 0 8px rgba(227, 28, 36, 0.1);
+  transition: text-shadow 140ms ease, transform 140ms ease;
+}
+
+.now-read-hit::after {
+  content: "READ MORE  ›" !important;
+  font-size: clamp(0.5rem, 1.36cqw, 0.94rem);
+}
+
+.section-view-all::after {
+  content: "VIEW ALL  ›" !important;
+  font-size: clamp(0.48rem, 1.22cqw, 0.86rem);
+}
+
+.now-read-hit:active::after,
+.section-view-all:active::after {
+  transform: translateX(1px);
+  text-shadow:
+    0 0 1px rgba(255, 92, 96, 0.58),
+    0 0 5px rgba(227, 28, 36, 0.34),
+    0 0 10px rgba(227, 28, 36, 0.14);
+}
+
+@media (hover: hover) {
+  .now-read-hit:hover::after,
+  .section-view-all:hover::after {
+    text-shadow:
+      0 0 1px rgba(255, 88, 92, 0.56),
+      0 0 5px rgba(227, 28, 36, 0.32),
+      0 0 9px rgba(227, 28, 36, 0.13);
+  }
 }
 
 /*
@@ -146,19 +235,20 @@
 
 @media (max-width: 42rem) {
   .now-pov {
-    padding: 1.35% 2.05% 1.3% 2.05%;
-    font-size: clamp(0.48rem, 1.08cqw, 0.82rem);
-    line-height: 1.46;
+    padding: 1.34% 2.05% 1.28% 2.05%;
+    font-size: clamp(0.53rem, 1.18cqw, 0.88rem);
+    line-height: 1.5;
   }
 
   .now-pov__label {
-    margin-right: 1.16em;
+    margin-right: 1.3em;
+    font-size: clamp(0.5rem, 1cqw, 0.8rem);
   }
 
   .now-pov::before {
-    width: 19%;
-    shape-outside: polygon(0 80%, 100% 80%, 100% 100%, 0 100%);
-    shape-margin: clamp(4px, 0.34cqw, 6px);
+    width: 18%;
+    shape-outside: polygon(0 87%, 100% 87%, 100% 100%, 0 100%);
+    shape-margin: clamp(4px, 0.3cqw, 6px);
   }
 
   .recent-card {
@@ -167,5 +257,13 @@
 
   .recent-card__title {
     font-size: clamp(0.4rem, 0.9cqw, 0.68rem);
+  }
+
+  .now-read-hit::after {
+    font-size: clamp(0.48rem, 1.28cqw, 0.88rem);
+  }
+
+  .section-view-all::after {
+    font-size: clamp(0.46rem, 1.16cqw, 0.8rem);
   }
 }
