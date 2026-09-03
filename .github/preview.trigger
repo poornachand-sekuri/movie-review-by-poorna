@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Apply corner-only poster fitting to Now Reviewed and Recent Reviews while leaving straight edges and Previously Reviewed unchanged.
+Apply runtime-only CSS corner masks to Now Reviewed and Recent Reviews posters; cut only the required corners and leave straight edges plus Previously Reviewed unchanged.
