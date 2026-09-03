@@ -31,10 +31,10 @@
  * margin. Every other part of the POV panel remains available to the copy.
  */
 .now-pov::before {
-  width: 28%;
+  width: 24%;
   height: 100%;
-  shape-outside: polygon(0 62%, 100% 62%, 100% 100%, 0 100%);
-  shape-margin: clamp(5px, 0.44cqw, 8px);
+  shape-outside: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+  shape-margin: clamp(4px, 0.34cqw, 6px);
 }
 
 /*
@@ -166,9 +166,9 @@
   }
 
   .now-pov::before {
-    width: 28%;
-    shape-outside: polygon(0 62%, 100% 62%, 100% 100%, 0 100%);
-    shape-margin: clamp(5px, 0.42cqw, 8px);
+    width: 24%;
+    shape-outside: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+    shape-margin: clamp(4px, 0.32cqw, 6px);
   }
 
   .recent-card {
