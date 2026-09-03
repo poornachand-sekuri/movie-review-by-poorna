@@ -116,36 +116,6 @@
     0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-/* Jewel-like cores sized to sit strictly inside the original metallic rings. */
-.lounge-panel--now::before,
-.lounge-panel--now::after {
-  content: "";
-  position: absolute;
-  z-index: 3;
-  left: 48.45%;
-  width: 1.92%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 35% 28%, #fff0d7 0 3%, #ffad55 5% 13%, #ff313a 26%, #b10813 55%, #540409 78%, #160102 100%);
-  box-shadow:
-    inset 0 0 0.16em rgba(255, 244, 222, 0.22),
-    0 0 0.22em rgba(255, 45, 52, 0.46),
-    0 0 0.48em rgba(255, 87, 35, 0.18);
-}
-
-.lounge-panel--now::before {
-  top: 24.72%;
-}
-
-.lounge-panel--now::after {
-  top: 61.62%;
-  background:
-    radial-gradient(circle at 35% 28%, #ffe9ce 0 3%, #ff8d42 5% 12%, #f52530 26%, #990710 56%, #450307 79%, #120102 100%);
-}
-
 .now-pov {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
