@@ -214,3 +214,151 @@
     font-size: clamp(0.5rem, 1.02cqw, 0.72rem);
   }
 }
+
+/*
+ * Lounge framing: keep the section artwork centered inside the cinema ambience.
+ * This deliberately overrides the earlier mobile near-edge-to-edge rule without
+ * changing any section aspect ratio or internal overlay geometry.
+ */
+.lounge-stage {
+  padding-inline: clamp(0.85rem, 4vw, 1.5rem);
+}
+
+.lounge-panel {
+  width: min(100%, 72rem);
+}
+
+.lounge-panel--now,
+.lounge-panel--recent,
+.lounge-panel--previous,
+.lounge-panel--opinion {
+  cursor: zoom-in;
+}
+
+/*
+ * Cinema focus view. The actual section is temporarily moved into this fixed
+ * layer, so the AVIF and every live overlay scale as one composition.
+ */
+html.lounge-focus-open,
+html.lounge-focus-open body {
+  overflow: hidden;
+}
+
+.lounge-focus-layer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(3rem, env(safe-area-inset-top)) 0.25rem max(1rem, env(safe-area-inset-bottom));
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: rgba(2, 2, 2, 0.82);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.lounge-focus-layer.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lounge-focus-stage {
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.lounge-focus-close {
+  position: fixed;
+  z-index: 102;
+  top: max(0.65rem, env(safe-area-inset-top));
+  right: max(0.65rem, env(safe-area-inset-right));
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(5, 5, 5, 0.78);
+  color: #f2ece3;
+  font: 500 1.45rem/1 system-ui, sans-serif;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lounge-focus-close:focus-visible {
+  outline: 2px solid var(--lounge-red);
+  outline-offset: 2px;
+}
+
+.lounge-panel.is-lounge-focused {
+  width: min(calc(100vw - 0.5rem), 80rem) !important;
+  max-width: none;
+  cursor: default;
+  filter: drop-shadow(0 1.4rem 2.2rem rgba(0, 0, 0, 0.72));
+  animation: lounge-focus-enter 220ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.lounge-focus-placeholder {
+  width: 100%;
+  pointer-events: none;
+}
+
+/* Preserve the locked proportions while giving live text the same gentle scale-up. */
+.lounge-focus-layer .now-title {
+  font-size: clamp(1rem, 2.9cqw, 2.08rem);
+}
+
+.lounge-focus-layer .now-meta dd {
+  font-size: clamp(0.5rem, 1.1cqw, 0.92rem);
+}
+
+.lounge-focus-layer .now-meta__rating dd {
+  font-size: clamp(0.84rem, 1.58cqw, 1.48rem);
+}
+
+.lounge-focus-layer .now-pov {
+  font-size: clamp(0.52rem, 1.16cqw, 0.9rem);
+}
+
+.lounge-focus-layer .now-pov p {
+  font-size: clamp(0.8rem, 1.68cqw, 0.94rem);
+}
+
+.lounge-focus-layer .recent-card__title {
+  font-size: clamp(0.54rem, 1.08cqw, 0.78rem);
+}
+
+.lounge-focus-layer .recent-card__stars {
+  font-size: clamp(0.54rem, 1.35cqw, 0.96rem);
+}
+
+.lounge-focus-layer .opinion-form input,
+.lounge-focus-layer .opinion-form textarea {
+  font-size: clamp(0.5rem, 1cqw, 0.88rem);
+}
+
+@keyframes lounge-focus-enter {
+  from {
+    opacity: 0.72;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lounge-focus-layer {
+    transition: none;
+  }
+
+  .lounge-panel.is-lounge-focused {
+    animation: none;
+  }
+}
