@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Deploy the centered Lounge ambience framing with visible side gutters and the universal focus view for every Lounge content section except the top and bottom navigation banners. Preserve all locked AVIF artwork, internal section geometry, My POV UI, READ MORE artwork and existing card/link actions.
+Deploy the centered Lounge ambience framing with the lighter runtime background shade, keeping visible side ambience and the universal focus view for every Lounge content section except the top and bottom navigation banners. Preserve all locked AVIF artwork, internal section geometry, My POV UI, READ MORE artwork and existing card/link actions.
