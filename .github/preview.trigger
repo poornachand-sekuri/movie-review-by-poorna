@@ -1,2 +1,2 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run live D1 API and Lounge page smoke tests.
-Deploy the current upright Avenir Next My POV treatment with the review copy beginning on the same line as the My POV label after a deliberate gap. Preserve the readable body size, 18% Read More keep-out, panel geometry and all Lounge artwork.
+Deploy the always-on baked READ MORE illumination using luminance-masked layered clip paths and drop-shadow, with no dimming, background overlay, box-shadow frame or change to the locked My POV/UI geometry.
