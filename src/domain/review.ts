@@ -1,4 +1,5 @@
 export type ReviewStatus = 'draft' | 'published' | 'archived';
+export type ReviewListOrder = 'reviewed' | 'added';
 
 export interface ReviewSummary {
   id: number;
@@ -46,6 +47,7 @@ export interface ReviewListOptions {
   limit?: number;
   offset?: number;
   language?: string;
+  order?: ReviewListOrder;
 }
 
 export interface ReviewSearchOptions {
