@@ -315,6 +315,106 @@ const featuredPov = featured?.verdict?.trim() || '';
       marqueeTitles.forEach((element) => observer.observe(element));
     }
 
+    const loungePage = document.querySelector<HTMLElement>('.lounge-page');
+    const focusableSections = [
+      ...document.querySelectorAll<HTMLElement>(
+        '.lounge-panel--now, .lounge-panel--recent, .lounge-panel--previous, .lounge-panel--opinion',
+      ),
+    ];
+
+    if (loungePage && focusableSections.length > 0) {
+      const focusLayer = document.createElement('div');
+      focusLayer.className = 'lounge-focus-layer';
+      focusLayer.setAttribute('role', 'dialog');
+      focusLayer.setAttribute('aria-modal', 'true');
+      focusLayer.setAttribute('aria-label', 'Enlarged Lounge section');
+      focusLayer.setAttribute('aria-hidden', 'true');
+
+      const closeButton = document.createElement('button');
+      closeButton.className = 'lounge-focus-close';
+      closeButton.type = 'button';
+      closeButton.setAttribute('aria-label', 'Close enlarged section');
+      closeButton.textContent = '×';
+
+      const focusStage = document.createElement('div');
+      focusStage.className = 'lounge-focus-stage';
+
+      focusLayer.append(closeButton, focusStage);
+      loungePage.append(focusLayer);
+
+      let focusedSection: HTMLElement | null = null;
+      let placeholder: HTMLDivElement | null = null;
+      const interactiveSelector = 'a, button, input, textarea, select, label, [contenteditable="true"]';
+
+      const openFocus = (section: HTMLElement) => {
+        if (focusedSection) return;
+
+        const rect = section.getBoundingClientRect();
+        placeholder = document.createElement('div');
+        placeholder.className = 'lounge-focus-placeholder';
+        placeholder.style.height = `${rect.height}px`;
+        placeholder.style.maxWidth = `${rect.width}px`;
+
+        section.before(placeholder);
+        focusedSection = section;
+        focusStage.append(section);
+        section.classList.add('is-lounge-focused');
+        focusLayer.classList.add('is-open');
+        focusLayer.setAttribute('aria-hidden', 'false');
+        document.documentElement.classList.add('lounge-focus-open');
+
+        requestAnimationFrame(() => {
+          fitAllMarquees();
+          closeButton.focus({ preventScroll: true });
+        });
+      };
+
+      const closeFocus = () => {
+        if (!focusedSection || !placeholder) return;
+
+        const section = focusedSection;
+        section.classList.remove('is-lounge-focused');
+        placeholder.replaceWith(section);
+        focusedSection = null;
+        placeholder = null;
+        focusLayer.classList.remove('is-open');
+        focusLayer.setAttribute('aria-hidden', 'true');
+        document.documentElement.classList.remove('lounge-focus-open');
+
+        requestAnimationFrame(() => {
+          fitAllMarquees();
+          section.focus({ preventScroll: true });
+        });
+      };
+
+      focusableSections.forEach((section) => {
+        section.tabIndex = 0;
+        section.setAttribute('aria-haspopup', 'dialog');
+
+        section.addEventListener('click', (event) => {
+          if (focusedSection === section) return;
+          const target = event.target;
+          if (target instanceof Element && target.closest(interactiveSelector)) return;
+          openFocus(section);
+        });
+
+        section.addEventListener('keydown', (event) => {
+          if (event.target !== section) return;
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          openFocus(section);
+        });
+      });
+
+      closeButton.addEventListener('click', closeFocus);
+      focusLayer.addEventListener('click', (event) => {
+        if (event.target === focusLayer || event.target === focusStage) closeFocus();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && focusedSection) closeFocus();
+      });
+    }
+
     const form = document.querySelector<HTMLFormElement>('[data-opinion-form]');
     const status = document.querySelector<HTMLElement>('[data-opinion-status]');
     form?.addEventListener('submit', (event) => {
