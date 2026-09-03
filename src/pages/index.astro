@@ -27,7 +27,7 @@ function formatDate(value: string | null): string {
   const day = Number(dayValue);
 
   if (!month || !Number.isInteger(day) || day < 1 || day > 31) return value;
-  return `${day} ${month} ${year}`;
+  return `${String(day).padStart(2, '0')} ${month} '${year.slice(-2)}`;
 }
 
 function starText(rating: number | null): string {
