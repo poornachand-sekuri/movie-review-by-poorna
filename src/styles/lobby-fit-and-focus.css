@@ -118,3 +118,15 @@
       0 0.3rem 0.86rem rgba(0, 0, 0, 0.68);
   }
 }
+
+/*
+ * Recent Review ratings: marquee champagne gold separates the stars from the
+ * Lounge's red borders/CTAs and picks up the warm practical lights in the room.
+ */
+.recent-card__stars {
+  color: #f3c86a;
+  text-shadow:
+    0 0 0.16rem rgba(243, 200, 106, 0.72),
+    0 0 0.42rem rgba(213, 150, 48, 0.38),
+    0 1px 2px rgba(0, 0, 0, 0.96);
+}
