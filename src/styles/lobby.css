@@ -47,6 +47,77 @@
   margin-inline: auto;
 }
 
+/*
+ * Focus mode follows the Lounge itself rather than replacing it with a black
+ * void. The complete background remains visible, but is softly dimmed and
+ * defocused so the enlarged section remains the clear focal plane.
+ */
+.lounge-focus-layer {
+  background: rgba(0, 0, 0, 0.46);
+  backdrop-filter: blur(2px) brightness(0.72) saturate(0.86);
+  -webkit-backdrop-filter: blur(2px) brightness(0.72) saturate(0.86);
+}
+
+.lounge-panel.is-lounge-focused {
+  filter:
+    drop-shadow(0 24px 58px rgba(0, 0, 0, 0.92))
+    drop-shadow(0 0 18px rgba(255, 35, 28, 0.12));
+}
+
+/*
+ * Focus artwork with the built-in EXIT treatment.
+ * No separate floating X is shown. When the panel artwork already contains an
+ * EXIT mark, the existing close control becomes a transparent hit-area over
+ * that artwork. For panels without an EXIT treatment, tapping outside the
+ * focused panel closes the focus layer and returns to the Lounge.
+ */
+.lounge-panel--now.is-lounge-focused {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/08_Now_Reviewed_With_Exit.png");
+}
+
+.lounge-panel--opinion.is-lounge-focused {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/09_Share_Your_Opinion_With_Exit.png");
+}
+
+/* Remove the generated floating X presentation completely. */
+.lounge-focus-close {
+  display: none;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  opacity: 0;
+}
+
+/* Transparent click target aligned to the EXIT artwork in the top-right corner. */
+.lounge-panel--now.is-lounge-focused > .lounge-focus-close,
+.lounge-panel--opinion.is-lounge-focused > .lounge-focus-close {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  right: 0;
+  display: block;
+  width: 21%;
+  height: 13%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lounge-panel--now.is-lounge-focused > .lounge-focus-close:focus-visible,
+.lounge-panel--opinion.is-lounge-focused > .lounge-focus-close:focus-visible {
+  outline: 2px solid rgba(255, 70, 58, 0.72);
+  outline-offset: -2px;
+}
+
 /* Keep the mobile composition tied to the artwork rails, not to generic
    viewport/container widths. */
 @media (max-width: 390px) {
@@ -57,5 +128,11 @@
   .lounge-backdrop {
     background-size: 100% auto !important;
     background-position: center top !important;
+  }
+
+  .lounge-focus-layer {
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(1.5px) brightness(0.74) saturate(0.88);
+    -webkit-backdrop-filter: blur(1.5px) brightness(0.74) saturate(0.88);
   }
 }
