@@ -1,2 +1,7 @@
 /* Lounge visual entrypoint. All presentation now starts from one clean baseline. */
 @import './lobby-reset.css';
+
+/* Correct the verified R2 object name for the Premier Lounge background. */
+.lounge-backdrop {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png") !important;
+}
