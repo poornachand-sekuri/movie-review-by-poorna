@@ -1,3 +1,3 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker and run the existing live D1 API and Lounge page smoke tests.
 Keep the locked Lounge data behavior unchanged: new published reviews added after the legacy migration come first by created_at, migrated legacy reviews remain ordered by reviewed_date descending, and the same sequence feeds Now Reviewed (#1), Recent Reviews (#2-#9), and Previously Reviewed (#10-#17) with the existing two-page swipe carousels and section interactions.
-Presentation is now reset to the neutral Lounge baseline so background, sections, colors, typography, spacing and decorative treatment can be redesigned from a clean visual foundation.
+Presentation uses the 2026-09-05 Premier Lounge visual layer: full rendered cinema-lounge background, uploaded PNG section artwork, preserved navigation/review interactions, and one consolidated Lounge presentation stylesheet.
