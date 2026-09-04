@@ -4,3 +4,4 @@ Presentation uses the 2026-09-05 Premier Lounge visual layer: full rendered cine
 Premier Lounge PNG smoke tests are updated; redeploy this validated visual build.
 Probe the uploaded Premier Lounge background filename and verify the complete R2 artwork set.
 Use the verified Premier Lounge background object path resolved by the previous asset probe.
+Lock Top Navigation, Now Reviewed, Recent Reviews, Previously Reviewed, Share Your Opinion, and Bottom Navigation to the same central architectural safe zone between the two vertical Lounge light rails.
