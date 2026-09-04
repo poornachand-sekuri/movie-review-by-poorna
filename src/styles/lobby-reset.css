@@ -1,42 +1,62 @@
 /*
- * Lounge presentation reset — 2026-09-04
+ * Premier Lounge presentation — 2026-09-05
  *
- * This is intentionally a neutral adaptive baseline, not a finished design.
- * Data, routes and behavior live outside this file and remain unchanged.
+ * One visual source of truth for the Lounge. Data, routes and interaction
+ * behavior remain in Astro/TypeScript; this file owns presentation only.
  */
 
 .lounge-page {
-  --lounge-bg: #f4f1eb;
-  --lounge-panel: #fffdf9;
-  --lounge-panel-strong: #ffffff;
-  --lounge-text: #24211d;
-  --lounge-muted: #6d675f;
-  --lounge-line: #d7d0c6;
-  --lounge-accent: #7b2d2d;
-  --lounge-accent-soft: #f0e4e2;
-  --lounge-radius: 18px;
-  --lounge-shadow: 0 12px 32px rgba(35, 30, 24, 0.08);
+  --lounge-art-base: "https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive";
+  --lounge-red: #ff201b;
+  --lounge-red-soft: rgba(255, 32, 27, 0.42);
+  --lounge-gold: #f0bd62;
+  --lounge-silver: #dedede;
+  --lounge-ink: #050505;
+  --lounge-card: rgba(4, 4, 4, 0.92);
+  --lounge-shadow: 0 16px 42px rgba(0, 0, 0, 0.72);
 
+  position: relative;
   min-height: 100vh;
-  background: var(--lounge-bg);
-  color: var(--lounge-text);
-  color-scheme: light;
   overflow-x: clip;
+  isolation: isolate;
+  color: #f5f3ee;
+  background: #000;
+  color-scheme: dark;
 }
 
-/* Old baked ambience/artwork is deliberately disabled for the redesign reset. */
-.lounge-backdrop,
-.lounge-shade,
-.lounge-panel__art {
-  display: none !important;
+/* The complete Lounge remains rendered behind every section at all times. */
+.lounge-backdrop {
+  position: fixed;
+  z-index: -4;
+  inset: 0;
+  display: block !important;
+  background-color: #000;
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_4K.png") !important;
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: auto 132vh;
+  transform: translateZ(0);
+}
+
+.lounge-shade {
+  position: fixed;
+  z-index: -3;
+  inset: 0;
+  display: block !important;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.66) 0%, rgba(0, 0, 0, 0.12) 22%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.12) 78%, rgba(0, 0, 0, 0.66) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.28) 100%);
 }
 
 .lounge-stage {
-  width: min(100%, 1180px);
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 470px);
   margin-inline: auto;
-  padding: clamp(18px, 3vw, 36px) clamp(14px, 3vw, 28px) clamp(40px, 7vw, 80px);
+  padding: clamp(92px, 13vh, 128px) 0 clamp(58px, 8vh, 96px);
   display: grid;
-  gap: clamp(18px, 3vw, 32px);
+  gap: 8px;
 }
 
 .lounge-panel,
@@ -44,85 +64,377 @@
   position: relative;
   width: 100%;
   margin: 0;
-  padding: clamp(18px, 3vw, 30px);
-  border: 1px solid var(--lounge-line);
-  border-radius: var(--lounge-radius);
-  background: var(--lounge-panel);
-  box-shadow: var(--lounge-shadow);
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+  container-type: inline-size;
 }
 
 .lounge-stage > .lounge-panel:not(.lounge-panel--banner) {
   cursor: zoom-in;
 }
 
-/* Neutral top/bottom navigation. */
+/* The original hidden img nodes are kept only as semantic/runtime hooks.
+   The final artwork is painted once by CSS, which prevents rule conflicts. */
+.lounge-panel__art {
+  display: none !important;
+}
+
+.lounge-panel--now {
+  aspect-ratio: 1448 / 1086;
+  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel.png") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+.lounge-panel--recent {
+  aspect-ratio: 1672 / 941;
+  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/04_Recent_Reviews_Panel.png") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+.lounge-panel--previous {
+  aspect-ratio: 1672 / 941;
+  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/05_Previously_Reviewed_Panel.png") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+.lounge-panel--opinion {
+  aspect-ratio: 2004 / 785;
+  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/06_Share_Your_Opinion_Panel.png") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+/* Top and bottom navigation art contains generous transparent padding.
+   Crop to the actual marquee while preserving the source artwork. */
 .lounge-panel--banner {
-  padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .lounge-banner-crop {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-height: 64px;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2048 / 286;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: center center;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.66));
+}
+
+.lounge-panel--banner:not(.lounge-panel--bottom) .lounge-banner-crop {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/02_Movie_Reviews_By_Poorna_Banner.png");
+}
+
+.lounge-panel--bottom .lounge-banner-crop {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/07_Lounge_Cini_Cafe_Banner.png");
 }
 
 .lounge-nav-hit {
-  position: relative;
+  position: absolute;
+  z-index: 4;
+  inset-block: 0;
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.lounge-panel--banner:not(.lounge-panel--bottom) .lounge-nav-hit--left {
+  left: 0;
+  width: 27%;
+}
+
+.lounge-panel--banner:not(.lounge-panel--bottom) .lounge-nav-hit--right {
+  right: 0;
+  width: 27%;
+}
+
+.lounge-panel--bottom .lounge-nav-hit--left {
+  left: 0;
+  width: 50%;
+}
+
+.lounge-panel--bottom .lounge-nav-hit--right {
+  right: 0;
+  width: 50%;
+}
+
+.lounge-nav-hit:hover,
+.lounge-nav-hit:focus-visible {
+  background: rgba(255, 32, 27, 0.035);
+  box-shadow: inset 0 0 18px rgba(255, 32, 27, 0.22);
+}
+
+/* ---------------- Featured review ---------------- */
+.now-poster {
+  position: absolute;
+  z-index: 2;
+  left: 11.5%;
+  top: 19.2%;
+  width: 25.5%;
+  height: 38.8%;
   display: grid;
   place-items: center;
-  min-height: 64px;
-  padding: 12px 18px;
-  color: var(--lounge-text);
-  text-decoration: none;
-  font-weight: 750;
-  letter-spacing: 0.03em;
-}
-
-.lounge-nav-hit + .lounge-nav-hit {
-  border-left: 1px solid var(--lounge-line);
-}
-
-.lounge-nav-hit--left::before {
-  content: "The Lounge";
-}
-
-.lounge-nav-hit--right::before {
-  content: "Cini Cafe";
-}
-
-/* Featured review. */
-.lounge-panel--now {
-  display: grid;
-  grid-template-columns: minmax(180px, 0.72fr) minmax(0, 1.28fr);
-  grid-template-areas:
-    "poster details"
-    "pov pov"
-    "read read";
-  gap: clamp(16px, 2.6vw, 28px);
-  align-items: start;
-}
-
-.lounge-panel--now::before {
-  content: "NOW REVIEWED";
-  grid-column: 1 / -1;
-  color: var(--lounge-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-
-.now-poster {
-  grid-area: poster;
-  position: relative;
-  aspect-ratio: 2 / 3;
   overflow: hidden;
-  border-radius: 12px;
-  background: #e5e0d8;
+  background: transparent;
+  border: 0;
+  border-radius: 1.5cqw;
 }
 
 .now-poster img,
-.poster-fallback,
+.poster-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.now-poster img {
+  filter: drop-shadow(0 0.9cqw 1.6cqw rgba(0, 0, 0, 0.8));
+}
+
+.poster-fallback {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    #121212;
+}
+
+.now-details {
+  position: absolute;
+  z-index: 3;
+  left: 55.2%;
+  top: 19.7%;
+  width: 32.9%;
+  height: 36.2%;
+  min-width: 0;
+  overflow: hidden;
+  color: #f5f2ea;
+  text-shadow: 0 1px 2px #000, 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.now-title {
+  margin: 0 0 1.1cqw;
+  overflow: hidden;
+  color: #f4f0e9;
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  font-size: 4.15cqw;
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.now-meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.05cqw 1.45cqw;
+  color: #eee9de;
+}
+
+.now-meta > div {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.now-meta > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.now-meta dt {
+  margin: 0 0 0.15cqw;
+  color: #ef443c;
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+  font-size: 1.75cqw;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
+}
+
+.now-meta dd {
+  margin: 0;
+  overflow: hidden;
+  color: #f8f5ee;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.35cqw;
+  font-weight: 650;
+  line-height: 1.08;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.now-meta__rating dd {
+  color: #f6c75e;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 2.55cqw;
+  letter-spacing: 0.07em;
+}
+
+.now-pov {
+  position: absolute;
+  z-index: 3;
+  left: 7.6%;
+  top: 72.1%;
+  width: 84.8%;
+  height: 13.8%;
+  overflow: hidden;
+  padding: 0.2cqw 0.9cqw 0;
+  border: 0;
+  background: transparent;
+}
+
+.now-pov__label {
+  display: none;
+}
+
+.now-pov p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #f7f2ea;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.75cqw;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: 0.003em;
+  text-shadow: 0 1px 2px #000, 0 0 7px rgba(0, 0, 0, 0.85);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.now-read-hit,
+.section-view-all {
+  position: absolute;
+  z-index: 6;
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  text-decoration: none;
+  border-radius: 999px;
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.now-read-hit {
+  right: 3.8%;
+  bottom: 2.9%;
+  width: 23.5%;
+  height: 8.5%;
+}
+
+.now-read-hit:hover,
+.now-read-hit:focus-visible,
+.section-view-all:hover,
+.section-view-all:focus-visible {
+  background: rgba(255, 24, 18, 0.025);
+  box-shadow: 0 0 17px rgba(255, 32, 27, 0.28);
+}
+
+/* ---------------- Review carousels ---------------- */
+.review-carousel {
+  position: absolute;
+  z-index: 3;
+  min-width: 0;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.recent-overlay {
+  left: 7.35%;
+  right: 7.35%;
+  top: 23.6%;
+  bottom: 16.2%;
+}
+
+.previous-overlay {
+  left: 8.8%;
+  right: 8.4%;
+  top: 32.6%;
+  bottom: 23.4%;
+}
+
+.review-carousel__viewport {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.review-carousel__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0, 0, 0);
+  transition: transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.review-carousel__page {
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.recent-overlay .review-carousel__page {
+  gap: 7.35%;
+}
+
+.previous-overlay .review-carousel__page {
+  gap: 4.45%;
+}
+
+.recent-card,
+.previous-card {
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0.8cqw;
+  background: transparent;
+  color: #fff;
+  text-decoration: none;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.recent-card:hover,
+.recent-card:focus-visible,
+.previous-card:hover,
+.previous-card:focus-visible {
+  filter: brightness(1.1);
+  transform: translateY(-0.35cqw);
+}
+
+.recent-card {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  padding: 1.3cqw 0.7cqw 1.2cqw;
+}
+
+.recent-card__poster {
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 0.55cqw 0.55cqw 0.2cqw 0.2cqw;
+  background: #111;
+}
+
 .recent-card__poster img,
 .previous-card img {
   display: block;
@@ -131,207 +443,19 @@
   object-fit: cover;
 }
 
-.poster-fallback {
-  background: linear-gradient(135deg, #e8e2d9, #d4cdc2);
-}
-
-.now-details {
-  grid-area: details;
-  min-width: 0;
-}
-
-.now-title {
-  margin: 0 0 18px;
-  color: var(--lounge-text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: clamp(1.5rem, 4vw, 2.8rem);
-  line-height: 1.05;
-  letter-spacing: -0.025em;
-}
-
-.now-meta {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.now-meta > div {
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--lounge-line);
-  border-radius: 10px;
-  background: var(--lounge-panel-strong);
-}
-
-.now-meta dt {
-  margin-bottom: 5px;
-  color: var(--lounge-muted);
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.now-meta dd {
-  margin: 0;
-  overflow: hidden;
-  color: var(--lounge-text);
-  font-weight: 700;
-  text-overflow: ellipsis;
-}
-
-.now-meta__rating dd,
-.recent-card__stars {
-  color: var(--lounge-accent);
-  letter-spacing: 0.06em;
-}
-
-.now-pov {
-  grid-area: pov;
-  padding: clamp(16px, 2.4vw, 24px);
-  border: 1px solid var(--lounge-line);
-  border-radius: 12px;
-  background: #faf7f1;
-}
-
-.now-pov__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4em;
-  margin-bottom: 10px;
-  color: var(--lounge-accent);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.now-pov p {
-  margin: 0;
-  color: var(--lounge-text);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1rem, 1.8vw, 1.15rem);
-  line-height: 1.62;
-}
-
-.now-read-hit,
-.section-view-all {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid var(--lounge-accent);
-  border-radius: 999px;
-  color: var(--lounge-accent);
-  background: transparent;
-  text-decoration: none;
-  font-size: 0.84rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-.now-read-hit {
-  grid-area: read;
-  justify-self: start;
-}
-
-.now-read-hit::before {
-  content: "Read review";
-}
-
-/* Review carousels. */
-.lounge-panel--recent,
-.lounge-panel--previous,
-.lounge-panel--opinion {
-  display: grid;
-  gap: 18px;
-}
-
-.lounge-panel--recent::before,
-.lounge-panel--previous::before,
-.lounge-panel--opinion::before {
-  color: var(--lounge-text);
-  font-size: clamp(1.15rem, 2.6vw, 1.65rem);
-  font-weight: 800;
-  letter-spacing: -0.015em;
-}
-
-.lounge-panel--recent::before {
-  content: "Recent Reviews";
-}
-
-.lounge-panel--previous::before {
-  content: "Previously Reviewed";
-}
-
-.lounge-panel--opinion::before {
-  content: "Share Your Opinion";
-}
-
-.review-carousel {
-  position: relative;
-  min-width: 0;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.review-carousel__viewport {
-  margin-inline: clamp(32px, 5vw, 48px);
-  overflow: hidden;
-}
-
-.review-carousel__track {
-  display: flex;
-  width: 100%;
-  transform: translate3d(0, 0, 0);
-  transition: transform 260ms ease;
-  will-change: transform;
-}
-
-.review-carousel__page {
-  flex: 0 0 100%;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(10px, 1.8vw, 18px);
-}
-
-.recent-card,
-.previous-card {
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--lounge-line);
-  border-radius: 12px;
-  background: var(--lounge-panel-strong);
-  color: var(--lounge-text);
-  text-decoration: none;
-}
-
-.recent-card {
-  display: grid;
-  grid-template-rows: auto auto auto;
-}
-
-.recent-card__poster,
-.previous-card {
-  aspect-ratio: 2 / 3;
-  background: #e5e0d8;
-}
-
-.recent-card__poster {
-  overflow: hidden;
-}
-
 .recent-card__title {
   min-width: 0;
   overflow: hidden;
-  padding: 10px 10px 5px;
+  margin-top: 0.6cqw;
+  padding: 0.55cqw 0.45cqw 0.45cqw;
+  background: rgba(0, 0, 0, 0.76);
+  color: #f6f2ea;
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+  font-size: 2.03cqw;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.025em;
   white-space: nowrap;
-  font-size: 0.86rem;
-  font-weight: 750;
 }
 
 .recent-card__title > span {
@@ -341,107 +465,169 @@
 }
 
 .recent-card__stars {
-  padding: 4px 10px 11px;
-  font-size: 0.86rem;
+  display: block;
+  overflow: hidden;
+  padding: 0.5cqw 0.35cqw 0.2cqw;
+  color: #f5c44f;
+  font-size: 1.82cqw;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.previous-card {
+  padding: 1.1cqw 0.6cqw;
+}
+
+.previous-card img {
+  border-radius: 0.55cqw;
 }
 
 .review-carousel__control {
   position: absolute;
-  z-index: 3;
+  z-index: 7;
   top: 50%;
-  width: 36px;
-  height: 48px;
+  width: max(22px, 5.5cqw);
+  height: max(30px, 9cqw);
+  padding: 0;
   transform: translateY(-50%);
-  border: 1px solid var(--lounge-line);
-  border-radius: 10px;
-  background: var(--lounge-panel-strong);
-  color: var(--lounge-text);
-  font-size: 1.5rem;
+  border: 1px solid rgba(224, 224, 224, 0.5);
+  border-radius: 999px;
+  background: rgba(5, 5, 5, 0.82);
+  color: #ff3a32;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  font-size: max(19px, 5cqw);
+  line-height: 1;
   cursor: pointer;
 }
 
 .review-carousel__control--prev {
-  left: 0;
+  left: -6.2%;
 }
 
 .review-carousel__control--next {
-  right: 0;
+  right: -6.2%;
 }
 
 .review-carousel__control:disabled {
-  opacity: 0.35;
+  opacity: 0.18;
   cursor: default;
 }
 
-.section-view-all {
-  justify-self: start;
+.section-view-all--recent,
+.section-view-all--previous {
+  right: 2.6%;
+  top: 4.4%;
+  width: 19.2%;
+  height: 12%;
 }
 
-.section-view-all::before {
-  content: "View all";
-}
-
-/* Opinion section. */
+/* ---------------- Opinion panel ---------------- */
 .comments-window {
-  min-height: 90px;
-  max-height: 220px;
+  position: absolute;
+  z-index: 3;
+  left: 6.75%;
+  top: 34%;
+  width: 39.25%;
+  height: 49.8%;
+  min-height: 0;
+  max-height: none;
   overflow: auto;
-  padding: 14px;
-  border: 1px dashed var(--lounge-line);
-  border-radius: 10px;
-  color: var(--lounge-muted);
-  background: #faf7f1;
+  padding: 1.35cqw 1.45cqw;
+  border: 0;
+  border-radius: 0.7cqw;
+  background: rgba(0, 0, 0, 0.14);
+  color: #ebe7df;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 2.06cqw;
+  line-height: 1.32;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 45, 38, 0.65) rgba(255, 255, 255, 0.05);
 }
 
 .comments-window:empty::before {
-  content: "Comments will appear here.";
+  content: "No approved comments yet. Be the first to share your opinion.";
+  color: rgba(245, 242, 234, 0.8);
 }
 
 .opinion-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  position: absolute;
+  z-index: 4;
+  left: 50.35%;
+  top: 34%;
+  width: 40.9%;
+  height: 49.8%;
+  display: block;
 }
 
 .opinion-form input,
 .opinion-form textarea {
+  position: absolute;
+  left: 0;
   width: 100%;
-  border: 1px solid var(--lounge-line);
-  border-radius: 10px;
-  background: var(--lounge-panel-strong);
-  color: var(--lounge-text);
+  margin: 0;
+  border: 0;
+  border-radius: 0.55cqw;
+  outline: 0;
+  background: rgba(0, 0, 0, 0.2);
+  color: #f5f1e9;
+  caret-color: #ff312a;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 2.08cqw;
+  line-height: 1.15;
+  box-shadow: none;
 }
 
 .opinion-form input {
-  min-height: 46px;
-  padding: 10px 12px;
+  top: 0;
+  height: 18.2%;
+  min-height: 0;
+  padding: 0.55cqw 1.25cqw;
 }
 
 .opinion-form textarea {
-  grid-column: 1 / -1;
-  min-height: 120px;
-  padding: 12px;
-  resize: vertical;
+  top: 25%;
+  height: 43.8%;
+  min-height: 0;
+  padding: 0.9cqw 1.25cqw;
+  resize: none;
+}
+
+.opinion-form input::placeholder,
+.opinion-form textarea::placeholder {
+  color: rgba(238, 233, 224, 0.62);
+}
+
+.opinion-form input:focus,
+.opinion-form textarea:focus {
+  background: rgba(0, 0, 0, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(255, 63, 53, 0.5), 0 0 12px rgba(255, 32, 27, 0.12);
 }
 
 .opinion-form button {
-  grid-column: 1 / -1;
-  justify-self: start;
-  min-height: 44px;
-  padding: 10px 18px;
+  position: absolute;
+  z-index: 2;
+  left: 2.5%;
+  top: 74.5%;
+  width: 95%;
+  height: 21.5%;
+  min-height: 0;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: var(--lounge-accent);
-  color: #fff;
-  font-weight: 800;
+  border-radius: 0.8cqw;
+  background: transparent;
+  color: transparent;
   cursor: pointer;
+  transition: box-shadow 150ms ease, background-color 150ms ease;
 }
 
-.opinion-form button::before {
-  content: "Submit comment";
+.opinion-form button:hover,
+.opinion-form button:focus-visible {
+  background: rgba(255, 35, 27, 0.05);
+  box-shadow: 0 0 18px rgba(255, 25, 18, 0.28);
 }
 
-/* Enlarged-section behavior remains intact, with neutral styling only. */
+/* ---------------- Enlarged-section behavior ---------------- */
 html.lounge-focus-open,
 html.lounge-focus-open body {
   overflow: hidden;
@@ -453,9 +639,10 @@ html.lounge-focus-open body {
   inset: 0;
   display: grid;
   place-items: center;
-  padding: max(54px, env(safe-area-inset-top)) 12px max(18px, env(safe-area-inset-bottom));
+  padding: max(58px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom));
   overflow: auto;
-  background: rgba(36, 33, 29, 0.52);
+  background: rgba(0, 0, 0, 0.86);
+  backdrop-filter: blur(9px) saturate(0.85);
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
@@ -467,7 +654,7 @@ html.lounge-focus-open body {
 }
 
 .lounge-focus-stage {
-  width: min(100%, 1180px);
+  width: min(96vw, 820px);
   display: grid;
   place-items: center;
 }
@@ -475,7 +662,7 @@ html.lounge-focus-open body {
 .lounge-panel.is-lounge-focused {
   width: 100%;
   cursor: default;
-  box-shadow: 0 24px 70px rgba(31, 27, 22, 0.22);
+  filter: drop-shadow(0 24px 55px rgba(0, 0, 0, 0.88));
 }
 
 .lounge-focus-close {
@@ -483,13 +670,17 @@ html.lounge-focus-open body {
   z-index: 102;
   top: max(10px, env(safe-area-inset-top));
   right: max(10px, env(safe-area-inset-right));
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--lounge-line);
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.66);
   border-radius: 50%;
-  background: #fff;
-  color: var(--lounge-text);
-  font-size: 1.2rem;
+  background: rgba(8, 8, 8, 0.9);
+  color: #ff3a31;
+  box-shadow: 0 0 18px rgba(255, 32, 27, 0.22);
+  font-size: 1.15rem;
   cursor: pointer;
 }
 
@@ -499,8 +690,15 @@ html.lounge-focus-open body {
 }
 
 .lounge-empty {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  border: 1px solid rgba(220, 220, 220, 0.5);
+  background: rgba(5, 5, 5, 0.9);
+  color: #eee9df;
   text-align: center;
-  color: var(--lounge-muted);
+  box-shadow: var(--lounge-shadow);
 }
 
 .lounge-nav-hit:focus-visible,
@@ -514,99 +712,43 @@ html.lounge-focus-open body {
 .opinion-form button:focus-visible,
 .lounge-focus-close:focus-visible,
 .lounge-panel:focus-visible {
-  outline: 3px solid var(--lounge-accent);
-  outline-offset: 3px;
+  outline: 2px solid #ff3a31;
+  outline-offset: 2px;
 }
 
-@media (max-width: 720px) {
-  .lounge-panel--now {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "poster"
-      "details"
-      "pov"
-      "read";
-  }
-
-  .now-poster {
-    width: min(72%, 300px);
-  }
-
-  .now-meta {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .now-meta__rating {
-    grid-column: 1 / -1;
-  }
-
-  .review-carousel__viewport {
-    margin-inline: 30px;
-  }
-
-  .review-carousel__page {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .opinion-form {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 420px) {
+@media (max-width: 390px) {
   .lounge-stage {
-    padding-inline: 10px;
+    width: min(94vw, 470px);
+    padding-top: clamp(84px, 11vh, 104px);
+    gap: 6px;
   }
 
-  .lounge-panel,
-  .lounge-empty {
-    padding: 16px;
-    border-radius: 14px;
-  }
-
-  .lounge-banner-crop {
-    grid-template-columns: 1fr;
-  }
-
-  .lounge-nav-hit + .lounge-nav-hit {
-    border-left: 0;
-    border-top: 1px solid var(--lounge-line);
-  }
-
-  .now-poster {
-    width: min(82%, 280px);
-  }
-
-  .now-meta {
-    grid-template-columns: 1fr;
-  }
-
-  .now-meta__rating {
-    grid-column: auto;
-  }
-
-  .review-carousel__viewport {
-    margin-inline: 26px;
-  }
-
-  .review-carousel__page {
-    grid-template-columns: 1fr 1fr;
-    gap: 9px;
+  .lounge-backdrop {
+    background-size: auto 124vh;
   }
 
   .review-carousel__control {
-    width: 30px;
-    height: 44px;
+    width: 20px;
+    height: 30px;
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 900px) and (min-height: 760px) {
+  .lounge-backdrop {
+    background-size: auto 136vh;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .review-carousel__track,
-  .lounge-focus-layer {
+  .lounge-focus-layer,
+  .recent-card,
+  .previous-card,
+  .lounge-nav-hit,
+  .now-read-hit,
+  .section-view-all,
+  .opinion-form button {
     transition: none;
-  }
-
-  .recent-card__title > span {
-    transform: none !important;
   }
 }
