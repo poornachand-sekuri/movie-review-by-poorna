@@ -1,20 +1,35 @@
 /* Lounge visual entrypoint. All presentation now starts from one clean baseline. */
 @import './lobby-reset.css';
 
-/* Correct the verified R2 object name for the Premier Lounge background. */
+/*
+ * Premier Lounge background — source-of-truth framing.
+ *
+ * IMPORTANT: the artwork must be shown at its full width. The earlier
+ * `auto 132vh` sizing scaled the image from viewport height, which made the
+ * rendered artwork wider than the phone viewport and cropped both side walls.
+ * Fit by width instead so Screen entrances, wall lighting and the complete
+ * architectural composition remain visible.
+ */
 .lounge-backdrop {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png") !important;
+  background-size: 100% auto !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
 }
 
 /*
  * Architectural safe-zone lock.
- * The Lounge artwork is the source of truth: every foreground section must sit
- * inside the two vertical light rails instead of expanding to viewport width.
- * Top navigation, all review/opinion sections, and bottom navigation therefore
- * share one master column width.
+ *
+ * With the FULL background visible, the inner vertical light rails sit at
+ * roughly 22% and 78% of the artwork width. The complete foreground UI stack
+ * therefore uses a single ~56% master column. This keeps every section inside
+ * those rails while preserving the side architecture.
+ *
+ * Top navigation, all content panels, Share Your Opinion and Bottom Navigation
+ * are intentionally governed by the same width — none may expand separately.
  */
 .lounge-stage {
-  width: min(72vw, 370px);
+  width: min(56vw, 470px);
 }
 
 .lounge-stage > .lounge-panel,
@@ -27,14 +42,20 @@
   justify-self: center;
 }
 
-/* Keep both navigation bars governed by the exact same architectural column. */
 .lounge-panel--banner:not(.lounge-panel--bottom),
 .lounge-panel--bottom {
   margin-inline: auto;
 }
 
+/* Keep the mobile composition tied to the artwork rails, not to generic
+   viewport/container widths. */
 @media (max-width: 390px) {
   .lounge-stage {
-    width: 72vw;
+    width: 56vw;
+  }
+
+  .lounge-backdrop {
+    background-size: 100% auto !important;
+    background-position: center top !important;
   }
 }
