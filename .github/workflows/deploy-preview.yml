@@ -116,8 +116,27 @@ jobs:
           curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors "$PREVIEW_URL/review/dc" > /tmp/review.html
 
           asset_base='https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res''ponsive'
-          for file in \
+
+          background_file=''
+          for candidate in \
             01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_4K.png \
+            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png \
+            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_4k.png \
+            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_HD.png \
+            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_2160x3780.png
+          do
+            status=$(curl --silent --show-error --location --output /tmp/lounge-background-candidate --write-out '%{http_code}' "$asset_base/$candidate?verify=$GITHUB_SHA" || true)
+            echo "Background candidate $candidate -> HTTP $status"
+            if [ "$status" = '200' ] && file /tmp/lounge-background-candidate | grep -q 'PNG image data'; then
+              background_file="$candidate"
+              cp /tmp/lounge-background-candidate /tmp/lounge-background.png
+              break
+            fi
+          done
+          test -n "$background_file" || { echo 'Could not resolve the uploaded Premier Lounge background object name.'; exit 1; }
+          echo "Resolved Premier Lounge background: $background_file"
+
+          for file in \
             02_Movie_Reviews_By_Poorna_Banner.png \
             03_Now_Reviewed_Panel.png \
             04_Recent_Reviews_Panel.png \
