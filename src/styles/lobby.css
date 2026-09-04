@@ -5,3 +5,36 @@
 .lounge-backdrop {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png") !important;
 }
+
+/*
+ * Architectural safe-zone lock.
+ * The Lounge artwork is the source of truth: every foreground section must sit
+ * inside the two vertical light rails instead of expanding to viewport width.
+ * Top navigation, all review/opinion sections, and bottom navigation therefore
+ * share one master column width.
+ */
+.lounge-stage {
+  width: min(72vw, 370px);
+}
+
+.lounge-stage > .lounge-panel,
+.lounge-stage > .lounge-empty,
+.lounge-panel--banner,
+.lounge-panel--bottom,
+.lounge-banner-crop {
+  width: 100%;
+  max-width: 100%;
+  justify-self: center;
+}
+
+/* Keep both navigation bars governed by the exact same architectural column. */
+.lounge-panel--banner:not(.lounge-panel--bottom),
+.lounge-panel--bottom {
+  margin-inline: auto;
+}
+
+@media (max-width: 390px) {
+  .lounge-stage {
+    width: 72vw;
+  }
+}
