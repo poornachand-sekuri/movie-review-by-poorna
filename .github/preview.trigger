@@ -3,3 +3,4 @@ Keep the locked Lounge data behavior unchanged: new published reviews added afte
 Presentation uses the 2026-09-05 Premier Lounge visual layer: full rendered cinema-lounge background, uploaded PNG section artwork, preserved navigation/review interactions, and one consolidated Lounge presentation stylesheet.
 Premier Lounge PNG smoke tests are updated; redeploy this validated visual build.
 Probe the uploaded Premier Lounge background filename and verify the complete R2 artwork set.
+Use the verified Premier Lounge background object path resolved by the previous asset probe.
