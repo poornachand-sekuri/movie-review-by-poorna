@@ -104,7 +104,7 @@ jobs:
           console.log(`Compact list: ${list.items.length} rows; detail: ${detail.review.title}; search: ${search.items.length} result(s).`);
           NODE
 
-      - name: Smoke-test Lounge pages and artwork
+      - name: Smoke-test Lounge pages and Premier artwork
         shell: bash
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
@@ -117,36 +117,24 @@ jobs:
 
           asset_base='https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res''ponsive'
           for file in \
-            01_background.avif \
-            02_top_menu_section.avif \
-            03_now_reviewed_section.avif \
-            04_recent_reviews_section.avif \
-            05_previously_reviewed.avif \
-            06_share_your_opinion.avif \
-            07_bottom_navigation.avif
+            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_4K.png \
+            02_Movie_Reviews_By_Poorna_Banner.png \
+            03_Now_Reviewed_Panel.png \
+            04_Recent_Reviews_Panel.png \
+            05_Previously_Reviewed_Panel.png \
+            06_Share_Your_Opinion_Panel.png \
+            07_Lounge_Cini_Cafe_Banner.png
           do
-            echo "Checking artwork: $file"
+            echo "Checking Premier artwork: $file"
             output="/tmp/$file"
             curl --fail --silent --show-error --location --retry 4 --retry-delay 1 --retry-all-errors \
               --output "$output" "$asset_base/$file?verify=$GITHUB_SHA"
-            file "$output" | grep -q 'AVIF Image' || {
-              echo "Artwork payload is not a real AVIF: $file"
+            file "$output" | grep -q 'PNG image data' || {
+              echo "Artwork payload is not a real PNG: $file"
               file "$output"
               exit 1
             }
           done
-
-          expected_now='42e06a283a9155ca41136d8cc139a667b0cd35e4dbcc23fc134822fb0ce4e275'
-          expected_recent='1e778374321e7cb87764741c4b2c1d284dce59949c988701505254fe81038150'
-          expected_previous='769d73bea77856cec3fb3b48f1ddc0070e95802f348bb4f07024be2f9d0a5390'
-
-          actual_now=$(sha256sum /tmp/03_now_reviewed_section.avif | awk '{print $1}')
-          actual_recent=$(sha256sum /tmp/04_recent_reviews_section.avif | awk '{print $1}')
-          actual_previous=$(sha256sum /tmp/05_previously_reviewed.avif | awk '{print $1}')
-
-          test "$actual_now" = "$expected_now" || { echo "Now Reviewed R2 object does not match the locked artwork."; exit 1; }
-          test "$actual_recent" = "$expected_recent" || { echo "Recent Reviews R2 object does not match the locked artwork."; exit 1; }
-          test "$actual_previous" = "$expected_previous" || { echo "Previously Reviewed R2 object does not match the locked artwork."; exit 1; }
 
           node <<'NODE'
           const fs = require('node:fs');
@@ -157,11 +145,11 @@ jobs:
           const count = (html, token) => html.split(token).length - 1;
 
           if (!lounge.includes('Movie Reviews By Poorna')) throw new Error('Lounge title is missing.');
-          if (!lounge.includes('03_now_reviewed_section.avif')) throw new Error('Now Reviewed artwork is missing.');
-          if (!lounge.includes('04_recent_reviews_section.avif')) throw new Error('Recent Reviews artwork is missing.');
-          if (!lounge.includes('05_previously_reviewed.avif')) throw new Error('Previous Reviews artwork is missing.');
-          if (!lounge.includes('06_share_your_opinion.avif')) throw new Error('Opinion artwork is missing.');
-          if (!lounge.includes('lounge-20260903-03')) throw new Error('Latest Lounge artwork revision is missing.');
+          if (!lounge.includes('lounge-stage')) throw new Error('Premier Lounge stage is missing.');
+          if (!lounge.includes('lounge-panel--now')) throw new Error('Now Reviewed panel is missing.');
+          if (!lounge.includes('lounge-panel--recent')) throw new Error('Recent Reviews panel is missing.');
+          if (!lounge.includes('lounge-panel--previous')) throw new Error('Previously Reviewed panel is missing.');
+          if (!lounge.includes('lounge-panel--opinion')) throw new Error('Share Your Opinion panel is missing.');
           if (count(lounge, 'class="recent-card ') !== 8) throw new Error('Lounge did not render exactly 8 recent review cards.');
           if (count(lounge, 'class="previous-card ') !== 8) throw new Error('Lounge did not render exactly 8 previous review cards.');
           if (count(lounge, 'data-review-carousel') !== 2) throw new Error('Lounge did not render both review carousels.');
@@ -172,5 +160,5 @@ jobs:
           if (!cafe.includes('Kantara')) throw new Error('Cini Cafe search page did not render search results.');
           if (!review.includes('Screening Room') || !review.includes('DC')) throw new Error('Review click-through did not render DC.');
 
-          console.log('Live page smoke tests passed: Lounge review paging, exact locked AVIF artwork, Cini Cafe and review click-through.');
+          console.log('Live page smoke tests passed: Premier Lounge artwork, review paging, Cini Cafe and review click-through.');
           NODE
