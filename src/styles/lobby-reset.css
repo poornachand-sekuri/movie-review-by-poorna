@@ -1,0 +1,612 @@
+/*
+ * Lounge presentation reset — 2026-09-04
+ *
+ * This is intentionally a neutral responsive baseline, not a finished design.
+ * Data, routes and behavior live outside this file and remain unchanged.
+ */
+
+.lounge-page {
+  --lounge-bg: #f4f1eb;
+  --lounge-panel: #fffdf9;
+  --lounge-panel-strong: #ffffff;
+  --lounge-text: #24211d;
+  --lounge-muted: #6d675f;
+  --lounge-line: #d7d0c6;
+  --lounge-accent: #7b2d2d;
+  --lounge-accent-soft: #f0e4e2;
+  --lounge-radius: 18px;
+  --lounge-shadow: 0 12px 32px rgba(35, 30, 24, 0.08);
+
+  min-height: 100vh;
+  background: var(--lounge-bg);
+  color: var(--lounge-text);
+  color-scheme: light;
+  overflow-x: clip;
+}
+
+/* Old baked ambience/artwork is deliberately disabled for the redesign reset. */
+.lounge-backdrop,
+.lounge-shade,
+.lounge-panel__art {
+  display: none !important;
+}
+
+.lounge-stage {
+  width: min(100%, 1180px);
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 36px) clamp(14px, 3vw, 28px) clamp(40px, 7vw, 80px);
+  display: grid;
+  gap: clamp(18px, 3vw, 32px);
+}
+
+.lounge-panel,
+.lounge-empty {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid var(--lounge-line);
+  border-radius: var(--lounge-radius);
+  background: var(--lounge-panel);
+  box-shadow: var(--lounge-shadow);
+}
+
+.lounge-stage > .lounge-panel:not(.lounge-panel--banner) {
+  cursor: zoom-in;
+}
+
+/* Neutral top/bottom navigation. */
+.lounge-panel--banner {
+  padding: 0;
+  overflow: hidden;
+}
+
+.lounge-banner-crop {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 64px;
+}
+
+.lounge-nav-hit {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 64px;
+  padding: 12px 18px;
+  color: var(--lounge-text);
+  text-decoration: none;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+}
+
+.lounge-nav-hit + .lounge-nav-hit {
+  border-left: 1px solid var(--lounge-line);
+}
+
+.lounge-nav-hit--left::before {
+  content: "The Lounge";
+}
+
+.lounge-nav-hit--right::before {
+  content: "Cini Cafe";
+}
+
+/* Featured review. */
+.lounge-panel--now {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.72fr) minmax(0, 1.28fr);
+  grid-template-areas:
+    "poster details"
+    "pov pov"
+    "read read";
+  gap: clamp(16px, 2.6vw, 28px);
+  align-items: start;
+}
+
+.lounge-panel--now::before {
+  content: "NOW REVIEWED";
+  grid-column: 1 / -1;
+  color: var(--lounge-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.now-poster {
+  grid-area: poster;
+  position: relative;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #e5e0d8;
+}
+
+.now-poster img,
+.poster-fallback,
+.recent-card__poster img,
+.previous-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.poster-fallback {
+  background: linear-gradient(135deg, #e8e2d9, #d4cdc2);
+}
+
+.now-details {
+  grid-area: details;
+  min-width: 0;
+}
+
+.now-title {
+  margin: 0 0 18px;
+  color: var(--lounge-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: clamp(1.5rem, 4vw, 2.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.now-meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.now-meta > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--lounge-line);
+  border-radius: 10px;
+  background: var(--lounge-panel-strong);
+}
+
+.now-meta dt {
+  margin-bottom: 5px;
+  color: var(--lounge-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.now-meta dd {
+  margin: 0;
+  overflow: hidden;
+  color: var(--lounge-text);
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.now-meta__rating dd,
+.recent-card__stars {
+  color: var(--lounge-accent);
+  letter-spacing: 0.06em;
+}
+
+.now-pov {
+  grid-area: pov;
+  padding: clamp(16px, 2.4vw, 24px);
+  border: 1px solid var(--lounge-line);
+  border-radius: 12px;
+  background: #faf7f1;
+}
+
+.now-pov__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-bottom: 10px;
+  color: var(--lounge-accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.now-pov p {
+  margin: 0;
+  color: var(--lounge-text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  line-height: 1.62;
+}
+
+.now-read-hit,
+.section-view-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--lounge-accent);
+  border-radius: 999px;
+  color: var(--lounge-accent);
+  background: transparent;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.now-read-hit {
+  grid-area: read;
+  justify-self: start;
+}
+
+.now-read-hit::before {
+  content: "Read review";
+}
+
+/* Review carousels. */
+.lounge-panel--recent,
+.lounge-panel--previous,
+.lounge-panel--opinion {
+  display: grid;
+  gap: 18px;
+}
+
+.lounge-panel--recent::before,
+.lounge-panel--previous::before,
+.lounge-panel--opinion::before {
+  color: var(--lounge-text);
+  font-size: clamp(1.15rem, 2.6vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.lounge-panel--recent::before {
+  content: "Recent Reviews";
+}
+
+.lounge-panel--previous::before {
+  content: "Previously Reviewed";
+}
+
+.lounge-panel--opinion::before {
+  content: "Share Your Opinion";
+}
+
+.review-carousel {
+  position: relative;
+  min-width: 0;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.review-carousel__viewport {
+  margin-inline: clamp(32px, 5vw, 48px);
+  overflow: hidden;
+}
+
+.review-carousel__track {
+  display: flex;
+  width: 100%;
+  transform: translate3d(0, 0, 0);
+  transition: transform 260ms ease;
+  will-change: transform;
+}
+
+.review-carousel__page {
+  flex: 0 0 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 1.8vw, 18px);
+}
+
+.recent-card,
+.previous-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--lounge-line);
+  border-radius: 12px;
+  background: var(--lounge-panel-strong);
+  color: var(--lounge-text);
+  text-decoration: none;
+}
+
+.recent-card {
+  display: grid;
+  grid-template-rows: auto auto auto;
+}
+
+.recent-card__poster,
+.previous-card {
+  aspect-ratio: 2 / 3;
+  background: #e5e0d8;
+}
+
+.recent-card__poster {
+  overflow: hidden;
+}
+
+.recent-card__title {
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 10px 5px;
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.recent-card__title > span {
+  display: inline-block;
+  min-width: max-content;
+  will-change: transform;
+}
+
+.recent-card__stars {
+  padding: 4px 10px 11px;
+  font-size: 0.86rem;
+}
+
+.review-carousel__control {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  width: 36px;
+  height: 48px;
+  transform: translateY(-50%);
+  border: 1px solid var(--lounge-line);
+  border-radius: 10px;
+  background: var(--lounge-panel-strong);
+  color: var(--lounge-text);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.review-carousel__control--prev {
+  left: 0;
+}
+
+.review-carousel__control--next {
+  right: 0;
+}
+
+.review-carousel__control:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.section-view-all {
+  justify-self: start;
+}
+
+.section-view-all::before {
+  content: "View all";
+}
+
+/* Opinion section. */
+.comments-window {
+  min-height: 90px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 14px;
+  border: 1px dashed var(--lounge-line);
+  border-radius: 10px;
+  color: var(--lounge-muted);
+  background: #faf7f1;
+}
+
+.comments-window:empty::before {
+  content: "Comments will appear here.";
+}
+
+.opinion-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.opinion-form input,
+.opinion-form textarea {
+  width: 100%;
+  border: 1px solid var(--lounge-line);
+  border-radius: 10px;
+  background: var(--lounge-panel-strong);
+  color: var(--lounge-text);
+}
+
+.opinion-form input {
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.opinion-form textarea {
+  grid-column: 1 / -1;
+  min-height: 120px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.opinion-form button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lounge-accent);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.opinion-form button::before {
+  content: "Submit comment";
+}
+
+/* Enlarged-section behavior remains intact, with neutral styling only. */
+html.lounge-focus-open,
+html.lounge-focus-open body {
+  overflow: hidden;
+}
+
+.lounge-focus-layer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(54px, env(safe-area-inset-top)) 12px max(18px, env(safe-area-inset-bottom));
+  overflow: auto;
+  background: rgba(36, 33, 29, 0.52);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.lounge-focus-layer.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lounge-focus-stage {
+  width: min(100%, 1180px);
+  display: grid;
+  place-items: center;
+}
+
+.lounge-panel.is-lounge-focused {
+  width: 100%;
+  cursor: default;
+  box-shadow: 0 24px 70px rgba(31, 27, 22, 0.22);
+}
+
+.lounge-focus-close {
+  position: fixed;
+  z-index: 102;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--lounge-line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--lounge-text);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.lounge-focus-placeholder {
+  width: 100%;
+  pointer-events: none;
+}
+
+.lounge-empty {
+  text-align: center;
+  color: var(--lounge-muted);
+}
+
+.lounge-nav-hit:focus-visible,
+.now-read-hit:focus-visible,
+.section-view-all:focus-visible,
+.recent-card:focus-visible,
+.previous-card:focus-visible,
+.review-carousel__control:focus-visible,
+.opinion-form input:focus-visible,
+.opinion-form textarea:focus-visible,
+.opinion-form button:focus-visible,
+.lounge-focus-close:focus-visible,
+.lounge-panel:focus-visible {
+  outline: 3px solid var(--lounge-accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .lounge-panel--now {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "poster"
+      "details"
+      "pov"
+      "read";
+  }
+
+  .now-poster {
+    width: min(72%, 300px);
+  }
+
+  .now-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .now-meta__rating {
+    grid-column: 1 / -1;
+  }
+
+  .review-carousel__viewport {
+    margin-inline: 30px;
+  }
+
+  .review-carousel__page {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opinion-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .lounge-stage {
+    padding-inline: 10px;
+  }
+
+  .lounge-panel,
+  .lounge-empty {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .lounge-banner-crop {
+    grid-template-columns: 1fr;
+  }
+
+  .lounge-nav-hit + .lounge-nav-hit {
+    border-left: 0;
+    border-top: 1px solid var(--lounge-line);
+  }
+
+  .now-poster {
+    width: min(82%, 280px);
+  }
+
+  .now-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .now-meta__rating {
+    grid-column: auto;
+  }
+
+  .review-carousel__viewport {
+    margin-inline: 26px;
+  }
+
+  .review-carousel__page {
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+
+  .review-carousel__control {
+    width: 30px;
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-carousel__track,
+  .lounge-focus-layer {
+    transition: none;
+  }
+
+  .recent-card__title > span {
+    transform: none !important;
+  }
+}
