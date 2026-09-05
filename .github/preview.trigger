@@ -47,3 +47,5 @@ Three room-specific loading screens: apply approved Lobby, Screening Room and Mo
 2026-09-06 Lobby loader timing: keep the normal clean loading state for 3 seconds before showing Try Again / Enter The Lobby, and extend the Lobby hard automatic fail-open to 5 seconds. Screening Room and Movie Café timings remain unchanged.
 
 2026-09-06 loader guardrail alignment: update the automated Lobby loading test to enforce the new 3-second recovery and 5-second hard fail-open timings before redeploying.
+
+2026-09-06 revised Lobby loader timing: show Try Again / Enter The Lobby only after 10 seconds and hard automatic fail-open at 15 seconds. Screening Room and Movie Café timings remain unchanged.
