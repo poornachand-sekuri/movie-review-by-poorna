@@ -1,14 +1,21 @@
 ---
 import '../styles/global.css';
 
+interface PreloadImage {
+  href: string;
+  fetchPriority?: 'high' | 'low' | 'auto';
+}
+
 interface Props {
   title?: string;
   description?: string;
+  preloadImages?: readonly PreloadImage[];
 }
 
 const {
   title = 'Movie Review By Poorna',
   description = 'Movie reviews, verdicts and cinema notes by Poorna.',
+  preloadImages = [],
 } = Astro.props;
 ---
 
@@ -22,6 +29,9 @@ const {
     <meta name="color-scheme" content="dark" />
     <link rel="preconnect" href="https://assets.moviereviewbypoorna.com" crossorigin />
     <link rel="dns-prefetch" href="//assets.moviereviewbypoorna.com" />
+    {preloadImages.map((image) => (
+      <link rel="preload" as="image" href={image.href} fetchpriority={image.fetchPriority ?? 'auto'} />
+    ))}
     <title>{title}</title>
   </head>
   <body>
