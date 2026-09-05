@@ -19,3 +19,5 @@ Performance pass: serve the existing lossless WebP versions of Now Reviewed, Rec
 Title visibility fix: render the Now Reviewed movie title in opaque bright ivory with an explicit WebKit text fill, no dark stroke or clipped-gradient treatment, and only a small proportional shadow. Preserve title placement and all artwork and metadata layout.
 
 Lounge readability pass: use clean upright My POV typography with three lines inside the red frame, scroll only overflowing Recent Reviews titles within their own tickets, center and enlarge recent rating stars with reserved space, and tint Previously Reviewed posters in warm monochrome gold for a vintage film-reel look.
+
+Rating color update: use bright champagne-ivory stars with a restrained warm gold glow in both Now Reviewed and Recent Reviews, preserving all rating sizes and alignment inside the red frames.

@@ -10,6 +10,11 @@
   --lounge-red: #ff201b;
   --lounge-red-soft: rgba(255, 32, 27, 0.42);
   --lounge-gold: #f0bd62;
+  --lounge-rating-color: #fff0ca;
+  --lounge-rating-shadow:
+    0 0.035em 0.06em #000,
+    0 0 0.14em rgba(255, 228, 170, 0.5),
+    0 0 0.3em rgba(217, 166, 81, 0.22);
   --lounge-silver: #dedede;
   --lounge-ink: #050505;
   --lounge-card: rgba(4, 4, 4, 0.92);
@@ -281,7 +286,7 @@
 }
 
 .now-meta__rating dd {
-  color: #f6c75e;
+  color: var(--lounge-rating-color);
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: 2.55cqw;
   letter-spacing: 0.07em;
@@ -491,7 +496,8 @@
   min-width: 0;
   overflow: hidden;
   padding: 0.2cqw 0.55cqw 0.45cqw;
-  color: #f5c44f;
+  color: var(--lounge-rating-color);
+  text-shadow: var(--lounge-rating-shadow);
   font-family: Arial, sans-serif;
   font-size: 2.55cqw;
   line-height: 1;
