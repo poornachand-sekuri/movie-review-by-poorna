@@ -45,3 +45,5 @@ Three room-specific loading screens: apply approved Lobby, Screening Room and Mo
 2026-09-06 spacing trial: increase the common Lounge section gap from 8px to 1rem so every Home section gets a slightly more breathable, consistent separation without changing the artwork itself.
 
 2026-09-06 Lobby loader timing: keep the normal clean loading state for 3 seconds before showing Try Again / Enter The Lobby, and extend the Lobby hard automatic fail-open to 5 seconds. Screening Room and Movie Café timings remain unchanged.
+
+2026-09-06 loader guardrail alignment: update the automated Lobby loading test to enforce the new 3-second recovery and 5-second hard fail-open timings before redeploying.
