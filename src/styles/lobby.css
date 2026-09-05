@@ -92,7 +92,13 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  color: #e7e1d5;
+  /* Opaque ivory keeps the title legible on the black ticket, including WebKit. */
+  color: #fff8eb;
+  -webkit-text-fill-color: currentColor;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  filter: none;
   font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
   font-size: clamp(12px, 4.2cqw, 28px);
   font-weight: 900;
@@ -103,11 +109,8 @@
   text-wrap: balance;
   white-space: normal;
   text-overflow: clip;
-  text-shadow:
-    0 1px 0 rgba(255,255,255,0.18),
-    0 2px 3px rgba(0,0,0,0.96),
-    0 0 8px rgba(135, 18, 14, 0.20);
-  -webkit-text-stroke: 0.015em rgba(10, 10, 10, 0.82);
+  text-shadow: 0 0.04em 0.08em rgba(0, 0, 0, 0.7);
+  -webkit-text-stroke: 0;
 }
 
 .now-meta {
