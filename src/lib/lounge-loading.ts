@@ -25,16 +25,16 @@ export async function waitForImage(image: HTMLImageElement): Promise<void> {
 }
 
 async function settleWithin(job: Promise<void>, timeoutMs: number): Promise<boolean> {
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race<boolean>([
       job.then(() => true, () => false),
       new Promise<boolean>((resolve) => {
-        timer = window.setTimeout(() => resolve(false), timeoutMs);
+        timer = setTimeout(() => resolve(false), timeoutMs);
       }),
     ]);
   } finally {
-    if (timer !== undefined) window.clearTimeout(timer);
+    if (timer !== undefined) clearTimeout(timer);
   }
 }
 
