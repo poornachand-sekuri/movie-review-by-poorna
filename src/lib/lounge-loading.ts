@@ -53,7 +53,62 @@ function removeLegacyArtworkRequests(page: HTMLElement): void {
   });
 }
 
+/**
+ * Park lower carousel posters before the browser's generous native lazy-load
+ * distance can pull them ahead of the section frame itself. The frame is the
+ * visual skeleton of each Lounge section, so it must win the network race.
+ */
+function parkProgressivePosters(page: HTMLElement): void {
+  page.querySelectorAll<HTMLImageElement>(
+    '.lounge-panel--recent .recent-card__poster img, .lounge-panel--previous .previous-card img',
+  ).forEach((image) => {
+    if (typeof image.getAttribute !== 'function') return;
+    const source = image.getAttribute('src');
+    if (!source || image.dataset.loungeDeferredSrc) return;
+
+    image.dataset.loungeDeferredSrc = source;
+    image.removeAttribute('src');
+    image.fetchPriority = 'low';
+    image.style.visibility = 'hidden';
+  });
+}
+
+function releaseProgressivePosters(section: HTMLElement): void {
+  if (typeof section.querySelectorAll !== 'function') return;
+
+  section.querySelectorAll<HTMLImageElement>('img[data-lounge-deferred-src]').forEach((image) => {
+    const source = image.dataset.loungeDeferredSrc;
+    if (!source) return;
+
+    delete image.dataset.loungeDeferredSrc;
+    image.loading = 'lazy';
+    image.fetchPriority = 'low';
+
+    const reveal = () => image.style.removeProperty('visibility');
+    image.addEventListener('load', reveal, { once: true });
+    image.addEventListener('error', reveal, { once: true });
+    image.src = source;
+
+    if (image.complete) reveal();
+  });
+}
+
+function activateProgressiveSection(section: HTMLElement): void {
+  if (section.classList.contains('is-art-ready')) return;
+
+  /*
+   * Adding the class queues the lossless WebP frame as a visible CSS image.
+   * Give that request a short head start, then release the lower-priority
+   * posters. This prevents the "floating posters on the Lounge wall" effect
+   * seen on slower connections while preserving progressive loading.
+   */
+  section.classList.add('is-art-ready');
+  setTimeout(() => releaseProgressivePosters(section), 120);
+}
+
 function armProgressiveArtwork(page: HTMLElement): void {
+  parkProgressivePosters(page);
+
   const deferred = [
     ...page.querySelectorAll<HTMLElement>(
       '.lounge-panel--recent, .lounge-panel--previous, .lounge-panel--opinion, .lounge-panel--bottom',
@@ -63,7 +118,7 @@ function armProgressiveArtwork(page: HTMLElement): void {
   if (deferred.length === 0) return;
 
   if (typeof IntersectionObserver === 'undefined') {
-    deferred.forEach((element) => element.classList.add('is-art-ready'));
+    deferred.forEach(activateProgressiveSection);
     return;
   }
 
@@ -71,14 +126,17 @@ function armProgressiveArtwork(page: HTMLElement): void {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       const element = entry.target;
-      if (element instanceof HTMLElement) element.classList.add('is-art-ready');
+      if (element instanceof HTMLElement) activateProgressiveSection(element);
       observer.unobserve(entry.target);
     });
   }, {
     root: null,
-    // 35vh is enough to make the next section feel instant without asking the
-    // browser to download several multi-megabyte frames at page start.
-    rootMargin: '35vh 0px 35vh',
+    /*
+     * Native lazy-loaded posters may be requested more than a viewport ahead.
+     * Start the lightweight section frame earlier than that so the structural
+     * artwork is normally decoded before the user reaches the section.
+     */
+    rootMargin: '120vh 0px 120vh',
     threshold: 0.01,
   });
 
