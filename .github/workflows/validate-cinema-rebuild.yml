@@ -31,14 +31,11 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Enforce runtime guardrails
-        run: npm run check:guardrails
+      - name: Validate application
+        run: npm run validate
 
       - name: Validate migration script syntax
         run: node --check scripts/build-legacy-seed.mjs
-
-      - name: Type-check Astro and TypeScript
-        run: npm run check
 
       - name: Build application
         run: npm run build
