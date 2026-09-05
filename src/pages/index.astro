@@ -26,10 +26,6 @@ function toPages<T>(items: readonly T[], pageSize: number): T[][] {
 const recentPages = toPages(recent, 4);
 const previousPages = toPages(previous, 4);
 
-const artBase = 'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive';
-const artRevision = 'lounge-20260903-03';
-const art = (file: string) => `${artBase}/${file}?v=${artRevision}`;
-
 const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatDate(value: string | null): string {
@@ -64,11 +60,7 @@ const featuredPov = featured?.verdict?.trim() || '';
 >
   <LoungeLoading />
   <main class="lounge-page">
-    <div
-      class="lounge-backdrop"
-      style={`background-image:url("${art('01_background.avif')}")`}
-      aria-hidden="true"
-    ></div>
+    <div class="lounge-backdrop" aria-hidden="true"></div>
     <div class="lounge-shade" aria-hidden="true"></div>
 
     <div class="lounge-stage">
@@ -76,16 +68,6 @@ const featuredPov = featured?.verdict?.trim() || '';
 
       <section class="lounge-panel lounge-panel--banner" aria-label="Lounge navigation">
         <div class="lounge-banner-crop">
-          <img
-            class="lounge-panel__art"
-            src={art('02_top_menu_section.avif')}
-            alt=""
-            width="2172"
-            height="724"
-            loading="eager"
-            fetchpriority="high"
-            decoding="async"
-          />
           <a class="lounge-nav-hit lounge-nav-hit--left" href="/" aria-label="Lounge home"></a>
           <a class="lounge-nav-hit lounge-nav-hit--right" href="/search" aria-label="Open Cini Cafe"></a>
         </div>
@@ -95,16 +77,6 @@ const featuredPov = featured?.verdict?.trim() || '';
         featured ? (
           <section class="lounge-panel lounge-panel--now" aria-labelledby="now-reviewed-heading">
             <h2 id="now-reviewed-heading" class="visually-hidden">Now Reviewed</h2>
-            <img
-              class="lounge-panel__art"
-              src={art('03_now_reviewed_section.avif')}
-              alt=""
-              width="1600"
-              height="983"
-              loading="eager"
-              fetchpriority="high"
-              decoding="async"
-            />
 
             <div class="now-poster" aria-label={`${featured.title} poster`}>
               {featured.posterUrl ? (
@@ -152,15 +124,6 @@ const featuredPov = featured?.verdict?.trim() || '';
         recent.length > 0 && (
           <section class="lounge-panel lounge-panel--recent" aria-labelledby="recent-heading">
             <h2 id="recent-heading" class="visually-hidden">Recent Reviews</h2>
-            <img
-              class="lounge-panel__art"
-              src={art('04_recent_reviews_section.avif')}
-              alt=""
-              width="1672"
-              height="941"
-              loading="lazy"
-              decoding="async"
-            />
 
             <div class="recent-overlay review-carousel" data-review-carousel aria-label="Recent Reviews carousel">
               <div class="review-carousel__viewport">
@@ -234,15 +197,6 @@ const featuredPov = featured?.verdict?.trim() || '';
         previous.length > 0 && (
           <section class="lounge-panel lounge-panel--previous" aria-labelledby="previous-heading">
             <h2 id="previous-heading" class="visually-hidden">Previously Reviewed</h2>
-            <img
-              class="lounge-panel__art"
-              src={art('05_previously_reviewed.avif')}
-              alt=""
-              width="1742"
-              height="903"
-              loading="lazy"
-              decoding="async"
-            />
 
             <div class="previous-overlay review-carousel" data-review-carousel aria-label="Previously Reviewed carousel">
               <div class="review-carousel__viewport">
@@ -303,15 +257,6 @@ const featuredPov = featured?.verdict?.trim() || '';
 
       <section class="lounge-panel lounge-panel--opinion" aria-labelledby="opinion-heading">
         <h2 id="opinion-heading" class="visually-hidden">Share Your Opinion</h2>
-        <img
-          class="lounge-panel__art"
-          src={art('06_share_your_opinion.avif')}
-          alt=""
-          width="2025"
-          height="777"
-          loading="lazy"
-          decoding="async"
-        />
 
         <div class="comments-window" aria-label="Recent comments" aria-live="polite"></div>
 
@@ -329,15 +274,6 @@ const featuredPov = featured?.verdict?.trim() || '';
 
       <section class="lounge-panel lounge-panel--banner lounge-panel--bottom" aria-label="Lounge navigation">
         <div class="lounge-banner-crop">
-          <img
-            class="lounge-panel__art"
-            src={art('07_bottom_navigation.avif')}
-            alt=""
-            width="2048"
-            height="682"
-            loading="lazy"
-            decoding="async"
-          />
           <a class="lounge-nav-hit lounge-nav-hit--left" href="/" aria-label="Lounge home"></a>
           <a class="lounge-nav-hit lounge-nav-hit--right" href="/search" aria-label="Open Cini Cafe"></a>
         </div>
