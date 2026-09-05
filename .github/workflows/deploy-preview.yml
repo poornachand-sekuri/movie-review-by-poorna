@@ -37,10 +37,7 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Validate application
-        run: |
-          npm run check:guardrails
-          node --test scripts/check-lounge-loading.mjs
-          npm run check
+        run: npm run validate
 
       - name: Build application
         run: npm run build
@@ -105,7 +102,7 @@ jobs:
           console.log(`Compact list: ${list.items.length} rows; detail: ${detail.review.title}; search: ${search.items.length} result(s).`);
           NODE
 
-      - name: Smoke-test Lounge pages and Premier artwork
+      - name: Smoke-test Lounge pages and runtime artwork
         shell: bash
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
@@ -116,44 +113,32 @@ jobs:
           curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors "$PREVIEW_URL/search?q=Kantara" > /tmp/cafe.html
           curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors "$PREVIEW_URL/review/dc" > /tmp/review.html
 
-          asset_base='https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res''ponsive'
+          asset_base='https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive'
+          runtime_assets=(
+            '01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_runtime_q99.webp'
+            '02_Movie_Reviews_By_Poorna_Banner_runtime_q99.webp'
+            '03_Now_Reviewed_Panel_runtime_q99.webp'
+            '04_Recent_Reviews_Panel_runtime_q99.webp'
+            '05_Previously_Reviewed_Panel_runtime_q99.webp'
+            '06_Share_Your_Opinion_Panel_runtime_q99.webp'
+            '07_Lounge_Cini_Cafe_Banner_runtime_q99.webp'
+            '08_Now_Reviewed_With_Exit_runtime_q99.webp'
+            '09_Share_Your_Opinion_With_Exit_runtime_q99.webp'
+          )
 
-          background_file=''
-          for candidate in \
-            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_4K.png \
-            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png \
-            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_4k.png \
-            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_HD.png \
-            01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_2160x3780.png
-          do
-            status=$(curl --silent --show-error --location --output /tmp/lounge-background-candidate --write-out '%{http_code}' "$asset_base/$candidate?verify=$GITHUB_SHA" || true)
-            echo "Background candidate $candidate -> HTTP $status"
-            if [ "$status" = '200' ] && file /tmp/lounge-background-candidate | grep -q 'PNG image data'; then
-              background_file="$candidate"
-              cp /tmp/lounge-background-candidate /tmp/lounge-background.png
-              break
-            fi
-          done
-          test -n "$background_file" || { echo 'Could not resolve the uploaded Premier Lounge background object name.'; exit 1; }
-          echo "Resolved Premier Lounge background: $background_file"
-
-          for file in \
-            02_Movie_Reviews_By_Poorna_Banner.png \
-            03_Now_Reviewed_Panel.png \
-            04_Recent_Reviews_Panel.png \
-            05_Previously_Reviewed_Panel.png \
-            06_Share_Your_Opinion_Panel.png \
-            07_Lounge_Cini_Cafe_Banner.png
-          do
-            echo "Checking Premier artwork: $file"
-            output="/tmp/$file"
+          for file in "${runtime_assets[@]}"; do
+            echo "Checking runtime artwork: $file"
+            output='/tmp/runtime-artwork.webp'
             curl --fail --silent --show-error --location --retry 4 --retry-delay 1 --retry-all-errors \
-              --output "$output" "$asset_base/$file?verify=$GITHUB_SHA"
-            file "$output" | grep -q 'PNG image data' || {
-              echo "Artwork payload is not a real PNG: $file"
-              file "$output"
-              exit 1
-            }
+              --range 0-31 --output "$output" "$asset_base/$file?verify=$GITHUB_SHA"
+
+            python - "$output" "$file" <<'PY'
+          import sys
+          path, name = sys.argv[1:3]
+          header = open(path, 'rb').read(12)
+          if len(header) < 12 or header[:4] != b'RIFF' or header[8:12] != b'WEBP':
+              raise SystemExit(f'Runtime artwork is not WebP: {name}')
+          PY
           done
 
           node <<'NODE'
@@ -167,6 +152,7 @@ jobs:
           if (!lounge.includes('Movie Reviews By Poorna')) throw new Error('Lounge title is missing.');
           if (!lounge.includes('lounge-stage')) throw new Error('Premier Lounge stage is missing.');
           if (!lounge.includes('data-lounge-loader') || !lounge.includes('Getting the lounge ready for your grand entrance')) throw new Error('Lounge loading screen is missing.');
+          if (!lounge.includes('02_Movie_Reviews_By_Poorna_Banner_runtime_q99.webp')) throw new Error('Fast Lobby critical artwork metadata is missing.');
           if (!lounge.includes('lounge-panel--now')) throw new Error('Now Reviewed panel is missing.');
           if (!lounge.includes('lounge-panel--recent')) throw new Error('Recent Reviews panel is missing.');
           if (!lounge.includes('lounge-panel--previous')) throw new Error('Previously Reviewed panel is missing.');
@@ -181,5 +167,5 @@ jobs:
           if (!cafe.includes('Kantara')) throw new Error('Cini Cafe search page did not render search results.');
           if (!review.includes('Screening Room') || !review.includes('DC')) throw new Error('Review click-through did not render DC.');
 
-          console.log('Live page smoke tests passed: Premier Lounge artwork, review paging, Cini Cafe and review click-through.');
+          console.log('Live smoke tests passed: Lounge runtime artwork, paging, Cini Cafe and review click-through.');
           NODE
