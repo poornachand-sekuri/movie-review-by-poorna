@@ -4,11 +4,9 @@
 /*
  * Premier Lounge background — source-of-truth framing.
  *
- * IMPORTANT: the artwork must be shown at its full width. The earlier
- * `auto 132vh` sizing scaled the image from viewport height, which made the
- * rendered artwork wider than the phone viewport and cropped both side walls.
- * Fit by width instead so Screen entrances, wall lighting and the complete
- * architectural composition remain visible.
+ * The complete Lounge artwork is always shown at full width so Screen
+ * entrances, wall lighting and the full architectural composition remain
+ * visible. The foreground stack is sized separately below.
  */
 .lounge-backdrop {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png") !important;
@@ -18,18 +16,16 @@
 }
 
 /*
- * Architectural safe-zone lock.
+ * Lounge master column.
  *
- * With the FULL background visible, the inner vertical light rails sit at
- * roughly 22% and 78% of the artwork width. The complete foreground UI stack
- * therefore uses a single ~56% master column. This keeps every section inside
- * those rails while preserving the side architecture.
- *
- * Top navigation, all content panels, Share Your Opinion and Bottom Navigation
- * are intentionally governed by the same width — none may expand separately.
+ * The previous 56vw setting made the panels feel compressed on phones. Move
+ * the complete stack to 64vw: visibly larger and easier to read, while still
+ * leaving 18% of the viewport on each side so the Lounge architecture remains
+ * part of the composition. Top Navigation, every content section and Bottom
+ * Navigation continue to share this one width — no section expands by itself.
  */
 .lounge-stage {
-  width: min(56vw, 470px);
+  width: min(64vw, 470px);
 }
 
 .lounge-stage > .lounge-panel,
@@ -126,11 +122,10 @@
   outline-offset: -2px;
 }
 
-/* Keep the mobile composition tied to the artwork rails, not to generic
-   viewport/container widths. */
+/* Keep the mobile composition comfortably inset from the screen edges. */
 @media (max-width: 390px) {
   .lounge-stage {
-    width: 56vw;
+    width: 64vw;
   }
 
   .lounge-backdrop {
