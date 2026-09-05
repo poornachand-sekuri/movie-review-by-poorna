@@ -3,10 +3,6 @@ import SiteFrame from '../layouts/SiteFrame.astro';
 import LoungeLoading from '../components/lobby/LoungeLoading.astro';
 import { listReviews } from '../lib/data/reviews';
 import '../styles/lobby.css';
-import '../styles/lobby-content.css';
-import '../styles/lobby-corners.css';
-import '../styles/lobby-polish.css';
-import '../styles/lobby-fit-and-focus.css';
 
 export const prerender = false;
 
@@ -80,7 +76,13 @@ const featuredPov = featured?.verdict?.trim() || '';
 
             <div class="now-poster" aria-label={`${featured.title} poster`}>
               {featured.posterUrl ? (
-                <img src={featured.posterUrl} alt={`${featured.title} poster`} decoding="async" />
+                <img
+                  src={featured.posterUrl}
+                  alt={`${featured.title} poster`}
+                  loading="eager"
+                  fetchpriority="high"
+                  decoding="async"
+                />
               ) : (
                 <span class="poster-fallback" aria-hidden="true"></span>
               )}
@@ -143,7 +145,13 @@ const featuredPov = featured?.verdict?.trim() || '';
                         >
                           <span class="recent-card__poster">
                             {review.posterUrl ? (
-                              <img src={review.posterUrl} alt="" loading="lazy" decoding="async" />
+                              <img
+                                src={review.posterUrl}
+                                alt=""
+                                loading="lazy"
+                                fetchpriority="low"
+                                decoding="async"
+                              />
                             ) : (
                               <span class="poster-fallback" aria-hidden="true"></span>
                             )}
@@ -215,7 +223,13 @@ const featuredPov = featured?.verdict?.trim() || '';
                           aria-label={`Read ${review.title} review`}
                         >
                           {review.posterUrl ? (
-                            <img src={review.posterUrl} alt={`${review.title} poster`} loading="lazy" decoding="async" />
+                            <img
+                              src={review.posterUrl}
+                              alt={`${review.title} poster`}
+                              loading="lazy"
+                              fetchpriority="low"
+                              decoding="async"
+                            />
                           ) : (
                             <span class="poster-fallback" aria-hidden="true"></span>
                           )}
@@ -306,7 +320,6 @@ const featuredPov = featured?.verdict?.trim() || '';
       const overflow = trackWidth - containerWidth;
       if (overflow <= 1) return;
 
-      // Keep the title in its own red frame, pausing at each readable end.
       const travelMs = Math.max(2500, (overflow / 16) * 1000);
       const pauseMs = 1500;
       const totalMs = 2 * (travelMs + pauseMs);
