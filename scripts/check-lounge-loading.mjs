@@ -226,12 +226,12 @@ function loadingScreenHarness({ room = 'The Lobby', theme = 'lobby', preview = f
   return { root, message, progress, recovery, buttons, document, window, timers, frames, reloaded: () => reloaded };
 }
 
-test('normal Lobby loading screen shows recovery at three seconds and hard-fails open at five seconds', () => {
+test('normal Lobby loading screen shows recovery at ten seconds and hard-fails open at fifteen seconds', () => {
   const h = loadingScreenHarness();
   assert.equal(h.root.dataset.loungeState, 'loading');
 
-  const slow = h.timers.find((timer) => timer.delay === 3000);
-  const hardStop = h.timers.find((timer) => timer.delay === 5000);
+  const slow = h.timers.find((timer) => timer.delay === 10000);
+  const hardStop = h.timers.find((timer) => timer.delay === 15000);
   assert(slow);
   assert(hardStop);
 
@@ -262,7 +262,7 @@ test('asset failure opens the page instead of leaving a permanent loading screen
 
 test('loading design preview deliberately stays open until manually entered', () => {
   const h = loadingScreenHarness({ preview: true });
-  h.timers.find((timer) => timer.delay === 3000).callback();
+  h.timers.find((timer) => timer.delay === 15000).callback();
   assert.equal(h.root.dataset.loungeState, 'loading');
   h.document.dispatchEvent(new Event('lounge:assets-ready'));
   assert.equal(h.root.dataset.loungeState, 'loading');
