@@ -24,6 +24,23 @@ export async function waitForImage(image: HTMLImageElement): Promise<void> {
   if (typeof image.decode === 'function') await image.decode();
 }
 
+function removeLegacyArtworkRequests(page: HTMLElement): void {
+  /*
+   * These nodes were retained from the old AVIF implementation but are hidden
+   * by CSS and are no longer painted. Browsers can still start downloading an
+   * <img> even when it is display:none, which means they can waste bandwidth
+   * alongside the actual CSS WebP artwork. Remove them immediately and clear
+   * the obsolete inline background URL so only the current R2 WebPs remain.
+   */
+  page.querySelector<HTMLElement>('.lounge-backdrop')?.removeAttribute('style');
+
+  page.querySelectorAll<HTMLImageElement>('.lounge-panel__art').forEach((image) => {
+    image.removeAttribute('src');
+    image.removeAttribute('srcset');
+    image.remove();
+  });
+}
+
 function armProgressiveArtwork(page: HTMLElement): void {
   const deferred = [
     ...page.querySelectorAll<HTMLElement>(
@@ -46,7 +63,6 @@ function armProgressiveArtwork(page: HTMLElement): void {
       observer.unobserve(entry.target);
     });
   }, {
-    // Begin downloading a section roughly one screen before it becomes visible.
     root: null,
     rootMargin: '90vh 0px 90vh',
     threshold: 0.01,
@@ -59,8 +75,7 @@ function armProgressiveArtwork(page: HTMLElement): void {
 export function prepareLounge(page: HTMLElement): void {
   let generation = 0;
 
-  // Do this immediately. Lower sections are no longer allowed to compete with
-  // the first screen for bandwidth, but will still be warm before scrolling.
+  removeLegacyArtworkRequests(page);
   armProgressiveArtwork(page);
 
   const prepare = async () => {
@@ -71,13 +86,10 @@ export function prepareLounge(page: HTMLElement): void {
     /*
      * Critical-only readiness gate.
      *
-     * The old loader waited for the full Lounge background, every section frame,
-     * every poster in both carousels, and even the second carousel pages before
-     * revealing anything. That made a premium image-heavy page feel broken on
-     * mobile. The Lounge now opens as soon as its immediately usable first UI is
-     * paintable: Top Navigation, Now Reviewed frame, featured poster and fonts.
-     * The 7.25 MB Lounge background and lower sections continue in parallel and
-     * progressively appear without blocking interaction.
+     * Open the Lounge when the immediately usable first UI is paintable: Top
+     * Navigation, Now Reviewed frame, featured poster and fonts. The large
+     * Lounge background and lower sections continue independently instead of
+     * blocking the first interaction.
      */
     const artworkUrls = new Set<string>();
     page.querySelectorAll<HTMLElement>(
