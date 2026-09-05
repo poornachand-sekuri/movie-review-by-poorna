@@ -1,1 +1,64 @@
-/* Legacy Lounge visual layer intentionally cleared during the 2026-09-04 presentation reset. */
+/*
+ * Runtime-only poster corner masks restored from the pre-reset implementation.
+ * Keep every straight poster edge full and remove only the decorative corner
+ * areas so the baked red frame remains visible around the runtime artwork.
+ */
+
+/* Now Reviewed: four concave ticket-style corners. */
+.now-poster {
+  --poster-corner-cut: clamp(7px, 2.45cqw, 24px);
+  background: transparent;
+  overflow: hidden;
+  -webkit-mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 0 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 100% / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 100% / 50.1% 50.1% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 0 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 100% / 50.1% 50.1% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 100% / 50.1% 50.1% no-repeat;
+}
+
+.now-poster img,
+.now-poster .poster-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+  clip-path: none;
+  transform: none;
+}
+
+/* Recent Reviews: only the upper poster corners are decorative; the lower edge
+   flows directly into the title/rating area of the ticket. */
+.recent-card__poster {
+  --poster-corner-cut: clamp(5px, 1.65cqw, 17px);
+  background: transparent;
+  overflow: hidden;
+  -webkit-mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 51% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 51% no-repeat,
+    linear-gradient(#000 0 0) 0 100% / 100% 50% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 51% no-repeat,
+    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 51% no-repeat,
+    linear-gradient(#000 0 0) 0 100% / 100% 50% no-repeat;
+}
+
+.recent-card__poster img,
+.recent-card__poster .poster-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+  clip-path: none;
+  transform: none;
+}
