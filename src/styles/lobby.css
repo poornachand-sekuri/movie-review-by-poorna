@@ -9,7 +9,7 @@
  * visible. The foreground stack is sized separately below.
  */
 .lounge-backdrop {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png") !important;
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.avif") !important;
   background-size: 100% auto !important;
   background-position: center top !important;
   background-repeat: no-repeat !important;
@@ -54,7 +54,7 @@
   background-color: #050403;
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.46), rgba(0, 0, 0, 0.46)),
-    url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png");
+    url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.avif");
   background-size: 100% 100%, 100% auto;
   background-position: center, center top;
   background-repeat: no-repeat, no-repeat;
@@ -137,7 +137,7 @@
     background-color: #050403;
     background-image:
       linear-gradient(rgba(0, 0, 0, 0.43), rgba(0, 0, 0, 0.43)),
-      url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png");
+      url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.avif");
     background-size: 100% 100%, 100% auto;
     background-position: center, center top;
     background-repeat: no-repeat, no-repeat;
