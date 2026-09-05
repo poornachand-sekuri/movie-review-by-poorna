@@ -66,12 +66,7 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
   .lounge-loading-preview { justify-self: center; }
   @keyframes cinema-pulse { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
 
-  /*
-   * The loading artwork is decorative, not content. On phones the former
-   * 1.6–1.9 MB PNG loading-room image competed directly with the Lounge assets.
-   * Use a lightweight cinematic gradient instead so the loading screen itself
-   * never becomes the performance bottleneck.
-   */
+  /* Decorative room artwork must never compete with the Lounge on phones. */
   @media (max-width: 700px) {
     html[data-lounge-state] .lounge-loading-screen {
       background-image:
@@ -142,9 +137,10 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
     let revealTimer;
     let slowTimer;
     let revealScheduled = false;
+    let fastProbeGeneration = 0;
 
-    // Runs before the page markup: no partially styled content flashes through.
-    // A hard fail-open timer below guarantees this state can never trap a user.
+    // This runs before page markup. The loader can therefore cover parsing
+    // without waiting for the Lounge's deferred interaction bundle.
     root.dataset.loungeState = 'loading';
 
     const showRecovery = (text) => {
@@ -191,10 +187,10 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
       window.setTimeout(() => beginReveal(ready), delay);
     };
 
-    const openWhenPageParsed = (ready) => {
-      if (!fastLobbyEnabled || root.dataset.loungeState !== 'loading') return;
+    const openWhenPageParsed = (ready, generation) => {
+      if (!fastLobbyEnabled || generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
       const openNow = () => {
-        if (root.dataset.loungeState !== 'loading') return;
+        if (generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
         revealScheduled = true;
         beginReveal(ready);
       };
@@ -217,12 +213,13 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
       observer.observe(document.documentElement, { childList: true, subtree: true });
     };
 
-    const loadCriticalImage = (url) => new Promise((resolve) => {
+    const loadCriticalImage = (url, reportSettled) => new Promise((resolve) => {
       const image = new Image();
       let settled = false;
       const done = (ok) => {
         if (settled) return;
         settled = true;
+        reportSettled();
         resolve(ok);
       };
       image.addEventListener('load', () => done(true), { once: true });
@@ -234,16 +231,27 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
     });
 
     const startFastLobbyProbe = () => {
-      if (!fastLobbyEnabled) return;
+      if (!fastLobbyEnabled || root.dataset.loungeState !== 'loading') return;
+      const generation = ++fastProbeGeneration;
+      let settled = 0;
       let fallbackTimer;
+      progress.value = 0;
+
+      const reportSettled = () => {
+        if (generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
+        settled += 1;
+        progress.value = Math.round(settled / criticalImages.length * 100);
+      };
+
       Promise.race([
-        Promise.all(criticalImages.map(loadCriticalImage)).then((results) => results.every(Boolean)),
+        Promise.all(criticalImages.map((url) => loadCriticalImage(url, reportSettled)))
+          .then((results) => results.every(Boolean)),
         new Promise((resolve) => {
           fallbackTimer = window.setTimeout(() => resolve(false), fastLobbyFallbackMs);
         }),
       ]).then((ready) => {
         if (fallbackTimer) window.clearTimeout(fallbackTimer);
-        openWhenPageParsed(Boolean(ready));
+        openWhenPageParsed(Boolean(ready), generation);
       });
     };
 
@@ -256,13 +264,17 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
       reveal(false);
     }, maximumHoldMs);
 
+    // Screening Room / Movie Café still report readiness from prepareCinemaPage.
+    // The Lobby ignores these events because its inline probe is intentionally
+    // independent of the deferred Lounge interaction module.
     document.addEventListener('lounge:loading-progress', (event) => {
-      if (root.dataset.loungeState !== 'loading') return;
+      if (fastLobbyEnabled || root.dataset.loungeState !== 'loading') return;
       const { loaded, total } = event.detail;
       progress.value = total ? Math.round(loaded / total * 100) : 0;
     });
 
     document.addEventListener('lounge:loading-error', () => {
+      if (fastLobbyEnabled) return;
       window.clearTimeout(slowTimer);
       reveal(false);
     });
@@ -272,6 +284,7 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
         progress.value = 100;
         return;
       }
+      if (fastLobbyEnabled) return;
       window.clearTimeout(slowTimer);
       reveal(true);
     });
@@ -286,15 +299,13 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
     window.addEventListener('pageshow', (event) => {
       if (!event.persisted) return;
       if (root.dataset.loungeState === 'loading') {
-        document.dispatchEvent(new Event('lounge:resume-loading'));
+        if (fastLobbyEnabled) startFastLobbyProbe();
+        else document.dispatchEvent(new Event('lounge:resume-loading'));
       } else if (root.dataset.loungeState) {
         finish();
       }
     });
 
-    // The Lobby's critical visuals start loading from this inline script, before
-    // the large page module has to download/execute. This prevents a ready Lounge
-    // from sitting behind the loader simply because deferred JavaScript is late.
     startFastLobbyProbe();
   })();
 </script>
