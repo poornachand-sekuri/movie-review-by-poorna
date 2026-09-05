@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { loungeCriticalImages } from '../lib/lounge-assets';
 
 interface PreloadImage {
   href: string;
@@ -12,10 +13,14 @@ interface Props {
   preloadImages?: readonly PreloadImage[];
 }
 
+const defaultPreloadImages: readonly PreloadImage[] = Astro.url.pathname === '/'
+  ? loungeCriticalImages.map((href) => ({ href, fetchPriority: 'high' as const }))
+  : [];
+
 const {
   title = 'Movie Review By Poorna',
   description = 'Movie reviews, verdicts and cinema notes by Poorna.',
-  preloadImages = [],
+  preloadImages = defaultPreloadImages,
 } = Astro.props;
 ---
 
