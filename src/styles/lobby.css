@@ -2,45 +2,68 @@
 @import './lobby-reset.css';
 
 /*
- * Premier Lounge background — source-of-truth framing.
+ * Runtime artwork cutover — R2 verified lossless WebP.
  *
- * Use the verified PNG master at runtime for iOS/WebKit reliability. The
- * current lossless AVIF master is pixel-exact but is not decoding reliably in
- * iOS Chrome/WebKit, which leaves the Lounge black even though the CSS layer is
- * present. No visual artwork is changed here; only the runtime source format.
+ * The PNG files remain the source/master assets in R2. These WebP derivatives
+ * were decoded and compared pixel-for-pixel against those masters, including
+ * alpha/transparency. The critical first-screen artwork loads immediately;
+ * lower Lounge sections are armed by IntersectionObserver in lounge-loading.ts
+ * so they no longer compete with the first screen on mobile networks.
  */
 .lounge-backdrop {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png") !important;
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_lossless.webp") !important;
   background-size: 100% auto !important;
   background-position: center top !important;
   background-repeat: no-repeat !important;
 }
 
-/*
- * Performance cutover: the lossless WebP versions already present in R2 are
- * byte-identical after decoding but materially smaller than the PNG masters.
- * Keep the PNGs as masters; serve WebP for the high-cost review frames.
- */
+/* Critical artwork: paint immediately. */
+.lounge-panel--banner:not(.lounge-panel--bottom) .lounge-banner-crop {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/02_Movie_Reviews_By_Poorna_Banner_lossless.webp") !important;
+}
+
 .lounge-panel--now {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_lossless.webp") !important;
 }
 
+/* Lower-page artwork: do not request until it approaches the viewport. */
 .lounge-panel--recent {
+  background-image: none !important;
+}
+
+.lounge-panel--recent.is-art-ready {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/04_Recent_Reviews_Panel_lossless.webp") !important;
 }
 
 .lounge-panel--previous {
+  background-image: none !important;
+}
+
+.lounge-panel--previous.is-art-ready {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/05_Previously_Reviewed_Panel_lossless.webp") !important;
+}
+
+.lounge-panel--opinion {
+  background-image: none !important;
+}
+
+.lounge-panel--opinion.is-art-ready {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/06_Share_Your_Opinion_Panel_lossless.webp") !important;
+}
+
+.lounge-panel--bottom .lounge-banner-crop {
+  background-image: none !important;
+}
+
+.lounge-panel--bottom.is-art-ready .lounge-banner-crop {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/07_Lounge_Cini_Cafe_Banner_lossless.webp") !important;
 }
 
 /*
  * Lounge master column.
  *
- * The previous 56vw setting made the panels feel compressed on phones. Move
- * the complete stack to 64vw: visibly larger and easier to read, while still
- * leaving 18% of the viewport on each side so the Lounge architecture remains
- * part of the composition. Top Navigation, every content section and Bottom
- * Navigation continue to share this one width — no section expands by itself.
+ * Keep every section on the same central architectural axis. No section is
+ * independently widened, so the whole stack still reads as one Lounge system.
  */
 .lounge-stage {
   width: min(64vw, 470px);
@@ -92,7 +115,6 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  /* Opaque ivory keeps the title legible on the black ticket, including WebKit. */
   color: #fff8eb;
   -webkit-text-fill-color: currentColor;
   background: none;
@@ -149,7 +171,6 @@
   text-shadow: 0 1px 2px #000, 0 0 5px rgba(0, 0, 0, 0.92);
 }
 
-/* Side credits deliberately align to the visual centreline of the baked stamp. */
 .now-meta > div:nth-child(1) {
   left: 5.2%;
   top: 28%;
@@ -180,7 +201,6 @@
   transform-origin: center;
 }
 
-/* Rating is the base of the stamp composition, not a separate floating row. */
 .now-meta > div:last-child {
   left: 20%;
   right: 20%;
@@ -203,17 +223,14 @@
 }
 
 /*
- * Focus mode uses ONE dedicated, clean Lounge background image for every
- * section. It does NOT expose or blur the live Lounge page underneath, so the
- * backdrop can never change depending on scroll position or which section was
- * opened. The first background layer is only a soft cinematic mask; the second
- * layer is the exact full Lounge background used on the main page.
+ * Focus mode keeps a single clean Lounge background. The focus-specific frame
+ * is requested only when the relevant section actually enters focus mode.
  */
 .lounge-focus-layer {
   background-color: #050403;
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.46), rgba(0, 0, 0, 0.46)),
-    url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png");
+    url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_lossless.webp");
   background-size: 100% 100%, 100% auto;
   background-position: center, center top;
   background-repeat: no-repeat, no-repeat;
@@ -227,19 +244,12 @@
     drop-shadow(0 0 18px rgba(255, 35, 28, 0.12));
 }
 
-/*
- * Focus artwork with the built-in EXIT treatment.
- * No separate floating X is shown. When the panel artwork already contains an
- * EXIT mark, the existing close control becomes a transparent hit-area over
- * that artwork. For panels without an EXIT treatment, tapping outside the
- * focused panel closes the focus layer and returns to the Lounge.
- */
 .lounge-panel--now.is-lounge-focused {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/08_Now_Reviewed_With_Exit.png");
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/08_Now_Reviewed_With_Exit_lossless.webp") !important;
 }
 
 .lounge-panel--opinion.is-lounge-focused {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/09_Share_Your_Opinion_With_Exit.png");
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/09_Share_Your_Opinion_With_Exit_lossless.webp") !important;
 }
 
 /* Remove the generated floating X presentation completely. */
@@ -281,7 +291,6 @@
   outline-offset: -2px;
 }
 
-/* Keep the mobile composition comfortably inset from the screen edges. */
 @media (max-width: 390px) {
   .lounge-stage {
     width: 64vw;
@@ -296,7 +305,7 @@
     background-color: #050403;
     background-image:
       linear-gradient(rgba(0, 0, 0, 0.43), rgba(0, 0, 0, 0.43)),
-      url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png");
+      url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_lossless.webp");
     background-size: 100% 100%, 100% auto;
     background-position: center, center top;
     background-repeat: no-repeat, no-repeat;
