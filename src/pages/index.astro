@@ -356,30 +356,31 @@ const featuredPov = featured?.verdict?.trim() || '';
       track.style.transform = 'translateX(0)';
       element.classList.remove('is-moving');
 
-      if (motionQuery.matches) return;
+      if (motionQuery.matches || element.closest('[data-carousel-page][aria-hidden="true"]')) return;
 
-      const containerWidth = element.clientWidth;
+      const style = getComputedStyle(element);
+      const containerWidth = element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
       const trackWidth = track.scrollWidth;
       if (containerWidth <= 0 || trackWidth <= 0) return;
 
-      const edgeGap = Math.max(8, containerWidth * 0.08);
-      const startX = containerWidth + edgeGap;
-      const endX = -trackWidth - edgeGap;
-      const travelDistance = startX - endX;
-      const pixelsPerSecond = 19;
-      const travelMs = Math.max(7000, Math.min(17000, (travelDistance / pixelsPerSecond) * 1000));
-      const pauseMs = 1450;
-      const totalMs = travelMs + pauseMs;
-      const endOffset = travelMs / totalMs;
+      const overflow = trackWidth - containerWidth;
+      if (overflow <= 1) return;
+
+      // Keep the title in its own red frame, pausing at each readable end.
+      const travelMs = Math.max(2500, (overflow / 16) * 1000);
+      const pauseMs = 1500;
+      const totalMs = 2 * (travelMs + pauseMs);
+      const endX = -overflow;
 
       element.classList.add('is-moving');
-      track.style.transform = `translateX(${startX}px)`;
 
       const animation = track.animate(
         [
-          { transform: `translateX(${startX}px)`, offset: 0 },
-          { transform: `translateX(${endX}px)`, offset: endOffset },
-          { transform: `translateX(${endX}px)`, offset: 1 },
+          { transform: 'translateX(0)', offset: 0 },
+          { transform: 'translateX(0)', offset: pauseMs / totalMs },
+          { transform: `translateX(${endX}px)`, offset: (pauseMs + travelMs) / totalMs },
+          { transform: `translateX(${endX}px)`, offset: (2 * pauseMs + travelMs) / totalMs },
+          { transform: 'translateX(0)', offset: 1 },
         ],
         { duration: totalMs, iterations: Infinity, easing: 'linear' },
       );

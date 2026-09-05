@@ -17,3 +17,5 @@ Runtime Now Reviewed right-leaf composition: keep the baked panel artwork unchan
 Performance pass: serve the existing lossless WebP versions of Now Reviewed, Recent Reviews and Previously Reviewed instead of their larger PNG equivalents while keeping identical decoded pixels. Prepare a lossless WebP Lounge background cutover next to reduce the mobile first-load payload without changing any artwork.
 
 Title visibility fix: render the Now Reviewed movie title in opaque bright ivory with an explicit WebKit text fill, no dark stroke or clipped-gradient treatment, and only a small proportional shadow. Preserve title placement and all artwork and metadata layout.
+
+Lounge readability pass: use clean upright My POV typography with three lines inside the red frame, scroll only overflowing Recent Reviews titles within their own tickets, center and enlarge recent rating stars with reserved space, and tint Previously Reviewed posters in warm monochrome gold for a vintage film-reel look.

@@ -39,7 +39,7 @@
 /* ---------------- Recent Reviews ---------------- */
 /*
  * Current 1672x941 PNG: the carousel is locked to the four inner red ticket
- * windows. The lower 20% remains available to the live title/rating treatment.
+ * windows. The lower 24% is reserved for the scrolling title and larger stars.
  */
 .recent-overlay {
   left: 7.715%;
@@ -54,7 +54,7 @@
 
 .recent-card {
   padding: 0;
-  grid-template-rows: minmax(0, 80fr) minmax(0, 10fr) minmax(0, 10fr);
+  grid-template-rows: minmax(0, 76fr) minmax(0, 12fr) minmax(0, 12fr);
   background: transparent;
   border-radius: 0;
 }
@@ -117,4 +117,9 @@
   /* Tiny inset protects the baked red line while still visually filling the box. */
   clip-path: inset(clamp(1px, 0.18cqw, 3px) round 7.5%);
   border-radius: 0;
+}
+
+/* Warm monochrome film print: retain deep blacks and soft gold highlights. */
+.previous-card img {
+  filter: grayscale(1) sepia(0.72) saturate(0.85) contrast(1.08) brightness(0.98);
 }

@@ -290,12 +290,12 @@
 .now-pov {
   position: absolute;
   z-index: 3;
-  left: 7.6%;
-  top: 72.1%;
-  width: 84.8%;
-  height: 13.8%;
+  left: 6.8%;
+  top: 72.2%;
+  width: 86.4%;
+  height: 17%;
   overflow: hidden;
-  padding: 0.2cqw 0.9cqw 0;
+  padding: 0.25cqw 0.9cqw 0.35cqw;
   border: 0;
   background: transparent;
 }
@@ -309,13 +309,13 @@
   margin: 0;
   overflow: hidden;
   color: #f7f2ea;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 2.75cqw;
-  font-style: italic;
-  font-weight: 600;
-  line-height: 1.22;
-  letter-spacing: 0.003em;
-  text-shadow: 0 1px 2px #000, 0 0 7px rgba(0, 0, 0, 0.85);
+  font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
+  font-size: 3.1cqw;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0.04em 0.08em rgba(0, 0, 0, 0.7);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
@@ -453,32 +453,51 @@
   min-width: 0;
   overflow: hidden;
   margin-top: 0.6cqw;
-  padding: 0.55cqw 0.45cqw 0.45cqw;
+  padding: 0.45cqw 0.55cqw;
   background: rgba(0, 0, 0, 0.76);
   color: #f6f2ea;
   font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
-  font-size: 2.03cqw;
-  font-weight: 800;
-  line-height: 1.05;
+  font-size: 2.2cqw;
+  font-weight: 700;
+  line-height: 1.15;
   letter-spacing: 0.025em;
   white-space: nowrap;
+  text-align: center;
 }
 
 .recent-card__title > span {
-  display: inline-block;
-  min-width: max-content;
+  display: block;
+  width: max-content;
+  min-width: 100%;
   will-change: transform;
 }
 
+.recent-card__title.is-moving {
+  text-align: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-card__title > span {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .recent-card__stars {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
   overflow: hidden;
-  padding: 0.5cqw 0.35cqw 0.2cqw;
+  padding: 0.2cqw 0.55cqw 0.45cqw;
   color: #f5c44f;
-  font-size: 1.82cqw;
+  font-family: Arial, sans-serif;
+  font-size: 2.55cqw;
   line-height: 1;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  text-align: center;
 }
 
 .previous-card {
