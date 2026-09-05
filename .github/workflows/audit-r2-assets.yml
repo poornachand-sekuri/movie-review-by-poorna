@@ -1,0 +1,38 @@
+name: Audit R2 Lounge Assets
+
+on:
+  push:
+    branches: [cinema-rebuild]
+    paths:
+      - '.github/workflows/audit-r2-assets.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch and fingerprint current R2 PNG masters
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://assets.moviereviewbypoorna.com/ui/pages/home/v4/responsive'
+          files=(
+            '01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.png'
+            '02_Movie_Reviews_By_Poorna_Banner.png'
+            '03_Now_Reviewed_Panel.png'
+            '04_Recent_Reviews_Panel.png'
+            '05_Previously_Reviewed_Panel.png'
+            '06_Share_Your_Opinion_Panel.png'
+            '07_Lounge_Cini_Cafe_Banner.png'
+            '08_Now_Reviewed_With_Exit.png'
+            '09_Share_Your_Opinion_With_Exit.png'
+          )
+          mkdir -p /tmp/r2-audit
+          for f in "${files[@]}"; do
+            echo "=== $f ==="
+            curl --fail --silent --show-error --location --retry 3 --retry-delay 1 \
+              "$base/$f" -o "/tmp/r2-audit/$f"
+            stat -c 'bytes=%s' "/tmp/r2-audit/$f"
+            sha256sum "/tmp/r2-audit/$f"
+            file "/tmp/r2-audit/$f"
+            echo
+          done
