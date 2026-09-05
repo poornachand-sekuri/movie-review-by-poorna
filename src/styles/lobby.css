@@ -26,36 +26,21 @@
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_runtime_q99.webp") !important;
 }
 
-/* Lower-page artwork: do not request until it approaches the viewport. */
+/* Structural lower-page artwork is queued immediately so runtime text/controls
+   can never appear without the corresponding panel frame. */
 .lounge-panel--recent {
-  background-image: none !important;
-}
-
-.lounge-panel--recent.is-art-ready {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/04_Recent_Reviews_Panel_runtime_q99.webp") !important;
 }
 
 .lounge-panel--previous {
-  background-image: none !important;
-}
-
-.lounge-panel--previous.is-art-ready {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/05_Previously_Reviewed_Panel_runtime_q99.webp") !important;
 }
 
 .lounge-panel--opinion {
-  background-image: none !important;
-}
-
-.lounge-panel--opinion.is-art-ready {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/06_Share_Your_Opinion_Panel_runtime_q99.webp") !important;
 }
 
 .lounge-panel--bottom .lounge-banner-crop {
-  background-image: none !important;
-}
-
-.lounge-panel--bottom.is-art-ready .lounge-banner-crop {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/07_Lounge_Cini_Cafe_Banner_runtime_q99.webp") !important;
 }
 
@@ -67,6 +52,7 @@
  */
 .lounge-stage {
   width: min(64vw, 470px);
+  gap: 1rem;
 }
 
 .lounge-stage > .lounge-panel,
