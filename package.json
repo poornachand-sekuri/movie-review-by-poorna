@@ -11,6 +11,8 @@
     "build": "wrangler types && astro build",
     "check": "wrangler types && astro check",
     "check:guardrails": "node scripts/check-runtime-guardrails.mjs",
+    "test:loading": "node --test scripts/check-lounge-loading.mjs",
+    "validate": "npm run check:guardrails && npm run test:loading && npm run check",
     "preview": "wrangler types && astro preview",
     "cf:types": "wrangler types",
     "deploy:preview": "npm run build && wrangler deploy"
