@@ -116,7 +116,8 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
     const recovery = screen.querySelector('[data-loading-recovery]');
     const startedAt = Date.now();
     const minimumVisibleMs = 350;
-    const maximumHoldMs = theme === 'lobby' ? 3000 : 2200;
+    const recoveryDelayMs = theme === 'lobby' ? 3000 : 1200;
+    const maximumHoldMs = theme === 'lobby' ? 5000 : 2200;
     let revealTimer;
     let revealScheduled = false;
 
@@ -164,10 +165,10 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
       window.setTimeout(() => beginReveal(ready), delay);
     };
 
-    // Show the escape hatch early, but automatically fail open shortly after.
+    // Keep the clean loading state longer; expose recovery only after 3s in The Lobby.
     const slowTimer = window.setTimeout(() => {
       showRecovery(`${room} is still preparing a few visuals.`);
-    }, 1200);
+    }, recoveryDelayMs);
 
     revealTimer = window.setTimeout(() => {
       window.clearTimeout(slowTimer);
