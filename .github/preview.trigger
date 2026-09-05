@@ -15,3 +15,5 @@ Restore the proven pre-reset runtime poster fitting: cover-fill each red poster 
 Keep the fixed background layer above the page fallback and below shade/content.
 Runtime Now Reviewed right-leaf composition: keep the baked panel artwork unchanged; center the movie title horizontally in a refined metallic poster-title treatment aligned to the Reviewed By Poorna stamp axis, keep release date and language as smaller inward-facing vertical side credits, and center the cinema-gold rating directly below the stamp. Labels remain visually hidden while semantic values remain in the DOM.
 Performance pass: serve the existing lossless WebP versions of Now Reviewed, Recent Reviews and Previously Reviewed instead of their larger PNG equivalents while keeping identical decoded pixels. Prepare a lossless WebP Lounge background cutover next to reduce the mobile first-load payload without changing any artwork.
+
+Title visibility fix: render the Now Reviewed movie title in opaque bright ivory with an explicit WebKit text fill, no dark stroke or clipped-gradient treatment, and only a small proportional shadow. Preserve title placement and all artwork and metadata layout.
