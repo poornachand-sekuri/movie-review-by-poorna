@@ -43,3 +43,5 @@ Three room-specific loading screens: apply approved Lobby, Screening Room and Mo
 2026-09-06 structural-frame race fix: do not let IntersectionObserver decide whether the Recent/Previous/Opinion/Bottom frame exists. Arm all lightweight Q99 structural frames synchronously while the loading curtain is still visible; use IntersectionObserver only for heavier movie posters, including restored-scroll handling. This removes the naked text/arrows state when observer timing is late or skipped.
 
 2026-09-06 spacing trial: increase the common Lounge section gap from 8px to 1rem so every Home section gets a slightly more breathable, consistent separation without changing the artwork itself.
+
+2026-09-06 Lobby loader timing: keep the normal clean loading state for 3 seconds before showing Try Again / Enter The Lobby, and extend the Lobby hard automatic fail-open to 5 seconds. Screening Room and Movie Café timings remain unchanged.
