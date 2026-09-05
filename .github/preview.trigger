@@ -9,3 +9,4 @@ Render the Premier Lounge background at full width without horizontal cropping, 
 In focus mode keep the Lounge background visible under a soft mask, remove the floating X, use the built-in EXIT artwork for Now Reviewed and Share Your Opinion, and retain outside-tap return behavior for panels without an EXIT graphic.
 Use one dedicated clean full Lounge background image for every focus state so the backdrop never contains or changes with the underlying section stack.
 Increase the complete Lounge section stack from 56vw to 64vw on phones so the panels are less compressed while retaining visible side architecture and common-width alignment for both navigation bars and all sections.
+Preconnect and DNS-prefetch the R2 asset origin so Lounge artwork can start sooner while the production image payload is being optimized.
