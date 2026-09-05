@@ -8,6 +8,11 @@ const rooms = {
 };
 const room = rooms[theme];
 const preview = Astro.url.searchParams.get('loading-preview') === '1';
+const lobbyCriticalImages = [
+  'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/02_Movie_Reviews_By_Poorna_Banner_runtime_q99.webp',
+  'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_runtime_q99.webp',
+];
+const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
 ---
 
 <style is:inline>
@@ -83,7 +88,16 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
   @media (prefers-reduced-motion: reduce) { .lounge-loading-indicator i { animation: none; } html[data-lounge-state] .lounge-loading-screen { transition: none; } .lounge-loading-progress::-webkit-progress-value { transition: none; } }
 </style>
 
-<div class="lounge-loading-screen" data-lounge-loader data-theme={theme} data-room={room.name} data-preview={String(preview)} style={`--loading-art: url("${room.image}")`} aria-labelledby="lounge-loading-title">
+<div
+  class="lounge-loading-screen"
+  data-lounge-loader
+  data-theme={theme}
+  data-room={room.name}
+  data-preview={String(preview)}
+  data-critical-images={JSON.stringify(criticalImages)}
+  style={`--loading-art: url("${room.image}")`}
+  aria-labelledby="lounge-loading-title"
+>
   <p class="lounge-loading-brand">MOVIE REVIEWS <span>BY POORNA</span></p>
   <div class="lounge-loading-card">
     <p class="lounge-loading-welcome">Welcome to</p>
@@ -118,7 +132,15 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
     const minimumVisibleMs = 350;
     const recoveryDelayMs = theme === 'lobby' ? 10000 : 1200;
     const maximumHoldMs = theme === 'lobby' ? 15000 : 2200;
+    const fastLobbyFallbackMs = 2000;
+    const criticalImages = (() => {
+      try { return JSON.parse(screen.dataset.criticalImages || '[]'); }
+      catch { return []; }
+    })();
+    const fastLobbyEnabled = theme === 'lobby' && !isPreview && criticalImages.length > 0;
+    const fadeMs = fastLobbyEnabled ? 120 : 240;
     let revealTimer;
+    let slowTimer;
     let revealScheduled = false;
 
     // Runs before the page markup: no partially styled content flashes through.
@@ -141,6 +163,8 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
     const beginReveal = (ready) => {
       if (root.dataset.loungeState !== 'loading') return;
       window.clearTimeout(revealTimer);
+      window.clearTimeout(slowTimer);
+      recovery.hidden = true;
       if (ready) {
         progress.value = 100;
         message.textContent = `${room} is ready. Come on in.`;
@@ -153,20 +177,77 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
         if (root.dataset.loungeState !== 'revealing') return;
         root.dataset.loungeState = 'leaving';
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        window.setTimeout(finish, reduceMotion ? 0 : 240);
+        window.setTimeout(finish, reduceMotion ? 0 : fadeMs);
       }));
     };
 
     const reveal = (ready) => {
       if (isPreview || root.dataset.loungeState !== 'loading' || revealScheduled) return;
       revealScheduled = true;
+      window.clearTimeout(slowTimer);
+      recovery.hidden = true;
       const elapsed = Date.now() - startedAt;
       const delay = Math.max(0, minimumVisibleMs - elapsed);
       window.setTimeout(() => beginReveal(ready), delay);
     };
 
-    // Keep the clean loading state longer; expose recovery only after 10s in The Lobby.
-    const slowTimer = window.setTimeout(() => {
+    const openWhenPageParsed = (ready) => {
+      if (!fastLobbyEnabled || root.dataset.loungeState !== 'loading') return;
+      const openNow = () => {
+        if (root.dataset.loungeState !== 'loading') return;
+        revealScheduled = true;
+        beginReveal(ready);
+      };
+
+      if (document.querySelector('.lounge-page')) {
+        openNow();
+        return;
+      }
+
+      if (typeof MutationObserver === 'undefined') {
+        window.setTimeout(openNow, 0);
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        if (!document.querySelector('.lounge-page')) return;
+        observer.disconnect();
+        openNow();
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    };
+
+    const loadCriticalImage = (url) => new Promise((resolve) => {
+      const image = new Image();
+      let settled = false;
+      const done = (ok) => {
+        if (settled) return;
+        settled = true;
+        resolve(ok);
+      };
+      image.addEventListener('load', () => done(true), { once: true });
+      image.addEventListener('error', () => done(false), { once: true });
+      image.decoding = 'async';
+      image.fetchPriority = 'high';
+      image.src = url;
+      if (image.complete) done(image.naturalWidth > 0);
+    });
+
+    const startFastLobbyProbe = () => {
+      if (!fastLobbyEnabled) return;
+      let fallbackTimer;
+      Promise.race([
+        Promise.all(criticalImages.map(loadCriticalImage)).then((results) => results.every(Boolean)),
+        new Promise((resolve) => {
+          fallbackTimer = window.setTimeout(() => resolve(false), fastLobbyFallbackMs);
+        }),
+      ]).then((ready) => {
+        if (fallbackTimer) window.clearTimeout(fallbackTimer);
+        openWhenPageParsed(Boolean(ready));
+      });
+    };
+
+    slowTimer = window.setTimeout(() => {
       showRecovery(`${room} is still preparing a few visuals.`);
     }, recoveryDelayMs);
 
@@ -183,7 +264,6 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
 
     document.addEventListener('lounge:loading-error', () => {
       window.clearTimeout(slowTimer);
-      showRecovery('A visual is taking longer than expected. Opening the page now…');
       reveal(false);
     });
 
@@ -211,5 +291,10 @@ const preview = Astro.url.searchParams.get('loading-preview') === '1';
         finish();
       }
     });
+
+    // The Lobby's critical visuals start loading from this inline script, before
+    // the large page module has to download/execute. This prevents a ready Lounge
+    // from sitting behind the loader simply because deferred JavaScript is late.
+    startFastLobbyProbe();
   })();
 </script>
