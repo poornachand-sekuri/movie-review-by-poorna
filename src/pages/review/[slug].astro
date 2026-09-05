@@ -1,4 +1,5 @@
 ---
+import LoungeLoading from '../../components/lobby/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
 import { getReviewBySlug } from '../../lib/data/reviews';
 
@@ -26,7 +27,8 @@ function formatDate(value: string | null): string {
 ---
 
 <SiteFrame title={`${review.title} — Movie Reviews By Poorna`}>
-  <main class="review-shell">
+  <LoungeLoading theme="screening" />
+  <main class="review-shell" data-cinema-page>
     <a class="back-link" href="/">← Lounge</a>
     <header>
       <p class="eyebrow">Screening Room</p>
@@ -38,6 +40,11 @@ function formatDate(value: string | null): string {
     {review.verdict && <p class="verdict">{review.verdict}</p>}
     <article class="review-copy" set:html={review.bodyHtml}></article>
   </main>
+  <script>
+    import { prepareCinemaPage } from '../../lib/lounge-loading';
+    const page = document.querySelector<HTMLElement>('[data-cinema-page]');
+    if (page) prepareCinemaPage(page);
+  </script>
 </SiteFrame>
 
 <style>

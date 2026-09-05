@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { backgroundImageUrls, prepareLounge, waitForImage } from '../src/lib/lounge-loading.ts';
+import { backgroundImageUrls, prepareLounge, prepareCinemaPage, waitForImage } from '../src/lib/lounge-loading.ts';
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 const deferred = () => {
@@ -181,15 +181,16 @@ test('failed critical artwork reports recovery without automatically opening an 
   } finally { env.restore(); }
 });
 
-test('the loading screen offers recovery on a slow connection and only fades on readiness', () => {
+for (const [room, preview] of [['The Lobby', false], ['The Screening Room', false], ['The Movie Café', false], ['The Lobby', true]]) test(`${room}: ${preview ? 'design preview stays open' : 'recovery and automatic reveal work'}`, () => {
   const source = readFileSync(new URL('../src/components/lobby/LoungeLoading.astro', import.meta.url), 'utf8');
   const script = source.match(/<script is:inline>([\s\S]*?)<\/script>/)[1];
   const root = { dataset: {} };
   const message = { textContent: '' };
   const progress = { value: 0 };
   const recovery = { hidden: true };
-  const buttons = { '[data-loading-retry]': new EventTarget(), '[data-loading-open]': new EventTarget() };
+  const buttons = { '[data-loading-retry]': new EventTarget(), '[data-loading-open]': new EventTarget(), '[data-loading-preview-open]': new EventTarget() };
   const screen = {
+    dataset: { room, preview: String(preview) },
     contains: () => false,
     querySelector: (selector) => ({ '[data-loading-message]': message, '[data-loading-progress]': progress, '[data-loading-recovery]': recovery, ...buttons })[selector],
   };
@@ -207,13 +208,19 @@ test('the loading screen offers recovery on a slow connection and only fades on 
   vm.runInNewContext(script, { document, window, Event, requestAnimationFrame: (callback) => frames.push(callback) });
   assert.equal(root.dataset.loungeState, 'loading');
   timers.find((timer) => timer.delay === 20000).callback();
-  assert.equal(recovery.hidden, false);
+  assert.equal(recovery.hidden, preview);
   assert.equal(root.dataset.loungeState, 'loading');
   buttons['[data-loading-retry]'].dispatchEvent(new Event('click'));
   assert.equal(reloaded, true);
   document.dispatchEvent(new Event('lounge:loading-error'));
   assert.equal(root.dataset.loungeState, 'loading');
   document.dispatchEvent(new Event('lounge:assets-ready'));
+  if (preview) {
+    assert.equal(root.dataset.loungeState, 'loading');
+    assert.equal(message.textContent, '');
+    assert.equal(frames.length, 0);
+    buttons['[data-loading-preview-open]'].dispatchEvent(new Event('click'));
+  }
   assert.equal(root.dataset.loungeState, 'revealing');
   assert.equal(progress.value, 100);
   frames.shift()();
@@ -222,4 +229,40 @@ test('the loading screen offers recovery on a slow connection and only fades on 
   assert.equal(root.dataset.loungeState, 'leaving');
   timers.find((timer) => timer.delay === 400).callback();
   assert.equal(root.dataset.loungeState, undefined);
+});
+
+for (const withPoster of [true, false]) test(`review/café gate waits for fonts${withPoster ? ' and review images' : ' without any images'}`, async () => {
+  const fontGate = deferred();
+  const posterGate = deferred();
+  const poster = new ImageDouble();
+  poster.decodeResult = posterGate.promise;
+  const env = environment({ fonts: fontGate.promise });
+  env.page.querySelectorAll = (selector) => selector === 'img' && withPoster ? [poster] : [];
+  try {
+    prepareCinemaPage(env.page);
+    await tick();
+    assert.equal(env.events.some((e) => e.name === 'lounge:assets-ready'), false);
+    fontGate.resolve();
+    await tick();
+    if (withPoster) {
+      assert.equal(poster.loading, 'eager');
+      assert.equal(env.events.some((e) => e.name === 'lounge:assets-ready'), false);
+    }
+    posterGate.resolve();
+    await tick();
+    assert.equal(env.events.filter((e) => e.name === 'lounge:assets-ready').length, 1);
+  } finally { env.restore(); }
+});
+
+test('a failed review poster offers recovery instead of leaving an unexplained spinner', async () => {
+  const poster = new ImageDouble();
+  poster.naturalWidth = 0;
+  const env = environment();
+  env.page.querySelectorAll = (selector) => selector === 'img' ? [poster] : [];
+  try {
+    prepareCinemaPage(env.page);
+    await tick();
+    assert.equal(env.events.some((e) => e.name === 'lounge:loading-error'), true);
+    assert.equal(env.events.some((e) => e.name === 'lounge:assets-ready'), false);
+  } finally { env.restore(); }
 });

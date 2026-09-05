@@ -1,4 +1,5 @@
 ---
+import LoungeLoading from '../components/lobby/LoungeLoading.astro';
 import SiteFrame from '../layouts/SiteFrame.astro';
 import { searchReviews } from '../lib/data/reviews';
 
@@ -9,7 +10,8 @@ const results = query ? await searchReviews(query, { limit: 20 }) : [];
 ---
 
 <SiteFrame title="Cini Cafe — Movie Reviews By Poorna">
-  <main class="search-shell">
+  <LoungeLoading theme="cafe" />
+  <main class="search-shell" data-cinema-page>
     <a class="back-link" href="/">← Lounge</a>
     <h1>Cini Cafe</h1>
     <form method="get" action="/search">
@@ -31,6 +33,11 @@ const results = query ? await searchReviews(query, { limit: 20 }) : [];
       ))}
     </div>
   </main>
+  <script>
+    import { prepareCinemaPage } from '../lib/lounge-loading';
+    const page = document.querySelector<HTMLElement>('[data-cinema-page]');
+    if (page) prepareCinemaPage(page);
+  </script>
 </SiteFrame>
 
 <style>

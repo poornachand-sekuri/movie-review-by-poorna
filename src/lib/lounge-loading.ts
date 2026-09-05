@@ -145,3 +145,36 @@ export function prepareLounge(page: HTMLElement): void {
   document.addEventListener('lounge:resume-loading', start);
   start();
 }
+
+/** Review and café pages use native links/forms and wait for their own artwork. */
+export function prepareCinemaPage(page: HTMLElement): void {
+  let generation = 0;
+  const prepare = async () => {
+    if (document.documentElement.dataset.loungeState !== 'loading') return;
+    const current = ++generation;
+    page.setAttribute('aria-busy', 'true');
+    const urls = new Set<string>();
+    [page, ...page.querySelectorAll<HTMLElement>('*')].forEach((element) => {
+      backgroundImageUrls(getComputedStyle(element).backgroundImage).forEach((url) => urls.add(url));
+    });
+    const images = [...page.querySelectorAll<HTMLImageElement>('img')];
+    images.forEach((image) => { image.loading = 'eager'; });
+    const artwork = [...urls].map((url) => { const image = new Image(); image.src = url; return image; });
+    const jobs = [...images, ...artwork].map(waitForImage);
+    if (document.fonts) jobs.push(document.fonts.ready.then(() => undefined));
+    let loaded = 0;
+    const progress = () => {
+      if (current === generation) document.dispatchEvent(new CustomEvent('lounge:loading-progress', { detail: { loaded, total: jobs.length } }));
+    };
+    progress();
+    try {
+      await Promise.all(jobs.map(async (job) => { await job; loaded += 1; progress(); }));
+      if (current === generation) document.dispatchEvent(new Event('lounge:assets-ready'));
+    } catch {
+      if (current === generation) document.dispatchEvent(new Event('lounge:loading-error'));
+    }
+  };
+  const start = () => { void prepare().catch(() => document.dispatchEvent(new Event('lounge:loading-error'))); };
+  document.addEventListener('lounge:resume-loading', start);
+  start();
+}

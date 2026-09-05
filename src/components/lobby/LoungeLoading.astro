@@ -1,131 +1,90 @@
+---
+interface Props { theme?: 'lobby' | 'screening' | 'cafe'; }
+const { theme = 'lobby' } = Astro.props;
+const rooms = {
+  lobby: { name: 'The Lobby', message: 'Getting the lounge ready for your grand entrance…', image: '/images/loading/lobby.png' },
+  screening: { name: 'The Screening Room', message: 'Hold that popcorn. The review is almost ready…', image: '/images/loading/screening.png' },
+  cafe: { name: 'The Movie Café', message: 'Fresh picks brewing…', image: '/images/loading/cafe.png' },
+};
+const room = rooms[theme];
+const preview = Astro.url.searchParams.get('loading-preview') === '1';
+---
+
 <style is:inline>
   .lounge-loading-screen { display: none; }
   html[data-lounge-state] { overflow: hidden; }
-  html[data-lounge-state="loading"] .lounge-page { visibility: hidden; }
+  html[data-lounge-state="loading"] :is(.lounge-page, [data-cinema-page]) { visibility: hidden; }
   html[data-lounge-state] .lounge-loading-screen {
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    overflow: auto;
-    padding: max(28px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom));
-    background:
-      radial-gradient(ellipse at 20% 15%, #61401c38, transparent 55%),
-      radial-gradient(ellipse at 90% 85%, #13425430, transparent 50%),
-      #080807;
-    color: #fff0ca;
-    font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
-    text-align: center;
-    opacity: 1;
-    transition: opacity 380ms ease;
+    --loading-accent: #d7bc80;
+    position: fixed; z-index: 1000; inset: 0;
+    display: grid; grid-template-rows: auto 1fr auto;
+    overflow: auto; isolation: isolate;
+    padding: max(30px, env(safe-area-inset-top)) 24px max(30px, env(safe-area-inset-bottom));
+    background-color: #10211f;
+    background-image: linear-gradient(180deg, #080c1066 0%, #080c1000 25%, #080c1030 55%, #080c1080 100%), var(--loading-art);
+    background-size: cover; background-position: center;
+    color: #fff4df; font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
+    text-align: center; opacity: 1; transition: opacity 380ms ease;
   }
-  html[data-lounge-state="leaving"] .lounge-loading-screen {
-    opacity: 0;
-    pointer-events: none;
-  }
+  html[data-lounge-state] .lounge-loading-screen[data-theme="screening"] { --loading-accent: #edb8a3; background-color: #230e16; }
+  html[data-lounge-state] .lounge-loading-screen[data-theme="cafe"] { --loading-accent: #e8c78c; background-color: #292216; }
+  html[data-lounge-state="leaving"] .lounge-loading-screen { opacity: 0; pointer-events: none; }
   .lounge-loading-screen * { box-sizing: border-box; }
-  .lounge-loading-card { width: min(100%, 380px); padding-block: 24px; }
-  .lounge-loading-brand {
-    margin: 0 0 48px;
-    color: #eee5d8;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.6;
-    letter-spacing: 0.16em;
-  }
-  .lounge-loading-brand span {
-    display: block;
-    color: #ff6458;
-    font-size: 12px;
-    letter-spacing: 0.25em;
-  }
-  .lounge-loading-indicator {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 28px;
-    border: 1px solid #cf9d4b40;
-    border-top: 2px solid #fff0ca;
-    border-right-color: #e05245;
-    border-radius: 50%;
-    box-shadow: 0 0 24px #ce943017;
-    animation: lounge-loading-spin 1.8s linear infinite;
-  }
-  .lounge-loading-title {
-    margin: 0 0 14px;
-    font-size: clamp(26px, 6vw, 34px);
-    font-weight: 500;
-    line-height: 1.2;
-    letter-spacing: 0.015em;
-  }
-  .lounge-loading-message {
-    margin: 0;
-    min-height: 3em;
-    color: #d3c8b9;
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  .lounge-loading-progress {
-    display: block;
-    width: min(100%, 240px);
-    height: 4px;
-    margin: 20px auto 0;
-    overflow: hidden;
-    border: 0;
-    border-radius: 4px;
-    background: #382c21;
-    color: #fff0ca;
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  .lounge-loading-progress::-webkit-progress-bar { background: #382c21; }
-  .lounge-loading-progress::-webkit-progress-value { background: #fff0ca; transition: width 180ms ease; }
-  .lounge-loading-progress::-moz-progress-bar { background: #fff0ca; }
-  .lounge-loading-recovery { margin-top: 28px; }
+  .lounge-loading-brand { margin: 0; color: #fff1d6; font-size: 14px; font-weight: 600; line-height: 1.7; letter-spacing: 0.14em; text-shadow: 0 2px 12px #000; }
+  .lounge-loading-brand span { display: block; color: var(--loading-accent); font-size: 12px; letter-spacing: 0.3em; }
+  .lounge-loading-card { align-self: center; justify-self: center; width: min(100%, 700px); padding: 48px 16px; margin-block: 24px; background: radial-gradient(ellipse, #080b0edd, #080b0e80 50%, transparent 72%); }
+  .lounge-loading-welcome { margin: 0 0 14px; color: var(--loading-accent); font-size: 15px; line-height: 1.5; letter-spacing: 0.2em; text-transform: uppercase; }
+  .lounge-loading-title { margin: 0 auto 24px; max-width: 12ch; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.5rem, 6.2vw, 4.5rem); font-weight: 400; line-height: 1.1; letter-spacing: -0.025em; text-wrap: balance; text-shadow: 0 2px 24px #000; }
+  .lounge-loading-message { margin: 0 auto; max-width: 32ch; min-height: 3em; color: #f3e9d8; font-size: clamp(1rem, 2vw, 1.125rem); line-height: 1.6; text-wrap: balance; text-shadow: 0 2px 10px #000; }
+  .lounge-loading-indicator { display: flex; justify-content: center; gap: 8px; margin: 30px auto 0; }
+  .lounge-loading-indicator i { width: 5px; height: 5px; border-radius: 50%; background: var(--loading-accent); animation: cinema-pulse 1.8s ease-in-out infinite; }
+  .lounge-loading-indicator i:nth-child(2) { animation-delay: 200ms; }
+  .lounge-loading-indicator i:nth-child(3) { animation-delay: 400ms; }
+  .lounge-loading-progress { display: block; width: min(100%, 160px); height: 2px; margin: 22px auto 0; overflow: hidden; border: 0; border-radius: 4px; background: #fff0ca30; color: var(--loading-accent); appearance: none; -webkit-appearance: none; }
+  .lounge-loading-progress::-webkit-progress-bar { background: #fff0ca30; }
+  .lounge-loading-progress::-webkit-progress-value { background: var(--loading-accent); transition: width 180ms ease; }
+  .lounge-loading-progress::-moz-progress-bar { background: var(--loading-accent); }
+  .lounge-loading-recovery { margin-top: 24px; padding: 16px; background: #090b0eed; border-radius: 6px; }
   .lounge-loading-recovery[hidden] { display: none; }
-  .lounge-loading-recovery p { color: #c5baab; font-size: 14px; line-height: 1.5; }
+  .lounge-loading-recovery p { color: #e1d6c8; font-size: 14px; line-height: 1.5; }
   .lounge-loading-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
-  .lounge-loading-actions button {
-    min-height: 44px;
-    padding: 10px 18px;
-    border: 1px solid #a88550;
-    border-radius: 6px;
-    background: #1c1610;
-    color: #fff0ca;
-    font: inherit;
-    font-size: 15px;
-    cursor: pointer;
+  .lounge-loading-screen button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--loading-accent); border-radius: 4px; background: #111713ee; color: #fff0ca; font: inherit; font-size: 15px; cursor: pointer; }
+  .lounge-loading-screen button:focus-visible { outline: 2px solid #fff4df; outline-offset: 4px; }
+  .lounge-loading-preview { justify-self: center; }
+  @keyframes cinema-pulse { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+  @media (max-width: 600px) {
+    html[data-lounge-state] .lounge-loading-screen[data-theme="lobby"],
+    html[data-lounge-state] .lounge-loading-screen[data-theme="cafe"] { background-position: center, 22% center; }
   }
-  .lounge-loading-actions button:focus-visible { outline: 2px solid #ff6458; outline-offset: 3px; }
-  @keyframes lounge-loading-spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) {
-    .lounge-loading-indicator { animation: none; }
-    html[data-lounge-state] .lounge-loading-screen { transition: none; }
-    .lounge-loading-progress::-webkit-progress-value { transition: none; }
-  }
+  @media (max-height: 540px) { .lounge-loading-card { padding-block: 20px; margin-block: 12px; } .lounge-loading-title { font-size: 2.25rem; margin-bottom: 12px; } }
+  @media (prefers-reduced-motion: reduce) { .lounge-loading-indicator i { animation: none; } html[data-lounge-state] .lounge-loading-screen { transition: none; } .lounge-loading-progress::-webkit-progress-value { transition: none; } }
 </style>
 
-<div class="lounge-loading-screen" data-lounge-loader aria-labelledby="lounge-loading-title">
+<div class="lounge-loading-screen" data-lounge-loader data-theme={theme} data-room={room.name} data-preview={String(preview)} style={`--loading-art: url("${room.image}")`} aria-labelledby="lounge-loading-title">
+  <p class="lounge-loading-brand">MOVIE REVIEWS <span>BY POORNA</span></p>
   <div class="lounge-loading-card">
-    <p class="lounge-loading-brand">MOVIE REVIEWS <span>BY POORNA</span></p>
-    <div class="lounge-loading-indicator" aria-hidden="true"></div>
-    <h2 class="lounge-loading-title" id="lounge-loading-title">Opening The Lobby</h2>
-    <p class="lounge-loading-message" data-loading-message role="status">Preparing your movie lounge…</p>
-    <progress class="lounge-loading-progress" data-loading-progress max="100" value="0" aria-label="Lounge loading progress"></progress>
+    <p class="lounge-loading-welcome">Welcome to</p>
+    <h2 class="lounge-loading-title" id="lounge-loading-title">{room.name}</h2>
+    <p class="lounge-loading-message" data-loading-message role="status">{room.message}</p>
+    <div class="lounge-loading-indicator" aria-hidden="true"><i></i><i></i><i></i></div>
+    <progress class="lounge-loading-progress" data-loading-progress max="100" value="0" aria-label={`${room.name} loading progress`}></progress>
     <div class="lounge-loading-recovery" data-loading-recovery hidden>
-      <p>Retry loading, or open the Lounge while the remaining images load.</p>
+      <p>Try again, or enter while the remaining images load.</p>
       <div class="lounge-loading-actions">
         <button type="button" data-loading-retry>Try again</button>
-        <button type="button" data-loading-open>Open Lounge</button>
+        <button type="button" data-loading-open>Enter {room.name}</button>
       </div>
     </div>
   </div>
+  {preview && <button class="lounge-loading-preview" type="button" data-loading-preview-open>Enter {room.name}</button>}
 </div>
 
 <script is:inline>
   (() => {
     const root = document.documentElement;
     const screen = document.querySelector('[data-lounge-loader]');
+    const room = screen.dataset.room;
+    const isPreview = screen.dataset.preview === 'true';
     const message = screen.querySelector('[data-loading-message]');
     const progress = screen.querySelector('[data-loading-progress]');
     const recovery = screen.querySelector('[data-loading-recovery]');
@@ -134,26 +93,26 @@
     root.dataset.loungeState = 'loading';
 
     const showRecovery = (text) => {
-      if (root.dataset.loungeState !== 'loading') return;
+      if (isPreview || root.dataset.loungeState !== 'loading') return;
       message.textContent = text;
       recovery.hidden = false;
     };
     const slowTimer = window.setTimeout(() => {
-      if (recovery.hidden) showRecovery('The Lounge is taking a little longer to open.');
+      if (!isPreview && recovery.hidden) showRecovery(`${room} is taking a little longer to open.`);
     }, 20000);
 
     const finish = () => {
       const hadFocus = screen.contains(document.activeElement);
       delete root.dataset.loungeState;
-      document.querySelector('.lounge-page')?.removeAttribute('aria-busy');
-      if (hadFocus) document.querySelector('.lounge-nav-hit')?.focus({ preventScroll: true });
+      document.querySelector('.lounge-page, [data-cinema-page]')?.removeAttribute('aria-busy');
+      if (hadFocus) document.querySelector('.lounge-nav-hit, .back-link')?.focus({ preventScroll: true });
     };
     const reveal = (ready) => {
       if (root.dataset.loungeState !== 'loading') return;
       window.clearTimeout(slowTimer);
       if (ready) {
         progress.value = 100;
-        message.textContent = 'Your Lounge is ready.';
+        message.textContent = `${room} is ready. Come on in.`;
       }
       // Make the prepared page paint under the opaque screen before fading.
       root.dataset.loungeState = 'revealing';
@@ -173,7 +132,11 @@
     document.addEventListener('lounge:loading-error', () => {
       showRecovery('Some artwork could not load. Please try again.');
     });
-    document.addEventListener('lounge:assets-ready', () => reveal(true));
+    document.addEventListener('lounge:assets-ready', () => {
+      if (isPreview) { progress.value = 100; return; }
+      reveal(true);
+    });
+    screen.querySelector('[data-loading-preview-open]')?.addEventListener('click', () => reveal(false));
     screen.querySelector('[data-loading-retry]').addEventListener('click', () => window.location.reload());
     screen.querySelector('[data-loading-open]').addEventListener('click', () => reveal(false));
 
