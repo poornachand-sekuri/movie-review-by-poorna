@@ -1,4 +1,4 @@
-/** Extract the browser-selected artwork URLs, including multiple backgrounds. */
+/** Extract browser-selected artwork URLs, including multiple backgrounds. */
 export function backgroundImageUrls(background: string): string[] {
   return [...background.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*?))\s*\)/g)]
     .map((match) => match[1] ?? match[2] ?? match[3] ?? '')
@@ -14,13 +14,13 @@ export async function waitForImage(image: HTMLImageElement): Promise<void> {
         image.removeEventListener('error', failed);
       };
       const loaded = () => { cleanup(); resolve(); };
-      const failed = () => { cleanup(); reject(new Error('Lounge image failed to load.')); };
+      const failed = () => { cleanup(); reject(new Error('Cinema image failed to load.')); };
       image.addEventListener('load', loaded, { once: true });
       image.addEventListener('error', failed, { once: true });
       if (image.complete) image.naturalWidth > 0 ? loaded() : failed();
     });
   }
-  if (image.naturalWidth === 0) throw new Error('Lounge image is unavailable.');
+  if (image.naturalWidth === 0) throw new Error('Cinema image is unavailable.');
   if (typeof image.decode === 'function') await image.decode();
 }
 
@@ -38,25 +38,14 @@ async function settleWithin(job: Promise<void>, timeoutMs: number): Promise<bool
   }
 }
 
-function removeLegacyArtworkRequests(page: HTMLElement): void {
-  page.querySelector<HTMLElement>('.lounge-backdrop')?.removeAttribute('style');
-
-  page.querySelectorAll<HTMLImageElement>('.lounge-panel__art').forEach((image) => {
-    image.removeAttribute('src');
-    image.removeAttribute('srcset');
-    image.remove();
-  });
-}
-
 /**
  * Park lower carousel posters before the browser's generous native lazy-load
- * distance can pull them ahead of the section frame itself.
+ * distance can pull them ahead of the already-requested structural frames.
  */
 function parkProgressivePosters(page: HTMLElement): void {
   page.querySelectorAll<HTMLImageElement>(
     '.lounge-panel--recent .recent-card__poster img, .lounge-panel--previous .previous-card img',
   ).forEach((image) => {
-    if (typeof image.getAttribute !== 'function') return;
     const source = image.getAttribute('src');
     if (!source || image.dataset.loungeDeferredSrc) return;
 
@@ -68,8 +57,6 @@ function parkProgressivePosters(page: HTMLElement): void {
 }
 
 function releaseProgressivePosters(section: HTMLElement): void {
-  if (typeof section.querySelectorAll !== 'function') return;
-
   section.querySelectorAll<HTMLImageElement>('img[data-lounge-deferred-src]').forEach((image) => {
     const source = image.dataset.loungeDeferredSrc;
     if (!source) return;
@@ -88,38 +75,15 @@ function releaseProgressivePosters(section: HTMLElement): void {
 }
 
 function isNearViewport(section: HTMLElement, marginScreens = 1.5): boolean {
-  if (typeof window === 'undefined' || typeof section.getBoundingClientRect !== 'function') return true;
+  if (typeof window === 'undefined') return true;
   const rect = section.getBoundingClientRect();
   const margin = window.innerHeight * marginScreens;
   return rect.bottom >= -margin && rect.top <= window.innerHeight + margin;
 }
 
-/**
- * Structural Lounge frames are now always armed immediately.
- *
- * The previous implementation used IntersectionObserver to decide when the CSS
- * background frame itself could exist. That meant the overlay text/arrows were
- * already in the DOM while background-image remained `none`, so a missed/late
- * observer callback exposed naked titles and controls on the Lounge wall.
- *
- * Q99 frame artwork is small (roughly 64–301 KB for sections 02–07), so the
- * production-safe tradeoff is to request ALL structural frames as soon as the
- * Lounge runtime starts. IntersectionObserver is retained only for the heavier
- * movie posters. Structure therefore always wins the network/render race.
- */
-function armProgressiveArtwork(page: HTMLElement): void {
+/** Structural frames are CSS-owned; JavaScript progressively releases posters only. */
+function armProgressivePosters(page: HTMLElement): void {
   parkProgressivePosters(page);
-
-  const structuralSections = [
-    ...page.querySelectorAll<HTMLElement>(
-      '.lounge-panel--recent, .lounge-panel--previous, .lounge-panel--opinion, .lounge-panel--bottom',
-    ),
-  ];
-
-  // This class only enables the Q99 CSS frame URL. Do it synchronously for all
-  // lower sections so their frames are discovered while the loading curtain is
-  // still on screen rather than after the user has already scrolled to them.
-  structuralSections.forEach((section) => section.classList.add('is-art-ready'));
 
   const posterSections = [
     ...page.querySelectorAll<HTMLElement>('.lounge-panel--recent, .lounge-panel--previous'),
@@ -127,7 +91,7 @@ function armProgressiveArtwork(page: HTMLElement): void {
 
   if (posterSections.length === 0) return;
 
-  // Handle restored scroll positions and very fast navigations synchronously.
+  // Cover restored scroll positions and fast navigations before observer delivery.
   posterSections.forEach((section) => {
     if (isNearViewport(section)) releaseProgressivePosters(section);
   });
@@ -146,9 +110,6 @@ function armProgressiveArtwork(page: HTMLElement): void {
     });
   }, {
     root: null,
-    // Frames are already downloading. Posters can begin about 85vh ahead so
-    // the user sees a complete section without allowing poster traffic to
-    // compete with first-screen structure.
     rootMargin: '85vh 0px 85vh',
     threshold: 0.01,
   });
@@ -156,87 +117,18 @@ function armProgressiveArtwork(page: HTMLElement): void {
   posterSections.forEach((section) => observer.observe(section));
 }
 
-/** Called only after the page's controls, carousels and event handlers exist. */
+/**
+ * The inline Lobby loader owns first-screen readiness so it can reveal before
+ * this deferred page module executes. This runtime owns poster scheduling only.
+ */
 export function prepareLounge(page: HTMLElement): void {
-  let generation = 0;
-
-  removeLegacyArtworkRequests(page);
-  armProgressiveArtwork(page);
-
-  const prepare = async () => {
-    if (document.documentElement.dataset.loungeState !== 'loading') return;
-    const current = ++generation;
+  armProgressivePosters(page);
+  if (document.documentElement.dataset.loungeState === 'loading') {
     page.setAttribute('aria-busy', 'true');
-
-    /*
-     * Critical-only readiness gate.
-     *
-     * Only the structural first-screen artwork participates in the gate. The
-     * featured poster is promoted to high priority but does not hold the page
-     * hostage, and fonts are deliberately not a readiness dependency.
-     */
-    const artworkUrls = new Set<string>();
-    page.querySelectorAll<HTMLElement>(
-      '.lounge-stage > .lounge-panel--banner:not(.lounge-panel--bottom) .lounge-banner-crop, .lounge-stage > .lounge-panel--now',
-    ).forEach((element) => {
-      backgroundImageUrls(getComputedStyle(element).backgroundImage).forEach((url) => artworkUrls.add(url));
-    });
-
-    const artwork = [...artworkUrls].map((url) => {
-      const image = new Image();
-      image.decoding = 'async';
-      image.fetchPriority = 'high';
-      image.src = url;
-      return image;
-    });
-
-    const featuredPoster = page.querySelector<HTMLImageElement>('.now-poster img');
-    if (featuredPoster) {
-      featuredPoster.loading = 'eager';
-      featuredPoster.fetchPriority = 'high';
-      void waitForImage(featuredPoster).catch(() => undefined);
-    }
-
-    const jobs = artwork.map((image) => settleWithin(waitForImage(image), 1800));
-    let loaded = 0;
-
-    const reportProgress = () => {
-      if (current !== generation) return;
-      document.dispatchEvent(new CustomEvent('lounge:loading-progress', { detail: { loaded, total: jobs.length } }));
-    };
-
-    reportProgress();
-
-    if (jobs.length === 0) {
-      if (current === generation) document.dispatchEvent(new Event('lounge:assets-ready'));
-      return;
-    }
-
-    const results = await Promise.all(jobs.map(async (job) => {
-      const ok = await job;
-      loaded += 1;
-      reportProgress();
-      return ok;
-    }));
-
-    if (current !== generation) return;
-
-    if (results.some((ok) => !ok)) {
-      document.dispatchEvent(new Event('lounge:loading-error'));
-    }
-
-    document.dispatchEvent(new Event('lounge:assets-ready'));
-  };
-
-  const start = () => { void prepare().catch(() => {
-    document.dispatchEvent(new Event('lounge:loading-error'));
-    document.dispatchEvent(new Event('lounge:assets-ready'));
-  }); };
-  document.addEventListener('lounge:resume-loading', start);
-  start();
+  }
 }
 
-/** Review and café pages use native links/forms and wait only for first-paint essentials. */
+/** Review and café pages still wait only for their first-paint essentials. */
 export function prepareCinemaPage(page: HTMLElement): void {
   let generation = 0;
 
