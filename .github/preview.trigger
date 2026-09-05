@@ -31,3 +31,5 @@ Lounge loading screen: show a lightweight black, champagne and red welcome scree
 Deploy the progressive-loading guardrail update together with the R2 WebP runtime cutover.
 
 Three room-specific loading screens: apply approved Lobby, Screening Room and Movie Café messages, unique backgrounds, and held design previews; preserve progressive Lounge loading.
+
+2026-09-06 loading performance hotfix: loading screens must never trap a user. On mobile, replace the 1.6–1.9 MB decorative loading-room PNG with lightweight CSS ambience; hard fail-open the Lobby at 3 seconds and Screening Room/Movie Café at 2.2 seconds; show the manual Enter option after 1.2 seconds; open progressively on artwork errors/timeouts; remove fonts and the featured poster from the Lobby readiness gate; and start lower Lounge frame downloads only when they are about 35vh from the viewport.
