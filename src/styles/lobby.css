@@ -45,50 +45,52 @@
 }
 
 /*
- * Now Reviewed — runtime-only right-leaf information composition.
+ * Now Reviewed — runtime-only right-leaf composition.
  *
- * Keep the baked PNG completely untouched. Only live text/value placement is
- * changed here: movie title becomes a centred poster-style title; metadata
- * labels are hidden; release date and language sit vertically on the leaf
- * edges; rating is centred along the bottom. The centre remains clear for the
- * baked Reviewed By Poorna stamp.
+ * The baked section artwork remains untouched. The right leaf is treated as a
+ * symmetrical poster-credit composition around the fixed Reviewed By Poorna
+ * stamp: title above, release/language as restrained side credits, rating below.
  */
 .now-details {
-  left: 54.1%;
-  top: 17.6%;
-  width: 36.4%;
-  height: 40.0%;
+  left: 54.15%;
+  top: 18.2%;
+  width: 36.25%;
+  height: 39.1%;
   overflow: hidden;
   pointer-events: none;
 }
 
+/* Movie title: quiet, premium poster-title hierarchy centred on the stamp axis. */
 .now-title {
   position: absolute;
   z-index: 2;
-  top: 2.5%;
-  left: 10%;
-  right: 10%;
-  min-height: 23%;
+  top: 0.5%;
+  left: 13%;
+  right: 13%;
+  height: 20%;
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   overflow: hidden;
-  color: #f4f0e8;
-  font-family: Impact, Haettenschweiler, "Arial Narrow", "Roboto Condensed", sans-serif;
-  font-size: clamp(13px, 5.05cqw, 34px);
-  font-weight: 800;
-  line-height: 0.92;
-  letter-spacing: 0.025em;
+  color: #f2eee6;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue Condensed", Impact, sans-serif;
+  font-size: clamp(12px, 4.15cqw, 30px);
+  font-weight: 900;
+  line-height: 0.96;
+  letter-spacing: 0.105em;
   text-align: center;
+  text-transform: uppercase;
   text-wrap: balance;
   white-space: normal;
   text-overflow: clip;
-  text-shadow:
-    0 1px 0 #000,
-    0 2px 3px rgba(0, 0, 0, 0.95),
-    0 0 9px rgba(125, 0, 0, 0.46);
-  -webkit-text-stroke: 0.02em rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #fffdf7 0%, #e6ddd0 46%, #b9afa3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 1))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9))
+    drop-shadow(0 0 4px rgba(255, 255, 255, 0.07));
 }
 
 .now-meta {
@@ -96,12 +98,20 @@
   inset: 0;
   margin: 0;
   display: block;
-  color: #f5f1e8;
+  color: #eee8df;
 }
 
-/* Labels are removed visually; values remain live and accessible in the DOM. */
+/* Hide the labels visually while preserving the semantic definition list. */
 .now-meta dt {
-  display: none !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 
 .now-meta > div {
@@ -116,39 +126,44 @@
 .now-meta dd {
   margin: 0;
   overflow: visible;
-  color: #f2eee5;
-  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
-  font-size: clamp(10px, 2.45cqw, 18px);
-  font-weight: 700;
+  color: #dcd5ca;
+  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(9px, 1.9cqw, 14px);
+  font-weight: 650;
   line-height: 1;
-  letter-spacing: 0.075em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   white-space: nowrap;
   text-overflow: clip;
-  text-shadow: 0 1px 2px #000, 0 0 7px rgba(0, 0, 0, 0.9);
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 1),
+    0 0 5px rgba(0, 0, 0, 0.86);
+  opacity: 0.92;
 }
 
-/* Release date — left edge, vertical poster-credit treatment. */
+/* Release date — left-side inward-facing credit, vertically centred to stamp. */
 .now-meta > div:nth-child(1) {
-  left: 0.5%;
-  top: 31%;
-  width: 10%;
-  height: 43%;
+  left: 1.4%;
+  top: 27%;
+  width: 8.5%;
+  height: 49%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .now-meta > div:nth-child(1) dd {
+  font-variant-numeric: tabular-nums;
   transform: rotate(-90deg);
   transform-origin: center;
 }
 
-/* Language — right edge, mirrored vertical treatment. */
+/* Language — mirrored right-side credit, sharing the same visual axis. */
 .now-meta > div:nth-child(2) {
-  right: 0.5%;
-  top: 31%;
-  width: 10%;
-  height: 43%;
+  right: 1.4%;
+  top: 27%;
+  width: 8.5%;
+  height: 49%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,29 +174,28 @@
   transform-origin: center;
 }
 
-/* Rating — centred horizontally at the bottom of the right leaf. */
+/* Rating — centred directly below the stamp; warm cinema-gold, not neon. */
 .now-meta > div:last-child {
-  left: 17%;
-  right: 17%;
-  bottom: 2.5%;
-  height: 15%;
+  left: 20%;
+  right: 20%;
+  bottom: 2.8%;
+  height: 13.5%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .now-meta__rating dd {
-  color: #ffd158;
+  color: #efc65b;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: clamp(12px, 3.15cqw, 23px);
-  font-weight: 800;
+  font-size: clamp(11px, 2.6cqw, 20px);
+  font-weight: 760;
   line-height: 1;
-  letter-spacing: 0.075em;
+  letter-spacing: 0.105em;
   text-align: center;
   text-shadow:
-    0 1px 2px #000,
-    0 0 5px rgba(255, 194, 45, 0.58),
-    0 0 11px rgba(255, 154, 0, 0.18);
+    0 1px 2px rgba(0, 0, 0, 1),
+    0 0 5px rgba(235, 182, 61, 0.28);
 }
 
 /*
