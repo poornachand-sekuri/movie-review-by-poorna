@@ -49,3 +49,5 @@ Three room-specific loading screens: apply approved Lobby, Screening Room and Mo
 2026-09-06 loader guardrail alignment: update the automated Lobby loading test to enforce the new 3-second recovery and 5-second hard fail-open timings before redeploying.
 
 2026-09-06 revised Lobby loader timing: show Try Again / Enter The Lobby only after 10 seconds and hard automatic fail-open at 15 seconds. Screening Room and Movie Café timings remain unchanged.
+
+2026-09-06 fast Lobby reveal: independently request the Top Navigation and Now Reviewed Q99 frames from the inline loading screen before the deferred page module executes. Reveal as soon as those frames and the Lounge markup are ready, or progressively fail-open at about 2 seconds. Keep 10s recovery and 15s hard-stop only as last-resort safety nets.
