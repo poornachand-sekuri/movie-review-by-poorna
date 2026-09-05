@@ -39,6 +39,7 @@ jobs:
       - name: Validate application
         run: |
           npm run check:guardrails
+          node --test scripts/check-lounge-loading.mjs
           npm run check
 
       - name: Build application
@@ -165,6 +166,7 @@ jobs:
 
           if (!lounge.includes('Movie Reviews By Poorna')) throw new Error('Lounge title is missing.');
           if (!lounge.includes('lounge-stage')) throw new Error('Premier Lounge stage is missing.');
+          if (!lounge.includes('data-lounge-loader') || !lounge.includes('Opening The Lobby')) throw new Error('Lounge loading screen is missing.');
           if (!lounge.includes('lounge-panel--now')) throw new Error('Now Reviewed panel is missing.');
           if (!lounge.includes('lounge-panel--recent')) throw new Error('Recent Reviews panel is missing.');
           if (!lounge.includes('lounge-panel--previous')) throw new Error('Previously Reviewed panel is missing.');

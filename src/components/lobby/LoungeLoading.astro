@@ -1,0 +1,189 @@
+<style is:inline>
+  .lounge-loading-screen { display: none; }
+  html[data-lounge-state] { overflow: hidden; }
+  html[data-lounge-state="loading"] .lounge-page { visibility: hidden; }
+  html[data-lounge-state] .lounge-loading-screen {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: auto;
+    padding: max(28px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom));
+    background:
+      radial-gradient(ellipse at 20% 15%, #61401c38, transparent 55%),
+      radial-gradient(ellipse at 90% 85%, #13425430, transparent 50%),
+      #080807;
+    color: #fff0ca;
+    font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
+    text-align: center;
+    opacity: 1;
+    transition: opacity 380ms ease;
+  }
+  html[data-lounge-state="leaving"] .lounge-loading-screen {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .lounge-loading-screen * { box-sizing: border-box; }
+  .lounge-loading-card { width: min(100%, 380px); padding-block: 24px; }
+  .lounge-loading-brand {
+    margin: 0 0 48px;
+    color: #eee5d8;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.6;
+    letter-spacing: 0.16em;
+  }
+  .lounge-loading-brand span {
+    display: block;
+    color: #ff6458;
+    font-size: 12px;
+    letter-spacing: 0.25em;
+  }
+  .lounge-loading-indicator {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 28px;
+    border: 1px solid #cf9d4b40;
+    border-top: 2px solid #fff0ca;
+    border-right-color: #e05245;
+    border-radius: 50%;
+    box-shadow: 0 0 24px #ce943017;
+    animation: lounge-loading-spin 1.8s linear infinite;
+  }
+  .lounge-loading-title {
+    margin: 0 0 14px;
+    font-size: clamp(26px, 6vw, 34px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.015em;
+  }
+  .lounge-loading-message {
+    margin: 0;
+    min-height: 3em;
+    color: #d3c8b9;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .lounge-loading-progress {
+    display: block;
+    width: min(100%, 240px);
+    height: 4px;
+    margin: 20px auto 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 4px;
+    background: #382c21;
+    color: #fff0ca;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .lounge-loading-progress::-webkit-progress-bar { background: #382c21; }
+  .lounge-loading-progress::-webkit-progress-value { background: #fff0ca; transition: width 180ms ease; }
+  .lounge-loading-progress::-moz-progress-bar { background: #fff0ca; }
+  .lounge-loading-recovery { margin-top: 28px; }
+  .lounge-loading-recovery[hidden] { display: none; }
+  .lounge-loading-recovery p { color: #c5baab; font-size: 14px; line-height: 1.5; }
+  .lounge-loading-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+  .lounge-loading-actions button {
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid #a88550;
+    border-radius: 6px;
+    background: #1c1610;
+    color: #fff0ca;
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .lounge-loading-actions button:focus-visible { outline: 2px solid #ff6458; outline-offset: 3px; }
+  @keyframes lounge-loading-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .lounge-loading-indicator { animation: none; }
+    html[data-lounge-state] .lounge-loading-screen { transition: none; }
+    .lounge-loading-progress::-webkit-progress-value { transition: none; }
+  }
+</style>
+
+<div class="lounge-loading-screen" data-lounge-loader aria-labelledby="lounge-loading-title">
+  <div class="lounge-loading-card">
+    <p class="lounge-loading-brand">MOVIE REVIEWS <span>BY POORNA</span></p>
+    <div class="lounge-loading-indicator" aria-hidden="true"></div>
+    <h2 class="lounge-loading-title" id="lounge-loading-title">Opening The Lobby</h2>
+    <p class="lounge-loading-message" data-loading-message role="status">Preparing your movie lounge…</p>
+    <progress class="lounge-loading-progress" data-loading-progress max="100" value="0" aria-label="Lounge loading progress"></progress>
+    <div class="lounge-loading-recovery" data-loading-recovery hidden>
+      <p>Retry loading, or open the Lounge while the remaining images load.</p>
+      <div class="lounge-loading-actions">
+        <button type="button" data-loading-retry>Try again</button>
+        <button type="button" data-loading-open>Open Lounge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const screen = document.querySelector('[data-lounge-loader]');
+    const message = screen.querySelector('[data-loading-message]');
+    const progress = screen.querySelector('[data-loading-progress]');
+    const recovery = screen.querySelector('[data-loading-recovery]');
+    // Runs before the Lounge markup: no partially loaded page flashes through.
+    // With JavaScript disabled this never runs, so the Lounge remains accessible.
+    root.dataset.loungeState = 'loading';
+
+    const showRecovery = (text) => {
+      if (root.dataset.loungeState !== 'loading') return;
+      message.textContent = text;
+      recovery.hidden = false;
+    };
+    const slowTimer = window.setTimeout(() => {
+      if (recovery.hidden) showRecovery('The Lounge is taking a little longer to open.');
+    }, 20000);
+
+    const finish = () => {
+      const hadFocus = screen.contains(document.activeElement);
+      delete root.dataset.loungeState;
+      document.querySelector('.lounge-page')?.removeAttribute('aria-busy');
+      if (hadFocus) document.querySelector('.lounge-nav-hit')?.focus({ preventScroll: true });
+    };
+    const reveal = (ready) => {
+      if (root.dataset.loungeState !== 'loading') return;
+      window.clearTimeout(slowTimer);
+      if (ready) {
+        progress.value = 100;
+        message.textContent = 'Your Lounge is ready.';
+      }
+      // Make the prepared page paint under the opaque screen before fading.
+      root.dataset.loungeState = 'revealing';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (root.dataset.loungeState !== 'revealing') return;
+        root.dataset.loungeState = 'leaving';
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.setTimeout(finish, reduceMotion ? 0 : 400);
+      }));
+    };
+
+    document.addEventListener('lounge:loading-progress', (event) => {
+      if (root.dataset.loungeState !== 'loading') return;
+      const { loaded, total } = event.detail;
+      progress.value = total ? Math.round(loaded / total * 100) : 0;
+    });
+    document.addEventListener('lounge:loading-error', () => {
+      showRecovery('Some artwork could not load. Please try again.');
+    });
+    document.addEventListener('lounge:assets-ready', () => reveal(true));
+    screen.querySelector('[data-loading-retry]').addEventListener('click', () => window.location.reload());
+    screen.querySelector('[data-loading-open]').addEventListener('click', () => reveal(false));
+
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      if (root.dataset.loungeState === 'loading') {
+        document.dispatchEvent(new Event('lounge:resume-loading'));
+      } else if (root.dataset.loungeState) {
+        finish();
+      }
+    });
+  })();
+</script>

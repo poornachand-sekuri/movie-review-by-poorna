@@ -1,5 +1,6 @@
 ---
 import SiteFrame from '../layouts/SiteFrame.astro';
+import LoungeLoading from '../components/lobby/LoungeLoading.astro';
 import { listReviews } from '../lib/data/reviews';
 import '../styles/lobby.css';
 import '../styles/lobby-content.css';
@@ -61,6 +62,7 @@ const featuredPov = featured?.verdict?.trim() || '';
   title="Movie Reviews By Poorna"
   description="The Lounge at Movie Reviews By Poorna — latest reviews, recent reviews and cinema notes."
 >
+  <LoungeLoading />
   <main class="lounge-page">
     <div
       class="lounge-backdrop"
@@ -344,6 +346,8 @@ const featuredPov = featured?.verdict?.trim() || '';
   </main>
 
   <script>
+    import { prepareLounge } from '../lib/lounge-loading';
+
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const animations = new Map<HTMLElement, Animation>();
 
@@ -614,5 +618,7 @@ const featuredPov = featured?.verdict?.trim() || '';
       event.preventDefault();
       if (status) status.textContent = 'Comment submission will be enabled with the interaction cutover.';
     });
+
+    if (loungePage) prepareLounge(loungePage);
   </script>
 </SiteFrame>
