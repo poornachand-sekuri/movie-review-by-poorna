@@ -226,12 +226,12 @@ function loadingScreenHarness({ room = 'The Lobby', theme = 'lobby', preview = f
   return { root, message, progress, recovery, buttons, document, window, timers, frames, reloaded: () => reloaded };
 }
 
-test('normal Lobby loading screen has a hard three-second fail-open', () => {
+test('normal Lobby loading screen shows recovery at three seconds and hard-fails open at five seconds', () => {
   const h = loadingScreenHarness();
   assert.equal(h.root.dataset.loungeState, 'loading');
 
-  const slow = h.timers.find((timer) => timer.delay === 1200);
-  const hardStop = h.timers.find((timer) => timer.delay === 3000);
+  const slow = h.timers.find((timer) => timer.delay === 3000);
+  const hardStop = h.timers.find((timer) => timer.delay === 5000);
   assert(slow);
   assert(hardStop);
 
