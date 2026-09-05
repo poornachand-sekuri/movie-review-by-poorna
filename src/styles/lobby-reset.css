@@ -1,23 +1,15 @@
 /*
- * Premier Lounge presentation — 2026-09-05
- *
- * One visual source of truth for the Lounge. Data, routes and interaction
- * behavior remain in Astro/TypeScript; this file owns presentation only.
+ * Premier Lounge structural baseline.
+ * Data, routes and interaction behavior remain in Astro/TypeScript; runtime
+ * artwork URLs and final presentation overrides live in lobby.css.
  */
 
 .lounge-page {
-  --lounge-art-base: "https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive";
-  --lounge-red: #ff201b;
-  --lounge-red-soft: rgba(255, 32, 27, 0.42);
-  --lounge-gold: #f0bd62;
   --lounge-rating-color: #fff0ca;
   --lounge-rating-shadow:
     0 0.035em 0.06em #000,
     0 0 0.14em rgba(255, 228, 170, 0.5),
     0 0 0.3em rgba(217, 166, 81, 0.22);
-  --lounge-silver: #dedede;
-  --lounge-ink: #050505;
-  --lounge-card: rgba(4, 4, 4, 0.92);
   --lounge-shadow: 0 16px 42px rgba(0, 0, 0, 0.72);
 
   position: relative;
@@ -29,12 +21,7 @@
   color-scheme: dark;
 }
 
-/*
- * The complete Lounge remains rendered behind every section at all times.
- * IMPORTANT: because .lounge-page is an isolated stacking context, the
- * backdrop must remain ABOVE the parent's own black fallback background.
- * Negative z-index values place it behind that fallback and make it disappear.
- */
+/* Keep the full Lounge above the page fallback and below shade/content. */
 .lounge-backdrop {
   position: fixed;
   z-index: 0;
@@ -42,7 +29,6 @@
   display: block !important;
   pointer-events: none;
   background-color: #000;
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.avif") !important;
   background-repeat: no-repeat;
   background-position: center top;
   background-size: 100% auto;
@@ -86,38 +72,39 @@
   cursor: zoom-in;
 }
 
-/* The original hidden img nodes are kept only as semantic/runtime hooks.
-   The final artwork is painted once by CSS, which prevents rule conflicts. */
-.lounge-panel__art {
-  display: none !important;
-}
-
 .lounge-panel--now {
   aspect-ratio: 1448 / 1086;
-  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel.png") center / 100% 100% no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
 }
 
 .lounge-panel--recent {
   aspect-ratio: 1672 / 941;
-  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/04_Recent_Reviews_Panel.png") center / 100% 100% no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
 }
 
 .lounge-panel--previous {
   aspect-ratio: 1672 / 941;
-  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/05_Previously_Reviewed_Panel.png") center / 100% 100% no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
 }
 
 .lounge-panel--opinion {
   aspect-ratio: 2004 / 785;
-  background: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/06_Share_Your_Opinion_Panel.png") center / 100% 100% no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
 }
 
-/* Top and bottom navigation art contains generous transparent padding.
-   Crop to the actual marquee while preserving the source artwork. */
+/* Navigation art contains generous transparent padding; crop to its marquee. */
 .lounge-panel--banner {
   overflow: visible;
 }
@@ -131,14 +118,6 @@
   background-size: 100% auto;
   background-position: center center;
   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.66));
-}
-
-.lounge-panel--banner:not(.lounge-panel--bottom) .lounge-banner-crop {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/02_Movie_Reviews_By_Poorna_Banner.png");
-}
-
-.lounge-panel--bottom .lounge-banner-crop {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/07_Lounge_Cini_Cafe_Banner.png");
 }
 
 .lounge-nav-hit {
