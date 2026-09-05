@@ -24,23 +24,29 @@
   color-scheme: dark;
 }
 
-/* The complete Lounge remains rendered behind every section at all times. */
+/*
+ * The complete Lounge remains rendered behind every section at all times.
+ * IMPORTANT: because .lounge-page is an isolated stacking context, the
+ * backdrop must remain ABOVE the parent's own black fallback background.
+ * Negative z-index values place it behind that fallback and make it disappear.
+ */
 .lounge-backdrop {
   position: fixed;
-  z-index: -4;
+  z-index: 0;
   inset: 0;
   display: block !important;
+  pointer-events: none;
   background-color: #000;
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_4K.png") !important;
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.avif") !important;
   background-repeat: no-repeat;
   background-position: center top;
-  background-size: auto 132vh;
+  background-size: 100% auto;
   transform: translateZ(0);
 }
 
 .lounge-shade {
   position: fixed;
-  z-index: -3;
+  z-index: 1;
   inset: 0;
   display: block !important;
   pointer-events: none;
@@ -51,7 +57,7 @@
 
 .lounge-stage {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: min(92vw, 470px);
   margin-inline: auto;
   padding: clamp(92px, 13vh, 128px) 0 clamp(58px, 8vh, 96px);
@@ -724,7 +730,7 @@ html.lounge-focus-open body {
   }
 
   .lounge-backdrop {
-    background-size: auto 124vh;
+    background-size: 100% auto;
   }
 
   .review-carousel__control {
@@ -736,7 +742,7 @@ html.lounge-focus-open body {
 
 @media (min-width: 900px) and (min-height: 760px) {
   .lounge-backdrop {
-    background-size: auto 136vh;
+    background-size: 100% auto;
   }
 }
 
