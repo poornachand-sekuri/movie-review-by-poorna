@@ -37,3 +37,5 @@ Three room-specific loading screens: apply approved Lobby, Screening Room and Mo
 2026-09-06 markup cleanup: remove the obsolete decorative AVIF <img> elements and inline AVIF background URL from the server-rendered Lounge HTML so the browser never discovers or downloads duplicate legacy artwork before the WebP runtime initializes.
 
 2026-09-06 frame-first loading pass: park Recent/Previously Reviewed poster requests until their lossless WebP section frame has been queued, start section frames roughly 120vh ahead of the viewport, then release the lower-priority poster images. This prevents bare posters and carousel controls appearing on the Lounge background before the corresponding section artwork arrives.
+
+2026-09-06 premium runtime cutover: switch all nine Lounge visual assets from the archival lossless WebPs to the newly uploaded same-dimension Q99 runtime WebPs. Keep PNG/lossless WebP files in R2 as masters/backups; preserve transparent alpha exactly; retain the existing frame-first/progressive loading behavior and focus-mode EXIT artwork.
