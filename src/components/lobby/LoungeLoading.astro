@@ -1,4 +1,6 @@
 ---
+import { loungeCriticalImages } from '../../lib/lounge-assets';
+
 interface Props { theme?: 'lobby' | 'screening' | 'cafe'; }
 const { theme = 'lobby' } = Astro.props;
 const rooms = {
@@ -8,11 +10,7 @@ const rooms = {
 };
 const room = rooms[theme];
 const preview = Astro.url.searchParams.get('loading-preview') === '1';
-const lobbyCriticalImages = [
-  'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/02_Movie_Reviews_By_Poorna_Banner_runtime_q99.webp',
-  'https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_runtime_q99.webp',
-];
-const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
+const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
 ---
 
 <style is:inline>
@@ -127,7 +125,6 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
     const minimumVisibleMs = 350;
     const recoveryDelayMs = theme === 'lobby' ? 10000 : 1200;
     const maximumHoldMs = theme === 'lobby' ? 15000 : 2200;
-    const fastLobbyFallbackMs = 2000;
     const criticalImages = (() => {
       try { return JSON.parse(screen.dataset.criticalImages || '[]'); }
       catch { return []; }
@@ -216,25 +213,43 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
     const loadCriticalImage = (url, reportSettled) => new Promise((resolve) => {
       const image = new Image();
       let settled = false;
+
       const done = (ok) => {
         if (settled) return;
         settled = true;
         reportSettled();
         resolve(ok);
       };
-      image.addEventListener('load', () => done(true), { once: true });
+
+      const settleLoadedImage = async () => {
+        if (settled) return;
+        if (image.naturalWidth <= 0) {
+          done(false);
+          return;
+        }
+
+        // Network-complete is not enough on a cold cache. Wait until the bitmap
+        // is decoded so the large Lounge backdrop can be painted on the very
+        // first frame after the loading curtain leaves.
+        if (typeof image.decode === 'function') {
+          try { await image.decode(); }
+          catch { /* A loaded image may still be paintable if decode() rejects. */ }
+        }
+        done(image.naturalWidth > 0);
+      };
+
+      image.addEventListener('load', () => { void settleLoadedImage(); }, { once: true });
       image.addEventListener('error', () => done(false), { once: true });
       image.decoding = 'async';
       image.fetchPriority = 'high';
       image.src = url;
-      if (image.complete) done(image.naturalWidth > 0);
+      if (image.complete) void settleLoadedImage();
     });
 
     const startFastLobbyProbe = () => {
       if (!fastLobbyEnabled || root.dataset.loungeState !== 'loading') return;
       const generation = ++fastProbeGeneration;
       let settled = 0;
-      let fallbackTimer;
       progress.value = 0;
 
       const reportSettled = () => {
@@ -243,16 +258,11 @@ const criticalImages = theme === 'lobby' ? lobbyCriticalImages : [];
         progress.value = Math.round(settled / criticalImages.length * 100);
       };
 
-      Promise.race([
-        Promise.all(criticalImages.map((url) => loadCriticalImage(url, reportSettled)))
-          .then((results) => results.every(Boolean)),
-        new Promise((resolve) => {
-          fallbackTimer = window.setTimeout(() => resolve(false), fastLobbyFallbackMs);
-        }),
-      ]).then((ready) => {
-        if (fallbackTimer) window.clearTimeout(fallbackTimer);
-        openWhenPageParsed(Boolean(ready), generation);
-      });
+      // No short time-based race here. The Lobby opens immediately when the
+      // background + Top Navigation + Now Reviewed are paint-ready. The 10s/15s
+      // controls below remain the only emergency escape hatches.
+      Promise.all(criticalImages.map((url) => loadCriticalImage(url, reportSettled)))
+        .then((results) => openWhenPageParsed(results.every(Boolean), generation));
     };
 
     slowTimer = window.setTimeout(() => {
