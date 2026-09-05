@@ -41,3 +41,5 @@ Three room-specific loading screens: apply approved Lobby, Screening Room and Mo
 2026-09-06 premium runtime cutover: switch all nine Lounge visual assets from the archival lossless WebPs to the newly uploaded same-dimension Q99 runtime WebPs. Keep PNG/lossless WebP files in R2 as masters/backups; preserve transparent alpha exactly; retain the existing frame-first/progressive loading behavior and focus-mode EXIT artwork.
 
 2026-09-06 structural-frame race fix: do not let IntersectionObserver decide whether the Recent/Previous/Opinion/Bottom frame exists. Arm all lightweight Q99 structural frames synchronously while the loading curtain is still visible; use IntersectionObserver only for heavier movie posters, including restored-scroll handling. This removes the naked text/arrows state when observer timing is late or skipped.
+
+2026-09-06 spacing trial: increase the common Lounge section gap from 8px to 1rem so every Home section gets a slightly more breathable, consistent separation without changing the artwork itself.
