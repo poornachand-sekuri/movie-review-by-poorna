@@ -42,8 +42,13 @@
  * windows. The lower 24% is reserved for the scrolling title and larger stars.
  */
 .recent-overlay {
-  left: 7.715%;
-  right: 8.493%;
+  --carousel-inset-left: 7.715cqw;
+  --carousel-inset-right: 8.493cqw;
+  /* Visible silver frame rails measured in the 1672px artwork. */
+  --carousel-border-left: 3.11cqw;
+  --carousel-border-right: 3.05cqw;
+  left: var(--carousel-inset-left);
+  right: var(--carousel-inset-right);
   top: 24.230%;
   bottom: 14.984%;
 }
@@ -90,8 +95,12 @@
 /* ---------------- Previously Reviewed ---------------- */
 /* Current 1672x941 PNG: align to the four red film-strip poster windows. */
 .previous-overlay {
-  left: 9.270%;
-  right: 9.629%;
+  --carousel-inset-left: 9.270cqw;
+  --carousel-inset-right: 9.629cqw;
+  --carousel-border-left: 0.93cqw;
+  --carousel-border-right: 1.14cqw;
+  left: var(--carousel-inset-left);
+  right: var(--carousel-inset-right);
   top: 33.262%;
   bottom: 22.954%;
 }

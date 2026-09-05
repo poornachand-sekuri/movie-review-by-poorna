@@ -21,3 +21,5 @@ Title visibility fix: render the Now Reviewed movie title in opaque bright ivory
 Lounge readability pass: use clean upright My POV typography with three lines inside the red frame, scroll only overflowing Recent Reviews titles within their own tickets, center and enlarge recent rating stars with reserved space, and tint Previously Reviewed posters in warm monochrome gold for a vintage film-reel look.
 
 Rating color update: use bright champagne-ivory stars with a restrained warm gold glow in both Now Reviewed and Recent Reviews, preserving all rating sizes and alignment inside the red frames.
+
+Carousel arrow placement: center both Previous and Next controls on the outer silver section borders in Recent Reviews and Previously Reviewed, using measured artwork coordinates that scale with the section while preserving poster windows and carousel behavior.

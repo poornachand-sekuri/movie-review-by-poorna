@@ -521,7 +521,6 @@
   width: max(22px, 5.5cqw);
   height: max(30px, 9cqw);
   padding: 0;
-  transform: translateY(-50%);
   border: 1px solid rgba(224, 224, 224, 0.5);
   border-radius: 999px;
   background: rgba(5, 5, 5, 0.82);
@@ -533,11 +532,13 @@
 }
 
 .review-carousel__control--prev {
-  left: -6.2%;
+  left: calc(var(--carousel-border-left) - var(--carousel-inset-left));
+  transform: translate(-50%, -50%);
 }
 
 .review-carousel__control--next {
-  right: -6.2%;
+  right: calc(var(--carousel-border-right) - var(--carousel-inset-right));
+  transform: translate(50%, -50%);
 }
 
 .review-carousel__control:disabled {
