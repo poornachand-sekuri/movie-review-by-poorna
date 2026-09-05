@@ -24,13 +24,25 @@ export async function waitForImage(image: HTMLImageElement): Promise<void> {
   if (typeof image.decode === 'function') await image.decode();
 }
 
+async function settleWithin(job: Promise<void>, timeoutMs: number): Promise<boolean> {
+  let timer: number | undefined;
+  try {
+    return await Promise.race<boolean>([
+      job.then(() => true, () => false),
+      new Promise<boolean>((resolve) => {
+        timer = window.setTimeout(() => resolve(false), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) window.clearTimeout(timer);
+  }
+}
+
 function removeLegacyArtworkRequests(page: HTMLElement): void {
   /*
-   * These nodes were retained from the old AVIF implementation but are hidden
-   * by CSS and are no longer painted. Browsers can still start downloading an
-   * <img> even when it is display:none, which means they can waste bandwidth
-   * alongside the actual CSS WebP artwork. Remove them immediately and clear
-   * the obsolete inline background URL so only the current R2 WebPs remain.
+   * Old AVIF image nodes are not painted anymore. Remove them as soon as the
+   * Lounge runtime initializes so lazy legacy files cannot become additional
+   * network work while the verified WebPs are being requested.
    */
   page.querySelector<HTMLElement>('.lounge-backdrop')?.removeAttribute('style');
 
@@ -64,7 +76,9 @@ function armProgressiveArtwork(page: HTMLElement): void {
     });
   }, {
     root: null,
-    rootMargin: '90vh 0px 90vh',
+    // 35vh is enough to make the next section feel instant without asking the
+    // browser to download several multi-megabyte frames at page start.
+    rootMargin: '35vh 0px 35vh',
     threshold: 0.01,
   });
 
@@ -86,10 +100,11 @@ export function prepareLounge(page: HTMLElement): void {
     /*
      * Critical-only readiness gate.
      *
-     * Open the Lounge when the immediately usable first UI is paintable: Top
-     * Navigation, Now Reviewed frame, featured poster and fonts. The large
-     * Lounge background and lower sections continue independently instead of
-     * blocking the first interaction.
+     * Only the structural first-screen artwork participates in the gate. The
+     * featured poster is promoted to high priority but does not hold the page
+     * hostage, and fonts are deliberately not a readiness dependency. A slow or
+     * broken CDN response can therefore never leave the user staring at the
+     * loading page indefinitely.
      */
     const artworkUrls = new Set<string>();
     page.querySelectorAll<HTMLElement>(
@@ -110,14 +125,12 @@ export function prepareLounge(page: HTMLElement): void {
     if (featuredPoster) {
       featuredPoster.loading = 'eager';
       featuredPoster.fetchPriority = 'high';
+      // Warm it aggressively, but never make it a blocker.
+      void waitForImage(featuredPoster).catch(() => undefined);
     }
 
-    const jobs: Promise<void>[] = artwork.map(waitForImage);
-    if (featuredPoster) jobs.push(waitForImage(featuredPoster));
-    if (document.fonts) jobs.push(document.fonts.ready.then(() => undefined));
-
+    const jobs = artwork.map((image) => settleWithin(waitForImage(image), 1800));
     let loaded = 0;
-    let reportedFailure = false;
 
     const reportProgress = () => {
       if (current !== generation) return;
@@ -126,55 +139,98 @@ export function prepareLounge(page: HTMLElement): void {
 
     reportProgress();
 
-    const results = await Promise.allSettled(jobs.map((job) => job.then(() => {
+    if (jobs.length === 0) {
+      if (current === generation) document.dispatchEvent(new Event('lounge:assets-ready'));
+      return;
+    }
+
+    const results = await Promise.all(jobs.map(async (job) => {
+      const ok = await job;
       loaded += 1;
       reportProgress();
-    }, (error: unknown) => {
-      if (current === generation && !reportedFailure) {
-        reportedFailure = true;
-        document.dispatchEvent(new Event('lounge:loading-error'));
-      }
-      throw error;
-    })));
+      return ok;
+    }));
 
-    if (current !== generation || results.some((result) => result.status === 'rejected')) return;
+    if (current !== generation) return;
+
+    if (results.some((ok) => !ok)) {
+      document.dispatchEvent(new Event('lounge:loading-error'));
+    }
+
+    // Fail open even when one critical image times out. The CSS background,
+    // panel frame or poster can finish progressively after the page is usable.
     document.dispatchEvent(new Event('lounge:assets-ready'));
   };
 
-  const start = () => { void prepare().catch(() => document.dispatchEvent(new Event('lounge:loading-error'))); };
+  const start = () => { void prepare().catch(() => {
+    document.dispatchEvent(new Event('lounge:loading-error'));
+    document.dispatchEvent(new Event('lounge:assets-ready'));
+  }); };
   document.addEventListener('lounge:resume-loading', start);
   start();
 }
 
-/** Review and café pages use native links/forms and wait for their own artwork. */
+/** Review and café pages use native links/forms and wait only for first-paint essentials. */
 export function prepareCinemaPage(page: HTMLElement): void {
   let generation = 0;
+
   const prepare = async () => {
     if (document.documentElement.dataset.loungeState !== 'loading') return;
     const current = ++generation;
     page.setAttribute('aria-busy', 'true');
+
     const urls = new Set<string>();
-    [page, ...page.querySelectorAll<HTMLElement>('*')].forEach((element) => {
-      backgroundImageUrls(getComputedStyle(element).backgroundImage).forEach((url) => urls.add(url));
-    });
+    backgroundImageUrls(getComputedStyle(page).backgroundImage).forEach((url) => urls.add(url));
+
     const images = [...page.querySelectorAll<HTMLImageElement>('img')];
-    images.forEach((image) => { image.loading = 'eager'; });
-    const artwork = [...urls].map((url) => { const image = new Image(); image.src = url; return image; });
-    const jobs = [...images, ...artwork].map(waitForImage);
-    if (document.fonts) jobs.push(document.fonts.ready.then(() => undefined));
+    images.forEach((image, index) => {
+      image.loading = index === 0 ? 'eager' : 'lazy';
+      if (index === 0) image.fetchPriority = 'high';
+    });
+
+    const artwork = [...urls].map((url) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.fetchPriority = 'high';
+      image.src = url;
+      return image;
+    });
+
+    // Only the first visible content image may briefly gate the screen. Article
+    // images and fonts continue progressively and never block navigation.
+    const critical = [...artwork, ...images.slice(0, 1)];
+    const jobs = critical.map((image) => settleWithin(waitForImage(image), 1500));
     let loaded = 0;
+
     const progress = () => {
-      if (current === generation) document.dispatchEvent(new CustomEvent('lounge:loading-progress', { detail: { loaded, total: jobs.length } }));
+      if (current === generation) {
+        document.dispatchEvent(new CustomEvent('lounge:loading-progress', { detail: { loaded, total: jobs.length } }));
+      }
     };
+
     progress();
-    try {
-      await Promise.all(jobs.map(async (job) => { await job; loaded += 1; progress(); }));
+
+    if (jobs.length === 0) {
       if (current === generation) document.dispatchEvent(new Event('lounge:assets-ready'));
-    } catch {
-      if (current === generation) document.dispatchEvent(new Event('lounge:loading-error'));
+      return;
     }
+
+    const results = await Promise.all(jobs.map(async (job) => {
+      const ok = await job;
+      loaded += 1;
+      progress();
+      return ok;
+    }));
+
+    if (current !== generation) return;
+    if (results.some((ok) => !ok)) document.dispatchEvent(new Event('lounge:loading-error'));
+    document.dispatchEvent(new Event('lounge:assets-ready'));
   };
-  const start = () => { void prepare().catch(() => document.dispatchEvent(new Event('lounge:loading-error'))); };
+
+  const start = () => { void prepare().catch(() => {
+    document.dispatchEvent(new Event('lounge:loading-error'));
+    document.dispatchEvent(new Event('lounge:assets-ready'));
+  }); };
   document.addEventListener('lounge:resume-loading', start);
   start();
 }
