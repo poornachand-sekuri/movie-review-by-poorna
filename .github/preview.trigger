@@ -27,3 +27,5 @@ Carousel arrow placement: center both Previous and Next controls on the outer si
 Lounge loading screen: show a lightweight black, champagne and red welcome screen with real asset progress, wait for the displayed section artwork, all posters, fonts and initialized controls, then reveal the prepared Lounge automatically. Provide retry and manual opening on slow or failed loads, preserve access without JavaScript, and verify readiness on cached return visits.
 
 2026-09-06 performance cutover: use the R2-verified lossless WebP versions for all Lounge artwork; load only Top Navigation, Now Reviewed, featured poster and fonts before opening the Lounge; progressively request Recent Reviews, Previously Reviewed, Share Your Opinion and Bottom Navigation as they approach the viewport; load focus EXIT artwork only when focus mode opens; remove obsolete hidden AVIF image nodes and the legacy inline AVIF background request so they cannot consume mobile bandwidth in parallel.
+
+Deploy the progressive-loading guardrail update together with the R2 WebP runtime cutover.
