@@ -39,11 +39,6 @@ async function settleWithin(job: Promise<void>, timeoutMs: number): Promise<bool
 }
 
 function removeLegacyArtworkRequests(page: HTMLElement): void {
-  /*
-   * Old AVIF image nodes are not painted anymore. Remove them as soon as the
-   * Lounge runtime initializes so lazy legacy files cannot become additional
-   * network work while the verified WebPs are being requested.
-   */
   page.querySelector<HTMLElement>('.lounge-backdrop')?.removeAttribute('style');
 
   page.querySelectorAll<HTMLImageElement>('.lounge-panel__art').forEach((image) => {
@@ -55,8 +50,7 @@ function removeLegacyArtworkRequests(page: HTMLElement): void {
 
 /**
  * Park lower carousel posters before the browser's generous native lazy-load
- * distance can pull them ahead of the section frame itself. The frame is the
- * visual skeleton of each Lounge section, so it must win the network race.
+ * distance can pull them ahead of the section frame itself.
  */
 function parkProgressivePosters(page: HTMLElement): void {
   page.querySelectorAll<HTMLImageElement>(
@@ -93,32 +87,53 @@ function releaseProgressivePosters(section: HTMLElement): void {
   });
 }
 
-function activateProgressiveSection(section: HTMLElement): void {
-  if (section.classList.contains('is-art-ready')) return;
-
-  /*
-   * Adding the class queues the lossless WebP frame as a visible CSS image.
-   * Give that request a short head start, then release the lower-priority
-   * posters. This prevents the "floating posters on the Lounge wall" effect
-   * seen on slower connections while preserving progressive loading.
-   */
-  section.classList.add('is-art-ready');
-  setTimeout(() => releaseProgressivePosters(section), 120);
+function isNearViewport(section: HTMLElement, marginScreens = 1.5): boolean {
+  if (typeof window === 'undefined' || typeof section.getBoundingClientRect !== 'function') return true;
+  const rect = section.getBoundingClientRect();
+  const margin = window.innerHeight * marginScreens;
+  return rect.bottom >= -margin && rect.top <= window.innerHeight + margin;
 }
 
+/**
+ * Structural Lounge frames are now always armed immediately.
+ *
+ * The previous implementation used IntersectionObserver to decide when the CSS
+ * background frame itself could exist. That meant the overlay text/arrows were
+ * already in the DOM while background-image remained `none`, so a missed/late
+ * observer callback exposed naked titles and controls on the Lounge wall.
+ *
+ * Q99 frame artwork is small (roughly 64–301 KB for sections 02–07), so the
+ * production-safe tradeoff is to request ALL structural frames as soon as the
+ * Lounge runtime starts. IntersectionObserver is retained only for the heavier
+ * movie posters. Structure therefore always wins the network/render race.
+ */
 function armProgressiveArtwork(page: HTMLElement): void {
   parkProgressivePosters(page);
 
-  const deferred = [
+  const structuralSections = [
     ...page.querySelectorAll<HTMLElement>(
       '.lounge-panel--recent, .lounge-panel--previous, .lounge-panel--opinion, .lounge-panel--bottom',
     ),
   ];
 
-  if (deferred.length === 0) return;
+  // This class only enables the Q99 CSS frame URL. Do it synchronously for all
+  // lower sections so their frames are discovered while the loading curtain is
+  // still on screen rather than after the user has already scrolled to them.
+  structuralSections.forEach((section) => section.classList.add('is-art-ready'));
+
+  const posterSections = [
+    ...page.querySelectorAll<HTMLElement>('.lounge-panel--recent, .lounge-panel--previous'),
+  ];
+
+  if (posterSections.length === 0) return;
+
+  // Handle restored scroll positions and very fast navigations synchronously.
+  posterSections.forEach((section) => {
+    if (isNearViewport(section)) releaseProgressivePosters(section);
+  });
 
   if (typeof IntersectionObserver === 'undefined') {
-    deferred.forEach(activateProgressiveSection);
+    posterSections.forEach(releaseProgressivePosters);
     return;
   }
 
@@ -126,21 +141,19 @@ function armProgressiveArtwork(page: HTMLElement): void {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       const element = entry.target;
-      if (element instanceof HTMLElement) activateProgressiveSection(element);
+      if (element instanceof HTMLElement) releaseProgressivePosters(element);
       observer.unobserve(entry.target);
     });
   }, {
     root: null,
-    /*
-     * Native lazy-loaded posters may be requested more than a viewport ahead.
-     * Start the lightweight section frame earlier than that so the structural
-     * artwork is normally decoded before the user reaches the section.
-     */
-    rootMargin: '120vh 0px 120vh',
+    // Frames are already downloading. Posters can begin about 85vh ahead so
+    // the user sees a complete section without allowing poster traffic to
+    // compete with first-screen structure.
+    rootMargin: '85vh 0px 85vh',
     threshold: 0.01,
   });
 
-  deferred.forEach((element) => observer.observe(element));
+  posterSections.forEach((section) => observer.observe(section));
 }
 
 /** Called only after the page's controls, carousels and event handlers exist. */
@@ -160,9 +173,7 @@ export function prepareLounge(page: HTMLElement): void {
      *
      * Only the structural first-screen artwork participates in the gate. The
      * featured poster is promoted to high priority but does not hold the page
-     * hostage, and fonts are deliberately not a readiness dependency. A slow or
-     * broken CDN response can therefore never leave the user staring at the
-     * loading page indefinitely.
+     * hostage, and fonts are deliberately not a readiness dependency.
      */
     const artworkUrls = new Set<string>();
     page.querySelectorAll<HTMLElement>(
@@ -183,7 +194,6 @@ export function prepareLounge(page: HTMLElement): void {
     if (featuredPoster) {
       featuredPoster.loading = 'eager';
       featuredPoster.fetchPriority = 'high';
-      // Warm it aggressively, but never make it a blocker.
       void waitForImage(featuredPoster).catch(() => undefined);
     }
 
@@ -215,8 +225,6 @@ export function prepareLounge(page: HTMLElement): void {
       document.dispatchEvent(new Event('lounge:loading-error'));
     }
 
-    // Fail open even when one critical image times out. The CSS background,
-    // panel frame or poster can finish progressively after the page is usable.
     document.dispatchEvent(new Event('lounge:assets-ready'));
   };
 
@@ -254,8 +262,6 @@ export function prepareCinemaPage(page: HTMLElement): void {
       return image;
     });
 
-    // Only the first visible content image may briefly gate the screen. Article
-    // images and fonts continue progressively and never block navigation.
     const critical = [...artwork, ...images.slice(0, 1)];
     const jobs = critical.map((image) => settleWithin(waitForImage(image), 1500));
     let loaded = 0;
