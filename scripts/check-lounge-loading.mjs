@@ -23,14 +23,6 @@ class ImageDouble extends EventTarget {
   decode() { this.decodeCalls += 1; return this.decodeResult; }
 }
 
-const classListDouble = () => {
-  const values = new Set();
-  return {
-    add(value) { values.add(value); },
-    contains(value) { return values.has(value); },
-  };
-};
-
 test('selected artwork URLs exclude gradients and support multiple backgrounds', () => {
   assert.deepEqual(backgroundImageUrls('linear-gradient(#000, #111), url("/backdrop.png"), url(/banner.webp)'), ['/backdrop.png', '/banner.webp']);
   assert.deepEqual(backgroundImageUrls('none'), []);
@@ -68,19 +60,87 @@ test('cached, broken and undecodable images are distinguished', async () => {
   await assert.rejects(waitForImage(corrupt), /decode failed/);
 });
 
-function environment({ poster = new ImageDouble(), badArtwork = false } = {}) {
+test('prepareLounge schedules lower posters without duplicating Lobby readiness work', () => {
+  const original = {
+    document: globalThis.document,
+    window: globalThis.window,
+    IntersectionObserver: globalThis.IntersectionObserver,
+  };
+
+  const events = [];
+  const document = new EventTarget();
+  document.documentElement = { dataset: { loungeState: 'loading' } };
+  for (const name of ['lounge:assets-ready', 'lounge:loading-error', 'lounge:loading-progress']) {
+    document.addEventListener(name, (event) => events.push({ name, detail: event.detail }));
+  }
+
+  let source = '/poster.webp';
+  const listeners = new Map();
+  const poster = {
+    dataset: {},
+    fetchPriority: 'auto',
+    loading: 'lazy',
+    complete: false,
+    style: {
+      visibility: '',
+      removeProperty(name) { if (name === 'visibility') this.visibility = ''; },
+    },
+    getAttribute(name) { return name === 'src' ? source : null; },
+    removeAttribute(name) { if (name === 'src') source = null; },
+    addEventListener(name, handler) { listeners.set(name, handler); },
+    set src(value) { source = value; },
+    get src() { return source; },
+  };
+
+  const section = {
+    querySelectorAll(selector) { return selector === 'img[data-lounge-deferred-src]' ? [poster] : []; },
+    getBoundingClientRect() { return { top: 5000, bottom: 5200 }; },
+  };
+
+  const observed = [];
+  globalThis.document = document;
+  globalThis.window = { innerHeight: 800 };
+  globalThis.IntersectionObserver = class {
+    constructor(callback) { this.callback = callback; }
+    observe(target) { observed.push(target); }
+    unobserve() {}
+  };
+
+  const page = {
+    attributes: new Map(),
+    setAttribute(name, value) { this.attributes.set(name, value); },
+    querySelectorAll(selector) {
+      if (selector.includes('.recent-card__poster img')) return [poster];
+      if (selector === '.lounge-panel--recent, .lounge-panel--previous') return [section];
+      return [];
+    },
+  };
+
+  try {
+    prepareLounge(page);
+    assert.equal(page.attributes.get('aria-busy'), 'true');
+    assert.equal(source, null);
+    assert.equal(poster.dataset.loungeDeferredSrc, '/poster.webp');
+    assert.equal(poster.fetchPriority, 'low');
+    assert.equal(poster.style.visibility, 'hidden');
+    assert.deepEqual(observed, [section]);
+    assert.equal(events.length, 0);
+  } finally {
+    globalThis.document = original.document;
+    globalThis.window = original.window;
+    globalThis.IntersectionObserver = original.IntersectionObserver;
+  }
+});
+
+function cinemaEnvironment({ poster = new ImageDouble(), badArtwork = false } = {}) {
   const original = {
     document: globalThis.document,
     Image: globalThis.Image,
     getComputedStyle: globalThis.getComputedStyle,
-    IntersectionObserver: globalThis.IntersectionObserver,
   };
 
   const document = new EventTarget();
   document.documentElement = { dataset: { loungeState: 'loading' } };
-  document.fonts = { ready: new Promise(() => {}) };
-
-  const backgrounds = [];
   const events = [];
   for (const name of ['lounge:assets-ready', 'lounge:loading-error', 'lounge:loading-progress']) {
     document.addEventListener(name, (event) => events.push({ name, detail: event.detail }));
@@ -88,95 +148,35 @@ function environment({ poster = new ImageDouble(), badArtwork = false } = {}) {
 
   globalThis.document = document;
   globalThis.Image = class extends ImageDouble {
-    set src(url) { backgrounds.push(url); if (badArtwork) this.naturalWidth = 0; }
+    set src(_url) { if (badArtwork) this.naturalWidth = 0; }
   };
-  globalThis.getComputedStyle = () => ({ backgroundImage: 'url("/selected.webp")' });
-  globalThis.IntersectionObserver = undefined;
-
-  const removedAttributes = [];
-  const backdrop = { removeAttribute(name) { removedAttributes.push(name); } };
-  const legacy = [{
-    removeAttribute() {},
-    removeCalled: false,
-    remove() { this.removeCalled = true; },
-  }];
-  const deferredSections = Array.from({ length: 4 }, () => ({ classList: classListDouble() }));
-  const criticalArtwork = [{}, {}];
+  globalThis.getComputedStyle = () => ({ backgroundImage: 'none' });
 
   const page = {
     attributes: new Map(),
     setAttribute(name, value) { this.attributes.set(name, value); },
-    querySelector(selector) {
-      if (selector === '.lounge-backdrop') return backdrop;
-      if (selector === '.now-poster img') return poster;
-      return null;
-    },
-    querySelectorAll(selector) {
-      if (selector === '.lounge-panel__art') return legacy;
-      if (selector.includes('.lounge-panel--recent')) return deferredSections;
-      if (selector.includes('.lounge-stage > .lounge-panel--banner')) return criticalArtwork;
-      if (selector === 'img') return [];
-      return [];
-    },
+    querySelectorAll(selector) { return selector === 'img' ? [poster] : []; },
   };
 
   return {
     document,
     page,
     events,
-    backgrounds,
-    removedAttributes,
-    legacy,
-    deferredSections,
     restore: () => {
       globalThis.document = original.document;
       globalThis.Image = original.Image;
       globalThis.getComputedStyle = original.getComputedStyle;
-      globalThis.IntersectionObserver = original.IntersectionObserver;
     },
   };
 }
 
-test('Lounge readiness is critical-only; poster and fonts cannot trap the loader', async () => {
-  const posterGate = deferred();
-  const poster = new ImageDouble();
-  poster.decodeResult = posterGate.promise;
-  const env = environment({ poster });
-
-  try {
-    prepareLounge(env.page);
-    await tick();
-    await tick();
-
-    assert.equal(poster.loading, 'eager');
-    assert.equal(poster.fetchPriority, 'high');
-    assert.deepEqual(env.backgrounds, ['/selected.webp']);
-    assert.equal(env.events.filter((e) => e.name === 'lounge:assets-ready').length, 1);
-
-    assert.deepEqual(env.removedAttributes, ['style']);
-    assert.equal(env.legacy[0].removeCalled, true);
-    assert.equal(env.deferredSections.every((section) => section.classList.contains('is-art-ready')), true);
-
-    // The intentionally unresolved poster and fonts do not block readiness.
-    assert.equal(poster.decodeCalls, 1);
-  } finally {
-    posterGate.resolve();
-    env.restore();
-  }
-});
-
-test('failed critical Lounge artwork reports an error and still fails open', async () => {
-  const env = environment({ badArtwork: true });
-  try {
-    prepareLounge(env.page);
-    await tick();
-    await tick();
-    assert.equal(env.events.some((e) => e.name === 'lounge:loading-error'), true);
-    assert.equal(env.events.some((e) => e.name === 'lounge:assets-ready'), true);
-  } finally { env.restore(); }
-});
-
-function loadingScreenHarness({ room = 'The Lobby', theme = 'lobby', preview = false } = {}) {
+function loadingScreenHarness({
+  room = 'The Lobby',
+  theme = 'lobby',
+  preview = false,
+  criticalImages = [],
+  pageParsed = false,
+} = {}) {
   const source = readFileSync(new URL('../src/components/lobby/LoungeLoading.astro', import.meta.url), 'utf8');
   const script = source.match(/<script is:inline>([\s\S]*?)<\/script>/)[1];
 
@@ -190,7 +190,12 @@ function loadingScreenHarness({ room = 'The Lobby', theme = 'lobby', preview = f
     '[data-loading-preview-open]': new EventTarget(),
   };
   const screen = {
-    dataset: { room, theme, preview: String(preview) },
+    dataset: {
+      room,
+      theme,
+      preview: String(preview),
+      criticalImages: JSON.stringify(criticalImages),
+    },
     contains: () => false,
     querySelector: (selector) => ({
       '[data-loading-message]': message,
@@ -202,7 +207,12 @@ function loadingScreenHarness({ room = 'The Lobby', theme = 'lobby', preview = f
 
   const document = new EventTarget();
   document.documentElement = root;
-  document.querySelector = (selector) => selector === '[data-lounge-loader]' ? screen : null;
+  document.activeElement = null;
+  document.querySelector = (selector) => {
+    if (selector === '[data-lounge-loader]') return screen;
+    if (selector === '.lounge-page') return pageParsed ? {} : null;
+    return null;
+  };
 
   const window = new EventTarget();
   const timers = [];
@@ -213,12 +223,24 @@ function loadingScreenHarness({ room = 'The Lobby', theme = 'lobby', preview = f
   window.location = { reload: () => { reloaded = true; } };
   window.matchMedia = () => ({ matches: false });
 
+  class FastImage extends EventTarget {
+    complete = true;
+    naturalWidth = 100;
+    decoding = 'auto';
+    fetchPriority = 'auto';
+    set src(_url) {}
+  }
+
   vm.runInNewContext(script, {
     document,
     window,
+    Image: FastImage,
     Event,
     Number,
     Math,
+    JSON,
+    Boolean,
+    Promise,
     Date: { now: () => 1000 },
     requestAnimationFrame: (callback) => frames.push(callback),
   });
@@ -226,7 +248,7 @@ function loadingScreenHarness({ room = 'The Lobby', theme = 'lobby', preview = f
   return { root, message, progress, recovery, buttons, document, window, timers, frames, reloaded: () => reloaded };
 }
 
-test('normal Lobby loading screen shows recovery at ten seconds and hard-fails open at fifteen seconds', () => {
+test('Lobby emergency guardrails remain ten-second recovery and fifteen-second hard fail-open', () => {
   const h = loadingScreenHarness();
   assert.equal(h.root.dataset.loungeState, 'loading');
 
@@ -251,13 +273,24 @@ test('normal Lobby loading screen shows recovery at ten seconds and hard-fails o
   assert.equal(h.root.dataset.loungeState, undefined);
 });
 
-test('asset failure opens the page instead of leaving a permanent loading screen', () => {
-  const h = loadingScreenHarness();
-  h.document.dispatchEvent(new Event('lounge:loading-error'));
-  const minimumDelay = h.timers.find((timer) => timer.delay === 350);
-  assert(minimumDelay);
-  minimumDelay.callback();
+test('fast Lobby probe opens as soon as critical frames and page markup are ready', async () => {
+  const h = loadingScreenHarness({
+    criticalImages: ['/banner.webp', '/now.webp'],
+    pageParsed: true,
+  });
+
+  await tick();
+  await tick();
+
   assert.equal(h.root.dataset.loungeState, 'revealing');
+  assert.equal(h.progress.value, 100);
+  assert.equal(h.recovery.hidden, true);
+
+  h.frames.shift()();
+  h.frames.shift()();
+  assert.equal(h.root.dataset.loungeState, 'leaving');
+  h.timers.find((timer) => timer.delay === 120).callback();
+  assert.equal(h.root.dataset.loungeState, undefined);
 });
 
 test('loading design preview deliberately stays open until manually entered', () => {
@@ -271,9 +304,8 @@ test('loading design preview deliberately stays open until manually entered', ()
 });
 
 test('café with no content images opens immediately', async () => {
-  const env = environment();
+  const env = cinemaEnvironment();
   env.page.querySelectorAll = () => [];
-  globalThis.getComputedStyle = () => ({ backgroundImage: 'none' });
   try {
     prepareCinemaPage(env.page);
     await tick();
@@ -285,9 +317,7 @@ test('screening room waits only for the first poster and then opens', async () =
   const posterGate = deferred();
   const poster = new ImageDouble();
   poster.decodeResult = posterGate.promise;
-  const env = environment();
-  env.page.querySelectorAll = (selector) => selector === 'img' ? [poster] : [];
-  globalThis.getComputedStyle = () => ({ backgroundImage: 'none' });
+  const env = cinemaEnvironment({ poster });
 
   try {
     prepareCinemaPage(env.page);
@@ -305,9 +335,7 @@ test('screening room waits only for the first poster and then opens', async () =
 test('broken screening poster reports the problem but still opens', async () => {
   const poster = new ImageDouble();
   poster.naturalWidth = 0;
-  const env = environment();
-  env.page.querySelectorAll = (selector) => selector === 'img' ? [poster] : [];
-  globalThis.getComputedStyle = () => ({ backgroundImage: 'none' });
+  const env = cinemaEnvironment({ poster });
 
   try {
     prepareCinemaPage(env.page);
