@@ -12,3 +12,4 @@ Increase the complete Lounge section stack from 56vw to 64vw on phones so the pa
 Preconnect and DNS-prefetch the R2 asset origin so Lounge artwork can start sooner while the production image payload is being optimized.
 Restore the proven pre-reset runtime poster fitting: cover-fill each red poster window, remove mount gaps and padding, preserve the baked red border, and use the original decorative corner-mask technique re-measured for the current Premier PNG artwork.
 2026-09-05 final asset cutover: runtime Lounge background now uses 01_Movie_Reviews_By_Poorna_Premier_Lounge_Background.avif from the responsive R2 path; all locked PNG section/focus artwork remains unchanged.
+Fix the isolated stacking context so the Premier Lounge AVIF backdrop renders above the page's black fallback background and below the shade/content stack.
