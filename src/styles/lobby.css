@@ -17,6 +17,23 @@
 }
 
 /*
+ * Performance cutover: the lossless WebP versions already present in R2 are
+ * byte-identical after decoding but materially smaller than the PNG masters.
+ * Keep the PNGs as masters; serve WebP for the high-cost review frames.
+ */
+.lounge-panel--now {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_lossless.webp") !important;
+}
+
+.lounge-panel--recent {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/04_Recent_Reviews_Panel_lossless.webp") !important;
+}
+
+.lounge-panel--previous {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/05_Previously_Reviewed_Panel_lossless.webp") !important;
+}
+
+/*
  * Lounge master column.
  *
  * The previous 56vw setting made the panels feel compressed on phones. Move
@@ -45,52 +62,52 @@
 }
 
 /*
- * Now Reviewed — runtime-only right-leaf composition.
+ * Now Reviewed — stamp-centred cinema billing composition.
  *
- * The baked section artwork remains untouched. The right leaf is treated as a
- * symmetrical poster-credit composition around the fixed Reviewed By Poorna
- * stamp: title above, release/language as restrained side credits, rating below.
+ * The Reviewed By Poorna stamp is the visual anchor of the right leaf. Build
+ * a quiet four-zone hierarchy around it instead of letting four competing text
+ * elements fight for attention: title above, release/language as restrained
+ * vertical side credits, and rating below. The baked panel image itself stays
+ * untouched.
  */
 .now-details {
-  left: 54.15%;
-  top: 18.2%;
-  width: 36.25%;
-  height: 39.1%;
+  left: 54.9%;
+  top: 17.9%;
+  width: 34.9%;
+  height: 39.2%;
   overflow: hidden;
   pointer-events: none;
 }
 
-/* Movie title: quiet, premium poster-title hierarchy centred on the stamp axis. */
 .now-title {
   position: absolute;
   z-index: 2;
-  top: 0.5%;
-  left: 13%;
-  right: 13%;
-  height: 20%;
+  top: 5%;
+  left: 16%;
+  right: 16%;
+  height: 17%;
+  min-height: 0;
   margin: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  color: #f2eee6;
-  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue Condensed", Impact, sans-serif;
-  font-size: clamp(12px, 4.15cqw, 30px);
+  color: #e7e1d5;
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  font-size: clamp(12px, 4.2cqw, 28px);
   font-weight: 900;
-  line-height: 0.96;
-  letter-spacing: 0.105em;
+  line-height: 0.94;
+  letter-spacing: 0.075em;
   text-align: center;
   text-transform: uppercase;
   text-wrap: balance;
   white-space: normal;
   text-overflow: clip;
-  background: linear-gradient(180deg, #fffdf7 0%, #e6ddd0 46%, #b9afa3 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter:
-    drop-shadow(0 1px 1px rgba(0, 0, 0, 1))
-    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9))
-    drop-shadow(0 0 4px rgba(255, 255, 255, 0.07));
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.18),
+    0 2px 3px rgba(0,0,0,0.96),
+    0 0 8px rgba(135, 18, 14, 0.20);
+  -webkit-text-stroke: 0.015em rgba(10, 10, 10, 0.82);
 }
 
 .now-meta {
@@ -98,20 +115,11 @@
   inset: 0;
   margin: 0;
   display: block;
-  color: #eee8df;
+  color: #eee8dd;
 }
 
-/* Hide the labels visually while preserving the semantic definition list. */
 .now-meta dt {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0 0 0 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+  display: none !important;
 }
 
 .now-meta > div {
@@ -126,44 +134,39 @@
 .now-meta dd {
   margin: 0;
   overflow: visible;
-  color: #dcd5ca;
-  font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(9px, 1.9cqw, 14px);
-  font-weight: 650;
+  color: #d9d2c6;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(9px, 2.05cqw, 14px);
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.105em;
   white-space: nowrap;
+  text-transform: uppercase;
   text-overflow: clip;
-  text-shadow:
-    0 1px 1px rgba(0, 0, 0, 1),
-    0 0 5px rgba(0, 0, 0, 0.86);
-  opacity: 0.92;
+  text-shadow: 0 1px 2px #000, 0 0 5px rgba(0, 0, 0, 0.92);
 }
 
-/* Release date — left-side inward-facing credit, vertically centred to stamp. */
+/* Side credits deliberately align to the visual centreline of the baked stamp. */
 .now-meta > div:nth-child(1) {
-  left: 1.4%;
-  top: 27%;
-  width: 8.5%;
-  height: 49%;
+  left: 5.2%;
+  top: 28%;
+  width: 8%;
+  height: 38%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .now-meta > div:nth-child(1) dd {
-  font-variant-numeric: tabular-nums;
   transform: rotate(-90deg);
   transform-origin: center;
 }
 
-/* Language — mirrored right-side credit, sharing the same visual axis. */
 .now-meta > div:nth-child(2) {
-  right: 1.4%;
-  top: 27%;
-  width: 8.5%;
-  height: 49%;
+  right: 5.2%;
+  top: 28%;
+  width: 8%;
+  height: 38%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,28 +177,29 @@
   transform-origin: center;
 }
 
-/* Rating — centred directly below the stamp; warm cinema-gold, not neon. */
+/* Rating is the base of the stamp composition, not a separate floating row. */
 .now-meta > div:last-child {
   left: 20%;
   right: 20%;
-  bottom: 2.8%;
-  height: 13.5%;
+  bottom: 4.5%;
+  height: 12%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .now-meta__rating dd {
-  color: #efc65b;
+  color: #e9c65b;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: clamp(11px, 2.6cqw, 20px);
-  font-weight: 760;
+  font-size: clamp(11px, 2.72cqw, 20px);
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: 0.105em;
+  letter-spacing: 0.055em;
   text-align: center;
   text-shadow:
-    0 1px 2px rgba(0, 0, 0, 1),
-    0 0 5px rgba(235, 182, 61, 0.28);
+    0 1px 2px #000,
+    0 0 4px rgba(232, 190, 72, 0.34),
+    0 0 9px rgba(255, 146, 0, 0.10);
 }
 
 /*
