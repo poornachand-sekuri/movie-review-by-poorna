@@ -33,6 +33,8 @@ for (const file of runtimeRoots.flatMap(walk)) {
 }
 
 const index = readRequired('src/pages/index.astro');
+const siteFrame = readRequired('src/layouts/SiteFrame.astro');
+const loungeAssets = readRequired('src/lib/lounge-assets.ts');
 const lobbyCss = readRequired('src/styles/lobby.css');
 const lobbyReset = readRequired('src/styles/lobby-reset.css');
 const loungeLoading = readRequired('src/lib/lounge-loading.ts');
@@ -99,14 +101,34 @@ for (const obsoleteToken of ['removeLegacyArtworkRequests', 'is-art-ready']) {
   }
 }
 
-for (const critical of runtimeArtwork.slice(1, 3)) {
-  if (!loadingComponent.includes(critical)) {
-    violations.push(`src/components/lobby/LoungeLoading.astro: missing fast Lobby critical asset ${critical}`);
+for (const critical of runtimeArtwork.slice(0, 3)) {
+  if (!loungeAssets.includes(critical)) {
+    violations.push(`src/lib/lounge-assets.ts: missing cold-cache critical asset ${critical}`);
   }
 }
 
+if (!loadingComponent.includes("import { loungeCriticalImages } from '../../lib/lounge-assets';")) {
+  violations.push('src/components/lobby/LoungeLoading.astro: must consume the shared critical Lounge asset list');
+}
+
+if (!loadingComponent.includes("typeof image.decode === 'function'") || !loadingComponent.includes('await image.decode()')) {
+  violations.push('src/components/lobby/LoungeLoading.astro: cold-cache critical images must wait for decode before reveal');
+}
+
+if (loadingComponent.includes('fastLobbyFallbackMs')) {
+  violations.push('src/components/lobby/LoungeLoading.astro: short time-based Lobby reveal race must not bypass the backdrop');
+}
+
+if (!siteFrame.includes("import { loungeCriticalImages } from '../lib/lounge-assets';") ||
+    !siteFrame.includes("Astro.url.pathname === '/'")) {
+  violations.push('src/layouts/SiteFrame.astro: Home must preload the shared critical Lounge assets from <head>');
+}
+
+if (!siteFrame.includes("fetchPriority: 'high' as const")) {
+  violations.push('src/layouts/SiteFrame.astro: critical Lounge preloads must retain high fetch priority');
+}
+
 for (const timing of [
-  'const fastLobbyFallbackMs = 2000;',
   "const recoveryDelayMs = theme === 'lobby' ? 10000 : 1200;",
   "const maximumHoldMs = theme === 'lobby' ? 15000 : 2200;",
 ]) {
