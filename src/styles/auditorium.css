@@ -140,25 +140,24 @@
 
 /* Clapboard live data ----------------------------------------------------- */
 /*
- * Same principle as the Lounge's poster viewport: the movie image lives
- * inside a dedicated clipped frame rather than sitting naked above the baked
- * artwork. The small inset leaves the red artwork border fully visible.
+ * The poster viewport is registered to the actual baked red poster box from
+ * the approved Clapboard artwork. The full poster is contained inside that
+ * box, so no runtime image can cover the red border, the credit rows below it,
+ * or the rounded corners.
  */
 .auditorium-movie-poster-frame {
   position: absolute;
-  left: 7.8%;
-  top: 22.7%;
-  width: 28.5%;
-  height: 42.6%;
+  left: 2.8%;
+  top: 16.0%;
+  width: 32.4%;
+  height: 33.1%;
   display: grid;
   place-items: center;
   overflow: hidden;
-  padding: 0.45cqw;
   box-sizing: border-box;
   border: 0;
   border-radius: 1.15cqw;
   background: #050505;
-  box-shadow: 0 0 1.35cqw rgb(0 0 0 / 58%);
 }
 
 .auditorium-movie-poster {
@@ -167,19 +166,26 @@
   height: 100%;
   max-width: 100%;
   object-fit: contain;
-  border-radius: 0.72cqw;
+  object-position: center;
+  border-radius: 0.8cqw;
   user-select: none;
   -webkit-user-drag: none;
 }
 
+/*
+ * Values are vertically centred on the baked WATCHED IN / RELEASE DATE /
+ * RATING labels. They intentionally live on the right side of each row while
+ * the artwork owns the labels and icons.
+ */
 .auditorium-clap-value {
   position: absolute;
   left: 56%;
   width: 35.5%;
-  min-height: 7.8%;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  transform: translateY(-50%);
   text-align: center;
   color: #f5ead8;
   font-size: clamp(10px, 2.15cqw, 18px);
@@ -189,65 +195,43 @@
   text-shadow: 0 1px 4px rgb(0 0 0 / 80%);
 }
 
-.auditorium-clap-value--watched { top: 25.1%; }
-.auditorium-clap-value--release { top: 38.3%; }
-.auditorium-clap-value--rating {
-  top: 51.3%;
-  flex-direction: column;
-  gap: 0.3cqw;
-}
+.auditorium-clap-value--watched { top: 24.9%; }
+.auditorium-clap-value--release { top: 35.4%; }
+.auditorium-clap-value--rating { top: 45.2%; }
 
 .auditorium-stars {
   color: #e2af56;
+  font-size: 1.06em;
   letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 
-.auditorium-rating-number {
-  color: #cfc4b3;
-  font-size: 0.68em;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.auditorium-cast-crew {
+/*
+ * ACTOR / ACTRESS / DIRECTOR / MUSIC DIRECTOR are baked into the approved
+ * artwork. Runtime renders values only, directly after each baked colon.
+ */
+.auditorium-credit-value {
   position: absolute;
-  left: 10.4%;
-  top: 70.6%;
-  width: 79.2%;
-  height: 8.4%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 1.8cqw;
-  color: #efe7dc;
-  font-size: clamp(8px, 1.55cqw, 13px);
-  line-height: 1.2;
-  text-align: center;
-  overflow: hidden;
-}
-
-.auditorium-cast-crew p {
+  left: 25.5%;
+  width: 66.5%;
   min-width: 0;
-  margin: 0;
+  transform: translateY(-50%);
+  overflow: hidden;
+  color: #efe7dc;
+  font-size: clamp(8px, 1.65cqw, 14px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0.005em;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 82%);
 }
 
-.auditorium-cast-crew strong,
-.auditorium-cast-crew span {
-  display: block;
-}
-
-.auditorium-cast-crew strong {
-  margin-bottom: 0.25em;
-  color: #d7a753;
-  font-size: 0.78em;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.auditorium-cast-crew span {
-  overflow-wrap: anywhere;
-}
+.auditorium-credit-value--actor { top: 61.6%; }
+.auditorium-credit-value--actress { top: 66.3%; }
+.auditorium-credit-value--director { top: 71.4%; }
+.auditorium-credit-value--music { top: 76.6%; }
 
 .auditorium-my-pov {
   position: absolute;
@@ -460,9 +444,8 @@
 }
 
 @media (max-width: 520px) {
-  .auditorium-cast-crew {
-    font-size: clamp(7px, 1.75cqw, 10px);
-    gap: 1cqw;
+  .auditorium-credit-value {
+    font-size: clamp(7px, 1.8cqw, 10px);
   }
 
   .auditorium-review-scroll {
