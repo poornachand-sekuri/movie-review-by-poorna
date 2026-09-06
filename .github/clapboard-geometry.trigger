@@ -1,1 +1,1 @@
-Measure the approved v4 Clapboard source artwork geometry.
+Measure exact poster opening and row baselines for the approved v4 Clapboard.
