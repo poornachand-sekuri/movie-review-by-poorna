@@ -97,7 +97,8 @@
 }
 
 .lounge-panel--opinion {
-  aspect-ratio: 2004 / 785;
+  aspect-ratio: 1080 / 1456;
+  scroll-margin-top: 2rem;
   background-position: center;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -537,76 +538,91 @@
 .comments-window {
   position: absolute;
   z-index: 3;
-  left: 6.75%;
-  top: 34%;
-  width: 39.25%;
-  height: 49.8%;
+  left: 10.65%;
+  top: 16.07%;
+  width: 81%;
+  height: 34.8901%;
   min-height: 0;
   max-height: none;
-  overflow: auto;
-  padding: 1.35cqw 1.45cqw;
+  display: grid;
+  grid-template-rows: minmax(0, 234fr) minmax(0, 218fr);
+  gap: 11.0236%;
+  overflow: hidden;
+  padding: 0;
   border: 0;
   border-radius: 0.7cqw;
-  background: rgba(0, 0, 0, 0.14);
-  color: #ebe7df;
+  background: transparent;
+  color: #f5f1e9;
   font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 2.06cqw;
-  line-height: 1.32;
+  font-size: clamp(12px, 3.7cqw, 20px);
+  line-height: 1.45;
+}
+
+.comment-slot {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 45, 38, 0.65) rgba(255, 255, 255, 0.05);
 }
 
-.comments-window:empty::before {
-  content: "No approved comments yet. Be the first to share your opinion.";
-  color: rgba(245, 242, 234, 0.8);
+.comments-empty {
+  margin: 0;
+  color: #ddd7cd;
 }
 
 .opinion-form {
   position: absolute;
   z-index: 4;
-  left: 50.35%;
-  top: 34%;
-  width: 40.9%;
-  height: 49.8%;
+  inset: 0;
   display: block;
+  pointer-events: none;
 }
 
 .opinion-form input,
 .opinion-form textarea {
   position: absolute;
-  left: 0;
-  width: 100%;
+  left: 7.4074%;
+  width: 85.1852%;
+  pointer-events: auto;
   margin: 0;
   border: 0;
   border-radius: 0.55cqw;
   outline: 0;
-  background: rgba(0, 0, 0, 0.2);
+  background: transparent;
   color: #f5f1e9;
   caret-color: #ff312a;
   font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 2.08cqw;
-  line-height: 1.15;
+  font-size: clamp(10px, 3.7cqw, 20px);
+  line-height: 1;
   box-shadow: none;
 }
 
 .opinion-form input {
-  top: 0;
-  height: 18.2%;
+  top: 64.011%;
+  height: 4.2582%;
   min-height: 0;
-  padding: 0.55cqw 1.25cqw;
+  padding: 0 1.4cqw;
 }
 
 .opinion-form textarea {
-  top: 25%;
-  height: 43.8%;
+  top: 70.0549%;
+  height: 15.522%;
   min-height: 0;
-  padding: 0.9cqw 1.25cqw;
+  padding: 1.2cqw 1.4cqw;
+  line-height: 1.4;
   resize: none;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form input,
+.lounge-panel--opinion.is-lounge-focused .opinion-form textarea {
+  font-size: clamp(16px, 3.7cqw, 20px);
 }
 
 .opinion-form input::placeholder,
 .opinion-form textarea::placeholder {
-  color: rgba(238, 233, 224, 0.62);
+  color: #c9c3b9;
 }
 
 .opinion-form input:focus,
@@ -618,10 +634,11 @@
 .opinion-form button {
   position: absolute;
   z-index: 2;
-  left: 2.5%;
-  top: 74.5%;
-  width: 95%;
-  height: 21.5%;
+  left: 6.8519%;
+  top: 87.6374%;
+  width: 86.2963%;
+  height: 6.3874%;
+  pointer-events: auto;
   min-height: 0;
   padding: 0;
   border: 0;

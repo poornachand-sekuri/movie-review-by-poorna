@@ -269,10 +269,15 @@ const featuredPov = featured?.verdict?.trim() || '';
         )
       }
 
-      <section class="lounge-panel lounge-panel--opinion" aria-labelledby="opinion-heading">
+      <section id="share-your-opinion" class="lounge-panel lounge-panel--opinion" aria-labelledby="opinion-heading">
         <h2 id="opinion-heading" class="visually-hidden">Share Your Opinion</h2>
 
-        <div class="comments-window" aria-label="Recent comments" aria-live="polite"></div>
+        <div class="comments-window" role="region" aria-label="Recent comments" aria-live="polite">
+          <div class="comment-slot" data-comment-slot="1">
+            <p class="comments-empty">No comments to show yet.</p>
+          </div>
+          <div class="comment-slot" data-comment-slot="2" aria-hidden="true"></div>
+        </div>
 
         <form class="opinion-form" data-opinion-form>
           <label class="visually-hidden" for="lounge-comment-name">Your name</label>
@@ -484,7 +489,7 @@ const featuredPov = featured?.verdict?.trim() || '';
       let placeholder: HTMLDivElement | null = null;
       const interactiveSelector = 'a, button, input, textarea, select, label, [contenteditable="true"]';
 
-      const openFocus = (section: HTMLElement) => {
+      const openFocus = (section: HTMLElement, initialFocus: HTMLElement = closeButton) => {
         if (focusedSection) return;
         const parent = section.parentElement;
         if (!parent) return;
@@ -499,15 +504,20 @@ const featuredPov = featured?.verdict?.trim() || '';
         focusedSection = section;
         focusStage.appendChild(section);
         section.classList.add('is-lounge-focused');
-        section.appendChild(closeButton);
+        const isOpinion = section.classList.contains('lounge-panel--opinion');
+        focusLayer.classList.toggle('is-opinion-focused', isOpinion);
+        // The approved upright ticket has no baked EXIT tab. Keep its close
+        // control outside the artwork, including when the ticket scrolls.
+        if (!isOpinion) section.appendChild(closeButton);
         focusLayer.classList.add('is-open');
+        focusLayer.scrollTop = 0;
         focusLayer.setAttribute('aria-hidden', 'false');
         document.documentElement.classList.add('lounge-focus-open');
         closeButton.tabIndex = 0;
 
         requestAnimationFrame(() => {
           fitAllMarquees();
-          closeButton.focus({ preventScroll: true });
+          if (focusedSection === section) initialFocus.focus({ preventScroll: initialFocus === closeButton });
         });
       };
 
@@ -523,7 +533,7 @@ const featuredPov = featured?.verdict?.trim() || '';
         parent.replaceChild(section, placeholder);
         focusedSection = null;
         placeholder = null;
-        focusLayer.classList.remove('is-open');
+        focusLayer.classList.remove('is-open', 'is-opinion-focused');
         focusLayer.setAttribute('aria-hidden', 'true');
         document.documentElement.classList.remove('lounge-focus-open');
 
@@ -550,6 +560,17 @@ const featuredPov = featured?.verdict?.trim() || '';
           event.preventDefault();
           openFocus(section);
         });
+
+        if (section.classList.contains('lounge-panel--opinion')) {
+          // Typing opens the readable ticket while retaining the selected field
+          // and its value. The Lobby's locked outer width stays unchanged.
+          section.addEventListener('focusin', (event) => {
+            const target = event.target;
+            if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+              openFocus(section, target);
+            }
+          });
+        }
       });
 
       closeButton.addEventListener('click', closeFocus);

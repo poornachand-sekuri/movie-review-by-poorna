@@ -64,7 +64,6 @@ const runtimeArtwork = [
   '06_Share_Your_Opinion_Panel_runtime_q99.webp',
   '07_Lounge_Cini_Cafe_Banner_runtime_q99.webp',
   '08_Now_Reviewed_With_Exit_runtime_q99.webp',
-  '09_Share_Your_Opinion_With_Exit_runtime_q99.webp',
 ];
 
 for (const file of runtimeArtwork) {
