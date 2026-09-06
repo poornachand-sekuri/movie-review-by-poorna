@@ -1,0 +1,127 @@
+name: Probe Auditorium Public Assets
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/auditorium-public-probe.trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Probe likely current Auditorium filenames
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import itertools
+          import os
+          import re
+          import struct
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          base = 'https://assets.moviereviewbypoorna.com/ui/pages/content/v4/' + 'res' + 'ponsive/'
+
+          labels = [
+              'Top_Navigation', 'Top_Navigation_Banner', 'Navigation_Banner', 'Auditorium_Top_Navigation',
+              'Movie_Reviews_By_Poorna_Banner', 'Movie_Reviews_By_Poorna_Top_Navigation',
+              'Clapboard', 'Clapboard_Section', 'Clapboard_Details', 'Clapboard_Panel', 'Movie_Details_Clapboard',
+              'Review_Clapboard', 'Movie_Clapboard',
+              'Theater_Screen', 'Theater_Screen_Section', 'Theater_Screen_Panel', 'Auditorium_Theater_Screen',
+              'Review_Theater_Screen', 'Review_Screen', 'Auditorium_Screen',
+              'Share_This_Review', 'Share_This_Review_Panel', 'Share_This_Review_Section', 'Share_Review', 'Share_Review_Panel',
+              'Related_Reviews', 'Related_Reviews_Panel', 'Related_Reviews_Section', 'Related_Review',
+              'Share_Your_Opinion', 'Share_Your_Opinion_Panel', 'Share_Your_Opinion_Section', 'Comments', 'Comments_Panel',
+              'Bottom_Navigation', 'Bottom_Navigation_Banner', 'Auditorium_Bottom_Navigation', 'Lounge_Cini_Cafe_Banner',
+              'Auditorium_Background', 'The_Auditorium_Background', 'Theater_Ambiance_Background',
+              'Auditorium_Ambiance_Background', 'Theater_Auditorium_Background', 'Auditorium_Theater_Background',
+              'Auditorium_Background_Image', 'Background'
+          ]
+
+          variants = [
+              '{n}_{label}_runtime_q99.webp',
+              '{n}_{label}_transparent_runtime_q99.webp',
+              '{n}_{label}_Premium_runtime_q99.webp',
+              '{n}_{label}_premium_runtime_q99.webp',
+          ]
+
+          candidates = []
+          for n in range(1, 11):
+              nn = f'{n:02d}'
+              for label in labels:
+                  for template in variants:
+                      candidates.append(template.format(n=nn, label=label))
+
+          # Known project naming patterns that do not fit the generic generator.
+          candidates += [
+              '06_Share_Your_Opinion_Ticket_2_Comments_transparent_runtime_q99.webp',
+              '09_Share_Your_Opinion_With_Exit_runtime_q99.webp',
+              '07_Lounge_Cini_Cafe_Banner_runtime_q99.webp',
+              '08_Lounge_Cini_Cafe_Banner_runtime_q99.webp',
+          ]
+
+          # Preserve order while de-duping.
+          candidates = list(dict.fromkeys(candidates))
+
+          def get(url):
+              req = urllib.request.Request(url, headers={'User-Agent': 'MovieReviewByPoorna-AuditoriumAudit/1.0'})
+              try:
+                  with urllib.request.urlopen(req, timeout=8) as res:
+                      body = res.read()
+                      return res.status, res.headers, body
+              except urllib.error.HTTPError as exc:
+                  return exc.code, exc.headers, b''
+              except Exception:
+                  return 0, {}, b''
+
+          def dims(data):
+              if len(data) >= 24 and data[:8] == b'\x89PNG\r\n\x1a\n':
+                  return struct.unpack('>II', data[16:24])
+              if len(data) >= 16 and data[:4] == b'RIFF' and data[8:12] == b'WEBP':
+                  p = 12
+                  while p + 8 <= len(data):
+                      kind = data[p:p+4]
+                      size = struct.unpack('<I', data[p+4:p+8])[0]
+                      chunk = data[p+8:p+8+size]
+                      if kind == b'VP8X' and len(chunk) >= 10:
+                          return (
+                              1 + int.from_bytes(chunk[4:7], 'little'),
+                              1 + int.from_bytes(chunk[7:10], 'little'),
+                          )
+                      if kind == b'VP8 ' and len(chunk) >= 10 and chunk[3:6] == b'\x9d\x01\x2a':
+                          return (
+                              struct.unpack('<H', chunk[6:8])[0] & 0x3fff,
+                              struct.unpack('<H', chunk[8:10])[0] & 0x3fff,
+                          )
+                      if kind == b'VP8L' and len(chunk) >= 5 and chunk[0] == 0x2f:
+                          bits = int.from_bytes(chunk[1:5], 'little')
+                          return ((bits & 0x3fff) + 1, ((bits >> 14) & 0x3fff) + 1)
+                      p += 8 + size + (size & 1)
+              return None
+
+          found = []
+          for index, name in enumerate(candidates, 1):
+              url = base + urllib.parse.quote(name)
+              status, headers, body = get(url)
+              if status == 200 and body:
+                  size = dims(body)
+                  found.append((name, size, len(body), headers.get('content-type', '')))
+                  print('AUDITORIUM_PUBLIC_ASSET\t{}\t{}\t{}\t{}'.format(
+                      name,
+                      f'{size[0]}x{size[1]}' if size else '?x?',
+                      len(body),
+                      headers.get('content-type', '')
+                  ))
+
+          print(f'AUDITORIUM_PUBLIC_MATCH_COUNT={len(found)}')
+          if not found:
+              raise SystemExit('No matching public Auditorium assets found from current naming patterns.')
+          PY
