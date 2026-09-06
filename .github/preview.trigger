@@ -1,5 +1,10 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
+2026-09-06: Lock the individual Review page identity as The Auditorium. Keep all
+review routes unchanged, use the Auditorium loader theme/artwork naming, and keep
+The Lounge / The Auditorium / The Movie Café / The Projection Booth as the canonical
+one-theater page identities.
+
 2026-09-06: Connect the approved transparent 09 Share Your Opinion With Exit
 artwork in focus mode. Align its two comment slots and lower form to the image,
 and map the top-right EXIT tab to the accessible close button. Keep the normal
@@ -15,4 +20,4 @@ Current Lounge invariants:
 - Do not use a short time-based fast-reveal race that can bypass the Lounge background. The 10s recovery controls and 15s hard fail-open remain emergency safety guards only.
 - Keep the mobile loader on lightweight CSS ambience so decorative loading artwork cannot compete with Lounge assets.
 - Keep one consolidated Lounge presentation cascade: lounge.css imports lounge-reset.css; do not reintroduce retired split Lounge stylesheets, hidden artwork nodes, duplicate readiness gates or legacy asset URLs.
-- Validate runtime guardrails, fast-loader behavior, current Q99 artwork, live D1 APIs, Cini Cafe and review click-through before considering the deployment complete.
+- Validate runtime guardrails, fast-loader behavior, current Q99 artwork, live D1 APIs, Cini Cafe and Auditorium review click-through before considering the deployment complete.
