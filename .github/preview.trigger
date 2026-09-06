@@ -1,5 +1,9 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
+2026-09-06: Re-run the Auditorium v4 deployment after updating the runtime guardrail
+to recognize the new full Auditorium page identity while continuing to reject
+reserved naming in executable/runtime-visible content.
+
 2026-09-06: Deploy the first responsive Auditorium v4 runtime. Use the newly
 uploaded content/v4/responsive artwork as immutable visual layers, align live
 review data over the approved Clapboard/Theater/Related sections, preserve the
