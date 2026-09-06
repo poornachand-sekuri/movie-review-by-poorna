@@ -1,0 +1,47 @@
+name: Export Auditorium Focus Art
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/focus-art.trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download approved focus artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/focus-art
+          python3 -m pip install --quiet pillow
+          python3 <<'PY'
+          from io import BytesIO
+          import urllib.request
+          from PIL import Image
+
+          base='https://assets.moviereviewbypoorna.com/ui/pages/content/v4/responsive/'
+          files={
+              'theater-focus':'09_Theater_Focus_Overlay_transparent_runtime_q99.webp',
+              'opinion-exit':'10_Share_Your_Opinion_With_Exit_runtime_q99.webp',
+          }
+          for stem,name in files.items():
+              req=urllib.request.Request(base+name,headers={'User-Agent':'MovieReviewByPoorna-FocusExport/1.0'})
+              with urllib.request.urlopen(req,timeout=20) as response:
+                  data=response.read()
+              image=Image.open(BytesIO(data)).convert('RGBA')
+              image.save(f'/tmp/focus-art/{stem}.png')
+              print(stem, image.size)
+          PY
+      - name: Upload focus artwork
+        uses: actions/upload-artifact@v4
+        with:
+          name: auditorium-focus-art
+          path: /tmp/focus-art/*.png
+          retention-days: 1
