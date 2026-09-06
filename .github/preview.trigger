@@ -1,6 +1,6 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-06: Build the Auditorium v4 artwork-first runtime from the confirmed
+2026-09-07: Build the Auditorium v4 artwork-first runtime from the confirmed
 content/v4/responsive assets. Use 02-08 as the normal page flow, reserve 09 as
 the same-canvas Theater focus state and 10 as the same-canvas Share Your Opinion
 exit state. Use a consistent 1.5rem visual vertical gap between all normal
@@ -9,12 +9,15 @@ canvas from document flow. Map live D1 content into the approved artwork zones:
 movie poster/details/Cast & Crew/My POV in the Clapboard, the complete review in
 an internal scrollable Theater screen, and four same-language related reviews in
 the Related Reviews artwork. The Clapboard field labelled Watched In maps
-explicitly to review.language (for DC: Telugu). Keep movie posters inside
-Lounge-style clipped viewports so the baked red frame borders stay visible and
-the rounded corners are honoured in both the Clapboard and Related Reviews.
-The Auditorium background is intentionally not wired while its artwork is still
-being finalized. Do not use old Content geometry or guessed asset filenames.
-The Lounge and The Movie Café are intentionally unchanged.
+explicitly to review.language. Keep the Clapboard poster inside the measured
+baked red poster box. Align Language, Release Date and stars directly with the
+baked WATCHED IN / RELEASE DATE / RATING rows; rating shows stars only. Runtime
+must not render credit labels: render Actor, Actress, Director and Music Director
+values only, inline with their baked artwork labels/colons. Keep Related Review
+posters inside clipped viewports so the baked red frame borders and corners stay
+visible. The Auditorium background remains intentionally unwired while its
+artwork is being finalized. Do not use old Content geometry or guessed asset
+filenames. The Lounge and The Movie Café are intentionally unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
