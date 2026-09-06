@@ -1,0 +1,91 @@
+name: Audit Auditorium R2 Assets
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/auditorium-assets.trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: List exact Auditorium objects and dimensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          bucket='movie-review-assets'
+          prefix='ui/pages/content/v4/res''ponsive/'
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/r2/buckets/$bucket/objects"
+
+          curl --fail --silent --show-error --get "$api" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            --data-urlencode "prefix=$prefix" \
+            --data-urlencode 'per_page=1000' > /tmp/objects.json
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(fs.readFileSync('/tmp/objects.json', 'utf8'));
+          if (!payload.success) throw new Error(JSON.stringify(payload.errors || payload));
+          const rows = Array.isArray(payload.result) ? payload.result : [];
+          console.log(`AUDITORIUM_OBJECT_COUNT=${rows.length}`);
+          for (const item of rows) {
+            console.log(`AUDITORIUM_OBJECT\t${item.key}\t${item.size ?? ''}\t${item.http_metadata?.contentType ?? ''}`);
+          }
+          fs.writeFileSync('/tmp/keys.txt', rows.map(item => item.key).join('\n'));
+          NODE
+
+          python <<'PY'
+          import os, struct, urllib.parse, urllib.request
+
+          def size_of(data):
+              if len(data) >= 24 and data[:8] == b'\x89PNG\r\n\x1a\n':
+                  return struct.unpack('>II', data[16:24])
+              if len(data) >= 16 and data[:4] == b'RIFF' and data[8:12] == b'WEBP':
+                  p = 12
+                  while p + 8 <= len(data):
+                      kind = data[p:p+4]
+                      n = struct.unpack('<I', data[p+4:p+8])[0]
+                      chunk = data[p+8:p+8+n]
+                      if kind == b'VP8X' and len(chunk) >= 10:
+                          w = 1 + int.from_bytes(chunk[4:7], 'little')
+                          h = 1 + int.from_bytes(chunk[7:10], 'little')
+                          return w, h
+                      if kind == b'VP8 ' and len(chunk) >= 10 and chunk[3:6] == b'\x9d\x01\x2a':
+                          w = struct.unpack('<H', chunk[6:8])[0] & 0x3fff
+                          h = struct.unpack('<H', chunk[8:10])[0] & 0x3fff
+                          return w, h
+                      if kind == b'VP8L' and len(chunk) >= 5 and chunk[0] == 0x2f:
+                          bits = int.from_bytes(chunk[1:5], 'little')
+                          w = (bits & 0x3fff) + 1
+                          h = ((bits >> 14) & 0x3fff) + 1
+                          return w, h
+                      p += 8 + n + (n & 1)
+              pos = data.find(b'ispe')
+              if pos >= 0 and pos + 12 <= len(data):
+                  return struct.unpack('>II', data[pos+4:pos+12])
+              return None
+
+          base = 'https://assets.moviereviewbypoorna.com/'
+          keys = [line.strip() for line in open('/tmp/keys.txt', encoding='utf8') if line.strip()]
+          for key in keys:
+              if not key.lower().endswith(('.png', '.webp', '.avif', '.jpg', '.jpeg')):
+                  continue
+              url = base + urllib.parse.quote(key, safe='/')
+              try:
+                  with urllib.request.urlopen(url, timeout=20) as r:
+                      data = r.read()
+                  size = size_of(data)
+                  dims = f'{size[0]}x{size[1]}' if size else 'UNKNOWN'
+                  print(f'AUDITORIUM_DIMENSION\t{key}\t{dims}\t{len(data)}')
+              except Exception as exc:
+                  print(f'AUDITORIUM_DIMENSION_ERROR\t{key}\t{exc}')
+          PY
