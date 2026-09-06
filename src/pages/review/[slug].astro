@@ -83,13 +83,15 @@ const cast = review.credits.filter((credit) => credit.role === 'actor' || credit
         <div class="auditorium-source-layer auditorium-clapboard-content">
           {
             review.posterUrl && (
-              <img
-                class="auditorium-movie-poster"
-                src={review.posterUrl}
-                alt={`${review.title} poster`}
-                loading="eager"
-                decoding="async"
-              />
+              <div class="auditorium-movie-poster-frame">
+                <img
+                  class="auditorium-movie-poster"
+                  src={review.posterUrl}
+                  alt={`${review.title} poster`}
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
             )
           }
 
@@ -155,9 +157,11 @@ const cast = review.credits.filter((credit) => credit.role === 'actor' || credit
           {
             relatedReviews.map((item) => (
               <a class="auditorium-related-card" href={`/review/${item.slug}`} aria-label={`Read ${item.title} review`}>
-                {item.posterUrl && (
-                  <img src={item.posterUrl} alt={`${item.title} poster`} loading="lazy" decoding="async" />
-                )}
+                <div class="auditorium-related-poster-frame">
+                  {item.posterUrl && (
+                    <img src={item.posterUrl} alt={`${item.title} poster`} loading="lazy" decoding="async" />
+                  )}
+                </div>
                 <span class="auditorium-related-title">{item.title}</span>
               </a>
             ))
