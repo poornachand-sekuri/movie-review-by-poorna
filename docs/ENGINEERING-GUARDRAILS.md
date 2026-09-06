@@ -18,7 +18,7 @@ Movie Review By Poorna is one virtual movie theater. Every public/admin page is 
 Locked page identities:
 
 - Home: The Lounge
-- Individual review: The Screening Room
+- Individual review: The Auditorium
 - Search: The Movie Café
 - Admin: The Projection Booth
 
