@@ -165,7 +165,7 @@ jobs:
           }
           if (!lounge.includes('name="robots" content="noindex,nofollow"')) throw new Error('Preview noindex metadata is missing.');
           if (!cafe.includes('Kantara')) throw new Error('Cini Cafe search page did not render search results.');
-          if (!review.includes('Screening Room') || !review.includes('DC')) throw new Error('Review click-through did not render DC.');
+          if (!review.includes('The Auditorium') || !review.includes('DC')) throw new Error('Auditorium review click-through did not render DC.');
 
-          console.log('Live smoke tests passed: Lounge runtime artwork, paging, Cini Cafe and review click-through.');
+          console.log('Live smoke tests passed: Lounge runtime artwork, paging, Cini Cafe and Auditorium review click-through.');
           NODE
