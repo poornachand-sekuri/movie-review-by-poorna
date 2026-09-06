@@ -75,16 +75,31 @@ function runtimeUrl(file: string): string {
   return `${AUDITORIUM_RUNTIME_BASE}/${file}?v=${AUDITORIUM_CACHE_KEY}`;
 }
 
-export const auditoriumAssetCandidates = Object.fromEntries(
-  Object.entries(auditoriumAssetFiles).map(([key, files]) => [
-    key,
-    files.map(runtimeUrl),
-  ]),
-) as Readonly<Record<AuditoriumAssetKey, readonly string[]>>;
+function candidateUrls(key: AuditoriumAssetKey): readonly string[] {
+  return auditoriumAssetFiles[key].map(runtimeUrl);
+}
 
-export const auditoriumRuntimeAssets = Object.fromEntries(
-  Object.entries(auditoriumAssetCandidates).map(([key, urls]) => [key, urls[0]]),
-) as Readonly<Record<AuditoriumAssetKey, string>>;
+export const auditoriumAssetCandidates: Readonly<Record<AuditoriumAssetKey, readonly string[]>> = {
+  background: candidateUrls('background'),
+  topNavigation: candidateUrls('topNavigation'),
+  clapboard: candidateUrls('clapboard'),
+  theaterScreen: candidateUrls('theaterScreen'),
+  shareReview: candidateUrls('shareReview'),
+  relatedReviews: candidateUrls('relatedReviews'),
+  shareOpinion: candidateUrls('shareOpinion'),
+  bottomNavigation: candidateUrls('bottomNavigation'),
+};
+
+export const auditoriumRuntimeAssets: Readonly<Record<AuditoriumAssetKey, string>> = {
+  background: auditoriumAssetCandidates.background[0]!,
+  topNavigation: auditoriumAssetCandidates.topNavigation[0]!,
+  clapboard: auditoriumAssetCandidates.clapboard[0]!,
+  theaterScreen: auditoriumAssetCandidates.theaterScreen[0]!,
+  shareReview: auditoriumAssetCandidates.shareReview[0]!,
+  relatedReviews: auditoriumAssetCandidates.relatedReviews[0]!,
+  shareOpinion: auditoriumAssetCandidates.shareOpinion[0]!,
+  bottomNavigation: auditoriumAssetCandidates.bottomNavigation[0]!,
+};
 
 export const auditoriumCriticalImages = [
   auditoriumRuntimeAssets.background,
