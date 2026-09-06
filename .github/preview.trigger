@@ -13,12 +13,16 @@ explicitly to review.language. Clapboard overlay geometry is source-measured
 from the approved 1536x1024 artwork: poster inner opening x=75..553/y=164..492,
 metadata centers y=253/351.5/446, credit centers y=607.877/654.438/700.396/748.993,
 and baked colon axis x=373..377. Rating shows stars only. Runtime does not render
-credit labels. Keep Related Review posters inside clipped viewports so the baked
-red frame borders and corners stay visible. The Auditorium background remains
-intentionally unwired while its artwork is being finalized. Do not use old
-Content geometry or guessed asset filenames. Temporary geometry diagnostics are
-removed after measurement. The Lounge and The Movie Café are intentionally
-unchanged.
+credit labels. Related Reviews overlay geometry is source-measured from the
+approved 2172x724 artwork: poster inner openings are x=340..675, x=726..1061,
+x=1112..1446 and x=1497..1833 with shared y=245..485. The lower central artwork
+remains present through about y=559, so each related-review title is centred on
+its own measured bay in the transparent band beginning at y=565. Do not use a
+generic equal-column overlay or extra poster inset that would cover or shrink
+away from the baked red borders. The Auditorium background remains intentionally
+unwired while its artwork is being finalized. Do not use old Content geometry
+or guessed asset filenames. Temporary geometry diagnostics are removed after
+measurement. The Lounge and The Movie Café are intentionally unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
