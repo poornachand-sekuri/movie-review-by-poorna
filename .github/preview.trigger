@@ -5,10 +5,14 @@ content/v4/responsive assets. Use 02-08 as the normal page flow, reserve 09 as
 the same-canvas Theater focus state and 10 as the same-canvas Share Your Opinion
 exit state. Use a consistent 1.5rem visual vertical gap between all normal
 Auditorium sections by excluding each artwork file's measured transparent
-canvas from document flow. The Auditorium background is intentionally not wired
-while its artwork is still being finalized. Do not use old Content geometry or
-guessed asset filenames. The Lounge and The Movie Café are intentionally
-unchanged.
+canvas from document flow. Map live D1 content into the approved artwork zones:
+movie poster/details/Cast & Crew/My POV in the Clapboard, the complete review in
+an internal scrollable Theater screen, and four same-language related reviews in
+the Related Reviews artwork. Do not invent missing Watched In data; render an
+empty placeholder until a real value exists. The Auditorium background is
+intentionally not wired while its artwork is still being finalized. Do not use
+old Content geometry or guessed asset filenames. The Lounge and The Movie Café
+are intentionally unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
