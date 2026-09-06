@@ -28,8 +28,8 @@ preferring the same language first and then other recent reviews. Fallbacks
 must never replace or reorder a credit match.
 
 Implement Auditorium focus behavior using the approved alternate artwork states.
-Theater/Now Screening uses 09_Theater_Focus_Overlay_transparent_runtime_q99.webp
-as the focused replacement state; Share Your Opinion uses
+The Theater focus uses 09_Theater_Focus_Overlay_transparent_runtime_q99.webp as
+the focused replacement state; Share Your Opinion uses
 10_Share_Your_Opinion_With_Exit_runtime_q99.webp. Opening focus moves the real
 section into a modal focus stage while preserving its original page position,
 dims/blurs the surrounding Auditorium and locks page scrolling. Sections open
