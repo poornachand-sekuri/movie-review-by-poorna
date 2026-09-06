@@ -1,6 +1,7 @@
 ---
 import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
+import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
 import { getReviewBySlug } from '../../lib/data/reviews';
 import '../../styles/auditorium.css';
 
@@ -12,24 +13,6 @@ const review = await getReviewBySlug(slug);
 if (!review) {
   return Astro.redirect('/');
 }
-
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
-
-function formatDate(value: string | null): string {
-  if (!value) return '—';
-  const date = new Date(`${value}T00:00:00Z`);
-  return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
-}
-
-function starText(rating: number | null): string {
-  const filled = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
-  return `${'★'.repeat(filled)}${'☆'.repeat(5 - filled)}`;
-}
 ---
 
 <SiteFrame
@@ -38,46 +21,94 @@ function starText(rating: number | null): string {
 >
   <LoungeLoading theme="auditorium" />
 
-  <main class="auditorium-reset-page" data-cinema-page>
-    <div class="auditorium-reset-stage">
-      <h1 class="visually-hidden">{review.title} — The Auditorium</h1>
+  <main class="auditorium-page" data-cinema-page>
+    <h1 class="visually-hidden">{review.title} — The Auditorium</h1>
 
-      <p class="auditorium-reset-kicker">The Auditorium · Clean Runtime Baseline</p>
-      <h2 class="auditorium-reset-title">{review.title}</h2>
-      <p class="auditorium-reset-meta">
-        {review.language ?? '—'} · {formatDate(review.releaseDate)} · {starText(review.rating)}
-      </p>
+    <div class="auditorium-stage" data-auditorium-stage>
+      <section class="auditorium-section auditorium-section--top" aria-label="Top navigation">
+        <img
+          class="auditorium-artwork"
+          src={assets.topNavigation.src}
+          width={assets.topNavigation.width}
+          height={assets.topNavigation.height}
+          alt=""
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </section>
 
-      {
-        review.posterUrl && (
-          <img
-            class="auditorium-reset-poster"
-            src={review.posterUrl}
-            alt={`${review.title} poster`}
-            loading="eager"
-            fetchpriority="high"
-            decoding="async"
-          />
-        )
-      }
+      <section class="auditorium-section auditorium-section--clapboard" aria-label="Movie details clapboard">
+        <img
+          class="auditorium-artwork"
+          src={assets.clapboard.src}
+          width={assets.clapboard.width}
+          height={assets.clapboard.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      </section>
 
-      {
-        review.verdict && (
-          <p class="auditorium-reset-verdict">{review.verdict}</p>
-        )
-      }
+      <section class="auditorium-section auditorium-section--theater" aria-label="Theater screen and reactions" data-auditorium-theater>
+        <img
+          class="auditorium-artwork"
+          src={assets.theater.src}
+          width={assets.theater.width}
+          height={assets.theater.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      </section>
 
-      {
-        review.credits.length > 0 && (
-          <div class="auditorium-reset-credits" aria-label="Cast and crew">
-            {review.credits.slice(0, 6).map((credit) => (
-              <p class="auditorium-reset-credit"><strong>{credit.role}:</strong> {credit.name}</p>
-            ))}
-          </div>
-        )
-      }
+      <section class="auditorium-section auditorium-section--share" aria-label="Share this review">
+        <img
+          class="auditorium-artwork"
+          src={assets.shareReview.src}
+          width={assets.shareReview.width}
+          height={assets.shareReview.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      </section>
 
-      <article class="auditorium-reset-review" set:html={review.bodyHtml}></article>
+      <section class="auditorium-section auditorium-section--related" aria-label="Related reviews">
+        <img
+          class="auditorium-artwork"
+          src={assets.relatedReviews.src}
+          width={assets.relatedReviews.width}
+          height={assets.relatedReviews.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      </section>
+
+      <section class="auditorium-section auditorium-section--opinion" aria-label="Share your opinion" data-auditorium-opinion>
+        <img
+          class="auditorium-artwork"
+          src={assets.shareOpinion.src}
+          width={assets.shareOpinion.width}
+          height={assets.shareOpinion.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      </section>
+
+      <section class="auditorium-section auditorium-section--bottom" aria-label="Bottom navigation">
+        <img
+          class="auditorium-artwork"
+          src={assets.bottomNavigation.src}
+          width={assets.bottomNavigation.width}
+          height={assets.bottomNavigation.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      </section>
     </div>
   </main>
 
