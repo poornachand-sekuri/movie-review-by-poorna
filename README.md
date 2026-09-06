@@ -14,7 +14,7 @@ This branch is a clean implementation. Existing production frontend code is refe
 Movie Review By Poorna is designed as one virtual movie theater with connected spaces:
 
 - Home: The Lounge
-- Individual Review: The Screening Room
+- Individual Review: The Auditorium
 - Search: The Movie Café
 - Admin: The Projection Booth
 
