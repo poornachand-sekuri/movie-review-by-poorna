@@ -6,6 +6,8 @@ const textExtensions = new Set(['.astro', '.css', '.html', '.js', '.json', '.md'
 const violations = [];
 const retiredHomeName = String.fromCharCode(108, 111, 98, 98, 121);
 const retiredHomePattern = new RegExp(`\\b${retiredHomeName}\\b`, 'i');
+const retiredReviewName = String.fromCharCode(115, 99, 114, 101, 101, 110, 105, 110, 103);
+const retiredReviewPattern = new RegExp(`\\b${retiredReviewName}\\b`, 'i');
 
 const walk = (path) => {
   if (!existsSync(path)) return [];
@@ -25,6 +27,9 @@ for (const file of namingRoots.flatMap(walk)) {
   if (file.toLowerCase().includes(retiredHomeName)) {
     violations.push(`${file}: retired Home room name must not appear in project paths`);
   }
+  if (file.toLowerCase().includes(retiredReviewName)) {
+    violations.push(`${file}: retired Review room name must not appear in project paths`);
+  }
 
   if (!textExtensions.has(extname(file).toLowerCase())) continue;
   const content = readFileSync(file, 'utf8');
@@ -36,6 +41,9 @@ for (const file of namingRoots.flatMap(walk)) {
   if (retiredHomePattern.test(content)) {
     violations.push(`${file}: retired Home room name must not appear in project code, docs or UI text`);
   }
+  if (retiredReviewPattern.test(content)) {
+    violations.push(`${file}: retired Review room name must not appear in project code, docs or UI text`);
+  }
 
   if (content.includes('.lounge-panel__art')) {
     violations.push(`${file}: obsolete hidden Lounge artwork hook must not return`);
@@ -43,6 +51,7 @@ for (const file of namingRoots.flatMap(walk)) {
 }
 
 const index = readRequired('src/pages/index.astro');
+const reviewPage = readRequired('src/pages/review/[slug].astro');
 const siteFrame = readRequired('src/layouts/SiteFrame.astro');
 const loungeAssets = readRequired('src/lib/lounge-assets.ts');
 const loungeCss = readRequired('src/styles/lounge.css');
@@ -121,6 +130,14 @@ if (!loadingComponent.includes("import { loungeCriticalImages } from '../../lib/
   violations.push('src/components/lounge/LoungeLoading.astro: must consume the shared critical Lounge asset list');
 }
 
+if (!loadingComponent.includes("auditorium: { name: 'The Auditorium'") || !loadingComponent.includes("image: '/images/loading/auditorium.png'")) {
+  violations.push('src/components/lounge/LoungeLoading.astro: Auditorium identity and loading artwork must remain canonical');
+}
+
+if (!reviewPage.includes('<LoungeLoading theme="auditorium" />') || !reviewPage.includes('<p class="eyebrow">The Auditorium</p>')) {
+  violations.push('src/pages/review/[slug].astro: individual reviews must render as The Auditorium');
+}
+
 if (!loadingComponent.includes("typeof image.decode === 'function'") || !loadingComponent.includes('await image.decode()')) {
   violations.push('src/components/lounge/LoungeLoading.astro: cold-cache critical images must wait for decode before reveal');
 }
@@ -151,4 +168,4 @@ if (violations.length > 0) {
   throw new Error(`Runtime guardrail violation(s):\n${violations.join('\n')}`);
 }
 
-console.log('Runtime naming, Lounge cleanup, artwork and loading guardrails passed.');
+console.log('Runtime room naming, Lounge cleanup, artwork and loading guardrails passed.');
