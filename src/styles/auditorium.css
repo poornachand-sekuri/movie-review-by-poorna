@@ -4,7 +4,7 @@
 
 .auditorium-page {
   --auditorium-stage-max: 1086px;
-  --auditorium-section-gap: clamp(18px, 2.25vw, 32px);
+  --auditorium-section-gap: 1.5rem;
   min-height: 100vh;
   padding: clamp(12px, 2vw, 24px) 12px clamp(36px, 6vw, 72px);
   background-color: #050505;
