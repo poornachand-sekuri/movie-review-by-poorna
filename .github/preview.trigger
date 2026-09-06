@@ -9,15 +9,15 @@ canvas from document flow. Map live D1 content into the approved artwork zones:
 movie poster/details/Cast & Crew/My POV in the Clapboard, the complete review in
 an internal scrollable Theater screen, and four same-language related reviews in
 the Related Reviews artwork. The Clapboard field labelled Watched In maps
-explicitly to review.language. Keep the Clapboard poster inside the measured
-baked red poster box. Align Language, Release Date and stars directly with the
-baked WATCHED IN / RELEASE DATE / RATING rows; rating shows stars only. Runtime
-must not render credit labels: render Actor, Actress, Director and Music Director
-values only, inline with their baked artwork labels/colons. Keep Related Review
-posters inside clipped viewports so the baked red frame borders and corners stay
-visible. The Auditorium background remains intentionally unwired while its
-artwork is being finalized. Do not use old Content geometry or guessed asset
-filenames. The Lounge and The Movie Café are intentionally unchanged.
+explicitly to review.language. Clapboard overlay geometry must be source-measured
+from the approved 1536x1024 artwork: poster inner opening x=75..553/y=164..492,
+metadata centers y=253/351.5/446, credit centers y=607.877/654.438/700.396/748.993,
+and baked colon axis x=373..377. Rating shows stars only. Runtime does not render
+credit labels. Keep Related Review posters inside clipped viewports so the baked
+red frame borders and corners stay visible. The Auditorium background remains
+intentionally unwired while its artwork is being finalized. Do not use old
+Content geometry or guessed asset filenames. The Lounge and The Movie Café are
+intentionally unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
