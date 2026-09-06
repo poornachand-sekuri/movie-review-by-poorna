@@ -72,3 +72,8 @@ p {
   white-space: nowrap;
   border: 0;
 }
+
+/* Cache-bust the replaced R2 Lounge/Cini Cafe artwork without changing layout. */
+html body .lounge-panel--bottom .lounge-banner-crop {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/07_Lounge_Cini_Cafe_Banner_runtime_q99.webp?v=exact-palette-20260906-1519") !important;
+}
