@@ -1,5 +1,9 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
+2026-09-06: Deploy the exact-palette replacements for 06 Share Your Opinion and
+09 Share Your Opinion With Exit. Use the newly uploaded runtime Q99 files and
+fresh cache keys so the preview cannot retain any previous palette versions.
+
 2026-09-06: Deploy the exact-palette replacement for 07 Lounge / Cini Cafe banner.
 Use the newly uploaded `07_Lounge_Cini_Cafe_Banner_runtime_q99.webp` and force a
 fresh asset cache key so the preview cannot retain the previous banner pixels.
