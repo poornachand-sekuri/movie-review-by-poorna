@@ -1,11 +1,11 @@
 ---
 import { loungeCriticalImages } from '../../lib/lounge-assets';
 
-interface Props { theme?: 'lounge' | 'screening' | 'cafe'; }
+interface Props { theme?: 'lounge' | 'auditorium' | 'cafe'; }
 const { theme = 'lounge' } = Astro.props;
 const rooms = {
   lounge: { name: 'The Lounge', message: 'Getting the lounge ready for your grand entrance…', image: '/images/loading/lounge.png' },
-  screening: { name: 'The Screening Room', message: 'Hold that popcorn. The review is almost ready…', image: '/images/loading/screening.png' },
+  auditorium: { name: 'The Auditorium', message: 'Hold that popcorn. The review is almost ready…', image: '/images/loading/auditorium.png' },
   cafe: { name: 'The Movie Café', message: 'Fresh picks brewing…', image: '/images/loading/cafe.png' },
 };
 const room = rooms[theme];
@@ -37,7 +37,7 @@ const criticalImages = theme === 'lounge' ? loungeCriticalImages : [];
     opacity: 1;
     transition: opacity 220ms ease;
   }
-  html[data-lounge-state] .lounge-loading-screen[data-theme="screening"] { --loading-accent: #edb8a3; background-color: #230e16; }
+  html[data-lounge-state] .lounge-loading-screen[data-theme="auditorium"] { --loading-accent: #edb8a3; background-color: #230e16; }
   html[data-lounge-state] .lounge-loading-screen[data-theme="cafe"] { --loading-accent: #e8c78c; background-color: #292216; }
   html[data-lounge-state="leaving"] .lounge-loading-screen { opacity: 0; pointer-events: none; }
   .lounge-loading-screen * { box-sizing: border-box; }
@@ -274,7 +274,7 @@ const criticalImages = theme === 'lounge' ? loungeCriticalImages : [];
       reveal(false);
     }, maximumHoldMs);
 
-    // Screening Room / Movie Café still report readiness from prepareCinemaPage.
+    // Auditorium / Movie Café still report readiness from prepareCinemaPage.
     // The Lounge ignores these events because its inline probe is intentionally
     // independent of the deferred Lounge interaction module.
     document.addEventListener('lounge:loading-progress', (event) => {
