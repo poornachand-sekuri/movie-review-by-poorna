@@ -8,16 +8,16 @@ import '../../styles/auditorium.css';
 export const prerender = false;
 
 const slug = Astro.params.slug ?? '';
-const review = await getReviewBySlug(slug);
+const loadedReview = await getReviewBySlug(slug);
 
-if (!review) {
+if (!loadedReview) {
   return Astro.redirect('/');
 }
 
-const relatedPool = await listReviews({
-  limit: 10,
-  language: review.language ?? undefined,
-});
+const review = loadedReview;
+const relatedPool = review.language
+  ? await listReviews({ limit: 10, language: review.language })
+  : await listReviews({ limit: 10 });
 const relatedReviews = relatedPool.filter((item) => item.slug !== review.slug).slice(0, 4);
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', {
