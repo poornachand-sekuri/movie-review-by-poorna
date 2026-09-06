@@ -322,50 +322,69 @@
 
 /* Related reviews -------------------------------------------------------- */
 /*
- * Related artwork has four equal red poster bays. Keep the four-column rhythm,
- * but make each bay a Lounge-style clipped viewport with a deliberate inset
- * from the baked red border. This prevents images from covering borders or
- * rendering square corners over the frame artwork.
+ * Exact source geometry measured from 06_Related_Reviews_transparent_runtime_q99
+ * (2172x724). The four red poster frames have a shared inner y opening of
+ * 245..485. Their measured inner x openings are:
+ * 1: 340..675, 2: 726..1061, 3: 1112..1446, 4: 1497..1833.
+ * The lower film-strip artwork remains opaque through ~y559; the central canvas
+ * becomes transparent from y565 onward. Titles therefore use that measured
+ * transparent band and stay centred on the exact poster-bay x centres.
  */
 .auditorium-related-grid {
-  left: 5.7%;
-  top: 31.5%;
-  width: 88.6%;
-  height: 49%;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2.35%;
-  transform: translateY(var(--art-shift-y));
+  inset: 0;
+  width: 100%;
+  height: auto;
   pointer-events: auto;
 }
 
 .auditorium-related-card {
-  position: relative;
-  min-width: 0;
+  position: absolute;
+  top: 0;
   height: 100%;
   color: inherit;
   text-decoration: none;
-  overflow: visible;
+  pointer-events: auto;
+}
+
+.auditorium-related-card:nth-child(1) {
+  left: 15.6537753223%;  /* 340 / 2172 */
+  width: 15.4696132597%; /* 336 / 2172 */
+}
+
+.auditorium-related-card:nth-child(2) {
+  left: 33.4254143646%;  /* 726 / 2172 */
+  width: 15.4696132597%; /* 336 / 2172 */
+}
+
+.auditorium-related-card:nth-child(3) {
+  left: 51.1970534070%;  /* 1112 / 2172 */
+  width: 15.4235727440%; /* 335 / 2172 */
+}
+
+.auditorium-related-card:nth-child(4) {
+  left: 68.9226519337%;  /* 1497 / 2172 */
+  width: 15.5156537753%; /* 337 / 2172 */
 }
 
 .auditorium-related-poster-frame {
   position: absolute;
-  left: 7%;
-  top: 0;
-  width: 86%;
-  height: 70%;
+  left: 0;
+  top: 33.8397790055%;   /* 245 / 724 */
+  width: 100%;
+  height: 33.2872928177%; /* 241 / 724 */
   overflow: hidden;
   border: 0;
-  border-radius: 0.58cqw;
+  border-radius: 0.7366482505cqw; /* ~16 source-px inner corner */
   background: #090909;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 4%);
 }
 
 .auditorium-related-poster-frame img {
   display: block;
   width: 100%;
   height: 100%;
+  max-width: none;
   object-fit: cover;
+  object-position: center;
   border-radius: inherit;
   user-select: none;
   -webkit-user-drag: none;
@@ -373,25 +392,33 @@
 
 .auditorium-related-title {
   position: absolute;
-  left: 5%;
-  right: 5%;
-  bottom: 2%;
-  display: -webkit-box;
+  left: -5%;
+  top: 78.0386740331%; /* y565 — first fully transparent central title band */
+  width: 110%;
+  height: 8.2872928177%; /* 60 / 724 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding-inline: 0.25cqw;
   overflow: hidden;
   color: #f1e8dc;
-  font-size: clamp(7px, 1.25cqw, 12px);
+  font-size: clamp(7px, 1.12cqw, 12px);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
   text-align: center;
-  text-shadow: 0 1px 3px #000;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px #000, 0 0 4px rgb(0 0 0 / 78%);
 }
 
 .auditorium-related-card:focus-visible {
+  outline: none;
+}
+
+.auditorium-related-card:focus-visible .auditorium-related-poster-frame {
   outline: 2px solid #d7a753;
-  outline-offset: 2px;
-  border-radius: 0.7cqw;
+  outline-offset: -2px;
 }
 
 @media (hover: hover) {
@@ -455,6 +482,10 @@
     padding: 2cqw 2.2cqw;
     font-size: clamp(9px, 2.55cqw, 12px);
     line-height: 1.45;
+  }
+
+  .auditorium-related-title {
+    font-size: clamp(6px, 1.35cqw, 9px);
   }
 }
 
