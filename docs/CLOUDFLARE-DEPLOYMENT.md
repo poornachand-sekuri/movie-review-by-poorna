@@ -34,7 +34,7 @@ ui/site/v1/
 │   ├── compact/
 │   ├── medium/
 │   └── wide/
-├── screening-room/
+├── auditorium/
 │   ├── compact/
 │   ├── medium/
 │   └── wide/
