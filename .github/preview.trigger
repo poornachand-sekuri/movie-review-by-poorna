@@ -1,38 +1,9 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-06: Re-run after fixing the Auditorium asset-map typing, review-data
-nullability and copy-link DOM fallback reported by Astro's strict type gate.
-
-2026-09-06: Re-run the Auditorium v4 deployment after updating the runtime guardrail
-to recognize the new full Auditorium page identity while continuing to reject
-reserved naming in executable/runtime-visible content.
-
-2026-09-06: Deploy the first responsive Auditorium v4 runtime. Use the newly
-uploaded content/v4/responsive artwork as immutable visual layers, align live
-review data over the approved Clapboard/Theater/Related sections, preserve the
-theater screen's internal scroll surface, and keep the page on the existing
-/review/[slug] routes.
-
-2026-09-06: Deploy the exact-palette replacements for 06 Share Your Opinion and
-09 Share Your Opinion With Exit. Use the newly uploaded runtime Q99 files and
-fresh cache keys so the preview cannot retain any previous palette versions.
-
-2026-09-06: Deploy the exact-palette replacement for 07 Lounge / Cini Cafe banner.
-Use the newly uploaded `07_Lounge_Cini_Cafe_Banner_runtime_q99.webp` and force a
-fresh asset cache key so the preview cannot retain the previous banner pixels.
-
-2026-09-06: Final Auditorium naming audit passed at the application gate; deploy the
-fully cleaned room identity to the temporary preview Worker for live verification.
-
-2026-09-06: Lock the individual Review page identity as The Auditorium. Keep all
-review routes unchanged, use the Auditorium loader theme/artwork naming, and keep
-The Lounge / The Auditorium / The Movie Café / The Projection Booth as the canonical
-one-theater page identities.
-
-2026-09-06: Connect the approved transparent 09 Share Your Opinion With Exit
-artwork in focus mode. Align its two comment slots and lower form to the image,
-and map the top-right EXIT tab to the accessible close button. Keep the normal
-06 ticket in the Lounge. Version both runtime URLs to bypass replaced asset caches.
+2026-09-06: Auditorium reset. Remove the failed v4 Auditorium asset manifest,
+guessed artwork paths and overlay runtime. Keep only the review data plumbing,
+canonical Auditorium loading screen and clean baseline presentation. The Lounge
+and The Movie Café are intentionally unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
