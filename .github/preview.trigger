@@ -1,5 +1,9 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
+2026-09-06: Deploy the exact-palette replacement for 07 Lounge / Cini Cafe banner.
+Use the newly uploaded `07_Lounge_Cini_Cafe_Banner_runtime_q99.webp` and force a
+fresh asset cache key so the preview cannot retain the previous banner pixels.
+
 2026-09-06: Final Auditorium naming audit passed at the application gate; deploy the
 fully cleaned room identity to the temporary preview Worker for live verification.
 
