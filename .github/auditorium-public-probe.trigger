@@ -1,1 +1,1 @@
-Probe current public Auditorium section files from content/v4/responsive. Concurrent pass 2.
+Probe exact current Auditorium runtime dimensions for 02-10 and verify whether any 01 background exists.
