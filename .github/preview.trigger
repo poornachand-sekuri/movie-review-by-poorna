@@ -1,32 +1,24 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-07: Refine the Auditorium Theater reading experience without changing
-approved artwork geometry. In the normal Theater, move the live review viewport
-up to source y=140 on the 1448x1086 canvas and end it at source y=675. This
-reduces the empty space above the first review line to approximately one reading
-line and preserves approximately one full reading-line of breathing room above
-the baked big-screen prompt. Keep the review internally scrollable.
-
-Focused Theater uses the approved 09 alternate artwork and keeps the review in a
-fixed safe viewport inside the Theater screen: left=120/1448, top=180/1086,
-width=1208/1448, height=610/1086. Add A-minus and A-plus readability controls
-visible only in focused Theater mode. Support five bounded font-size levels from
-small through extra large. Changing font size must never change the physical
-review viewport; larger text only increases the internal scroll height, so text
-cannot overlap or extend beyond the Theater screen frame, seats, reactions or
-EXIT artwork. Disable the decrease/increase control at the respective limits and
-keep keyboard accessibility. Preserve the chosen size while the current page is
-open. Existing focus close behavior remains: baked EXIT hit area, backdrop click
-or Escape, restoring the section to its original page position.
+2026-09-07: Keep the current Auditorium Theater reading geometry and focused
+review safe viewport unchanged. Move the readability controls completely outside
+the Theater artwork so they can never compete with or overlap the review text.
+In focused Theater mode, place a compact cinematic helper toolbar immediately
+above the Theater with the message "Adjust text size for comfortable reading"
+and styled A-minus/A-plus controls. The toolbar must appear only for Theater
+focus, remain hidden for the normal page and Share Your Opinion focus, retain the
+five bounded font levels, keyboard accessibility and disabled states at limits.
+The review viewport remains fixed inside the approved Theater borders; changing
+font size only changes internal text flow/scroll length.
 
 Keep all previously approved Auditorium mapping: consistent 1.5rem visible gaps;
 source-measured Clapboard overlays; Watched In = language; stars-only rating;
 full posters resized with object-fit: contain; Related Reviews ordered by
 Director, Actor, Actress, Music Director matches then same-language/general
 fallbacks; Related titles inside their red poster openings on subtle black strips;
-and the improved My POV typography. The Auditorium background remains unwired
-while its artwork is being finalized. The Lounge and The Movie Café are
-intentionally unchanged.
+improved My POV typography; approved focus artwork and EXIT behavior. The
+Auditorium background remains unwired while its artwork is being finalized. The
+Lounge and The Movie Café are intentionally unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
