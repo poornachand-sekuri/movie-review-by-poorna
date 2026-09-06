@@ -325,7 +325,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         focusLayer.classList.toggle('is-opinion-focused', kind === 'opinion');
         focusLayer.setAttribute(
           'aria-label',
-          kind === 'opinion' ? 'Enlarged Share Your Opinion' : 'Enlarged Now Screening review',
+          kind === 'opinion' ? 'Enlarged Share Your Opinion' : 'Enlarged Auditorium review',
         );
 
         const focusArtwork = section.querySelector<HTMLImageElement>('[data-auditorium-focus-art]');
