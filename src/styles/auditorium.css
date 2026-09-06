@@ -140,23 +140,21 @@
 
 /* Clapboard live data ----------------------------------------------------- */
 /*
- * The poster viewport is registered to the actual baked red poster box from
- * the approved Clapboard artwork. The full poster is contained inside that
- * box, so no runtime image can cover the red border, the credit rows below it,
- * or the rounded corners.
+ * Exact geometry measured from 03_Clapboard_Details_transparent_runtime_q99:
+ * canvas 1536x1024; poster red stroke x=70..558/y=159..497;
+ * inner opening x=75..553/y=164..492. The runtime viewport therefore uses
+ * only those measured source pixels — no visual percentage tuning.
  */
 .auditorium-movie-poster-frame {
   position: absolute;
-  left: 2.8%;
-  top: 16.0%;
-  width: 32.4%;
-  height: 33.1%;
-  display: grid;
-  place-items: center;
+  left: 4.8828125%;       /* 75 / 1536 */
+  top: 16.015625%;        /* 164 / 1024 */
+  width: 31.1848958333%;  /* 479 / 1536 */
+  height: 32.12890625%;   /* 329 / 1024 */
   overflow: hidden;
   box-sizing: border-box;
   border: 0;
-  border-radius: 1.15cqw;
+  border-radius: 0.6510416667cqw; /* measured ~10 source-px inner corner */
   background: #050505;
 }
 
@@ -164,18 +162,17 @@
   display: block;
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  object-fit: contain;
+  max-width: none;
+  object-fit: cover;
   object-position: center;
-  border-radius: 0.8cqw;
+  border-radius: inherit;
   user-select: none;
   -webkit-user-drag: none;
 }
 
 /*
- * Values are vertically centred on the baked WATCHED IN / RELEASE DATE /
- * RATING labels. They intentionally live on the right side of each row while
- * the artwork owns the labels and icons.
+ * Exact metadata centre-lines measured from the baked icon/label rows:
+ * WATCHED IN y=253, RELEASE DATE y=351.5, RATING y=446 on the 1024px canvas.
  */
 .auditorium-clap-value {
   position: absolute;
@@ -190,14 +187,15 @@
   color: #f5ead8;
   font-size: clamp(10px, 2.15cqw, 18px);
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1;
   letter-spacing: 0.015em;
   text-shadow: 0 1px 4px rgb(0 0 0 / 80%);
+  white-space: nowrap;
 }
 
-.auditorium-clap-value--watched { top: 24.9%; }
-.auditorium-clap-value--release { top: 35.4%; }
-.auditorium-clap-value--rating { top: 45.2%; }
+.auditorium-clap-value--watched { top: 24.70703125%; }   /* 253 / 1024 */
+.auditorium-clap-value--release { top: 34.326171875%; }  /* 351.5 / 1024 */
+.auditorium-clap-value--rating { top: 43.5546875%; }     /* 446 / 1024 */
 
 .auditorium-stars {
   color: #e2af56;
@@ -207,20 +205,25 @@
 }
 
 /*
- * ACTOR / ACTRESS / DIRECTOR / MUSIC DIRECTOR are baked into the approved
- * artwork. Runtime renders values only, directly after each baked colon.
+ * ACTOR / ACTRESS / DIRECTOR / MUSIC DIRECTOR and their colons are baked into
+ * the artwork. Source inspection found every colon on x=373..377. Runtime
+ * values are anchored to the measured colon's right edge (x=377), with one
+ * container unit of typographic breathing room; their y positions are the
+ * measured centre-lines of the four baked label bands.
  */
 .auditorium-credit-value {
   position: absolute;
-  left: 25.5%;
-  width: 66.5%;
+  left: 24.5442708333%; /* 377 / 1536 */
+  width: 67.4557291667%;
   min-width: 0;
+  box-sizing: border-box;
+  padding-left: 1cqw;
   transform: translateY(-50%);
   overflow: hidden;
   color: #efe7dc;
   font-size: clamp(8px, 1.65cqw, 14px);
   font-weight: 500;
-  line-height: 1.1;
+  line-height: 1;
   letter-spacing: 0.005em;
   text-align: left;
   white-space: nowrap;
@@ -228,10 +231,10 @@
   text-shadow: 0 1px 3px rgb(0 0 0 / 82%);
 }
 
-.auditorium-credit-value--actor { top: 61.6%; }
-.auditorium-credit-value--actress { top: 66.3%; }
-.auditorium-credit-value--director { top: 71.4%; }
-.auditorium-credit-value--music { top: 76.6%; }
+.auditorium-credit-value--actor { top: 59.3629882813%; }    /* 607.877 / 1024 */
+.auditorium-credit-value--actress { top: 63.9099609375%; }  /* 654.438 / 1024 */
+.auditorium-credit-value--director { top: 68.398046875%; }  /* 700.396 / 1024 */
+.auditorium-credit-value--music { top: 73.1438476563%; }    /* 748.993 / 1024 */
 
 .auditorium-my-pov {
   position: absolute;
