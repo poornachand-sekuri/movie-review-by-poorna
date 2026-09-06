@@ -154,6 +154,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         aria-expanded="false"
         data-auditorium-theater
         data-auditorium-focusable="theater"
+        data-font-step="2"
         tabindex="0"
       >
         <img
@@ -178,7 +179,32 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         />
 
         <div class="auditorium-source-layer auditorium-theater-content">
-          <article class="auditorium-review-scroll" tabindex="0" set:html={review.bodyHtml}></article>
+          <article
+            id="auditorium-review-body"
+            class="auditorium-review-scroll"
+            tabindex="0"
+            set:html={review.bodyHtml}
+          ></article>
+        </div>
+
+        <div class="auditorium-font-controls" data-auditorium-font-controls aria-label="Review text size">
+          <button
+            type="button"
+            class="auditorium-font-control"
+            aria-label="Decrease review text size"
+            aria-controls="auditorium-review-body"
+            data-auditorium-font-decrease
+            tabindex="-1"
+          >A−</button>
+          <span class="visually-hidden" data-auditorium-font-status aria-live="polite">Review text size: medium</span>
+          <button
+            type="button"
+            class="auditorium-font-control"
+            aria-label="Increase review text size"
+            aria-controls="auditorium-review-body"
+            data-auditorium-font-increase
+            tabindex="-1"
+          >A+</button>
         </div>
 
         <button
@@ -288,6 +314,33 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
     if (page) prepareCinemaPage(page);
 
     const focusableSections = [...document.querySelectorAll<HTMLElement>('[data-auditorium-focusable]')];
+    const theaterSection = document.querySelector<HTMLElement>('[data-auditorium-theater]');
+    const fontDecrease = theaterSection?.querySelector<HTMLButtonElement>('[data-auditorium-font-decrease]') ?? null;
+    const fontIncrease = theaterSection?.querySelector<HTMLButtonElement>('[data-auditorium-font-increase]') ?? null;
+    const fontStatus = theaterSection?.querySelector<HTMLElement>('[data-auditorium-font-status]') ?? null;
+    const fontLabels = ['small', 'compact', 'medium', 'large', 'extra large'] as const;
+    let theaterFontStep = 2;
+
+    const applyTheaterFontStep = (nextStep: number) => {
+      if (!theaterSection) return;
+      theaterFontStep = Math.max(0, Math.min(fontLabels.length - 1, Math.trunc(nextStep)));
+      theaterSection.dataset.fontStep = String(theaterFontStep);
+      if (fontDecrease) fontDecrease.disabled = theaterFontStep === 0;
+      if (fontIncrease) fontIncrease.disabled = theaterFontStep === fontLabels.length - 1;
+      if (fontStatus) fontStatus.textContent = `Review text size: ${fontLabels[theaterFontStep]}`;
+    };
+
+    applyTheaterFontStep(theaterFontStep);
+
+    fontDecrease?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      applyTheaterFontStep(theaterFontStep - 1);
+    });
+
+    fontIncrease?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      applyTheaterFontStep(theaterFontStep + 1);
+    });
 
     if (focusableSections.length > 0) {
       const focusLayer = document.createElement('div');
@@ -303,6 +356,11 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
 
       let focusedSection: HTMLElement | null = null;
       let placeholder: HTMLDivElement | null = null;
+
+      const setFocusedControlsTabIndex = (section: HTMLElement, value: number) => {
+        section.querySelectorAll<HTMLButtonElement>('[data-auditorium-font-decrease], [data-auditorium-font-increase]')
+          .forEach((button) => { button.tabIndex = value; });
+      };
 
       const openFocus = (section: HTMLElement) => {
         if (focusedSection) return;
@@ -334,6 +392,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         focusLayer.classList.add('is-open');
         focusLayer.setAttribute('aria-hidden', 'false');
         document.documentElement.classList.add('auditorium-focus-open');
+        setFocusedControlsTabIndex(section, 0);
 
         const closeButton = section.querySelector<HTMLButtonElement>('[data-auditorium-focus-close]');
         if (closeButton) {
@@ -353,6 +412,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
 
         const closeButton = section.querySelector<HTMLButtonElement>('[data-auditorium-focus-close]');
         if (closeButton) closeButton.tabIndex = -1;
+        setFocusedControlsTabIndex(section, -1);
 
         section.classList.remove('is-auditorium-focused');
         section.setAttribute('aria-expanded', 'false');
