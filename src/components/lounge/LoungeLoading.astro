@@ -1,16 +1,16 @@
 ---
 import { loungeCriticalImages } from '../../lib/lounge-assets';
 
-interface Props { theme?: 'lobby' | 'screening' | 'cafe'; }
-const { theme = 'lobby' } = Astro.props;
+interface Props { theme?: 'lounge' | 'screening' | 'cafe'; }
+const { theme = 'lounge' } = Astro.props;
 const rooms = {
-  lobby: { name: 'The Lobby', message: 'Getting the lounge ready for your grand entrance…', image: '/images/loading/lobby.png' },
+  lounge: { name: 'The Lounge', message: 'Getting the lounge ready for your grand entrance…', image: '/images/loading/lounge.png' },
   screening: { name: 'The Screening Room', message: 'Hold that popcorn. The review is almost ready…', image: '/images/loading/screening.png' },
   cafe: { name: 'The Movie Café', message: 'Fresh picks brewing…', image: '/images/loading/cafe.png' },
 };
 const room = rooms[theme];
 const preview = Astro.url.searchParams.get('loading-preview') === '1';
-const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
+const criticalImages = theme === 'lounge' ? loungeCriticalImages : [];
 ---
 
 <style is:inline>
@@ -123,14 +123,14 @@ const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
     const recovery = screen.querySelector('[data-loading-recovery]');
     const startedAt = Date.now();
     const minimumVisibleMs = 350;
-    const recoveryDelayMs = theme === 'lobby' ? 10000 : 1200;
-    const maximumHoldMs = theme === 'lobby' ? 15000 : 2200;
+    const recoveryDelayMs = theme === 'lounge' ? 10000 : 1200;
+    const maximumHoldMs = theme === 'lounge' ? 15000 : 2200;
     const criticalImages = (() => {
       try { return JSON.parse(screen.dataset.criticalImages || '[]'); }
       catch { return []; }
     })();
-    const fastLobbyEnabled = theme === 'lobby' && !isPreview && criticalImages.length > 0;
-    const fadeMs = fastLobbyEnabled ? 120 : 240;
+    const fastLoungeEnabled = theme === 'lounge' && !isPreview && criticalImages.length > 0;
+    const fadeMs = fastLoungeEnabled ? 120 : 240;
     let revealTimer;
     let slowTimer;
     let revealScheduled = false;
@@ -185,7 +185,7 @@ const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
     };
 
     const openWhenPageParsed = (ready, generation) => {
-      if (!fastLobbyEnabled || generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
+      if (!fastLoungeEnabled || generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
       const openNow = () => {
         if (generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
         revealScheduled = true;
@@ -246,8 +246,8 @@ const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
       if (image.complete) void settleLoadedImage();
     });
 
-    const startFastLobbyProbe = () => {
-      if (!fastLobbyEnabled || root.dataset.loungeState !== 'loading') return;
+    const startFastLoungeProbe = () => {
+      if (!fastLoungeEnabled || root.dataset.loungeState !== 'loading') return;
       const generation = ++fastProbeGeneration;
       let settled = 0;
       progress.value = 0;
@@ -258,7 +258,7 @@ const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
         progress.value = Math.round(settled / criticalImages.length * 100);
       };
 
-      // No short time-based race here. The Lobby opens immediately when the
+      // No short time-based race here. The Lounge opens immediately when the
       // background + Top Navigation + Now Reviewed are paint-ready. The 10s/15s
       // controls below remain the only emergency escape hatches.
       Promise.all(criticalImages.map((url) => loadCriticalImage(url, reportSettled)))
@@ -275,16 +275,16 @@ const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
     }, maximumHoldMs);
 
     // Screening Room / Movie Café still report readiness from prepareCinemaPage.
-    // The Lobby ignores these events because its inline probe is intentionally
+    // The Lounge ignores these events because its inline probe is intentionally
     // independent of the deferred Lounge interaction module.
     document.addEventListener('lounge:loading-progress', (event) => {
-      if (fastLobbyEnabled || root.dataset.loungeState !== 'loading') return;
+      if (fastLoungeEnabled || root.dataset.loungeState !== 'loading') return;
       const { loaded, total } = event.detail;
       progress.value = total ? Math.round(loaded / total * 100) : 0;
     });
 
     document.addEventListener('lounge:loading-error', () => {
-      if (fastLobbyEnabled) return;
+      if (fastLoungeEnabled) return;
       window.clearTimeout(slowTimer);
       reveal(false);
     });
@@ -294,7 +294,7 @@ const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
         progress.value = 100;
         return;
       }
-      if (fastLobbyEnabled) return;
+      if (fastLoungeEnabled) return;
       window.clearTimeout(slowTimer);
       reveal(true);
     });
@@ -309,13 +309,13 @@ const criticalImages = theme === 'lobby' ? loungeCriticalImages : [];
     window.addEventListener('pageshow', (event) => {
       if (!event.persisted) return;
       if (root.dataset.loungeState === 'loading') {
-        if (fastLobbyEnabled) startFastLobbyProbe();
+        if (fastLoungeEnabled) startFastLoungeProbe();
         else document.dispatchEvent(new Event('lounge:resume-loading'));
       } else if (root.dataset.loungeState) {
         finish();
       }
     });
 
-    startFastLobbyProbe();
+    startFastLoungeProbe();
   })();
 </script>

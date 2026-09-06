@@ -30,7 +30,7 @@ Recommended namespace:
 ```text
 ui/site/v1/
 ├── shared/
-├── lobby/
+├── lounge/
 │   ├── compact/
 │   ├── medium/
 │   └── wide/

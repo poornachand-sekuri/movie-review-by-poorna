@@ -1,9 +1,11 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join } from 'node:path';
 
-const runtimeRoots = ['src', 'public'];
-const textExtensions = new Set(['.astro', '.css', '.html', '.js', '.json', '.ts', '.tsx']);
+const namingRoots = ['src', 'public', 'docs', 'scripts', '.github', 'README.md'];
+const textExtensions = new Set(['.astro', '.css', '.html', '.js', '.json', '.md', '.ts', '.tsx', '.yml', '.yaml']);
 const violations = [];
+const retiredHomeName = String.fromCharCode(108, 111, 98, 98, 121);
+const retiredHomePattern = new RegExp(`\\b${retiredHomeName}\\b`, 'i');
 
 const walk = (path) => {
   if (!existsSync(path)) return [];
@@ -19,12 +21,20 @@ const readRequired = (path) => {
   return readFileSync(path, 'utf8');
 };
 
-for (const file of runtimeRoots.flatMap(walk)) {
+for (const file of namingRoots.flatMap(walk)) {
+  if (file.toLowerCase().includes(retiredHomeName)) {
+    violations.push(`${file}: retired Home room name must not appear in project paths`);
+  }
+
   if (!textExtensions.has(extname(file).toLowerCase())) continue;
   const content = readFileSync(file, 'utf8');
 
   if (/responsive/i.test(content)) {
     violations.push(`${file}: reserved project shorthand must not appear in runtime code or UI text`);
+  }
+
+  if (retiredHomePattern.test(content)) {
+    violations.push(`${file}: retired Home room name must not appear in project code, docs or UI text`);
   }
 
   if (content.includes('.lounge-panel__art')) {
@@ -35,17 +45,17 @@ for (const file of runtimeRoots.flatMap(walk)) {
 const index = readRequired('src/pages/index.astro');
 const siteFrame = readRequired('src/layouts/SiteFrame.astro');
 const loungeAssets = readRequired('src/lib/lounge-assets.ts');
-const lobbyCss = readRequired('src/styles/lobby.css');
-const lobbyReset = readRequired('src/styles/lobby-reset.css');
+const loungeCss = readRequired('src/styles/lounge.css');
+const loungeReset = readRequired('src/styles/lounge-reset.css');
 const loungeLoading = readRequired('src/lib/lounge-loading.ts');
-const loadingComponent = readRequired('src/components/lobby/LoungeLoading.astro');
+const loadingComponent = readRequired('src/components/lounge/LoungeLoading.astro');
 
 const removedLoungeFiles = [
-  'src/styles/lobby-content.css',
-  'src/styles/lobby-corners.css',
-  'src/styles/lobby-polish.css',
-  'src/styles/lobby-fit-and-focus.css',
-  'src/components/lobby/LobbyReviewCard.astro',
+  'src/styles/lounge-content.css',
+  'src/styles/lounge-corners.css',
+  'src/styles/lounge-polish.css',
+  'src/styles/lounge-fit-and-focus.css',
+  'src/components/lounge/LoungeReviewCard.astro',
 ];
 
 for (const path of removedLoungeFiles) {
@@ -68,22 +78,22 @@ const runtimeArtwork = [
 ];
 
 for (const file of runtimeArtwork) {
-  if (!lobbyCss.includes(file)) {
-    violations.push(`src/styles/lobby.css: missing Premium Runtime artwork ${file}`);
+  if (!loungeCss.includes(file)) {
+    violations.push(`src/styles/lounge.css: missing Premium Runtime artwork ${file}`);
   }
 }
 
 const legacyArtworkPattern = /Movie_Reviews_By_Poorna[^"')\s]*\.(?:png|avif)/i;
 for (const [path, content] of [
-  ['src/styles/lobby.css', lobbyCss],
-  ['src/styles/lobby-reset.css', lobbyReset],
+  ['src/styles/lounge.css', loungeCss],
+  ['src/styles/lounge-reset.css', loungeReset],
 ]) {
   if (legacyArtworkPattern.test(content)) {
     violations.push(`${path}: legacy PNG/AVIF Lounge runtime artwork reference detected`);
   }
 }
 
-if ((index.match(/import ['"]\.\.\/styles\/lobby\.css['"]/g) ?? []).length !== 1) {
+if ((index.match(/import ['"]\.\.\/styles\/lounge\.css['"]/g) ?? []).length !== 1) {
   violations.push('src/pages/index.astro: Home must import the consolidated Lounge stylesheet exactly once');
 }
 
@@ -108,15 +118,15 @@ for (const critical of runtimeArtwork.slice(0, 3)) {
 }
 
 if (!loadingComponent.includes("import { loungeCriticalImages } from '../../lib/lounge-assets';")) {
-  violations.push('src/components/lobby/LoungeLoading.astro: must consume the shared critical Lounge asset list');
+  violations.push('src/components/lounge/LoungeLoading.astro: must consume the shared critical Lounge asset list');
 }
 
 if (!loadingComponent.includes("typeof image.decode === 'function'") || !loadingComponent.includes('await image.decode()')) {
-  violations.push('src/components/lobby/LoungeLoading.astro: cold-cache critical images must wait for decode before reveal');
+  violations.push('src/components/lounge/LoungeLoading.astro: cold-cache critical images must wait for decode before reveal');
 }
 
-if (loadingComponent.includes('fastLobbyFallbackMs')) {
-  violations.push('src/components/lobby/LoungeLoading.astro: short time-based Lobby reveal race must not bypass the backdrop');
+if (loadingComponent.includes('fastLoungeFallbackMs')) {
+  violations.push('src/components/lounge/LoungeLoading.astro: short time-based Lounge reveal race must not bypass the backdrop');
 }
 
 if (!siteFrame.includes("import { loungeCriticalImages } from '../lib/lounge-assets';") ||
@@ -129,11 +139,11 @@ if (!siteFrame.includes("fetchPriority: 'high' as const")) {
 }
 
 for (const timing of [
-  "const recoveryDelayMs = theme === 'lobby' ? 10000 : 1200;",
-  "const maximumHoldMs = theme === 'lobby' ? 15000 : 2200;",
+  "const recoveryDelayMs = theme === 'lounge' ? 10000 : 1200;",
+  "const maximumHoldMs = theme === 'lounge' ? 15000 : 2200;",
 ]) {
   if (!loadingComponent.includes(timing)) {
-    violations.push(`src/components/lobby/LoungeLoading.astro: loader guardrail changed unexpectedly: ${timing}`);
+    violations.push(`src/components/lounge/LoungeLoading.astro: loader guardrail changed unexpectedly: ${timing}`);
   }
 }
 

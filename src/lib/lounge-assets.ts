@@ -8,7 +8,7 @@ export const loungeRuntimeAssets = {
 
 /**
  * First-paint artwork that must already be paintable before the loading curtain
- * leaves on a cold Lobby visit. Keep the background first because it is the
+ * leaves on a cold Lounge visit. Keep the background first because it is the
  * largest visual and is also preloaded from <head> at high priority.
  */
 export const loungeCriticalImages = [

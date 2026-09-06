@@ -1,5 +1,5 @@
 /* Lounge visual entrypoint. Keep all Home/Lounge presentation in this cascade. */
-@import './lobby-reset.css';
+@import './lounge-reset.css';
 
 /* Premium Q99 runtime artwork. Archival PNG/lossless WebP masters remain in R2. */
 .lounge-backdrop {

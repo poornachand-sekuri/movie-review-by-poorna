@@ -118,7 +118,7 @@ function armProgressivePosters(page: HTMLElement): void {
 }
 
 /**
- * The inline Lobby loader owns first-screen readiness so it can reveal before
+ * The inline Lounge loader owns first-screen readiness so it can reveal before
  * this deferred page module executes. This runtime owns poster scheduling only.
  */
 export function prepareLounge(page: HTMLElement): void {

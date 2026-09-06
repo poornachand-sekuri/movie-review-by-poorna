@@ -1,8 +1,8 @@
 ---
 import SiteFrame from '../layouts/SiteFrame.astro';
-import LoungeLoading from '../components/lobby/LoungeLoading.astro';
+import LoungeLoading from '../components/lounge/LoungeLoading.astro';
 import { listReviews } from '../lib/data/reviews';
-import '../styles/lobby.css';
+import '../styles/lounge.css';
 
 export const prerender = false;
 
@@ -564,7 +564,7 @@ const featuredPov = featured?.verdict?.trim() || '';
 
         if (section.classList.contains('lounge-panel--opinion')) {
           // Typing opens the readable ticket while retaining the selected field
-          // and its value. The Lobby's locked outer width stays unchanged.
+          // and its value. The Lounge's locked outer width stays unchanged.
           section.addEventListener('focusin', (event) => {
             const target = event.target;
             if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {

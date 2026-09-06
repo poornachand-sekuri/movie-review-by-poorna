@@ -60,7 +60,7 @@ test('cached, broken and undecodable images are distinguished', async () => {
   await assert.rejects(waitForImage(corrupt), /decode failed/);
 });
 
-test('prepareLounge schedules lower posters without duplicating Lobby readiness work', () => {
+test('prepareLounge schedules lower posters without duplicating Lounge readiness work', () => {
   const original = {
     document: globalThis.document,
     window: globalThis.window,
@@ -171,13 +171,13 @@ function cinemaEnvironment({ poster = new ImageDouble(), badArtwork = false } = 
 }
 
 function loadingScreenHarness({
-  room = 'The Lobby',
-  theme = 'lobby',
+  room = 'The Lounge',
+  theme = 'lounge',
   preview = false,
   criticalImages = [],
   pageParsed = false,
 } = {}) {
-  const source = readFileSync(new URL('../src/components/lobby/LoungeLoading.astro', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../src/components/lounge/LoungeLoading.astro', import.meta.url), 'utf8');
   const script = source.match(/<script is:inline>([\s\S]*?)<\/script>/)[1];
 
   const root = { dataset: {} };
@@ -248,7 +248,7 @@ function loadingScreenHarness({
   return { root, message, progress, recovery, buttons, document, window, timers, frames, reloaded: () => reloaded };
 }
 
-test('Lobby emergency guardrails remain ten-second recovery and fifteen-second hard fail-open', () => {
+test('Lounge emergency guardrails remain ten-second recovery and fifteen-second hard fail-open', () => {
   const h = loadingScreenHarness();
   assert.equal(h.root.dataset.loungeState, 'loading');
 
@@ -273,7 +273,7 @@ test('Lobby emergency guardrails remain ten-second recovery and fifteen-second h
   assert.equal(h.root.dataset.loungeState, undefined);
 });
 
-test('fast Lobby probe opens as soon as critical frames and page markup are ready', async () => {
+test('fast Lounge probe opens as soon as critical frames and page markup are ready', async () => {
   const h = loadingScreenHarness({
     criticalImages: ['/banner.webp', '/now.webp'],
     pageParsed: true,

@@ -1,5 +1,5 @@
 :root {
-  /* Layout scale. Visual identity values remain deliberately neutral until The Lobby artwork is approved. */
+  /* Layout scale. Visual identity values remain deliberately neutral until The Lounge artwork is approved. */
   --layout-max: 90rem;
   --layout-reading: 46rem;
   --layout-gutter: clamp(1rem, 0.55rem + 2.1vw, 3rem);

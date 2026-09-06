@@ -1,7 +1,7 @@
 /*
  * Premier Lounge structural baseline.
  * Data, routes and interaction behavior remain in Astro/TypeScript; runtime
- * artwork URLs and final presentation overrides live in lobby.css.
+ * artwork URLs and final presentation overrides live in lounge.css.
  */
 
 .lounge-page {
@@ -656,7 +656,7 @@
 }
 
 /* The approved 09 Exit artwork reserves space above its ticket. These content
-   coordinates follow that image; the normal 06 Lobby layout keeps its geometry. */
+   coordinates follow that image; the normal 06 Lounge layout keeps its geometry. */
 .lounge-panel--opinion.is-lounge-focused .comments-window {
   left: 11.8519%;
   top: 20.3984%;
