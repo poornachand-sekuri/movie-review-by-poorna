@@ -41,16 +41,16 @@ function fallbackList(key: AuditoriumAssetKey): string {
   return auditoriumAssetCandidates[key].slice(1).join('|');
 }
 
-function extraString(...keys: string[]): string | null {
+function extraString(extra: Readonly<Record<string, unknown>>, ...keys: string[]): string | null {
   for (const key of keys) {
-    const value = review.extra[key];
+    const value = extra[key];
     if (typeof value === 'string' && value.trim()) return value.trim();
   }
   return null;
 }
 
 const watchedIn =
-  extraString('watchedIn', 'watched_in', 'watchType', 'watch_type', 'platform', 'venue') ?? '—';
+  extraString(review.extra, 'watchedIn', 'watched_in', 'watchType', 'watch_type', 'platform', 'venue') ?? '—';
 
 const credits = review.credits.slice(0, 4);
 
@@ -346,16 +346,7 @@ const related = [...sameLanguage, ...recentReviews]
           await navigator.clipboard.writeText(shareUrl);
           setShareStatus('Review link copied.');
         } catch {
-          const field = document.createElement('textarea');
-          field.value = shareUrl;
-          field.setAttribute('readonly', '');
-          field.style.position = 'fixed';
-          field.style.opacity = '0';
-          document.body.append(field);
-          field.select();
-          document.execCommand('copy');
-          field.remove();
-          setShareStatus('Review link copied.');
+          setShareStatus('Could not copy the review link.');
         }
       };
 
