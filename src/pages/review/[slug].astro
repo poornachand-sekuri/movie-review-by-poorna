@@ -2,7 +2,7 @@
 import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
 import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
-import { getReviewBySlug, listRelatedReviewsByCredits } from '../../lib/data/reviews';
+import { getReviewBySlug, listRelatedReviewsByCredits, listReviews } from '../../lib/data/reviews';
 import '../../styles/auditorium.css';
 
 export const prerender = false;
@@ -15,7 +15,29 @@ if (!loadedReview) {
 }
 
 const review = loadedReview;
-const relatedReviews = await listRelatedReviewsByCredits(review.id, 4);
+const creditMatches = await listRelatedReviewsByCredits(review.id, 4);
+const relatedReviews = [...creditMatches];
+const relatedSlugs = new Set([review.slug, ...relatedReviews.map((item) => item.slug)]);
+
+if (relatedReviews.length < 4 && review.language) {
+  const sameLanguageFallback = await listReviews({ limit: 20, language: review.language });
+  for (const item of sameLanguageFallback) {
+    if (relatedSlugs.has(item.slug)) continue;
+    relatedReviews.push(item);
+    relatedSlugs.add(item.slug);
+    if (relatedReviews.length === 4) break;
+  }
+}
+
+if (relatedReviews.length < 4) {
+  const generalFallback = await listReviews({ limit: 24 });
+  for (const item of generalFallback) {
+    if (relatedSlugs.has(item.slug)) continue;
+    relatedReviews.push(item);
+    relatedSlugs.add(item.slug);
+    if (relatedReviews.length === 4) break;
+  }
+}
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   day: '2-digit',
