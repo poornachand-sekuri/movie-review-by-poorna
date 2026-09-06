@@ -313,7 +313,7 @@ test('café with no content images opens immediately', async () => {
   } finally { env.restore(); }
 });
 
-test('screening room waits only for the first poster and then opens', async () => {
+test('auditorium waits only for the first poster and then opens', async () => {
   const posterGate = deferred();
   const poster = new ImageDouble();
   poster.decodeResult = posterGate.promise;
@@ -332,7 +332,7 @@ test('screening room waits only for the first poster and then opens', async () =
   } finally { env.restore(); }
 });
 
-test('broken screening poster reports the problem but still opens', async () => {
+test('broken auditorium poster reports the problem but still opens', async () => {
   const poster = new ImageDouble();
   poster.naturalWidth = 0;
   const env = cinemaEnvironment({ poster });
