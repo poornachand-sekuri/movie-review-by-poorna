@@ -187,26 +187,6 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
           ></article>
         </div>
 
-        <div class="auditorium-font-controls" data-auditorium-font-controls aria-label="Review text size">
-          <button
-            type="button"
-            class="auditorium-font-control"
-            aria-label="Decrease review text size"
-            aria-controls="auditorium-review-body"
-            data-auditorium-font-decrease
-            tabindex="-1"
-          >A−</button>
-          <span class="visually-hidden" data-auditorium-font-status aria-live="polite">Review text size: medium</span>
-          <button
-            type="button"
-            class="auditorium-font-control"
-            aria-label="Increase review text size"
-            aria-controls="auditorium-review-body"
-            data-auditorium-font-increase
-            tabindex="-1"
-          >A+</button>
-        </div>
-
         <button
           class="auditorium-focus-close auditorium-focus-close--theater"
           type="button"
@@ -315,32 +295,8 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
 
     const focusableSections = [...document.querySelectorAll<HTMLElement>('[data-auditorium-focusable]')];
     const theaterSection = document.querySelector<HTMLElement>('[data-auditorium-theater]');
-    const fontDecrease = theaterSection?.querySelector<HTMLButtonElement>('[data-auditorium-font-decrease]') ?? null;
-    const fontIncrease = theaterSection?.querySelector<HTMLButtonElement>('[data-auditorium-font-increase]') ?? null;
-    const fontStatus = theaterSection?.querySelector<HTMLElement>('[data-auditorium-font-status]') ?? null;
     const fontLabels = ['small', 'compact', 'medium', 'large', 'extra large'] as const;
     let theaterFontStep = 2;
-
-    const applyTheaterFontStep = (nextStep: number) => {
-      if (!theaterSection) return;
-      theaterFontStep = Math.max(0, Math.min(fontLabels.length - 1, Math.trunc(nextStep)));
-      theaterSection.dataset.fontStep = String(theaterFontStep);
-      if (fontDecrease) fontDecrease.disabled = theaterFontStep === 0;
-      if (fontIncrease) fontIncrease.disabled = theaterFontStep === fontLabels.length - 1;
-      if (fontStatus) fontStatus.textContent = `Review text size: ${fontLabels[theaterFontStep]}`;
-    };
-
-    applyTheaterFontStep(theaterFontStep);
-
-    fontDecrease?.addEventListener('click', (event) => {
-      event.stopPropagation();
-      applyTheaterFontStep(theaterFontStep - 1);
-    });
-
-    fontIncrease?.addEventListener('click', (event) => {
-      event.stopPropagation();
-      applyTheaterFontStep(theaterFontStep + 1);
-    });
 
     if (focusableSections.length > 0) {
       const focusLayer = document.createElement('div');
@@ -351,16 +307,72 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
 
       const focusStage = document.createElement('div');
       focusStage.className = 'auditorium-focus-stage';
+
+      const readingToolbar = document.createElement('div');
+      readingToolbar.className = 'auditorium-reading-toolbar';
+      readingToolbar.setAttribute('role', 'group');
+      readingToolbar.setAttribute('aria-label', 'Review text size controls');
+      readingToolbar.hidden = true;
+
+      const toolbarMessage = document.createElement('span');
+      toolbarMessage.className = 'auditorium-reading-toolbar-message';
+      toolbarMessage.textContent = 'Adjust text size for comfortable reading';
+
+      const toolbarActions = document.createElement('div');
+      toolbarActions.className = 'auditorium-reading-toolbar-actions';
+
+      const fontDecrease = document.createElement('button');
+      fontDecrease.type = 'button';
+      fontDecrease.className = 'auditorium-font-control';
+      fontDecrease.setAttribute('aria-label', 'Decrease review text size');
+      fontDecrease.setAttribute('aria-controls', 'auditorium-review-body');
+      fontDecrease.textContent = 'A−';
+      fontDecrease.tabIndex = -1;
+
+      const fontIncrease = document.createElement('button');
+      fontIncrease.type = 'button';
+      fontIncrease.className = 'auditorium-font-control';
+      fontIncrease.setAttribute('aria-label', 'Increase review text size');
+      fontIncrease.setAttribute('aria-controls', 'auditorium-review-body');
+      fontIncrease.textContent = 'A+';
+      fontIncrease.tabIndex = -1;
+
+      const fontStatus = document.createElement('span');
+      fontStatus.className = 'visually-hidden';
+      fontStatus.setAttribute('aria-live', 'polite');
+
+      toolbarActions.appendChild(fontDecrease);
+      toolbarActions.appendChild(fontIncrease);
+      readingToolbar.appendChild(toolbarMessage);
+      readingToolbar.appendChild(toolbarActions);
+      readingToolbar.appendChild(fontStatus);
+      focusStage.appendChild(readingToolbar);
       focusLayer.appendChild(focusStage);
       document.body.appendChild(focusLayer);
 
+      const applyTheaterFontStep = (nextStep: number) => {
+        if (!theaterSection) return;
+        theaterFontStep = Math.max(0, Math.min(fontLabels.length - 1, Math.trunc(nextStep)));
+        theaterSection.dataset.fontStep = String(theaterFontStep);
+        fontDecrease.disabled = theaterFontStep === 0;
+        fontIncrease.disabled = theaterFontStep === fontLabels.length - 1;
+        fontStatus.textContent = `Review text size: ${fontLabels[theaterFontStep]}`;
+      };
+
+      applyTheaterFontStep(theaterFontStep);
+
+      fontDecrease.addEventListener('click', (event) => {
+        event.stopPropagation();
+        applyTheaterFontStep(theaterFontStep - 1);
+      });
+
+      fontIncrease.addEventListener('click', (event) => {
+        event.stopPropagation();
+        applyTheaterFontStep(theaterFontStep + 1);
+      });
+
       let focusedSection: HTMLElement | null = null;
       let placeholder: HTMLDivElement | null = null;
-
-      const setFocusedControlsTabIndex = (section: HTMLElement, value: number) => {
-        section.querySelectorAll<HTMLButtonElement>('[data-auditorium-font-decrease], [data-auditorium-font-increase]')
-          .forEach((button) => { button.tabIndex = value; });
-      };
 
       const openFocus = (section: HTMLElement) => {
         if (focusedSection) return;
@@ -380,11 +392,16 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         section.setAttribute('aria-expanded', 'true');
 
         const kind = section.dataset.auditoriumFocusable ?? 'section';
+        const isTheater = kind === 'theater';
         focusLayer.classList.toggle('is-opinion-focused', kind === 'opinion');
         focusLayer.setAttribute(
           'aria-label',
           kind === 'opinion' ? 'Enlarged Share Your Opinion' : 'Enlarged Auditorium review',
         );
+
+        readingToolbar.hidden = !isTheater;
+        fontDecrease.tabIndex = isTheater ? 0 : -1;
+        fontIncrease.tabIndex = isTheater ? 0 : -1;
 
         const focusArtwork = section.querySelector<HTMLImageElement>('[data-auditorium-focus-art]');
         if (focusArtwork) focusArtwork.hidden = false;
@@ -392,7 +409,6 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         focusLayer.classList.add('is-open');
         focusLayer.setAttribute('aria-hidden', 'false');
         document.documentElement.classList.add('auditorium-focus-open');
-        setFocusedControlsTabIndex(section, 0);
 
         const closeButton = section.querySelector<HTMLButtonElement>('[data-auditorium-focus-close]');
         if (closeButton) {
@@ -412,7 +428,10 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
 
         const closeButton = section.querySelector<HTMLButtonElement>('[data-auditorium-focus-close]');
         if (closeButton) closeButton.tabIndex = -1;
-        setFocusedControlsTabIndex(section, -1);
+
+        readingToolbar.hidden = true;
+        fontDecrease.tabIndex = -1;
+        fontIncrease.tabIndex = -1;
 
         section.classList.remove('is-auditorium-focused');
         section.setAttribute('aria-expanded', 'false');
