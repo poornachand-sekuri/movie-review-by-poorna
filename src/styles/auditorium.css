@@ -428,6 +428,10 @@
 .auditorium-focus-stage {
   width: min(94vw, 1120px);
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(8px, 1.2vh, 14px);
 }
 
 .auditorium-focus-layer.is-opinion-focused .auditorium-focus-stage {
@@ -437,6 +441,92 @@
 .auditorium-focus-stage > .auditorium-section {
   width: 100% !important;
   max-width: none;
+}
+
+.auditorium-reading-toolbar {
+  align-self: center;
+  width: min(92%, 760px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(10px, 2vw, 20px);
+  box-sizing: border-box;
+  padding: clamp(8px, 1.1vw, 12px) clamp(10px, 1.7vw, 18px);
+  border: 1px solid rgb(215 52 44 / 72%);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgb(27 8 8 / 94%), rgb(7 7 7 / 96%)),
+    rgb(7 7 7 / 96%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 4%),
+    0 0 18px rgb(210 34 28 / 12%),
+    0 8px 24px rgb(0 0 0 / 42%);
+  color: #f7ead9;
+}
+
+.auditorium-reading-toolbar[hidden] {
+  display: none;
+}
+
+.auditorium-reading-toolbar-message {
+  min-width: 0;
+  font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
+  font-size: clamp(11px, 1.35vw, 15px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px #000;
+}
+
+.auditorium-reading-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: clamp(6px, 0.8vw, 10px);
+}
+
+.auditorium-font-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(42px, 5vw, 54px);
+  height: clamp(34px, 4vw, 44px);
+  margin: 0;
+  padding: 0 clamp(9px, 1vw, 13px);
+  border: 1px solid rgb(231 73 62 / 78%);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 18%, rgb(126 29 24 / 28%), transparent 60%),
+    rgb(8 8 8 / 96%);
+  color: #fff2df;
+  font: 800 clamp(14px, 1.55vw, 18px) / 1 Arial, sans-serif;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 2px #000;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 5%),
+    0 0 10px rgb(214 45 37 / 10%);
+  cursor: pointer;
+}
+
+.auditorium-font-control:hover:not(:disabled) {
+  border-color: rgb(255 102 88 / 95%);
+  background:
+    radial-gradient(circle at 50% 18%, rgb(164 38 31 / 40%), transparent 62%),
+    rgb(15 6 6 / 98%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 7%),
+    0 0 14px rgb(230 51 41 / 20%);
+}
+
+.auditorium-font-control:disabled {
+  opacity: 0.36;
+  cursor: default;
+}
+
+.auditorium-font-control:focus-visible {
+  outline: 2px solid #f0bb67;
+  outline-offset: 2px;
 }
 
 .auditorium-section.is-auditorium-focused {
@@ -485,55 +575,6 @@
 
 .auditorium-section--theater.is-auditorium-focused[data-font-step="4"] .auditorium-review-scroll {
   font-size: clamp(21px, 2.7cqw, 29px);
-}
-
-.auditorium-font-controls {
-  position: absolute;
-  z-index: 7;
-  top: 10.6813996317%;
-  right: 8.2872928177%;
-  display: none;
-  align-items: center;
-  gap: clamp(5px, 0.7cqw, 9px);
-  pointer-events: auto;
-}
-
-.auditorium-section--theater.is-auditorium-focused .auditorium-font-controls {
-  display: flex;
-}
-
-.auditorium-font-control {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: clamp(34px, 4.4cqw, 46px);
-  height: clamp(30px, 3.7cqw, 40px);
-  margin: 0;
-  padding: 0;
-  border: 1px solid rgb(210 54 48 / 72%);
-  border-radius: 999px;
-  background: rgb(4 4 4 / 82%);
-  color: #fff0dd;
-  font: 800 clamp(13px, 1.55cqw, 18px) / 1 Arial, sans-serif;
-  letter-spacing: -0.02em;
-  text-shadow: 0 1px 2px #000;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 5%), 0 4px 14px rgb(0 0 0 / 45%);
-  cursor: pointer;
-}
-
-.auditorium-font-control:hover:not(:disabled) {
-  border-color: rgb(245 84 72 / 92%);
-  background: rgb(24 5 5 / 90%);
-}
-
-.auditorium-font-control:disabled {
-  opacity: 0.38;
-  cursor: default;
-}
-
-.auditorium-font-control:focus-visible {
-  outline: 2px solid #f0bb67;
-  outline-offset: 2px;
 }
 
 .auditorium-focus-close {
@@ -621,13 +662,34 @@
     width: min(96vw, 640px);
   }
 
+  .auditorium-reading-toolbar {
+    width: 96%;
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: 18px;
+  }
+
+  .auditorium-reading-toolbar-message {
+    font-size: clamp(9px, 2.65vw, 11px);
+    line-height: 1.12;
+    letter-spacing: 0.025em;
+    text-transform: none;
+  }
+
+  .auditorium-reading-toolbar-actions {
+    gap: 5px;
+  }
+
+  .auditorium-font-control {
+    min-width: 42px;
+    height: 34px;
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+
   .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
     padding: 1.05cqw 2cqw 1.4cqw;
     line-height: 1.52;
-  }
-
-  .auditorium-font-controls {
-    gap: 5px;
   }
 }
 
