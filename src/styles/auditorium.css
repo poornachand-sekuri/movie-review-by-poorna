@@ -259,14 +259,20 @@
   pointer-events: none;
 }
 
+/*
+ * Normal Theater text viewport uses source-pixel geometry on the 1448x1086
+ * artwork. Starting at y=140 removes the oversized empty top band, while the
+ * viewport ends at y=675 so the baked big-screen prompt retains roughly one
+ * text-line of clear breathing room above it.
+ */
 .auditorium-review-scroll {
   position: absolute;
   left: 13.6%;
-  top: 18.2%;
+  top: 12.8913443831%;
   width: 72.8%;
-  height: 45.5%;
+  height: 49.2633517495%;
   box-sizing: border-box;
-  padding: 2.1cqw 2.4cqw 2.2cqw;
+  padding: 1.05cqw 2.4cqw 1.4cqw;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -446,10 +452,88 @@
 .auditorium-section.is-auditorium-focused > .auditorium-state-layer { transform: none; }
 .auditorium-section.is-auditorium-focused > .auditorium-source-layer { transform: none; }
 
+/*
+ * Focused review viewport is fixed safely inside the approved Theater screen.
+ * Font-size controls only change text flow inside this box; overflow stays
+ * scrollable, so no font level can cross the artwork boundaries.
+ */
 .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
-  font-size: clamp(14px, 1.8cqw, 20px);
-  line-height: 1.62;
+  left: 8.2872928177%;
+  top: 16.5745856354%;
+  width: 83.4254143646%;
+  height: 56.1694290976%;
+  padding: 1.15cqw 2.05cqw 1.65cqw;
+  line-height: 1.58;
   scrollbar-width: auto;
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="0"] .auditorium-review-scroll {
+  font-size: clamp(13px, 1.55cqw, 17px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="1"] .auditorium-review-scroll {
+  font-size: clamp(15px, 1.8cqw, 20px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="2"] .auditorium-review-scroll {
+  font-size: clamp(17px, 2.1cqw, 23px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="3"] .auditorium-review-scroll {
+  font-size: clamp(19px, 2.4cqw, 26px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="4"] .auditorium-review-scroll {
+  font-size: clamp(21px, 2.7cqw, 29px);
+}
+
+.auditorium-font-controls {
+  position: absolute;
+  z-index: 7;
+  top: 10.6813996317%;
+  right: 8.2872928177%;
+  display: none;
+  align-items: center;
+  gap: clamp(5px, 0.7cqw, 9px);
+  pointer-events: auto;
+}
+
+.auditorium-section--theater.is-auditorium-focused .auditorium-font-controls {
+  display: flex;
+}
+
+.auditorium-font-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(34px, 4.4cqw, 46px);
+  height: clamp(30px, 3.7cqw, 40px);
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgb(210 54 48 / 72%);
+  border-radius: 999px;
+  background: rgb(4 4 4 / 82%);
+  color: #fff0dd;
+  font: 800 clamp(13px, 1.55cqw, 18px) / 1 Arial, sans-serif;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 2px #000;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 5%), 0 4px 14px rgb(0 0 0 / 45%);
+  cursor: pointer;
+}
+
+.auditorium-font-control:hover:not(:disabled) {
+  border-color: rgb(245 84 72 / 92%);
+  background: rgb(24 5 5 / 90%);
+}
+
+.auditorium-font-control:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.auditorium-font-control:focus-visible {
+  outline: 2px solid #f0bb67;
+  outline-offset: 2px;
 }
 
 .auditorium-focus-close {
@@ -516,7 +600,7 @@
   }
 
   .auditorium-review-scroll {
-    padding: 2cqw 2.2cqw;
+    padding: 1cqw 2.2cqw 1.35cqw;
     font-size: clamp(9px, 2.55cqw, 12px);
     line-height: 1.45;
   }
@@ -538,8 +622,12 @@
   }
 
   .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
-    font-size: clamp(11px, 2.8cqw, 15px);
-    line-height: 1.5;
+    padding: 1.05cqw 2cqw 1.4cqw;
+    line-height: 1.52;
+  }
+
+  .auditorium-font-controls {
+    gap: 5px;
   }
 }
 
