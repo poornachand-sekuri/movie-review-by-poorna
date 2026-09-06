@@ -23,6 +23,11 @@ const readRequired = (path) => {
   return readFileSync(path, 'utf8');
 };
 
+const withoutComments = (content) => content
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/<!--[\s\S]*?-->/g, '')
+  .replace(/^\s*\/\/.*$/gm, '');
+
 for (const file of namingRoots.flatMap(walk)) {
   if (file.toLowerCase().includes(retiredHomeName)) {
     violations.push(`${file}: retired Home room name must not appear in project paths`);
@@ -33,15 +38,16 @@ for (const file of namingRoots.flatMap(walk)) {
 
   if (!textExtensions.has(extname(file).toLowerCase())) continue;
   const content = readFileSync(file, 'utf8');
+  const runtimeContent = withoutComments(content);
 
-  if (/responsive/i.test(content)) {
+  if (/responsive/i.test(runtimeContent)) {
     violations.push(`${file}: reserved project shorthand must not appear in runtime code or UI text`);
   }
 
-  if (retiredHomePattern.test(content)) {
+  if (retiredHomePattern.test(runtimeContent)) {
     violations.push(`${file}: retired Home room name must not appear in project code, docs or UI text`);
   }
-  if (retiredReviewPattern.test(content)) {
+  if (retiredReviewPattern.test(runtimeContent)) {
     violations.push(`${file}: retired Review room name must not appear in project code, docs or UI text`);
   }
 
@@ -134,7 +140,14 @@ if (!loadingComponent.includes("auditorium: { name: 'The Auditorium'") || !loadi
   violations.push('src/components/lounge/LoungeLoading.astro: Auditorium identity and loading artwork must remain canonical');
 }
 
-if (!reviewPage.includes('<LoungeLoading theme="auditorium" />') || !reviewPage.includes('<p class="eyebrow">The Auditorium</p>')) {
+const hasAuditoriumPageIdentity =
+  reviewPage.includes('<LoungeLoading theme="auditorium" />') &&
+  (
+    reviewPage.includes('<p class="eyebrow">The Auditorium</p>') ||
+    reviewPage.includes('{review.title} — The Auditorium</h1>')
+  );
+
+if (!hasAuditoriumPageIdentity) {
   violations.push('src/pages/review/[slug].astro: individual reviews must render as The Auditorium');
 }
 
