@@ -1,1 +1,1 @@
-Measure exact Cast & Crew colon/value start positions from the approved v4 Clapboard.
+Locate the exact baked Cast & Crew colon axis in the approved v4 Clapboard.
