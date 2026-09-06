@@ -2,7 +2,7 @@
 import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
 import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
-import { getReviewBySlug } from '../../lib/data/reviews';
+import { getReviewBySlug, listReviews } from '../../lib/data/reviews';
 import '../../styles/auditorium.css';
 
 export const prerender = false;
@@ -13,6 +13,54 @@ const review = await getReviewBySlug(slug);
 if (!review) {
   return Astro.redirect('/');
 }
+
+const relatedPool = await listReviews({
+  limit: 10,
+  language: review.language ?? undefined,
+});
+const relatedReviews = relatedPool.filter((item) => item.slug !== review.slug).slice(0, 4);
+
+const dateFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+function formatDate(value: string | null): string {
+  if (!value) return '—';
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
+}
+
+function ratingText(value: number | null): string {
+  if (value === null || !Number.isFinite(Number(value))) return '—';
+  const rating = Math.max(0, Math.min(5, Number(value)));
+  const rounded = Math.round(rating);
+  return `${'★'.repeat(rounded)}${'☆'.repeat(5 - rounded)}`;
+}
+
+function extraString(keys: readonly string[]): string | null {
+  for (const key of keys) {
+    const value = review.extra[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+const watchedIn = extraString([
+  'watchedIn',
+  'watched_in',
+  'cinema',
+  'venue',
+  'theatre',
+  'theater',
+  'format',
+]);
+
+const directors = review.credits.filter((credit) => credit.role === 'director');
+const music = review.credits.filter((credit) => credit.role === 'music_director');
+const cast = review.credits.filter((credit) => credit.role === 'actor' || credit.role === 'actress');
 ---
 
 <SiteFrame
@@ -38,7 +86,7 @@ if (!review) {
         />
       </section>
 
-      <section class="auditorium-section auditorium-section--clapboard" aria-label="Movie details clapboard">
+      <section class="auditorium-section auditorium-section--clapboard" aria-label={`${review.title} movie details`}>
         <img
           class="auditorium-artwork"
           src={assets.clapboard.src}
@@ -48,9 +96,40 @@ if (!review) {
           loading="lazy"
           decoding="async"
         />
+
+        <div class="auditorium-source-layer auditorium-clapboard-content">
+          {
+            review.posterUrl && (
+              <img
+                class="auditorium-movie-poster"
+                src={review.posterUrl}
+                alt={`${review.title} poster`}
+                loading="eager"
+                decoding="async"
+              />
+            )
+          }
+
+          <div class="auditorium-clap-value auditorium-clap-value--watched">{watchedIn ?? '—'}</div>
+          <div class="auditorium-clap-value auditorium-clap-value--release">{formatDate(review.releaseDate)}</div>
+          <div class="auditorium-clap-value auditorium-clap-value--rating" aria-label={`${review.rating ?? 'No'} out of 5 stars`}>
+            <span class="auditorium-stars">{ratingText(review.rating)}</span>
+            {review.rating !== null && <span class="auditorium-rating-number">{Number(review.rating).toFixed(1)} / 5</span>}
+          </div>
+
+          <div class="auditorium-cast-crew">
+            {directors.length > 0 && <p><strong>Director</strong><span>{directors.map((credit) => credit.name).join(', ')}</span></p>}
+            {music.length > 0 && <p><strong>Music</strong><span>{music.map((credit) => credit.name).join(', ')}</span></p>}
+            {cast.length > 0 && <p><strong>Cast</strong><span>{cast.map((credit) => credit.name).join(', ')}</span></p>}
+          </div>
+
+          <div class="auditorium-my-pov">
+            <p>{review.verdict ?? review.excerpt ?? '—'}</p>
+          </div>
+        </div>
       </section>
 
-      <section class="auditorium-section auditorium-section--theater" aria-label="Theater screen and reactions" data-auditorium-theater>
+      <section class="auditorium-section auditorium-section--theater" aria-label={`${review.title} full review`} data-auditorium-theater>
         <img
           class="auditorium-artwork"
           src={assets.theater.src}
@@ -60,6 +139,10 @@ if (!review) {
           loading="lazy"
           decoding="async"
         />
+
+        <div class="auditorium-source-layer auditorium-theater-content">
+          <article class="auditorium-review-scroll" tabindex="0" set:html={review.bodyHtml}></article>
+        </div>
       </section>
 
       <section class="auditorium-section auditorium-section--share" aria-label="Share this review">
@@ -84,6 +167,19 @@ if (!review) {
           loading="lazy"
           decoding="async"
         />
+
+        <div class="auditorium-source-layer auditorium-related-grid">
+          {
+            relatedReviews.map((item) => (
+              <a class="auditorium-related-card" href={`/review/${item.slug}`} aria-label={`Read ${item.title} review`}>
+                {item.posterUrl && (
+                  <img src={item.posterUrl} alt={`${item.title} poster`} loading="lazy" decoding="async" />
+                )}
+                <span class="auditorium-related-title">{item.title}</span>
+              </a>
+            ))
+          }
+        </div>
       </section>
 
       <section class="auditorium-section auditorium-section--opinion" aria-label="Share your opinion" data-auditorium-opinion>
