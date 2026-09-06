@@ -40,24 +40,7 @@ function ratingText(value: number | null): string {
   return `${'★'.repeat(rounded)}${'☆'.repeat(5 - rounded)}`;
 }
 
-function extraString(keys: readonly string[]): string | null {
-  for (const key of keys) {
-    const value = review.extra[key];
-    if (typeof value === 'string' && value.trim()) return value.trim();
-  }
-  return null;
-}
-
-const watchedIn = extraString([
-  'watchedIn',
-  'watched_in',
-  'cinema',
-  'venue',
-  'theatre',
-  'theater',
-  'format',
-]);
-
+const watchedIn = review.language?.trim() || '—';
 const directors = review.credits.filter((credit) => credit.role === 'director');
 const music = review.credits.filter((credit) => credit.role === 'music_director');
 const cast = review.credits.filter((credit) => credit.role === 'actor' || credit.role === 'actress');
@@ -110,7 +93,7 @@ const cast = review.credits.filter((credit) => credit.role === 'actor' || credit
             )
           }
 
-          <div class="auditorium-clap-value auditorium-clap-value--watched">{watchedIn ?? '—'}</div>
+          <div class="auditorium-clap-value auditorium-clap-value--watched">{watchedIn}</div>
           <div class="auditorium-clap-value auditorium-clap-value--release">{formatDate(review.releaseDate)}</div>
           <div class="auditorium-clap-value auditorium-clap-value--rating" aria-label={`${review.rating ?? 'No'} out of 5 stars`}>
             <span class="auditorium-stars">{ratingText(review.rating)}</span>
