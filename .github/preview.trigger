@@ -1,5 +1,8 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
+2026-09-06: Re-run after fixing the Auditorium asset-map typing, review-data
+nullability and copy-link DOM fallback reported by Astro's strict type gate.
+
 2026-09-06: Re-run the Auditorium v4 deployment after updating the runtime guardrail
 to recognize the new full Auditorium page identity while continuing to reject
 reserved naming in executable/runtime-visible content.
