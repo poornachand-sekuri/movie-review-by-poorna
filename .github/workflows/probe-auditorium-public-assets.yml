@@ -13,62 +13,39 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
-      - name: Probe likely current Auditorium filenames
+      - name: Read exact Auditorium runtime dimensions
         shell: bash
         run: |
           set -euo pipefail
           python3 <<'PY'
           import concurrent.futures
           import struct
-          import urllib.error
           import urllib.parse
           import urllib.request
 
           base = 'https://assets.moviereviewbypoorna.com/ui/pages/content/v4/' + 'res' + 'ponsive/'
-
-          labels = [
-              'Top_Navigation', 'Top_Navigation_Banner', 'Navigation_Banner', 'Auditorium_Top_Navigation',
-              'Movie_Reviews_By_Poorna_Banner', 'Movie_Reviews_By_Poorna_Top_Navigation',
-              'Clapboard', 'Clapboard_Section', 'Clapboard_Details', 'Clapboard_Panel', 'Movie_Details_Clapboard',
-              'Review_Clapboard', 'Movie_Clapboard',
-              'Theater_Screen', 'Theater_Screen_Section', 'Theater_Screen_Panel', 'Auditorium_Theater_Screen',
-              'Review_Theater_Screen', 'Review_Screen', 'Auditorium_Screen',
-              'Share_This_Review', 'Share_This_Review_Panel', 'Share_This_Review_Section', 'Share_Review', 'Share_Review_Panel',
-              'Related_Reviews', 'Related_Reviews_Panel', 'Related_Reviews_Section', 'Related_Review',
-              'Share_Your_Opinion', 'Share_Your_Opinion_Panel', 'Share_Your_Opinion_Section', 'Comments', 'Comments_Panel',
-              'Bottom_Navigation', 'Bottom_Navigation_Banner', 'Auditorium_Bottom_Navigation', 'Lounge_Cini_Cafe_Banner',
-              'Auditorium_Background', 'The_Auditorium_Background', 'Theater_Ambiance_Background',
-              'Auditorium_Ambiance_Background', 'Theater_Auditorium_Background', 'Auditorium_Theater_Background',
-              'Auditorium_Background_Image', 'Background'
-          ]
-
-          variants = [
-              '{n}_{label}_runtime_q99.webp',
-              '{n}_{label}_transparent_runtime_q99.webp',
-              '{n}_{label}_Premium_runtime_q99.webp',
-              '{n}_{label}_premium_runtime_q99.webp',
-          ]
-
-          candidates = []
-          for n in range(1, 11):
-              nn = f'{n:02d}'
-              for label in labels:
-                  for template in variants:
-                      candidates.append(template.format(n=nn, label=label))
-
-          candidates += [
-              '06_Share_Your_Opinion_Ticket_2_Comments_transparent_runtime_q99.webp',
-              '09_Share_Your_Opinion_With_Exit_runtime_q99.webp',
-              '07_Lounge_Cini_Cafe_Banner_runtime_q99.webp',
+          candidates = [
+              '02_Movie_Reviews_By_Poorna_Banner_runtime_q99.webp',
+              '03_Clapboard_Details_transparent_runtime_q99.webp',
+              '04_Theater_Seats_Reactions_transparent_runtime_q99.webp',
+              '05_Share_This_Review_transparent_runtime_q99.webp',
+              '06_Related_Reviews_transparent_runtime_q99.webp',
+              '07_Share_Your_Opinion_Panel_runtime_q99.webp',
               '08_Lounge_Cini_Cafe_Banner_runtime_q99.webp',
+              '09_Theater_Focus_Overlay_transparent_runtime_q99.webp',
+              '10_Share_Your_Opinion_With_Exit_runtime_q99.webp',
+              '01_Auditorium_Background_runtime_q99.webp',
+              '01_The_Auditorium_Background_runtime_q99.webp',
+              '01_Theater_Background_runtime_q99.webp',
+              '01_Theater_Ambiance_Background_runtime_q99.webp',
+              '01_Auditorium_Ambiance_Background_runtime_q99.webp',
+              '01_Theater_Auditorium_Background_runtime_q99.webp',
+              '01_Auditorium_Theater_Background_runtime_q99.webp',
           ]
-          candidates = list(dict.fromkeys(candidates))
 
           def dims(data):
-              if len(data) >= 24 and data[:8] == b'\x89PNG\r\n\x1a\n':
-                  return struct.unpack('>II', data[16:24])
               if len(data) >= 16 and data[:4] == b'RIFF' and data[8:12] == b'WEBP':
                   p = 12
                   while p + 8 <= len(data):
@@ -86,36 +63,22 @@ jobs:
               return None
 
           def probe(name):
-              url = base + urllib.parse.quote(name)
-              req = urllib.request.Request(url, headers={'User-Agent': 'MovieReviewByPoorna-AuditoriumAudit/1.0'})
+              req = urllib.request.Request(base + urllib.parse.quote(name), headers={'User-Agent':'MovieReviewByPoorna-AuditoriumAudit/1.0'})
               try:
-                  with urllib.request.urlopen(req, timeout=4) as res:
+                  with urllib.request.urlopen(req, timeout=6) as res:
                       if res.status != 200:
                           return None
-                      body = res.read()
-                      if not body:
-                          return None
-                      return name, dims(body), len(body), res.headers.get('content-type', '')
+                      data = res.read()
+                      return name, dims(data), len(data), res.headers.get('content-type','')
               except Exception:
                   return None
 
-          found = []
-          with concurrent.futures.ThreadPoolExecutor(max_workers=64) as pool:
-              futures = [pool.submit(probe, name) for name in candidates]
-              for future in concurrent.futures.as_completed(futures):
-                  result = future.result()
+          found=[]
+          with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+              for result in pool.map(probe, candidates):
                   if result:
                       found.append(result)
-
-          found.sort(key=lambda row: row[0])
-          for name, size, byte_count, content_type in found:
-              print('AUDITORIUM_PUBLIC_ASSET\t{}\t{}\t{}\t{}'.format(
-                  name,
-                  f'{size[0]}x{size[1]}' if size else '?x?',
-                  byte_count,
-                  content_type
-              ))
+          for name,size,byte_count,content_type in found:
+              print(f"AUDITORIUM_PUBLIC_ASSET\t{name}\t{size[0]}x{size[1]}\t{byte_count}\t{content_type}")
           print(f'AUDITORIUM_PUBLIC_MATCH_COUNT={len(found)}')
-          if not found:
-              raise SystemExit('No matching public Auditorium assets found from current naming patterns.')
           PY
