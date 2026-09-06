@@ -1,0 +1,73 @@
+name: Inspect Clapboard Geometry
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/clapboard-geometry.trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Measure source artwork geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow opencv-python-headless numpy
+          python3 <<'PY'
+          from io import BytesIO
+          import urllib.request
+          import cv2, numpy as np
+          from PIL import Image
+
+          url='https://assets.moviereviewbypoorna.com/ui/pages/content/v4/responsive/03_Clapboard_Details_transparent_runtime_q99.webp'
+          req=urllib.request.Request(url,headers={'User-Agent':'MovieReviewByPoorna-Geometry/1.0'})
+          with urllib.request.urlopen(req, timeout=20) as r:
+              data=r.read()
+          im=Image.open(BytesIO(data)).convert('RGBA')
+          rgb=np.array(im)[...,:3]
+          h,w=rgb.shape[:2]
+          print(f'CANVAS\t{w}\t{h}')
+
+          hsv=cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+          # Bright, saturated red artwork (borders, icons, headings).
+          red=(((hsv[:,:,0] <= 10) | (hsv[:,:,0] >= 170)) & (hsv[:,:,1] >= 130) & (hsv[:,:,2] >= 110)).astype(np.uint8)
+          n,lab,stats,cent=cv2.connectedComponentsWithStats(red,8)
+          comps=[]
+          for i in range(1,n):
+              x,y,cw,ch,area=map(int,stats[i])
+              if area>=30:
+                  comps.append((area,x,y,cw,ch,float(cent[i][0]),float(cent[i][1])))
+          for row in sorted(comps, reverse=True)[:80]:
+              print('RED_COMPONENT\t'+'\t'.join(map(str,row)))
+
+          # Row/column density is useful for exact straight frame lines.
+          rc=red.sum(axis=1); cc=red.sum(axis=0)
+          for y in np.argsort(rc)[-30:][::-1]:
+              print(f'RED_ROW\t{int(y)}\t{int(rc[y])}')
+          for x in np.argsort(cc)[-30:][::-1]:
+              print(f'RED_COL\t{int(x)}\t{int(cc[x])}')
+
+          # Warm beige/gold baked labels + colons in Cast & Crew.
+          # HSV tuned to source artwork's cream labels, excluding whites.
+          warm=((hsv[:,:,0] >= 8) & (hsv[:,:,0] <= 35) & (hsv[:,:,1] >= 35) & (hsv[:,:,1] <= 190) & (hsv[:,:,2] >= 120)).astype(np.uint8)
+          wn,wlab,wstats,wcent=cv2.connectedComponentsWithStats(warm,8)
+          wcomps=[]
+          for i in range(1,wn):
+              x,y,cw,ch,area=map(int,wstats[i])
+              if area>=8:
+                  wcomps.append((area,x,y,cw,ch,float(wcent[i][0]),float(wcent[i][1])))
+          for row in sorted(wcomps, reverse=True)[:120]:
+              print('WARM_COMPONENT\t'+'\t'.join(map(str,row)))
+
+          # Print aggregated warm-pixel row counts to reveal four label baselines.
+          wr=warm.sum(axis=1)
+          for y in np.argsort(wr)[-50:][::-1]:
+              print(f'WARM_ROW\t{int(y)}\t{int(wr[y])}')
+          PY
