@@ -27,11 +27,11 @@ function formatDate(value: string | null): string {
 ---
 
 <SiteFrame title={`${review.title} — Movie Reviews By Poorna`}>
-  <LoungeLoading theme="screening" />
+  <LoungeLoading theme="auditorium" />
   <main class="review-shell" data-cinema-page>
     <a class="back-link" href="/">← Lounge</a>
     <header>
-      <p class="eyebrow">Screening Room</p>
+      <p class="eyebrow">The Auditorium</p>
       <h1>{review.title}</h1>
       <p class="meta">{review.language ?? '—'} · {formatDate(review.releaseDate)}</p>
     </header>
