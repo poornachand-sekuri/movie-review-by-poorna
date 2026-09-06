@@ -655,6 +655,40 @@
   box-shadow: 0 0 18px rgba(255, 25, 18, 0.28);
 }
 
+/* The approved 09 Exit artwork reserves space above its ticket. These content
+   coordinates follow that image; the normal 06 Lobby layout keeps its geometry. */
+.lounge-panel--opinion.is-lounge-focused .comments-window {
+  left: 11.8519%;
+  top: 20.3984%;
+  width: 78.7037%;
+  height: 33.3791%;
+  grid-template-rows: minmax(0, 227fr) minmax(0, 207fr);
+  gap: 10.6996%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form input,
+.lounge-panel--opinion.is-lounge-focused .opinion-form textarea {
+  left: 8.8889%;
+  width: 82.037%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form input {
+  top: 66.4835%;
+  height: 4.1209%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form textarea {
+  top: 72.3214%;
+  height: 14.6978%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form button {
+  left: 8.3333%;
+  top: 89.011%;
+  width: 83.3333%;
+  height: 6.25%;
+}
+
 /* ---------------- Enlarged-section behavior ---------------- */
 html.lounge-focus-open,
 html.lounge-focus-open body {

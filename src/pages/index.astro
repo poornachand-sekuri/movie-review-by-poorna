@@ -506,9 +506,10 @@ const featuredPov = featured?.verdict?.trim() || '';
         section.classList.add('is-lounge-focused');
         const isOpinion = section.classList.contains('lounge-panel--opinion');
         focusLayer.classList.toggle('is-opinion-focused', isOpinion);
-        // The approved upright ticket has no baked EXIT tab. Keep its close
-        // control outside the artwork, including when the ticket scrolls.
-        if (!isOpinion) section.appendChild(closeButton);
+        // Each focused artwork owns its EXIT tab; CSS maps this semantic
+        // button to the corresponding image coordinates.
+        section.appendChild(closeButton);
+        closeButton.setAttribute('aria-label', isOpinion ? 'Exit enlarged Share Your Opinion' : 'Close enlarged section');
         focusLayer.classList.add('is-open');
         focusLayer.scrollTop = 0;
         focusLayer.setAttribute('aria-hidden', 'false');

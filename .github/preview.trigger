@@ -1,13 +1,13 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-06: Use the approved 1080 × 1456 transparent upright Share Your Opinion
-ticket, with two large comment slots above the tear line and the form on the
-lower leaf. Keep the same ticket in focus mode with a separate visible close
-control. Version its runtime URL to bypass the replaced landscape asset cache.
+2026-09-06: Connect the approved transparent 09 Share Your Opinion With Exit
+artwork in focus mode. Align its two comment slots and lower form to the image,
+and map the top-right EXIT tab to the accessible close button. Keep the normal
+06 ticket in the Lobby. Version both runtime URLs to bypass replaced asset caches.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
-- Use the Premium Runtime Q99 WebP Lounge assets in R2; the old 09 opinion EXIT frame is superseded by the upright 06 ticket. Archival PNG/lossless/AVIF files are masters/backups only and must not be requested by the Lounge runtime.
+- Use the nine Premium Runtime Q99 WebP Lounge assets in R2, including the approved upright 06 and 09 opinion tickets. Archival PNG/lossless/AVIF files are masters/backups only and must not be requested by the Lounge runtime.
 - Keep all structural Lounge frames requested immediately and keep Recent/Previously Reviewed movie posters progressively scheduled at low priority.
 - The featured Now Reviewed poster remains eager/high priority.
 - On Home, preload the Lounge background, Top Navigation and Now Reviewed Q99 artwork from <head> at high priority.

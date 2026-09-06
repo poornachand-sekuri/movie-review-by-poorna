@@ -208,6 +208,10 @@
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/08_Now_Reviewed_With_Exit_runtime_q99.webp") !important;
 }
 
+.lounge-panel--opinion.is-lounge-focused {
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/09_Share_Your_Opinion_With_Exit_runtime_q99.webp?v=opinion-exit-20260906") !important;
+}
+
 .lounge-focus-layer.is-opinion-focused {
   align-items: safe center;
 }
@@ -226,7 +230,8 @@
 }
 
 /* Transparent click target aligned to baked EXIT artwork. */
-.lounge-panel--now.is-lounge-focused > .lounge-focus-close {
+.lounge-panel--now.is-lounge-focused > .lounge-focus-close,
+.lounge-panel--opinion.is-lounge-focused > .lounge-focus-close {
   position: absolute;
   z-index: 20;
   top: 0;
@@ -243,25 +248,27 @@
   background: transparent;
   color: transparent;
   box-shadow: none;
-  opacity: 0;
+  opacity: 1;
   cursor: pointer;
 }
 
-.lounge-panel--now.is-lounge-focused > .lounge-focus-close:focus-visible {
+.lounge-panel--now.is-lounge-focused > .lounge-focus-close:focus-visible,
+.lounge-panel--opinion.is-lounge-focused > .lounge-focus-close:focus-visible {
   outline: 2px solid rgba(255, 70, 58, 0.72);
   outline-offset: -2px;
 }
 
-/* A visible close control leaves the single approved ticket intact. */
-.is-opinion-focused > .lounge-focus-close {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.66);
-  border-radius: 50%;
-  background: rgba(8, 8, 8, 0.95);
-  color: #ff3a31;
-  opacity: 1;
+/* The approved 09 tab occupies x=831..1003, y=10..93 on a 1080 × 1456
+   canvas. Its transparent hit target stays centred, with a usable touch height. */
+.lounge-panel--opinion.is-lounge-focused > .lounge-focus-close {
+  left: 76.9444%;
+  right: auto;
+  top: 3.5371%;
+  width: 15.9259%;
+  height: 5.7005%;
+  min-width: 44px;
+  min-height: 44px;
+  transform: translateY(-50%);
 }
 
 @media (max-width: 390px) {
