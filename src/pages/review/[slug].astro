@@ -41,9 +41,10 @@ function ratingText(value: number | null): string {
 }
 
 const watchedIn = review.language?.trim() || '—';
+const actors = review.credits.filter((credit) => credit.role === 'actor');
+const actresses = review.credits.filter((credit) => credit.role === 'actress');
 const directors = review.credits.filter((credit) => credit.role === 'director');
-const music = review.credits.filter((credit) => credit.role === 'music_director');
-const cast = review.credits.filter((credit) => credit.role === 'actor' || credit.role === 'actress');
+const musicDirectors = review.credits.filter((credit) => credit.role === 'music_director');
 ---
 
 <SiteFrame
@@ -99,14 +100,28 @@ const cast = review.credits.filter((credit) => credit.role === 'actor' || credit
           <div class="auditorium-clap-value auditorium-clap-value--release">{formatDate(review.releaseDate)}</div>
           <div class="auditorium-clap-value auditorium-clap-value--rating" aria-label={`${review.rating ?? 'No'} out of 5 stars`}>
             <span class="auditorium-stars">{ratingText(review.rating)}</span>
-            {review.rating !== null && <span class="auditorium-rating-number">{Number(review.rating).toFixed(1)} / 5</span>}
           </div>
 
-          <div class="auditorium-cast-crew">
-            {directors.length > 0 && <p><strong>Director</strong><span>{directors.map((credit) => credit.name).join(', ')}</span></p>}
-            {music.length > 0 && <p><strong>Music</strong><span>{music.map((credit) => credit.name).join(', ')}</span></p>}
-            {cast.length > 0 && <p><strong>Cast</strong><span>{cast.map((credit) => credit.name).join(', ')}</span></p>}
-          </div>
+          {actors.length > 0 && (
+            <div class="auditorium-credit-value auditorium-credit-value--actor">
+              {actors.map((credit) => credit.name).join(', ')}
+            </div>
+          )}
+          {actresses.length > 0 && (
+            <div class="auditorium-credit-value auditorium-credit-value--actress">
+              {actresses.map((credit) => credit.name).join(', ')}
+            </div>
+          )}
+          {directors.length > 0 && (
+            <div class="auditorium-credit-value auditorium-credit-value--director">
+              {directors.map((credit) => credit.name).join(', ')}
+            </div>
+          )}
+          {musicDirectors.length > 0 && (
+            <div class="auditorium-credit-value auditorium-credit-value--music">
+              {musicDirectors.map((credit) => credit.name).join(', ')}
+            </div>
+          )}
 
           <div class="auditorium-my-pov">
             <p>{review.verdict ?? review.excerpt ?? '—'}</p>
