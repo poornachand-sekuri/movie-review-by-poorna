@@ -13,16 +13,14 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 5
     steps:
       - name: Probe likely current Auditorium filenames
         shell: bash
         run: |
           set -euo pipefail
           python3 <<'PY'
-          import itertools
-          import os
-          import re
+          import concurrent.futures
           import struct
           import urllib.error
           import urllib.parse
@@ -60,27 +58,13 @@ jobs:
                   for template in variants:
                       candidates.append(template.format(n=nn, label=label))
 
-          # Known project naming patterns that do not fit the generic generator.
           candidates += [
               '06_Share_Your_Opinion_Ticket_2_Comments_transparent_runtime_q99.webp',
               '09_Share_Your_Opinion_With_Exit_runtime_q99.webp',
               '07_Lounge_Cini_Cafe_Banner_runtime_q99.webp',
               '08_Lounge_Cini_Cafe_Banner_runtime_q99.webp',
           ]
-
-          # Preserve order while de-duping.
           candidates = list(dict.fromkeys(candidates))
-
-          def get(url):
-              req = urllib.request.Request(url, headers={'User-Agent': 'MovieReviewByPoorna-AuditoriumAudit/1.0'})
-              try:
-                  with urllib.request.urlopen(req, timeout=8) as res:
-                      body = res.read()
-                      return res.status, res.headers, body
-              except urllib.error.HTTPError as exc:
-                  return exc.code, exc.headers, b''
-              except Exception:
-                  return 0, {}, b''
 
           def dims(data):
               if len(data) >= 24 and data[:8] == b'\x89PNG\r\n\x1a\n':
@@ -92,35 +76,45 @@ jobs:
                       size = struct.unpack('<I', data[p+4:p+8])[0]
                       chunk = data[p+8:p+8+size]
                       if kind == b'VP8X' and len(chunk) >= 10:
-                          return (
-                              1 + int.from_bytes(chunk[4:7], 'little'),
-                              1 + int.from_bytes(chunk[7:10], 'little'),
-                          )
+                          return (1 + int.from_bytes(chunk[4:7], 'little'), 1 + int.from_bytes(chunk[7:10], 'little'))
                       if kind == b'VP8 ' and len(chunk) >= 10 and chunk[3:6] == b'\x9d\x01\x2a':
-                          return (
-                              struct.unpack('<H', chunk[6:8])[0] & 0x3fff,
-                              struct.unpack('<H', chunk[8:10])[0] & 0x3fff,
-                          )
+                          return (struct.unpack('<H', chunk[6:8])[0] & 0x3fff, struct.unpack('<H', chunk[8:10])[0] & 0x3fff)
                       if kind == b'VP8L' and len(chunk) >= 5 and chunk[0] == 0x2f:
                           bits = int.from_bytes(chunk[1:5], 'little')
                           return ((bits & 0x3fff) + 1, ((bits >> 14) & 0x3fff) + 1)
                       p += 8 + size + (size & 1)
               return None
 
-          found = []
-          for index, name in enumerate(candidates, 1):
+          def probe(name):
               url = base + urllib.parse.quote(name)
-              status, headers, body = get(url)
-              if status == 200 and body:
-                  size = dims(body)
-                  found.append((name, size, len(body), headers.get('content-type', '')))
-                  print('AUDITORIUM_PUBLIC_ASSET\t{}\t{}\t{}\t{}'.format(
-                      name,
-                      f'{size[0]}x{size[1]}' if size else '?x?',
-                      len(body),
-                      headers.get('content-type', '')
-                  ))
+              req = urllib.request.Request(url, headers={'User-Agent': 'MovieReviewByPoorna-AuditoriumAudit/1.0'})
+              try:
+                  with urllib.request.urlopen(req, timeout=4) as res:
+                      if res.status != 200:
+                          return None
+                      body = res.read()
+                      if not body:
+                          return None
+                      return name, dims(body), len(body), res.headers.get('content-type', '')
+              except Exception:
+                  return None
 
+          found = []
+          with concurrent.futures.ThreadPoolExecutor(max_workers=64) as pool:
+              futures = [pool.submit(probe, name) for name in candidates]
+              for future in concurrent.futures.as_completed(futures):
+                  result = future.result()
+                  if result:
+                      found.append(result)
+
+          found.sort(key=lambda row: row[0])
+          for name, size, byte_count, content_type in found:
+              print('AUDITORIUM_PUBLIC_ASSET\t{}\t{}\t{}\t{}'.format(
+                  name,
+                  f'{size[0]}x{size[1]}' if size else '?x?',
+                  byte_count,
+                  content_type
+              ))
           print(f'AUDITORIUM_PUBLIC_MATCH_COUNT={len(found)}')
           if not found:
               raise SystemExit('No matching public Auditorium assets found from current naming patterns.')
