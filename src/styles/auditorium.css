@@ -25,27 +25,85 @@
   gap: var(--auditorium-section-gap);
 }
 
+/*
+ * The source artwork deliberately contains transparent canvas around several
+ * sections. If that canvas participates in layout, a 1.5rem CSS gap can look
+ * much larger on screen. Each section therefore keeps the original image
+ * untouched but crops only its measured transparent top/bottom canvas in the
+ * browser. The visible artwork edge-to-edge gap is then the same 1.5rem for
+ * every adjacent pair.
+ */
 .auditorium-section {
   position: relative;
   margin: 0;
   flex: 0 0 auto;
+  overflow: hidden;
+  aspect-ratio: var(--art-width) / var(--art-visible-height);
 }
 
-.auditorium-artwork {
+.auditorium-artwork,
+.auditorium-state-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
   width: 100%;
   height: auto;
   max-width: none;
   object-fit: contain;
+  transform: translateY(var(--art-shift-y));
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/*
- * Mobile: every approved section gets the available viewport width while its
- * own intrinsic aspect ratio remains untouched. This keeps tall interaction
- * panels usable instead of shrinking them to desktop-relative proportions.
- */
+.auditorium-artwork {
+  pointer-events: none;
+}
+
+/* Measured alpha bounds from the confirmed Q99 runtime files. */
+.auditorium-section--top {
+  --art-width: 2048;
+  --art-visible-height: 299; /* source y: 210..509 */
+  --art-shift-y: -30.7918%; /* -210 / 682 */
+}
+
+.auditorium-section--clapboard {
+  --art-width: 1536;
+  --art-visible-height: 981; /* source y: 15..996 */
+  --art-shift-y: -1.4648%; /* -15 / 1024 */
+}
+
+.auditorium-section--theater {
+  --art-width: 1448;
+  --art-visible-height: 1058; /* source y: 0..1058 */
+  --art-shift-y: 0%;
+}
+
+.auditorium-section--share {
+  --art-width: 2021;
+  --art-visible-height: 358; /* source y: 8..366 */
+  --art-shift-y: -2.1390%; /* -8 / 374 */
+}
+
+.auditorium-section--related {
+  --art-width: 2172;
+  --art-visible-height: 685; /* source y: 23..708 */
+  --art-shift-y: -3.1768%; /* -23 / 724 */
+}
+
+.auditorium-section--opinion {
+  --art-width: 1080;
+  --art-visible-height: 1422; /* source y: 14..1436 */
+  --art-shift-y: -0.9615%; /* -14 / 1456 */
+}
+
+.auditorium-section--bottom {
+  --art-width: 2048;
+  --art-visible-height: 324; /* source y: 179..503 */
+  --art-shift-y: -26.2463%; /* -179 / 682 */
+}
+
+/* Mobile: every approved section gets the available viewport width. */
 .auditorium-section--top,
 .auditorium-section--clapboard,
 .auditorium-section--theater,
@@ -89,10 +147,6 @@
 
 /* Reserved same-canvas overlay slots for 09 and 10 interaction states. */
 .auditorium-state-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
 }
 
