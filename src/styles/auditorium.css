@@ -1,73 +1,107 @@
-/* Clean Auditorium baseline.
-   Keep this file intentionally small until the newly approved section artwork
-   is measured and wired from its actual intrinsic dimensions. */
+/* Auditorium v4 — clean artwork-first runtime.
+   Geometry comes only from the confirmed content/v4/responsive assets.
+   The final Auditorium background is intentionally not wired yet. */
 
-.auditorium-reset-page {
+.auditorium-page {
+  --auditorium-stage-max: 1086px;
+  --auditorium-section-gap: clamp(18px, 2.25vw, 32px);
   min-height: 100vh;
-  padding: 24px 16px 64px;
-  background: #050505;
-  color: #f2eee8;
-}
-
-.auditorium-reset-stage {
-  width: min(100%, 760px);
-  margin-inline: auto;
-}
-
-.auditorium-reset-kicker {
-  margin: 0 0 6px;
-  color: #d93636;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.auditorium-reset-title {
-  margin: 0;
-  font-size: clamp(28px, 6vw, 52px);
-  line-height: 1.05;
-}
-
-.auditorium-reset-meta {
-  margin: 10px 0 0;
-  color: #bfb8ae;
-}
-
-.auditorium-reset-poster {
-  width: min(54vw, 240px);
-  height: auto;
-  margin: 28px auto;
-}
-
-.auditorium-reset-verdict {
-  margin: 24px 0;
-  padding: 16px 18px;
-  background: #111;
-  line-height: 1.55;
-}
-
-.auditorium-reset-credits {
-  margin: 24px 0;
-  display: grid;
-  gap: 8px;
-}
-
-.auditorium-reset-credit {
-  margin: 0;
-  color: #d7d0c7;
-}
-
-.auditorium-reset-credit strong {
+  padding: clamp(12px, 2vw, 24px) 12px clamp(36px, 6vw, 72px);
+  background-color: #050505;
+  background-image: var(--auditorium-background, none);
+  background-position: top center;
+  background-repeat: repeat-y;
+  background-size: 100% auto;
   color: #fff;
+  overflow-x: clip;
 }
 
-.auditorium-reset-review {
-  color: #e4dfd8;
-  line-height: 1.7;
+.auditorium-stage {
+  width: min(100%, var(--auditorium-stage-max));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--auditorium-section-gap);
 }
 
-.auditorium-reset-review :global(img) {
-  max-width: 100%;
+.auditorium-section {
+  position: relative;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.auditorium-artwork {
+  display: block;
+  width: 100%;
   height: auto;
+  max-width: none;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/*
+ * Mobile: every approved section gets the available viewport width while its
+ * own intrinsic aspect ratio remains untouched. This keeps tall interaction
+ * panels usable instead of shrinking them to desktop-relative proportions.
+ */
+.auditorium-section--top,
+.auditorium-section--clapboard,
+.auditorium-section--theater,
+.auditorium-section--share,
+.auditorium-section--related,
+.auditorium-section--opinion,
+.auditorium-section--bottom {
+  width: 100%;
+}
+
+/*
+ * Desktop/tablet proportions are derived from the confirmed source widths,
+ * using Related Reviews (2172 px) as the common reference canvas.
+ */
+@media (min-width: 720px) {
+  .auditorium-section--top,
+  .auditorium-section--bottom {
+    width: 94.291%; /* 2048 / 2172 */
+  }
+
+  .auditorium-section--clapboard {
+    width: 70.718%; /* 1536 / 2172 */
+  }
+
+  .auditorium-section--theater {
+    width: 66.667%; /* 1448 / 2172 */
+  }
+
+  .auditorium-section--share {
+    width: 93.048%; /* 2021 / 2172 */
+  }
+
+  .auditorium-section--related {
+    width: 100%;
+  }
+
+  .auditorium-section--opinion {
+    width: 49.724%; /* 1080 / 2172 */
+  }
+}
+
+/* Reserved same-canvas overlay slots for 09 and 10 interaction states. */
+.auditorium-state-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.auditorium-state-layer[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auditorium-page {
+    scroll-behavior: auto;
+  }
 }
