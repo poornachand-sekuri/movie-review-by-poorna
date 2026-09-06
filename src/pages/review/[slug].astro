@@ -2,7 +2,7 @@
 import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
 import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
-import { getReviewBySlug, listReviews } from '../../lib/data/reviews';
+import { getReviewBySlug, listRelatedReviewsByCredits } from '../../lib/data/reviews';
 import '../../styles/auditorium.css';
 
 export const prerender = false;
@@ -15,10 +15,7 @@ if (!loadedReview) {
 }
 
 const review = loadedReview;
-const relatedPool = review.language
-  ? await listReviews({ limit: 10, language: review.language })
-  : await listReviews({ limit: 10 });
-const relatedReviews = relatedPool.filter((item) => item.slug !== review.slug).slice(0, 4);
+const relatedReviews = await listRelatedReviewsByCredits(review.id, 4);
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   day: '2-digit',
@@ -176,8 +173,8 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
                   {item.posterUrl && (
                     <img src={item.posterUrl} alt={`${item.title} poster`} loading="lazy" decoding="async" />
                   )}
+                  <span class="auditorium-related-title">{item.title}</span>
                 </div>
-                <span class="auditorium-related-title">{item.title}</span>
               </a>
             ))
           }
