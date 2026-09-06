@@ -1,5 +1,8 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
+2026-09-06: Final Auditorium naming audit passed at the application gate; deploy the
+fully cleaned room identity to the temporary preview Worker for live verification.
+
 2026-09-06: Lock the individual Review page identity as The Auditorium. Keep all
 review routes unchanged, use the Auditorium loader theme/artwork naming, and keep
 The Lounge / The Auditorium / The Movie Café / The Projection Booth as the canonical
