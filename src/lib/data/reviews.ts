@@ -50,6 +50,10 @@ interface ReviewSearchRow extends ReviewSummaryRow {
   search_rank: number;
 }
 
+interface RelatedReviewRow extends ReviewSummaryRow {
+  match_rank: number;
+}
+
 const SUMMARY_COLUMNS = `
   id,
   slug,
@@ -183,6 +187,67 @@ export async function listReviews(options: ReviewListOptions = {}): Promise<read
         .bind(limit, offset);
 
   const result = await statement.run<ReviewSummaryRow>();
+  return result.results.map(mapSummary);
+}
+
+export async function listRelatedReviewsByCredits(
+  reviewId: number,
+  limit = 4,
+): Promise<readonly ReviewSummary[]> {
+  if (!Number.isInteger(reviewId) || reviewId <= 0) return [];
+
+  const db = getContentDb();
+  const relatedLimit = clampInteger(limit, 4, 1, 4);
+  const result = await db
+    .prepare(
+      `WITH current_credits AS (
+         SELECT
+           person_id,
+           role,
+           position,
+           CASE role
+             WHEN 'director' THEN 1
+             WHEN 'actor' THEN 2
+             WHEN 'actress' THEN 3
+             WHEN 'music_director' THEN 4
+             ELSE 99
+           END AS role_priority
+         FROM review_credits
+         WHERE review_id = ?1
+           AND role IN ('director', 'actor', 'actress', 'music_director')
+       ),
+       candidate_matches AS (
+         SELECT
+           rc.review_id AS candidate_review_id,
+           MIN((cc.role_priority * 1000) + cc.position) AS match_rank
+         FROM review_credits rc
+         JOIN current_credits cc
+           ON cc.person_id = rc.person_id
+          AND cc.role = rc.role
+         WHERE rc.review_id <> ?1
+         GROUP BY rc.review_id
+       )
+       SELECT
+         r.id,
+         r.slug,
+         r.title,
+         r.language,
+         r.release_date,
+         r.reviewed_date,
+         r.rating,
+         r.verdict,
+         r.excerpt,
+         r.poster_url,
+         cm.match_rank
+       FROM candidate_matches cm
+       JOIN reviews r ON r.id = cm.candidate_review_id
+       WHERE r.status = 'published'
+       ORDER BY cm.match_rank ASC, r.reviewed_date DESC, r.id DESC
+       LIMIT ?2`,
+    )
+    .bind(reviewId, relatedLimit)
+    .run<RelatedReviewRow>();
+
   return result.results.map(mapSummary);
 }
 
