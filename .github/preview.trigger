@@ -1,9 +1,11 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-06: Auditorium reset. Remove the failed v4 Auditorium asset manifest,
-guessed artwork paths and overlay runtime. Keep only the review data plumbing,
-canonical Auditorium loading screen and clean baseline presentation. The Lounge
-and The Movie Café are intentionally unchanged.
+2026-09-06: Build the Auditorium v4 artwork-first runtime from the confirmed
+content/v4/responsive assets. Use 02-08 as the normal page flow, reserve 09 as
+the same-canvas Theater focus state and 10 as the same-canvas Share Your Opinion
+exit state. The Auditorium background is intentionally not wired while its
+artwork is still being finalized. Do not use old Content geometry or guessed
+asset filenames. The Lounge and The Movie Café are intentionally unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
