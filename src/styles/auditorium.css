@@ -1,0 +1,493 @@
+/* Auditorium / individual-review visual runtime.
+   The Q99 WebP files are the source of visual truth; CSS only aligns live content
+   and interaction hit targets over the approved artwork. */
+
+.auditorium-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow-x: clip;
+  padding:
+    max(1.25rem, env(safe-area-inset-top))
+    0
+    max(3.5rem, env(safe-area-inset-bottom));
+  background: #080606;
+  color: #f4eee5;
+}
+
+.auditorium-backdrop,
+.auditorium-shade {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.auditorium-backdrop {
+  overflow: hidden;
+  background: #090707;
+}
+
+.auditorium-backdrop__artwork {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center top;
+  user-select: none;
+}
+
+.auditorium-shade {
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.22) 46%, rgba(0, 0, 0, 0.38) 100%),
+    radial-gradient(circle at 50% 8%, rgba(255, 209, 133, 0.08), transparent 30%);
+}
+
+.auditorium-stage {
+  width: min(94vw, 960px);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.15rem, 3vw, 2.35rem);
+}
+
+.auditorium-section {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  container-type: inline-size;
+  line-height: 1;
+}
+
+.auditorium-artwork {
+  width: 100%;
+  height: auto;
+  max-width: none;
+  margin: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.auditorium-artwork[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+.auditorium-nav-hit,
+.auditorium-share-hit,
+.related-review-card,
+.auditorium-opinion-hit {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auditorium-nav-hit {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  border-radius: 0;
+}
+
+.auditorium-nav-hit--left {
+  left: 0;
+}
+
+.auditorium-nav-hit--right {
+  right: 0;
+}
+
+.auditorium-nav-hit:focus-visible,
+.auditorium-share-hit:focus-visible,
+.related-review-card:focus-visible,
+.auditorium-opinion-hit:focus-visible {
+  outline: 2px solid rgba(238, 84, 67, 0.9);
+  outline-offset: -3px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Clapboard live review data                                                 */
+/* -------------------------------------------------------------------------- */
+
+.auditorium-clapboard__poster,
+.auditorium-clapboard__details,
+.auditorium-clapboard__credits,
+.auditorium-clapboard__pov {
+  position: absolute;
+  z-index: 3;
+}
+
+.auditorium-clapboard__poster {
+  left: 5.35%;
+  top: 15.2%;
+  width: 39.6%;
+  height: 42.7%;
+  overflow: hidden;
+  background: #0b0908;
+}
+
+.auditorium-clapboard__poster img,
+.auditorium-poster-fallback {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+.auditorium-poster-fallback {
+  display: block;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(173, 46, 39, 0.22), transparent 42%),
+    linear-gradient(145deg, #161110, #060505 72%);
+}
+
+.auditorium-clapboard__details {
+  left: 49.25%;
+  top: 16.8%;
+  width: 44.3%;
+  height: 27.6%;
+  overflow: hidden;
+  color: #efe8dc;
+}
+
+.auditorium-movie-title {
+  height: 31%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: #fff8ed;
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  font-size: clamp(12px, 4.2cqw, 34px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.92);
+}
+
+.auditorium-meta {
+  height: 69%;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: end;
+  gap: 2.5%;
+  color: #e0d7ca;
+}
+
+.auditorium-meta > div {
+  min-width: 0;
+  text-align: center;
+}
+
+.auditorium-meta dt {
+  display: none;
+}
+
+.auditorium-meta dd {
+  margin: 0;
+  overflow: hidden;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(8px, 1.8cqw, 15px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.055em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px #000;
+}
+
+.auditorium-meta__rating dd {
+  color: #f2c25e;
+  font-size: clamp(9px, 2.25cqw, 18px);
+  letter-spacing: 0.025em;
+  text-overflow: clip;
+}
+
+.auditorium-clapboard__credits {
+  left: 49.25%;
+  top: 47.4%;
+  width: 44.3%;
+  height: 14.2%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.auditorium-credit-list {
+  width: 100%;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2px, 0.9cqw, 8px) 5%;
+}
+
+.auditorium-credit-list > div {
+  min-width: 0;
+}
+
+.auditorium-credit-list dt {
+  margin: 0 0 0.18em;
+  overflow: hidden;
+  color: #a99f91;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(6px, 1.25cqw, 11px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.auditorium-credit-list dd {
+  margin: 0;
+  overflow: hidden;
+  color: #eee6da;
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  font-size: clamp(7px, 1.55cqw, 13px);
+  font-weight: 700;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+
+.auditorium-clapboard__pov {
+  left: 5.35%;
+  right: 5.35%;
+  bottom: 6.5%;
+  height: 21.4%;
+  overflow: auto;
+  padding: 0 1.2% 0 1%;
+  color: #f1e8dc;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(190, 45, 36, 0.75) rgba(18, 14, 13, 0.55);
+}
+
+.auditorium-clapboard__pov p {
+  margin: 0;
+  font-size: clamp(8px, 1.85cqw, 15px);
+  font-weight: 600;
+  line-height: 1.42;
+  text-shadow: 0 1px 2px #000;
+}
+
+.auditorium-clapboard__pov::-webkit-scrollbar,
+.auditorium-review-scroll::-webkit-scrollbar {
+  width: clamp(4px, 0.6cqw, 8px);
+}
+
+.auditorium-clapboard__pov::-webkit-scrollbar-track,
+.auditorium-review-scroll::-webkit-scrollbar-track {
+  background: rgba(13, 10, 9, 0.45);
+}
+
+.auditorium-clapboard__pov::-webkit-scrollbar-thumb,
+.auditorium-review-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(185, 42, 34, 0.78);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Theater screen: intentionally owns a persistent internal scroll surface.    */
+/* -------------------------------------------------------------------------- */
+
+.auditorium-review-scroll {
+  position: absolute;
+  z-index: 5;
+  left: 12.9%;
+  right: 12.9%;
+  top: 16.9%;
+  bottom: 25.5%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 1.8% 2.8% 2.5%;
+  color: #ece5db;
+  font-size: clamp(10px, 2.05cqw, 17px);
+  line-height: 1.64;
+  text-align: left;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(189, 44, 35, 0.84) rgba(8, 7, 7, 0.55);
+  -webkit-overflow-scrolling: touch;
+}
+
+.auditorium-review-copy {
+  max-width: 66ch;
+  margin-inline: auto;
+}
+
+.auditorium-review-copy p,
+.auditorium-review-copy ul,
+.auditorium-review-copy ol,
+.auditorium-review-copy blockquote {
+  margin: 0 0 1em;
+}
+
+.auditorium-review-copy > :last-child {
+  margin-bottom: 0;
+}
+
+.auditorium-review-copy a {
+  color: #f0c179;
+}
+
+.auditorium-review-copy img {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 1em auto;
+  border-radius: 4px;
+}
+
+.auditorium-review-scroll:focus-visible {
+  outline: 2px solid rgba(235, 194, 110, 0.68);
+  outline-offset: -4px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Share This Review                                                          */
+/* -------------------------------------------------------------------------- */
+
+.auditorium-share-grid {
+  position: absolute;
+  z-index: 8;
+  left: 8%;
+  right: 8%;
+  top: 31%;
+  bottom: 13%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2%;
+}
+
+.auditorium-share-hit {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Related Reviews                                                            */
+/* -------------------------------------------------------------------------- */
+
+.auditorium-related-grid {
+  position: absolute;
+  z-index: 5;
+  left: 7.2%;
+  right: 7.2%;
+  top: 30.5%;
+  bottom: 17%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3.4%;
+}
+
+.related-review-card {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  text-decoration: none;
+  background: #080706;
+}
+
+.related-review-card img,
+.related-review-card .auditorium-poster-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+.auditorium-related-empty {
+  position: absolute;
+  z-index: 4;
+  inset: 34% 9% 20%;
+  display: grid;
+  place-items: center;
+  color: rgba(238, 228, 214, 0.64);
+  font-size: clamp(9px, 1.8cqw, 14px);
+  text-align: center;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Share Your Opinion                                                         */
+/* -------------------------------------------------------------------------- */
+
+.auditorium-opinion-hit {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive composition                                                     */
+/* -------------------------------------------------------------------------- */
+
+@media (min-width: 900px) {
+  .auditorium-stage {
+    width: min(78vw, 960px);
+  }
+
+  .auditorium-page {
+    padding-top: 2rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .auditorium-stage {
+    width: min(96vw, 560px);
+    gap: 1rem;
+  }
+
+  .auditorium-page {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+
+  .auditorium-shade {
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.28) 58%, rgba(0, 0, 0, 0.46) 100%);
+  }
+
+  .auditorium-review-scroll {
+    left: 12.3%;
+    right: 12.3%;
+    padding-inline: 2.4%;
+    font-size: clamp(9px, 2.65cqw, 13px);
+  }
+
+  .auditorium-clapboard__pov p {
+    font-size: clamp(7px, 2.25cqw, 11px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auditorium-nav-hit,
+  .auditorium-share-hit,
+  .related-review-card {
+    transition: box-shadow 120ms ease, opacity 120ms ease;
+  }
+
+  .related-review-card:hover,
+  .related-review-card:focus-visible {
+    box-shadow: 0 0 0 2px rgba(230, 72, 55, 0.48), 0 0 18px rgba(230, 52, 42, 0.2);
+  }
+}

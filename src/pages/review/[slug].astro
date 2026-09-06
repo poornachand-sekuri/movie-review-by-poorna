@@ -1,7 +1,14 @@
 ---
 import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
-import { getReviewBySlug } from '../../lib/data/reviews';
+import type { AuditoriumAssetKey } from '../../lib/auditorium-assets';
+import {
+  auditoriumAssetCandidates,
+  auditoriumCriticalImages,
+  auditoriumRuntimeAssets,
+} from '../../lib/auditorium-assets';
+import { getReviewBySlug, listReviews } from '../../lib/data/reviews';
+import '../../styles/auditorium.css';
 
 export const prerender = false;
 
@@ -24,82 +31,370 @@ function formatDate(value: string | null): string {
   const date = new Date(`${value}T00:00:00Z`);
   return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
 }
+
+function starText(rating: number | null): string {
+  const filled = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
+  return `${'★'.repeat(filled)}${'☆'.repeat(5 - filled)}`;
+}
+
+function fallbackList(key: AuditoriumAssetKey): string {
+  return auditoriumAssetCandidates[key].slice(1).join('|');
+}
+
+function extraString(...keys: string[]): string | null {
+  for (const key of keys) {
+    const value = review.extra[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+const watchedIn =
+  extraString('watchedIn', 'watched_in', 'watchType', 'watch_type', 'platform', 'venue') ?? '—';
+
+const credits = review.credits.slice(0, 4);
+
+const sameLanguage = review.language
+  ? await listReviews({ limit: 12, language: review.language, order: 'reviewed' })
+  : [];
+const recentReviews = await listReviews({ limit: 12, order: 'reviewed' });
+const related = [...sameLanguage, ...recentReviews]
+  .filter((item, index, items) => (
+    item.slug !== review.slug &&
+    items.findIndex((candidate) => candidate.slug === item.slug) === index
+  ))
+  .slice(0, 4);
 ---
 
-<SiteFrame title={`${review.title} — Movie Reviews By Poorna`}>
+<SiteFrame
+  title={`${review.title} — The Auditorium | Movie Reviews By Poorna`}
+  description={review.excerpt ?? `Read Poorna's review of ${review.title} in The Auditorium.`}
+  preloadImages={auditoriumCriticalImages.map((href) => ({ href, fetchPriority: 'high' as const }))}
+>
   <LoungeLoading theme="auditorium" />
-  <main class="review-shell" data-cinema-page>
-    <a class="back-link" href="/">← Lounge</a>
-    <header>
-      <p class="eyebrow">The Auditorium</p>
-      <h1>{review.title}</h1>
-      <p class="meta">{review.language ?? '—'} · {formatDate(review.releaseDate)}</p>
-    </header>
 
-    {review.posterUrl && <img class="poster" src={review.posterUrl} alt={`${review.title} poster`} />}
-    {review.verdict && <p class="verdict">{review.verdict}</p>}
-    <article class="review-copy" set:html={review.bodyHtml}></article>
+  <main
+    class="auditorium-page"
+    data-cinema-page
+    data-cinema-critical-count="4"
+    data-review-title={review.title}
+  >
+    <div class="auditorium-backdrop" aria-hidden="true">
+      <img
+        class="auditorium-backdrop__artwork"
+        src={auditoriumRuntimeAssets.background}
+        data-auditorium-artwork
+        data-fallbacks={fallbackList('background')}
+        alt=""
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </div>
+    <div class="auditorium-shade" aria-hidden="true"></div>
+
+    <div class="auditorium-stage">
+      <h1 class="visually-hidden">{review.title} — The Auditorium</h1>
+
+      <section class="auditorium-section auditorium-section--top" aria-label="Top Navigation">
+        <img
+          class="auditorium-artwork"
+          src={auditoriumRuntimeAssets.topNavigation}
+          data-auditorium-artwork
+          data-fallbacks={fallbackList('topNavigation')}
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+        <a class="auditorium-nav-hit auditorium-nav-hit--left" href="/" aria-label="Go to The Lounge"></a>
+        <a class="auditorium-nav-hit auditorium-nav-hit--right" href="/search" aria-label="Open The Movie Café"></a>
+      </section>
+
+      <section class="auditorium-section auditorium-section--clapboard" aria-label={`${review.title} movie details`}>
+        <img
+          class="auditorium-artwork"
+          src={auditoriumRuntimeAssets.clapboard}
+          data-auditorium-artwork
+          data-fallbacks={fallbackList('clapboard')}
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+
+        <div class="auditorium-clapboard__poster">
+          {
+            review.posterUrl ? (
+              <img
+                src={review.posterUrl}
+                alt={`${review.title} poster`}
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+              />
+            ) : (
+              <span class="auditorium-poster-fallback" aria-hidden="true"></span>
+            )
+          }
+        </div>
+
+        <div class="auditorium-clapboard__details">
+          <h2 class="auditorium-movie-title">{review.title}</h2>
+          <dl class="auditorium-meta">
+            <div>
+              <dt>Watched In</dt>
+              <dd>{watchedIn}</dd>
+            </div>
+            <div>
+              <dt>Release Date</dt>
+              <dd>{formatDate(review.releaseDate)}</dd>
+            </div>
+            <div class="auditorium-meta__rating">
+              <dt>Rating</dt>
+              <dd aria-label={`${Math.round(Number(review.rating) || 0)} out of 5 stars`}>
+                {starText(review.rating)}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="auditorium-clapboard__credits" aria-label="Cast and crew">
+          {
+            credits.length > 0 && (
+              <dl class="auditorium-credit-list">
+                {credits.map((credit) => (
+                  <div>
+                    <dt>{credit.role}</dt>
+                    <dd>{credit.name}</dd>
+                  </div>
+                ))}
+              </dl>
+            )
+          }
+        </div>
+
+        <div class="auditorium-clapboard__pov" tabindex="0" aria-label="My POV">
+          <p>{review.verdict?.trim() || review.excerpt?.trim() || 'Review verdict coming soon.'}</p>
+        </div>
+      </section>
+
+      <section class="auditorium-section auditorium-section--screen" aria-label="Theater Screen review">
+        <img
+          class="auditorium-artwork"
+          src={auditoriumRuntimeAssets.theaterScreen}
+          data-auditorium-artwork
+          data-fallbacks={fallbackList('theaterScreen')}
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+
+        <article
+          class="auditorium-review-scroll"
+          tabindex="0"
+          aria-label={`Scrollable review of ${review.title}`}
+        >
+          <div class="auditorium-review-copy" set:html={review.bodyHtml}></div>
+        </article>
+      </section>
+
+      <section class="auditorium-section auditorium-section--share" aria-label="Share This Review">
+        <img
+          class="auditorium-artwork"
+          src={auditoriumRuntimeAssets.shareReview}
+          data-auditorium-artwork
+          data-fallbacks={fallbackList('shareReview')}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          fetchpriority="low"
+          decoding="async"
+        />
+
+        <div class="auditorium-share-grid">
+          <button class="auditorium-share-hit" type="button" data-share="native" aria-label="Share this review"></button>
+          <button class="auditorium-share-hit" type="button" data-share="whatsapp" aria-label="Share this review on WhatsApp"></button>
+          <button class="auditorium-share-hit" type="button" data-share="facebook" aria-label="Share this review on Facebook"></button>
+          <button class="auditorium-share-hit" type="button" data-share="x" aria-label="Share this review on X"></button>
+          <button class="auditorium-share-hit" type="button" data-share="copy" aria-label="Copy review link"></button>
+        </div>
+        <p class="visually-hidden" data-share-status aria-live="polite"></p>
+      </section>
+
+      <section class="auditorium-section auditorium-section--related" aria-label="Related Reviews">
+        <img
+          class="auditorium-artwork"
+          src={auditoriumRuntimeAssets.relatedReviews}
+          data-auditorium-artwork
+          data-fallbacks={fallbackList('relatedReviews')}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          fetchpriority="low"
+          decoding="async"
+        />
+
+        {
+          related.length > 0 && (
+            <div class="auditorium-related-grid">
+              {related.map((item) => (
+                <a
+                  class="related-review-card"
+                  href={`/review/${encodeURIComponent(item.slug)}`}
+                  aria-label={`Read ${item.title} review`}
+                >
+                  {
+                    item.posterUrl ? (
+                      <img
+                        src={item.posterUrl}
+                        alt=""
+                        loading="lazy"
+                        fetchpriority="low"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span class="auditorium-poster-fallback" aria-hidden="true"></span>
+                    )
+                  }
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </section>
+
+      <section class="auditorium-section auditorium-section--opinion" aria-label="Share Your Opinion">
+        <img
+          class="auditorium-artwork"
+          src={auditoriumRuntimeAssets.shareOpinion}
+          data-auditorium-artwork
+          data-fallbacks={fallbackList('shareOpinion')}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          fetchpriority="low"
+          decoding="async"
+        />
+      </section>
+
+      <section class="auditorium-section auditorium-section--bottom" aria-label="Bottom Navigation">
+        <img
+          class="auditorium-artwork"
+          src={auditoriumRuntimeAssets.bottomNavigation}
+          data-auditorium-artwork
+          data-fallbacks={fallbackList('bottomNavigation')}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          fetchpriority="low"
+          decoding="async"
+        />
+        <a class="auditorium-nav-hit auditorium-nav-hit--left" href="/" aria-label="Return to The Lounge"></a>
+        <a class="auditorium-nav-hit auditorium-nav-hit--right" href="/search" aria-label="Open The Movie Café"></a>
+      </section>
+    </div>
   </main>
+
   <script>
     import { prepareCinemaPage } from '../../lib/lounge-loading';
+
     const page = document.querySelector<HTMLElement>('[data-cinema-page]');
-    if (page) prepareCinemaPage(page);
+
+    if (page) {
+      const artwork = [...page.querySelectorAll<HTMLImageElement>('img[data-auditorium-artwork]')];
+
+      artwork.forEach((image) => {
+        const fallbacks = (image.dataset.fallbacks ?? '').split('|').filter(Boolean);
+        let fallbackIndex = 0;
+
+        const useNextFallback = () => {
+          const next = fallbacks[fallbackIndex];
+          fallbackIndex += 1;
+          if (!next) {
+            image.dataset.assetState = 'error';
+            return;
+          }
+          image.dataset.assetState = 'retrying';
+          image.src = next;
+        };
+
+        image.addEventListener('load', () => {
+          image.dataset.assetState = 'ready';
+        });
+
+        image.addEventListener('error', useNextFallback);
+
+        if (image.complete && image.naturalWidth === 0) useNextFallback();
+      });
+
+      const shareTitle = page.dataset.reviewTitle || document.title;
+      const shareUrl = window.location.href;
+      const shareText = `${shareTitle} — Movie Review By Poorna`;
+      const shareStatus = page.querySelector<HTMLElement>('[data-share-status]');
+
+      const setShareStatus = (message: string) => {
+        if (shareStatus) shareStatus.textContent = message;
+      };
+
+      const copyLink = async () => {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          setShareStatus('Review link copied.');
+        } catch {
+          const field = document.createElement('textarea');
+          field.value = shareUrl;
+          field.setAttribute('readonly', '');
+          field.style.position = 'fixed';
+          field.style.opacity = '0';
+          document.body.append(field);
+          field.select();
+          document.execCommand('copy');
+          field.remove();
+          setShareStatus('Review link copied.');
+        }
+      };
+
+      page.querySelectorAll<HTMLButtonElement>('[data-share]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const target = button.dataset.share;
+
+          if (target === 'native') {
+            if (navigator.share) {
+              try {
+                await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+                setShareStatus('Review shared.');
+              } catch {
+                // User-cancelled share sheets should remain silent.
+              }
+            } else {
+              await copyLink();
+            }
+            return;
+          }
+
+          if (target === 'copy') {
+            await copyLink();
+            return;
+          }
+
+          const encodedUrl = encodeURIComponent(shareUrl);
+          const encodedText = encodeURIComponent(`${shareText}\n${shareUrl}`);
+          const destinations: Record<string, string> = {
+            whatsapp: `https://wa.me/?text=${encodedText}`,
+            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+            x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodedUrl}`,
+          };
+          const destination = target ? destinations[target] : undefined;
+          if (destination) window.open(destination, '_blank', 'noopener,noreferrer');
+        });
+      });
+
+      prepareCinemaPage(page);
+    }
   </script>
 </SiteFrame>
-
-<style>
-  .review-shell {
-    width: min(100% - 2rem, 52rem);
-    margin-inline: auto;
-    padding-block: 2rem 5rem;
-  }
-
-  .back-link {
-    color: #d7d4cf;
-    text-decoration: none;
-  }
-
-  header {
-    margin-top: 1.5rem;
-  }
-
-  .eyebrow {
-    margin-bottom: 0.45rem;
-    color: #df2027;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  h1 {
-    margin-bottom: 0.5rem;
-    line-height: 1.05;
-  }
-
-  .meta {
-    color: #aaa7a1;
-  }
-
-  .poster {
-    width: min(70vw, 18rem);
-    margin: 2rem auto;
-    border: 1px solid #292929;
-  }
-
-  .verdict {
-    margin: 2rem 0;
-    font-size: 1.2rem;
-    font-style: italic;
-  }
-
-  .review-copy {
-    color: #e2dfd8;
-    line-height: 1.72;
-  }
-
-  .review-copy :global(img) {
-    max-width: 100%;
-    height: auto;
-  }
-</style>

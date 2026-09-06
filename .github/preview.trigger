@@ -1,5 +1,11 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
+2026-09-06: Deploy the first responsive Auditorium v4 runtime. Use the newly
+uploaded content/v4/responsive artwork as immutable visual layers, align live
+review data over the approved Clapboard/Theater/Related sections, preserve the
+theater screen's internal scroll surface, and keep the page on the existing
+/review/[slug] routes.
+
 2026-09-06: Deploy the exact-palette replacements for 06 Share Your Opinion and
 09 Share Your Opinion With Exit. Use the newly uploaded runtime Q99 files and
 fresh cache keys so the preview cannot retain any previous palette versions.
