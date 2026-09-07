@@ -154,194 +154,208 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         </div>
       </section>
 
-      <section
-        class="auditorium-section auditorium-section--theater"
-        aria-label={`${review.title} full review. Activate to enlarge.`}
-        aria-expanded="false"
-        data-auditorium-theater
-        data-auditorium-focusable="theater"
-        data-font-step="2"
-        tabindex="0"
-      >
+      <div class="auditorium-audience">
         <img
-          class="auditorium-artwork"
-          src={assets.theater.src}
-          width={assets.theater.width}
-          height={assets.theater.height}
+          class="auditorium-seating-backdrop"
+          src={assets.background.src}
+          width={assets.background.width}
+          height={assets.background.height}
           alt=""
+          aria-hidden="true"
           loading="lazy"
+          fetchpriority="low"
           decoding="async"
         />
-        <img
-          class="auditorium-state-layer auditorium-state-layer--theater-focus"
-          src={assets.theaterFocus.src}
-          width={assets.theaterFocus.width}
-          height={assets.theaterFocus.height}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          data-auditorium-focus-art
-          hidden
-        />
 
-        <div class="auditorium-source-layer auditorium-theater-content">
-          <article
-            id="auditorium-review-body"
-            class="auditorium-review-scroll"
-            tabindex="0"
-            set:html={review.bodyHtml}
-          ></article>
+        <section
+          class="auditorium-section auditorium-section--theater"
+          aria-label={`${review.title} full review. Activate to enlarge.`}
+          aria-expanded="false"
+          data-auditorium-theater
+          data-auditorium-focusable="theater"
+          data-font-step="2"
+          tabindex="0"
+        >
+          <img
+            class="auditorium-artwork"
+            src={assets.theater.src}
+            width={assets.theater.width}
+            height={assets.theater.height}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+          <img
+            class="auditorium-state-layer auditorium-state-layer--theater-focus"
+            src={assets.theaterFocus.src}
+            width={assets.theaterFocus.width}
+            height={assets.theaterFocus.height}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            data-auditorium-focus-art
+            hidden
+          />
 
-          <div
-            class="auditorium-reactions"
-            data-review-reactions
-            data-review-slug={review.slug}
-            data-viewer-reaction={reactionSnapshot.viewerReaction ?? ''}
-            aria-label={`${review.title} audience reactions`}
-          >
-            <button
-              class:list={[
-                'auditorium-reaction-button',
-                'auditorium-reaction-button--like',
-                { 'is-selected': reactionSnapshot.viewerReaction === 'like' },
-              ]}
-              type="button"
-              data-reaction-action="like"
-              aria-label={`Like ${review.title}`}
-              aria-pressed={reactionSnapshot.viewerReaction === 'like' ? 'true' : 'false'}
+          <div class="auditorium-source-layer auditorium-theater-content">
+            <article
+              id="auditorium-review-body"
+              class="auditorium-review-scroll"
+              tabindex="0"
+              set:html={review.bodyHtml}
+            ></article>
+
+            <div
+              class="auditorium-reactions"
+              data-review-reactions
+              data-review-slug={review.slug}
+              data-viewer-reaction={reactionSnapshot.viewerReaction ?? ''}
+              aria-label={`${review.title} audience reactions`}
             >
-              <span class="auditorium-reaction-count" data-reaction-count="like">{reactionSnapshot.likes}</span>
-            </button>
+              <button
+                class:list={[
+                  'auditorium-reaction-button',
+                  'auditorium-reaction-button--like',
+                  { 'is-selected': reactionSnapshot.viewerReaction === 'like' },
+                ]}
+                type="button"
+                data-reaction-action="like"
+                aria-label={`Like ${review.title}`}
+                aria-pressed={reactionSnapshot.viewerReaction === 'like' ? 'true' : 'false'}
+              >
+                <span class="auditorium-reaction-count" data-reaction-count="like">{reactionSnapshot.likes}</span>
+              </button>
 
-            <button
-              class:list={[
-                'auditorium-reaction-button',
-                'auditorium-reaction-button--dislike',
-                { 'is-selected': reactionSnapshot.viewerReaction === 'dislike' },
-              ]}
-              type="button"
-              data-reaction-action="dislike"
-              aria-label={`Dislike ${review.title}`}
-              aria-pressed={reactionSnapshot.viewerReaction === 'dislike' ? 'true' : 'false'}
-            >
-              <span class="auditorium-reaction-count" data-reaction-count="dislike">{reactionSnapshot.dislikes}</span>
-            </button>
+              <button
+                class:list={[
+                  'auditorium-reaction-button',
+                  'auditorium-reaction-button--dislike',
+                  { 'is-selected': reactionSnapshot.viewerReaction === 'dislike' },
+                ]}
+                type="button"
+                data-reaction-action="dislike"
+                aria-label={`Dislike ${review.title}`}
+                aria-pressed={reactionSnapshot.viewerReaction === 'dislike' ? 'true' : 'false'}
+              >
+                <span class="auditorium-reaction-count" data-reaction-count="dislike">{reactionSnapshot.dislikes}</span>
+              </button>
 
-            <span class="visually-hidden" data-reaction-status aria-live="polite"></span>
+              <span class="visually-hidden" data-reaction-status aria-live="polite"></span>
+            </div>
           </div>
-        </div>
 
-        <button
-          class="auditorium-focus-close auditorium-focus-close--theater"
-          type="button"
-          aria-label="Exit enlarged review"
-          data-auditorium-focus-close
-          tabindex="-1"
-        ></button>
-      </section>
+          <button
+            class="auditorium-focus-close auditorium-focus-close--theater"
+            type="button"
+            aria-label="Exit enlarged review"
+            data-auditorium-focus-close
+            tabindex="-1"
+          ></button>
+        </section>
 
-      <section class="auditorium-section auditorium-section--share" aria-label="Share this review">
-        <img
-          class="auditorium-artwork"
-          src={assets.shareReview.src}
-          width={assets.shareReview.width}
-          height={assets.shareReview.height}
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
-      </section>
+        <section class="auditorium-section auditorium-section--share" aria-label="Share this review">
+          <img
+            class="auditorium-artwork"
+            src={assets.shareReview.src}
+            width={assets.shareReview.width}
+            height={assets.shareReview.height}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+        </section>
 
-      <section class="auditorium-section auditorium-section--related" aria-label="Related reviews">
-        <img
-          class="auditorium-artwork"
-          src={assets.relatedReviews.src}
-          width={assets.relatedReviews.width}
-          height={assets.relatedReviews.height}
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
+        <section class="auditorium-section auditorium-section--related" aria-label="Related reviews">
+          <img
+            class="auditorium-artwork"
+            src={assets.relatedReviews.src}
+            width={assets.relatedReviews.width}
+            height={assets.relatedReviews.height}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
 
-        <div class="auditorium-source-layer auditorium-related-grid">
-          {
-            relatedReviews.map((item) => (
-              <a class="auditorium-related-card" href={`/review/${item.slug}`} aria-label={`Read ${item.title} review`}>
-                <div class="auditorium-related-poster-frame">
-                  {item.posterUrl && (
-                    <img src={item.posterUrl} alt={`${item.title} poster`} loading="lazy" decoding="async" />
-                  )}
-                  <span class="auditorium-related-title">{item.title}</span>
-                </div>
-              </a>
-            ))
-          }
-        </div>
-      </section>
+          <div class="auditorium-source-layer auditorium-related-grid">
+            {
+              relatedReviews.map((item) => (
+                <a class="auditorium-related-card" href={`/review/${item.slug}`} aria-label={`Read ${item.title} review`}>
+                  <div class="auditorium-related-poster-frame">
+                    {item.posterUrl && (
+                      <img src={item.posterUrl} alt={`${item.title} poster`} loading="lazy" decoding="async" />
+                    )}
+                    <span class="auditorium-related-title">{item.title}</span>
+                  </div>
+                </a>
+              ))
+            }
+          </div>
+        </section>
 
-      <section
-        class="auditorium-section auditorium-section--opinion"
-        aria-label="Share your opinion. Activate to enlarge."
-        aria-expanded="false"
-        data-auditorium-opinion
-        data-auditorium-focusable="opinion"
-        tabindex="0"
-      >
-        <img
-          class="auditorium-artwork"
-          src={assets.shareOpinion.src}
-          width={assets.shareOpinion.width}
-          height={assets.shareOpinion.height}
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
-        <img
-          class="auditorium-state-layer auditorium-state-layer--opinion-focus"
-          src={assets.shareOpinionExit.src}
-          width={assets.shareOpinionExit.width}
-          height={assets.shareOpinionExit.height}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          data-auditorium-focus-art
-          hidden
-        />
+        <section
+          class="auditorium-section auditorium-section--opinion"
+          aria-label="Share your opinion. Activate to enlarge."
+          aria-expanded="false"
+          data-auditorium-opinion
+          data-auditorium-focusable="opinion"
+          tabindex="0"
+        >
+          <img
+            class="auditorium-artwork"
+            src={assets.shareOpinion.src}
+            width={assets.shareOpinion.width}
+            height={assets.shareOpinion.height}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+          <img
+            class="auditorium-state-layer auditorium-state-layer--opinion-focus"
+            src={assets.shareOpinionExit.src}
+            width={assets.shareOpinionExit.width}
+            height={assets.shareOpinionExit.height}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            data-auditorium-focus-art
+            hidden
+          />
 
-        <button
-          class="auditorium-focus-close auditorium-focus-close--opinion"
-          type="button"
-          aria-label="Exit enlarged Share Your Opinion"
-          data-auditorium-focus-close
-          tabindex="-1"
-        ></button>
-      </section>
+          <button
+            class="auditorium-focus-close auditorium-focus-close--opinion"
+            type="button"
+            aria-label="Exit enlarged Share Your Opinion"
+            data-auditorium-focus-close
+            tabindex="-1"
+          ></button>
+        </section>
 
-      <section class="auditorium-section auditorium-section--bottom" aria-label="Bottom navigation">
-        <img
-          class="auditorium-artwork"
-          src={assets.bottomNavigation.src}
-          width={assets.bottomNavigation.width}
-          height={assets.bottomNavigation.height}
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
-        <nav class="auditorium-nav-layer" aria-label="Footer cinema navigation">
-          <a
-            class="auditorium-nav-hit auditorium-nav-hit--bottom-lounge"
-            href="/"
-            aria-label="Go to The Lounge"
-            title="The Lounge"
-          ></a>
-          <a
-            class="auditorium-nav-hit auditorium-nav-hit--bottom-cafe"
-            href="/search"
-            aria-label="Go to The Movie Café"
-            title="The Movie Café"
-          ></a>
-        </nav>
-      </section>
+        <section class="auditorium-section auditorium-section--bottom" aria-label="Bottom navigation">
+          <img
+            class="auditorium-artwork"
+            src={assets.bottomNavigation.src}
+            width={assets.bottomNavigation.width}
+            height={assets.bottomNavigation.height}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+          <nav class="auditorium-nav-layer" aria-label="Footer cinema navigation">
+            <a
+              class="auditorium-nav-hit auditorium-nav-hit--bottom-lounge"
+              href="/"
+              aria-label="Go to The Lounge"
+              title="The Lounge"
+            ></a>
+            <a
+              class="auditorium-nav-hit auditorium-nav-hit--bottom-cafe"
+              href="/search"
+              aria-label="Go to The Movie Café"
+              title="The Movie Café"
+            ></a>
+          </nav>
+        </section>
+      </div>
     </div>
   </main>
 

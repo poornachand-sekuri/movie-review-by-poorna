@@ -1,17 +1,14 @@
 /* Auditorium v4 — artwork-first runtime with live content overlays.
-   Geometry comes only from the confirmed content/v4/responsive assets.
-   The final Auditorium background is intentionally not wired yet. */
+   Preserve main's registered section geometry and use one continuous seating
+   background beneath the theater, sharing, related reviews and opinion panel. */
 
 .auditorium-page {
   --auditorium-stage-max: 1086px;
   --auditorium-section-gap: 1.5rem;
+  --auditorium-end-space: clamp(36px, 6vw, 72px);
   min-height: 100vh;
-  padding: clamp(12px, 2vw, 24px) 12px clamp(36px, 6vw, 72px);
-  background-color: #050505;
-  background-image: var(--auditorium-background, none);
-  background-position: top center;
-  background-repeat: repeat-y;
-  background-size: 100% auto;
+  padding: clamp(12px, 2vw, 24px) 12px var(--auditorium-end-space);
+  background-color: #060505;
   color: #fff;
   overflow-x: clip;
 }
@@ -23,6 +20,34 @@
   flex-direction: column;
   align-items: center;
   gap: var(--auditorium-section-gap);
+}
+
+.auditorium-audience {
+  /* The normal theater canvas begins its seating at source y=800/1448. */
+  --auditorium-seats-start: 55.2486187845cqw;
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--auditorium-section-gap);
+}
+
+.auditorium-seating-backdrop {
+  position: absolute;
+  z-index: -1;
+  top: var(--auditorium-seats-start);
+  left: 50%;
+  width: 100vw;
+  max-width: none;
+  height: calc(100% - var(--auditorium-seats-start) + var(--auditorium-end-space));
+  transform: translateX(-50%);
+  object-fit: cover;
+  object-position: top center;
+  pointer-events: none;
+  user-select: none;
 }
 
 .auditorium-section {
@@ -540,6 +565,10 @@
 }
 
 @media (min-width: 720px) {
+  .auditorium-audience {
+    /* Match main's 66.667% theater width, without measuring layout in JS. */
+    --auditorium-seats-start: 36.8325966851cqw;
+  }
   .auditorium-section--top,
   .auditorium-section--bottom { width: 94.291%; }
   .auditorium-section--clapboard { width: 70.718%; }
