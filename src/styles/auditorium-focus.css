@@ -27,25 +27,43 @@
   width: min(88vw, 640px);
 }
 
-/* External cinematic toolbar used only where there is no baked EXIT artwork. */
+/*
+ * Shared popup fascia for sections that do not have baked focus artwork.
+ * The treatment deliberately reads like a physical Auditorium sign/control panel:
+ * dark enamel, warm metal trim and restrained red illumination rather than web UI.
+ */
 .auditorium-focus-toolbar {
+  position: relative;
   align-self: center;
-  width: min(96%, 920px);
+  width: min(94%, 860px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: clamp(12px, 2vw, 22px);
   box-sizing: border-box;
-  padding: 8px 10px 8px 16px;
-  border: 1px solid rgb(218 55 46 / 72%);
-  border-radius: 999px;
+  padding: 8px 10px 8px 15px;
+  border: 1px solid rgb(135 84 48 / 74%);
+  border-radius: 10px;
   background:
-    linear-gradient(180deg, rgb(30 7 7 / 96%), rgb(7 7 7 / 97%)),
-    #080808;
+    linear-gradient(90deg, rgb(166 35 26 / 5%), transparent 24%, transparent 76%, rgb(166 35 26 / 5%)),
+    linear-gradient(180deg, rgb(25 18 13 / 98%) 0%, rgb(11 9 8 / 98%) 48%, rgb(5 5 5 / 99%) 100%);
   box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 4%),
-    0 0 20px rgb(216 38 30 / 14%),
-    0 10px 28px rgb(0 0 0 / 48%);
+    inset 0 1px 0 rgb(255 233 201 / 6%),
+    inset 0 -1px 0 rgb(129 35 27 / 38%),
+    0 0 0 1px rgb(0 0 0 / 72%),
+    0 0 18px rgb(165 38 29 / 11%),
+    0 10px 28px rgb(0 0 0 / 50%);
+}
+
+.auditorium-focus-toolbar::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 3px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(198 57 43 / 48%), transparent);
+  pointer-events: none;
 }
 
 .auditorium-focus-toolbar[hidden] {
@@ -55,59 +73,198 @@
 .auditorium-focus-toolbar-title {
   min-width: 0;
   overflow: hidden;
-  color: #f6eadc;
+  color: #dcc8a7;
   font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
-  font-size: clamp(12px, 1.5vw, 17px);
+  font-size: clamp(12px, 1.4vw, 16px);
   font-weight: 800;
   line-height: 1;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.075em;
   text-transform: uppercase;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: 0 1px 2px #000, 0 0 10px rgb(180 42 34 / 18%);
+  text-shadow: 0 1px 2px #000, 0 0 7px rgb(153 56 39 / 12%);
 }
 
+/* EXIT now behaves like a small illuminated theater sign instead of a browser pill. */
 .auditorium-focus-toolbar-exit {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
   flex: 0 0 auto;
-  min-width: 76px;
-  height: 38px;
+  min-width: 72px;
+  height: 34px;
   margin: 0;
-  padding: 0 13px;
-  border: 1px solid rgb(255 78 65 / 88%);
-  border-radius: 999px;
+  padding: 1px 13px 0;
+  border: 1px solid rgb(181 67 54 / 90%);
+  border-radius: 5px;
   background:
-    radial-gradient(circle at 50% 20%, rgb(150 29 23 / 34%), transparent 60%),
-    rgb(12 6 6 / 98%);
-  color: #fff0df;
-  font: 800 13px / 1 Arial, sans-serif;
-  letter-spacing: 0.09em;
-  text-shadow: 0 1px 2px #000;
+    radial-gradient(circle at 50% -10%, rgb(231 69 49 / 22%), transparent 60%),
+    linear-gradient(180deg, rgb(68 18 14 / 98%), rgb(24 8 7 / 99%) 58%, rgb(12 6 6 / 100%));
+  color: #ffd7c4;
+  font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px #000, 0 0 7px rgb(239 86 66 / 18%);
   box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 5%),
-    0 0 13px rgb(232 47 38 / 18%);
+    inset 0 0 0 1px rgb(255 206 170 / 5%),
+    inset 0 0 13px rgb(203 54 41 / 13%),
+    0 0 8px rgb(214 47 36 / 13%),
+    0 4px 9px rgb(0 0 0 / 36%);
   cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease, color 140ms ease;
 }
 
-.auditorium-focus-toolbar-exit span:last-child {
-  font-size: 21px;
-  line-height: 0.8;
-  transform: translateY(-1px);
+.auditorium-focus-toolbar-exit::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgb(255 142 115 / 9%);
+  border-radius: 3px;
+  pointer-events: none;
 }
 
 .auditorium-focus-toolbar-exit:hover {
-  border-color: rgb(255 111 95 / 100%);
+  transform: translateY(-1px);
+  border-color: rgb(220 84 66 / 96%);
+  color: #ffe5d6;
   box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 7%),
-    0 0 18px rgb(237 55 44 / 28%);
+    inset 0 0 0 1px rgb(255 219 190 / 7%),
+    inset 0 0 16px rgb(219 62 47 / 18%),
+    0 0 11px rgb(219 51 39 / 19%),
+    0 5px 11px rgb(0 0 0 / 40%);
+}
+
+.auditorium-focus-toolbar-exit:active {
+  transform: translateY(0);
 }
 
 .auditorium-focus-toolbar-exit:focus-visible {
-  outline: 2px solid #f1bd6c;
-  outline-offset: 2px;
+  outline: 2px solid #d8aa68;
+  outline-offset: 3px;
+}
+
+/*
+ * Theater reading controls use the same physical-material language as the popup fascia.
+ * The base functionality and bounded font-size behavior remain unchanged.
+ */
+.auditorium-reading-toolbar {
+  position: relative;
+  align-self: center;
+  width: min(92%, 760px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(10px, 2vw, 18px);
+  box-sizing: border-box;
+  padding: 8px 10px 8px 15px;
+  border: 1px solid rgb(127 82 48 / 72%);
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgb(138 31 24 / 4%), transparent 28%, transparent 72%, rgb(138 31 24 / 4%)),
+    linear-gradient(180deg, rgb(23 17 12 / 98%), rgb(10 9 8 / 99%) 52%, rgb(5 5 5 / 100%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 231 197 / 6%),
+    inset 0 -1px 0 rgb(112 34 26 / 34%),
+    0 0 0 1px rgb(0 0 0 / 74%),
+    0 0 15px rgb(155 40 31 / 9%),
+    0 8px 22px rgb(0 0 0 / 46%);
+  color: #ead8bb;
+}
+
+.auditorium-reading-toolbar::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 3px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(184 53 40 / 38%), transparent);
+  pointer-events: none;
+}
+
+.auditorium-reading-toolbar[hidden] {
+  display: none;
+}
+
+.auditorium-reading-toolbar-message {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: #decbae;
+  font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
+  font-size: clamp(11px, 1.3vw, 15px);
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: 0.035em;
+  text-transform: none;
+  text-shadow: 0 1px 2px #000;
+}
+
+.auditorium-reading-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 7px;
+  padding-left: 11px;
+  border-left: 1px solid rgb(157 105 62 / 24%);
+}
+
+.auditorium-font-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 34px;
+  margin: 0;
+  padding: 2px 10px 0;
+  border: 1px solid rgb(151 103 62 / 72%);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 5px, rgb(199 61 47 / 78%) 0 1px, rgb(199 61 47 / 20%) 1.5px 3px, transparent 3.5px),
+    linear-gradient(180deg, rgb(35 25 17 / 99%), rgb(12 10 8 / 100%) 62%, rgb(7 7 6 / 100%));
+  color: #f3dfbf;
+  font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px #000;
+  box-shadow:
+    inset 0 1px 0 rgb(255 229 192 / 6%),
+    inset 0 0 8px rgb(151 65 39 / 7%),
+    0 3px 8px rgb(0 0 0 / 38%);
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.auditorium-font-control:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgb(192 138 82 / 90%);
+  color: #ffe8c6;
+  box-shadow:
+    inset 0 1px 0 rgb(255 235 207 / 8%),
+    inset 0 0 10px rgb(177 71 44 / 10%),
+    0 0 8px rgb(167 53 39 / 10%),
+    0 4px 9px rgb(0 0 0 / 42%);
+}
+
+.auditorium-font-control:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auditorium-font-control:disabled {
+  opacity: 0.34;
+  filter: saturate(0.5);
+  cursor: default;
+}
+
+.auditorium-font-control:focus-visible {
+  outline: 2px solid #d8aa68;
+  outline-offset: 3px;
 }
 
 /* Enlarged sections retain their own measured content geometry. */
@@ -132,21 +289,54 @@
     width: min(96vw, 640px);
   }
 
-  .auditorium-focus-toolbar {
+  .auditorium-focus-toolbar,
+  .auditorium-reading-toolbar {
     width: 96%;
-    padding: 7px 8px 7px 12px;
-    border-radius: 18px;
+    padding: 7px 8px 7px 11px;
+    border-radius: 8px;
   }
 
   .auditorium-focus-toolbar-title {
     font-size: clamp(10px, 3vw, 12px);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.055em;
   }
 
   .auditorium-focus-toolbar-exit {
-    min-width: 68px;
-    height: 34px;
-    padding-inline: 11px;
-    font-size: 12px;
+    min-width: 62px;
+    height: 32px;
+    padding-inline: 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+  }
+
+  .auditorium-reading-toolbar {
+    gap: 7px;
+  }
+
+  .auditorium-reading-toolbar-message {
+    font-size: clamp(9px, 2.7vw, 11px);
+    line-height: 1.12;
+    letter-spacing: 0.02em;
+  }
+
+  .auditorium-reading-toolbar-actions {
+    gap: 5px;
+    padding-left: 7px;
+  }
+
+  .auditorium-font-control {
+    min-width: 39px;
+    height: 32px;
+    padding-inline: 8px;
+    border-radius: 5px;
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auditorium-focus-toolbar-exit,
+  .auditorium-font-control {
+    transition: none;
   }
 }
