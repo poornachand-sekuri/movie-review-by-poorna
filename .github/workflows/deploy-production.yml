@@ -1,0 +1,103 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'migrations/**'
+      - 'scripts/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'wrangler.jsonc'
+      - '.nvmrc'
+      - '.github/workflows/deploy-production.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: movie-review-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PRODUCTION_URL: https://www.moviereviewbypoorna.com
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.nvmrc'
+          package-manager-cache: false
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate application
+        run: npm run validate
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Deploy production Worker
+        run: npx wrangler deploy
+
+      - name: Smoke-test production runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fetch_page() {
+            local path="$1"
+            local output="$2"
+            curl --fail --silent --show-error --location \
+              --retry 12 --retry-delay 3 --retry-all-errors \
+              "$PRODUCTION_URL$path" > "$output"
+          }
+
+          sleep 4
+          fetch_page '/' /tmp/lounge.html
+          fetch_page '/search?q=Kantara' /tmp/cafe.html
+          fetch_page '/review/dc' /tmp/review.html
+          fetch_page '/admin/' /tmp/admin.html
+          fetch_page '/api/health' /tmp/health.json
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const lounge = fs.readFileSync('/tmp/lounge.html', 'utf8');
+          const cafe = fs.readFileSync('/tmp/cafe.html', 'utf8');
+          const review = fs.readFileSync('/tmp/review.html', 'utf8');
+          const admin = fs.readFileSync('/tmp/admin.html', 'utf8');
+          const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+
+          if (health.status !== 'ok') throw new Error('Production health endpoint failed.');
+          if (!lounge.includes('lounge-stage') || !lounge.includes('Movie Reviews By Poorna')) {
+            throw new Error('Production Lounge did not render the rebuild.');
+          }
+          if (lounge.includes('name="robots" content="noindex,nofollow"')) {
+            throw new Error('Production Lounge is still marked noindex.');
+          }
+          if (!cafe.includes('Kantara')) throw new Error('Production Cini Cafe search did not render results.');
+          if (!review.includes('The Auditorium') || !review.includes('DC')) {
+            throw new Error('Production Auditorium did not render the DC review.');
+          }
+          if (!admin.includes('The Projector Room')) {
+            throw new Error('Production Projector Room did not render.');
+          }
+
+          console.log('Production smoke tests passed: Lounge, Cini Cafe, Auditorium, Projector Room and API health.');
+          NODE
