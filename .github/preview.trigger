@@ -19,6 +19,10 @@ The future Projection Booth must be able to consume the same pending/approved/re
 D1 records without schema changes. The Auditorium background remains unwired while
 its artwork is finalized. The Movie Cafe is otherwise unchanged.
 
+2026-09-07 validation cutover: deploy from the corrected current comments client,
+which preserves the dependency-free Lounge loader test path and uses DOM-safe comment
+slot/form construction for both rooms.
+
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
 - Use the nine Premium Runtime Q99 WebP Lounge assets in R2, including the approved upright 06 and 09 opinion tickets. Archival PNG/lossless/AVIF files are masters/backups only and must not be requested by the Lounge runtime.
