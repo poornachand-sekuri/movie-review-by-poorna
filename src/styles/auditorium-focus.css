@@ -289,6 +289,27 @@
     width: min(96vw, 640px);
   }
 
+  /*
+   * Mobile Theater focus keeps the current width but gets a taller canvas.
+   * The approved focus artwork and its source-registered live overlays stretch
+   * together, so review text, reactions and the baked EXIT hit area remain aligned.
+   */
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused {
+    aspect-ratio: 1.08 / 1;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused > .auditorium-state-layer {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused > .auditorium-source-layer {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
   .auditorium-focus-toolbar,
   .auditorium-reading-toolbar {
     width: 96%;
