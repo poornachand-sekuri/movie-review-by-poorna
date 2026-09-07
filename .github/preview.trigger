@@ -23,6 +23,10 @@ its artwork is finalized. The Movie Cafe is otherwise unchanged.
 which preserves the dependency-free Lounge loader test path and uses DOM-safe comment
 slot/form construction for both rooms.
 
+2026-09-07 My POV refinement: keep the approved Clapboard artwork and My POV overlay
+geometry unchanged, but render the POV as a left-aligned, warmer high-contrast reading
+block with stronger condensed typography and improved small-screen readability.
+
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
 - Use the nine Premium Runtime Q99 WebP Lounge assets in R2, including the approved upright 06 and 09 opinion tickets. Archival PNG/lossless/AVIF files are masters/backups only and must not be requested by the Lounge runtime.
