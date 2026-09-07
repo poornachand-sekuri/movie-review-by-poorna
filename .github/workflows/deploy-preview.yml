@@ -6,7 +6,17 @@ on:
     branches:
       - cinema-rebuild
     paths:
-      - '.github/preview.trigger'
+      - 'src/**'
+      - 'public/**'
+      - 'migrations/**'
+      - 'scripts/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'wrangler.jsonc'
+      - '.nvmrc'
+      - '.github/workflows/deploy-preview.yml'
 
 permissions:
   contents: read
