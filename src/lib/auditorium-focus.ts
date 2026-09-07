@@ -174,7 +174,7 @@ export function initAuditoriumFocus(): void {
     requestAnimationFrame(() => section.focus({ preventScroll: true }));
   };
 
-  const openFocus = (section: HTMLElement) => {
+  const openFocus = (section: HTMLElement, initialFocus?: HTMLElement) => {
     if (focusedSection) return;
     const parent = section.parentElement;
     if (!parent) return;
@@ -218,12 +218,17 @@ export function initAuditoriumFocus(): void {
     document.documentElement.classList.add('auditorium-focus-open');
 
     const bakedCloseButton = section.querySelector<HTMLButtonElement>('[data-auditorium-focus-close]');
-    if (bakedCloseButton) {
-      bakedCloseButton.tabIndex = 0;
-      requestAnimationFrame(() => bakedCloseButton.focus({ preventScroll: true }));
-    } else if (usesGenericExit) {
-      requestAnimationFrame(() => genericClose.focus({ preventScroll: true }));
-    }
+    if (bakedCloseButton) bakedCloseButton.tabIndex = 0;
+
+    requestAnimationFrame(() => {
+      if (initialFocus && section.contains(initialFocus)) {
+        initialFocus.focus({ preventScroll: true });
+      } else if (bakedCloseButton) {
+        bakedCloseButton.focus({ preventScroll: true });
+      } else if (usesGenericExit) {
+        genericClose.focus({ preventScroll: true });
+      }
+    });
   };
 
   genericClose.addEventListener('click', (event) => {
@@ -245,6 +250,16 @@ export function initAuditoriumFocus(): void {
       event.preventDefault();
       openFocus(section);
     });
+
+    if (section.dataset.auditoriumFocusable === 'opinion') {
+      section.addEventListener('focusin', (event) => {
+        const target = event.target;
+        if (focusedSection === section) return;
+        if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+          openFocus(section, target);
+        }
+      });
+    }
 
     section.querySelector<HTMLButtonElement>('[data-auditorium-focus-close]')?.addEventListener('click', (event) => {
       event.stopPropagation();
