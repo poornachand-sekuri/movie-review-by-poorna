@@ -1,1 +1,0 @@
-Temporary release note for the production cutover hotfix. The legacy Durable Object class exports are retained only to preserve existing Cloudflare namespaces and stored data while the rebuilt runtime uses D1. This note will be removed before merge.
