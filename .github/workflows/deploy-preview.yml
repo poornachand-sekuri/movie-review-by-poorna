@@ -15,6 +15,7 @@ on:
       - 'package-lock.json'
       - 'tsconfig.json'
       - 'wrangler.jsonc'
+      - 'wrangler.preview.jsonc'
       - '.nvmrc'
       - '.github/workflows/deploy-preview.yml'
 
@@ -46,6 +47,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Activate preview Cloudflare config
+        run: cp wrangler.preview.jsonc wrangler.jsonc
+
       - name: Validate application
         run: npm run validate
 
@@ -58,7 +62,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          npx wrangler deploy --env preview 2>&1 | tee /tmp/deploy.log
+          npx wrangler deploy 2>&1 | tee /tmp/deploy.log
 
           preview_url=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/deploy.log | tail -n 1 || true)
           test -n "$preview_url" || { echo 'Could not determine workers.dev preview URL.'; exit 1; }
