@@ -2,7 +2,7 @@ type AuditoriumFocusKind = 'clapboard' | 'theater' | 'share' | 'related' | 'opin
 
 const FOCUS_LABELS: Record<AuditoriumFocusKind, string> = {
   clapboard: 'Movie Details',
-  theater: 'Now Screening',
+  theater: 'Theater Review',
   share: 'Share This Review',
   related: 'Related Reviews',
   opinion: 'Share Your Opinion',
