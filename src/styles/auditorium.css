@@ -1,28 +1,80 @@
 /* Auditorium v4 — artwork-first runtime with live content overlays.
-   Geometry comes only from the confirmed content/v4/responsive assets.
-   The final Auditorium background is intentionally not wired yet. */
+   Preserve main's registered section geometry and use one continuous seating
+   background beneath the theater, sharing, related reviews and opinion panel. */
 
 .auditorium-page {
   --auditorium-stage-max: 1086px;
   --auditorium-section-gap: 1.5rem;
+  --auditorium-end-space: clamp(36px, 6vw, 72px);
+  --auditorium-start-space: clamp(12px, 2vw, 24px);
   min-height: 100vh;
-  padding: clamp(12px, 2vw, 24px) 12px clamp(36px, 6vw, 72px);
-  background-color: #050505;
-  background-image: var(--auditorium-background, none);
-  background-position: top center;
-  background-repeat: repeat-y;
-  background-size: 100% auto;
+  padding: var(--auditorium-start-space) 12px var(--auditorium-end-space);
+  background-color: #060505;
   color: #fff;
   overflow-x: clip;
 }
 
 .auditorium-stage {
+  /* Registered top navigation + clapboard + screen-to-seats heights.
+     The surrounding walls end at the same seating transition as the artwork. */
+  --auditorium-front-depth: 133.7154156595cqw;
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
   width: min(100%, var(--auditorium-stage-max));
   margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--auditorium-section-gap);
+}
+
+.auditorium-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: calc(-1 * var(--auditorium-start-space));
+  left: 50%;
+  width: 100vw;
+  height: calc(var(--auditorium-front-depth) + 2 * var(--auditorium-section-gap) + var(--auditorium-start-space) + 3rem);
+  transform: translateX(-50%);
+  /* Reuse the original ceiling and wall artwork at its natural proportions.
+     Only the upper image is exposed; the existing seats remain the floor. */
+  background-image: url('/images/auditorium/auditorium-surround-lossless.webp');
+  background-size: 100% auto;
+  background-position: center top;
+  background-repeat: no-repeat;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 6rem), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 6rem), transparent);
+  pointer-events: none;
+}
+
+.auditorium-audience {
+  /* The normal theater canvas begins its seating at source y=800/1448. */
+  --auditorium-seats-start: 55.2486187845cqw;
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--auditorium-section-gap);
+}
+
+.auditorium-seating-backdrop {
+  position: absolute;
+  z-index: -1;
+  top: var(--auditorium-seats-start);
+  left: 50%;
+  width: 100vw;
+  max-width: none;
+  height: calc(100% - var(--auditorium-seats-start) + var(--auditorium-end-space));
+  transform: translateX(-50%);
+  object-fit: cover;
+  object-position: top center;
+  pointer-events: none;
+  user-select: none;
 }
 
 .auditorium-section {
@@ -540,6 +592,14 @@
 }
 
 @media (min-width: 720px) {
+  .auditorium-stage {
+    /* Same source heights, with the existing desktop section widths. */
+    --auditorium-front-depth: 95.7643120171cqw;
+  }
+  .auditorium-audience {
+    /* Match main's 66.667% theater width, without measuring layout in JS. */
+    --auditorium-seats-start: 36.8325966851cqw;
+  }
   .auditorium-section--top,
   .auditorium-section--bottom { width: 94.291%; }
   .auditorium-section--clapboard { width: 70.718%; }
