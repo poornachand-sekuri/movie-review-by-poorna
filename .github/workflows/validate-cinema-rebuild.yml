@@ -80,10 +80,15 @@ jobs:
 
       - name: Prove importer against preserved production catalogue
         shell: bash
+        env:
+          LEGACY_PRODUCTION_COMMIT: ab279f9d859561b6f642aee47d17d2875ade0911
         run: |
           set -euo pipefail
 
-          git fetch --no-tags --depth=1 origin main
+          # The legacy JSON catalogue was intentionally removed by the Astro cutover.
+          # Pin this proof to the final pre-rebuild production commit so the guardrail
+          # remains stable after main moves forward.
+          git fetch --no-tags --depth=1 origin "$LEGACY_PRODUCTION_COMMIT"
           git show FETCH_HEAD:public/data/index.json > /tmp/legacy-reviews.json
           git show FETCH_HEAD:public/data/cast-crew.json > /tmp/legacy-credits.json
 
