@@ -70,7 +70,7 @@ jobs:
           fetch '/admin/' /tmp/admin.html
           fetch '/api/health' /tmp/health.json
 
-          admin_session_status=$(curl --silent --show-error --output /tmp/admin-session.json \
+          admin_session_status=$(curl --silent --show-error --location --output /tmp/admin-session.json \
             --write-out '%{http_code}' \
             --retry 6 --retry-delay 2 --retry-all-errors \
             "$PRODUCTION_URL/api/admin/session")
