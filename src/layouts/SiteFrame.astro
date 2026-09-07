@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import '../styles/comments.css';
+import '../styles/auditorium-comments.css';
 import { loungeCriticalImages } from '../lib/lounge-assets';
 
 interface PreloadImage {
@@ -41,5 +43,9 @@ const {
   </head>
   <body>
     <slot />
+    <script>
+      import { initComments } from '../lib/comments-client';
+      initComments();
+    </script>
   </body>
 </html>
