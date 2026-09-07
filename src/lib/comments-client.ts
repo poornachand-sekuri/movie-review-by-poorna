@@ -54,8 +54,10 @@ function createCommentCard(comment: PublicCommentPayload): HTMLElement {
   body.className = 'comment-card__body';
   body.textContent = comment.comment;
 
-  header.append(name, time);
-  card.append(header, body);
+  header.appendChild(name);
+  header.appendChild(time);
+  card.appendChild(header);
+  card.appendChild(body);
   return card;
 }
 
@@ -70,17 +72,22 @@ function paintComments(root: HTMLElement, comments: PublicCommentPayload[]): voi
 
   const visible = comments.slice(0, slots.length);
   if (visible.length === 0) {
+    const firstSlot = slots[0];
+    if (!firstSlot) return;
+
     const empty = document.createElement('p');
     empty.className = 'comments-empty';
     empty.textContent = 'No approved comments yet. Be the first to share your opinion.';
-    slots[0].appendChild(empty);
-    slots[0].setAttribute('aria-hidden', 'false');
+    firstSlot.appendChild(empty);
+    firstSlot.setAttribute('aria-hidden', 'false');
     return;
   }
 
   visible.forEach((comment, index) => {
-    slots[index].appendChild(createCommentCard(comment));
-    slots[index].setAttribute('aria-hidden', 'false');
+    const slot = slots[index];
+    if (!slot) return;
+    slot.appendChild(createCommentCard(comment));
+    slot.setAttribute('aria-hidden', 'false');
   });
 }
 
@@ -101,7 +108,8 @@ function addHoneypot(form: HTMLFormElement, idPrefix: string): void {
   input.autocomplete = 'off';
   input.setAttribute('aria-hidden', 'true');
 
-  form.append(label, input);
+  form.appendChild(label);
+  form.appendChild(input);
 }
 
 function prepareLoungeRoot(): void {
@@ -202,9 +210,15 @@ function buildAuditoriumComments(root: HTMLElement, slug: string): void {
   status.dataset.commentsStatus = '';
   status.setAttribute('aria-live', 'polite');
 
-  form.append(nameLabel, name, commentLabel, comment, submit, status);
+  form.appendChild(nameLabel);
+  form.appendChild(name);
+  form.appendChild(commentLabel);
+  form.appendChild(comment);
+  form.appendChild(submit);
+  form.appendChild(status);
   addHoneypot(form, 'auditorium-comment');
-  root.append(commentsWindow, form);
+  root.appendChild(commentsWindow);
+  root.appendChild(form);
 }
 
 function prepareAuditoriumRoot(): void {
