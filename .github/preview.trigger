@@ -1,20 +1,19 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-07: Keep the approved Auditorium artwork/content geometry and top/bottom
-navigation mappings unchanged. Extend the existing Auditorium focus/layover system
-to every content section except Top Navigation and Bottom Navigation. Focusable
-sections are: Clapboard Details, Theater, Share This Review, Related Reviews and
-Share Your Opinion. Theater keeps the approved 09 focus artwork, fixed internal
-review viewport and external readability toolbar. Share Your Opinion keeps the
-approved 10 focus artwork and baked EXIT hit area. Clapboard, Share This Review
-and Related Reviews enlarge their existing approved artwork/content without
-swapping or redrawing it and use one shared cinematic EXIT toolbar outside the
-artwork. Related Review poster links remain interactive in focus mode. Keep Escape
-and backdrop-click closing, page scroll locking, keyboard activation and exact
-section restoration on close. Top and Bottom Navigation remain navigation-only
-and must never open focus mode. Internal focus labels must use canonical Auditorium
-terminology. The Auditorium background remains unwired while its artwork is
-finalized. The Lounge and The Movie Café are otherwise unchanged.
+2026-09-07: Keep all approved Auditorium artwork/content geometry, focus modes and
+top/bottom navigation mappings unchanged. Add persistent movie-specific Like and
+Dislike integration to the Theater reaction bar. Existing aggregate counts must
+render on initial review-page load. Normal Auditorium and Theater Focus Mode must
+share one live reaction state so updates are reflected immediately in both views.
+Use one anonymous browser voter key per visitor: first tap records Like/Dislike,
+tapping the same choice again removes it, and tapping the opposite choice switches
+the vote without double-counting. Store reactions by review id in D1 so each movie
+has independent counts. Place each live count immediately to the right of its baked
+thumb icon with subtle spacing, warm cinematic ivory/gold typography, tabular
+numbers and restrained glow. The baked artwork itself must remain untouched.
+Reaction controls must remain keyboard accessible and must not accidentally open
+Theater focus mode when pressed. The Auditorium background remains unwired while
+its artwork is finalized. The Lounge and The Movie Café are otherwise unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
