@@ -84,6 +84,146 @@ function paintComments(root: HTMLElement, comments: PublicCommentPayload[]): voi
   });
 }
 
+function addHoneypot(form: HTMLFormElement, idPrefix: string): void {
+  if (form.elements.namedItem('website')) return;
+
+  const label = document.createElement('label');
+  label.className = 'comments-honeypot';
+  label.htmlFor = `${idPrefix}-website`;
+  label.textContent = 'Website';
+
+  const input = document.createElement('input');
+  input.id = `${idPrefix}-website`;
+  input.className = 'comments-honeypot';
+  input.type = 'text';
+  input.name = 'website';
+  input.tabIndex = -1;
+  input.autocomplete = 'off';
+  input.setAttribute('aria-hidden', 'true');
+
+  form.append(label, input);
+}
+
+function prepareLoungeRoot(): void {
+  const root = document.querySelector<HTMLElement>('#share-your-opinion.lounge-panel--opinion');
+  if (!root) return;
+
+  root.dataset.commentsRoot = '';
+  root.dataset.commentTarget = 'lounge';
+  root.dataset.commentTargetId = 'lounge';
+
+  const form = root.querySelector<HTMLFormElement>('[data-opinion-form]');
+  if (!form) return;
+  form.dataset.commentsForm = '';
+
+  const name = form.elements.namedItem('name');
+  if (name instanceof HTMLInputElement) {
+    name.required = true;
+    name.minLength = 2;
+  }
+
+  const comment = form.elements.namedItem('comment');
+  if (comment instanceof HTMLTextAreaElement) {
+    comment.required = true;
+    comment.minLength = 2;
+  }
+
+  const status = root.querySelector<HTMLElement>('[data-opinion-status]');
+  if (status) status.dataset.commentsStatus = '';
+  addHoneypot(form, 'lounge-comment');
+}
+
+function buildAuditoriumComments(root: HTMLElement, slug: string): void {
+  if (root.querySelector('[data-comments-form]')) return;
+
+  root.dataset.commentsRoot = '';
+  root.dataset.commentTarget = 'review';
+  root.dataset.commentTargetId = slug;
+
+  const commentsWindow = document.createElement('div');
+  commentsWindow.className = 'auditorium-comments-window';
+  commentsWindow.dataset.commentsList = '';
+  commentsWindow.setAttribute('role', 'region');
+  commentsWindow.setAttribute('aria-label', 'Recent approved comments');
+  commentsWindow.setAttribute('aria-live', 'polite');
+
+  for (let index = 1; index <= 2; index += 1) {
+    const slot = document.createElement('div');
+    slot.className = `auditorium-comment-slot auditorium-comment-slot--${index}`;
+    slot.dataset.commentSlot = String(index);
+    slot.setAttribute('aria-hidden', index === 1 ? 'false' : 'true');
+    if (index === 1) {
+      const empty = document.createElement('p');
+      empty.className = 'comments-empty';
+      empty.textContent = 'No approved comments yet. Be the first to share your opinion.';
+      slot.appendChild(empty);
+    }
+    commentsWindow.appendChild(slot);
+  }
+
+  const form = document.createElement('form');
+  form.className = 'auditorium-opinion-form';
+  form.dataset.commentsForm = '';
+  form.noValidate = false;
+
+  const nameLabel = document.createElement('label');
+  nameLabel.className = 'visually-hidden';
+  nameLabel.htmlFor = 'auditorium-comment-name';
+  nameLabel.textContent = 'Your name';
+
+  const name = document.createElement('input');
+  name.id = 'auditorium-comment-name';
+  name.name = 'name';
+  name.maxLength = 80;
+  name.minLength = 2;
+  name.required = true;
+  name.placeholder = 'Your name';
+  name.autocomplete = 'name';
+
+  const commentLabel = document.createElement('label');
+  commentLabel.className = 'visually-hidden';
+  commentLabel.htmlFor = 'auditorium-comment-text';
+  commentLabel.textContent = 'Your comment';
+
+  const comment = document.createElement('textarea');
+  comment.id = 'auditorium-comment-text';
+  comment.name = 'comment';
+  comment.maxLength = 1500;
+  comment.minLength = 2;
+  comment.required = true;
+  comment.placeholder = 'Your comment';
+
+  const submit = document.createElement('button');
+  submit.type = 'submit';
+  submit.setAttribute('aria-label', 'Submit comment for approval');
+
+  const status = document.createElement('p');
+  status.className = 'visually-hidden';
+  status.dataset.commentsStatus = '';
+  status.setAttribute('aria-live', 'polite');
+
+  form.append(nameLabel, name, commentLabel, comment, submit, status);
+  addHoneypot(form, 'auditorium-comment');
+  root.append(commentsWindow, form);
+}
+
+function prepareAuditoriumRoot(): void {
+  const root = document.querySelector<HTMLElement>('[data-auditorium-opinion]');
+  if (!root) return;
+
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  if (parts[0] !== 'review' || !parts[1]) return;
+
+  let slug = parts[1];
+  try {
+    slug = decodeURIComponent(slug);
+  } catch {
+    // Keep the URL segment as-is if it is not percent encoded correctly.
+  }
+
+  buildAuditoriumComments(root, slug.slice(0, 180));
+}
+
 let toastTimer: number | undefined;
 
 function showToast(message: string, tone: 'success' | 'error' = 'success'): void {
@@ -129,7 +269,7 @@ async function loadComments(root: HTMLElement): Promise<void> {
     const payload = (await response.json()) as CommentsResponse;
     paintComments(root, Array.isArray(payload.comments) ? payload.comments : []);
   } catch {
-    // Keep server-rendered approved comments when a refresh request temporarily fails.
+    // Retain the current display if the approved-comment refresh temporarily fails.
   }
 }
 
@@ -147,7 +287,7 @@ function mountCommentRoot(root: HTMLElement): void {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
     if (!form.reportValidity()) return;
 
     const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -197,9 +337,11 @@ function mountCommentRoot(root: HTMLElement): void {
       form.removeAttribute('aria-busy');
       if (submit) submit.disabled = false;
     }
-  });
+  }, true);
 }
 
 export function initComments(): void {
+  prepareLoungeRoot();
+  prepareAuditoriumRoot();
   document.querySelectorAll<HTMLElement>('[data-comments-root]').forEach(mountCommentRoot);
 }
