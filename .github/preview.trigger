@@ -36,6 +36,8 @@ warm-metal trim and restrained red illumination; remove the generic popup chevro
 but increase only the Theater's vertical height on small screens. Stretch the approved
 focus artwork and its source-registered review/reaction/EXIT overlay layer together so
 all live controls remain aligned while the Theater uses more of the phone's screen.
+The live review viewport should also use nearly the full measured inner black screen,
+with only a small safe inset from the illuminated frame and internal scrolling retained.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
