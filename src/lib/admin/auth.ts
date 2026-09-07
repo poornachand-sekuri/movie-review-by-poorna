@@ -12,6 +12,14 @@ function bindings(): AdminBindings {
   return env as unknown as AdminBindings;
 }
 
+function sessionSecret(config = bindings()): string {
+  const dedicated = config.ADMIN_SESSION_SECRET?.trim();
+  if (dedicated) return dedicated;
+
+  const password = config.ADMIN_PASSWORD?.trim();
+  return password ? `movie-review-by-poorna:admin-session:v1:${password}` : '';
+}
+
 function cookieValue(request: Request, name: string): string | null {
   const cookie = request.headers.get('cookie') ?? '';
   for (const part of cookie.split(';')) {
@@ -62,7 +70,7 @@ async function signSession(expiry: number, nonce: string, secret: string): Promi
 }
 
 export async function isAdminAuthenticated(request: Request): Promise<boolean> {
-  const secret = bindings().ADMIN_SESSION_SECRET?.trim();
+  const secret = sessionSecret();
   if (!secret) return false;
 
   const token = cookieValue(request, SESSION_COOKIE);
@@ -79,13 +87,13 @@ export async function isAdminAuthenticated(request: Request): Promise<boolean> {
 }
 
 export async function loginAdmin(request: Request): Promise<Response> {
-  const { ADMIN_PASSWORD, ADMIN_SESSION_SECRET } = bindings();
-  const password = ADMIN_PASSWORD?.trim();
-  const secret = ADMIN_SESSION_SECRET?.trim();
+  const config = bindings();
+  const password = config.ADMIN_PASSWORD?.trim();
+  const secret = sessionSecret(config);
 
   if (!password || !secret) {
     return Response.json(
-      { error: 'Admin security is not configured. Add ADMIN_PASSWORD and ADMIN_SESSION_SECRET as Worker secrets.' },
+      { error: 'Admin security is not configured. Add ADMIN_PASSWORD as a Worker secret.' },
       { status: 503, headers: { 'cache-control': 'no-store' } },
     );
   }
