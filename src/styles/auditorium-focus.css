@@ -1,0 +1,152 @@
+/* Shared focus-mode refinements for Auditorium sections without dedicated focus artwork. */
+
+/* The base stylesheet hides normal artwork for focus states that have alternate art.
+   Restore the approved normal artwork for sections that are simply enlarged. */
+.auditorium-section.is-auditorium-focused:not(.has-auditorium-focus-artwork) > .auditorium-artwork {
+  opacity: 1;
+}
+
+.auditorium-section.is-auditorium-focused.has-auditorium-focus-artwork > .auditorium-artwork {
+  opacity: 0;
+}
+
+/* Give each artwork family an appropriate enlarged width while keeping one overlay system. */
+.auditorium-focus-layer[data-focus-kind="clapboard"] .auditorium-focus-stage {
+  width: min(92vw, 900px);
+}
+
+.auditorium-focus-layer[data-focus-kind="share"] .auditorium-focus-stage {
+  width: min(96vw, 1180px);
+}
+
+.auditorium-focus-layer[data-focus-kind="related"] .auditorium-focus-stage {
+  width: min(97vw, 1220px);
+}
+
+.auditorium-focus-layer[data-focus-kind="opinion"] .auditorium-focus-stage {
+  width: min(88vw, 640px);
+}
+
+/* External cinematic toolbar used only where there is no baked EXIT artwork. */
+.auditorium-focus-toolbar {
+  align-self: center;
+  width: min(96%, 920px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  padding: 8px 10px 8px 16px;
+  border: 1px solid rgb(218 55 46 / 72%);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgb(30 7 7 / 96%), rgb(7 7 7 / 97%)),
+    #080808;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 4%),
+    0 0 20px rgb(216 38 30 / 14%),
+    0 10px 28px rgb(0 0 0 / 48%);
+}
+
+.auditorium-focus-toolbar[hidden] {
+  display: none;
+}
+
+.auditorium-focus-toolbar-title {
+  min-width: 0;
+  overflow: hidden;
+  color: #f6eadc;
+  font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
+  font-size: clamp(12px, 1.5vw, 17px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000, 0 0 10px rgb(180 42 34 / 18%);
+}
+
+.auditorium-focus-toolbar-exit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-width: 76px;
+  height: 38px;
+  margin: 0;
+  padding: 0 13px;
+  border: 1px solid rgb(255 78 65 / 88%);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 20%, rgb(150 29 23 / 34%), transparent 60%),
+    rgb(12 6 6 / 98%);
+  color: #fff0df;
+  font: 800 13px / 1 Arial, sans-serif;
+  letter-spacing: 0.09em;
+  text-shadow: 0 1px 2px #000;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 5%),
+    0 0 13px rgb(232 47 38 / 18%);
+  cursor: pointer;
+}
+
+.auditorium-focus-toolbar-exit span:last-child {
+  font-size: 21px;
+  line-height: 0.8;
+  transform: translateY(-1px);
+}
+
+.auditorium-focus-toolbar-exit:hover {
+  border-color: rgb(255 111 95 / 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 7%),
+    0 0 18px rgb(237 55 44 / 28%);
+}
+
+.auditorium-focus-toolbar-exit:focus-visible {
+  outline: 2px solid #f1bd6c;
+  outline-offset: 2px;
+}
+
+/* Enlarged sections retain their own measured content geometry. */
+.auditorium-focus-layer[data-focus-kind="clapboard"] .auditorium-section--clapboard,
+.auditorium-focus-layer[data-focus-kind="share"] .auditorium-section--share,
+.auditorium-focus-layer[data-focus-kind="related"] .auditorium-section--related {
+  filter:
+    drop-shadow(0 26px 65px rgb(0 0 0 / 92%))
+    drop-shadow(0 0 24px rgb(220 35 28 / 18%));
+}
+
+/* Keep Related Reviews navigation fully interactive while the strip is enlarged. */
+.auditorium-focus-layer[data-focus-kind="related"] .auditorium-related-card {
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .auditorium-focus-layer[data-focus-kind="clapboard"] .auditorium-focus-stage,
+  .auditorium-focus-layer[data-focus-kind="share"] .auditorium-focus-stage,
+  .auditorium-focus-layer[data-focus-kind="related"] .auditorium-focus-stage,
+  .auditorium-focus-layer[data-focus-kind="opinion"] .auditorium-focus-stage {
+    width: min(96vw, 640px);
+  }
+
+  .auditorium-focus-toolbar {
+    width: 96%;
+    padding: 7px 8px 7px 12px;
+    border-radius: 18px;
+  }
+
+  .auditorium-focus-toolbar-title {
+    font-size: clamp(10px, 3vw, 12px);
+    letter-spacing: 0.05em;
+  }
+
+  .auditorium-focus-toolbar-exit {
+    min-width: 68px;
+    height: 34px;
+    padding-inline: 11px;
+    font-size: 12px;
+  }
+}
