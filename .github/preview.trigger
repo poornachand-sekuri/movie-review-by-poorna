@@ -12,8 +12,9 @@ swapping or redrawing it and use one shared cinematic EXIT toolbar outside the
 artwork. Related Review poster links remain interactive in focus mode. Keep Escape
 and backdrop-click closing, page scroll locking, keyboard activation and exact
 section restoration on close. Top and Bottom Navigation remain navigation-only
-and must never open focus mode. The Auditorium background remains unwired while
-its artwork is finalized. The Lounge and The Movie Café are otherwise unchanged.
+and must never open focus mode. Internal focus labels must use canonical Auditorium
+terminology. The Auditorium background remains unwired while its artwork is
+finalized. The Lounge and The Movie Café are otherwise unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
