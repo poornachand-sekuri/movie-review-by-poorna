@@ -58,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          npx wrangler deploy 2>&1 | tee /tmp/deploy.log
+          npx wrangler deploy --env preview 2>&1 | tee /tmp/deploy.log
 
           preview_url=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/deploy.log | tail -n 1 || true)
           test -n "$preview_url" || { echo 'Could not determine workers.dev preview URL.'; exit 1; }
