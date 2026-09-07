@@ -66,7 +66,7 @@ export function initAuditoriumFocus(): void {
   genericClose.type = 'button';
   genericClose.className = 'auditorium-focus-toolbar-exit';
   genericClose.setAttribute('aria-label', 'Exit enlarged section');
-  genericClose.innerHTML = '<span>EXIT</span><span aria-hidden="true">›</span>';
+  genericClose.innerHTML = '<span>EXIT</span>';
   genericClose.tabIndex = -1;
 
   genericToolbar.appendChild(genericTitle);
