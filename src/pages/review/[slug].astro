@@ -3,11 +3,13 @@ import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
 import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
 import { getReviewReactionSnapshot } from '../../lib/data/reactions';
-import { getReviewBySlug, listRelatedReviewsByCredits, listReviews } from '../../lib/data/reviews';
+import { listRelatedReviews } from '../../lib/data/related-reviews';
+import { getReviewBySlug } from '../../lib/data/reviews';
 import '../../styles/auditorium.css';
 import '../../styles/auditorium-navigation.css';
 import '../../styles/auditorium-focus.css';
 import '../../styles/auditorium-reactions.css';
+import '../../styles/auditorium-comments.css';
 
 export const prerender = false;
 
@@ -21,29 +23,7 @@ if (!loadedReview) {
 const review = loadedReview;
 const viewerReactionKey = Astro.cookies.get('mrp_reaction_voter')?.value ?? null;
 const reactionSnapshot = await getReviewReactionSnapshot(review.id, viewerReactionKey);
-const creditMatches = await listRelatedReviewsByCredits(review.id, 4);
-const relatedReviews = [...creditMatches];
-const relatedSlugs = new Set([review.slug, ...relatedReviews.map((item) => item.slug)]);
-
-if (relatedReviews.length < 4 && review.language) {
-  const sameLanguageFallback = await listReviews({ limit: 20, language: review.language });
-  for (const item of sameLanguageFallback) {
-    if (relatedSlugs.has(item.slug)) continue;
-    relatedReviews.push(item);
-    relatedSlugs.add(item.slug);
-    if (relatedReviews.length === 4) break;
-  }
-}
-
-if (relatedReviews.length < 4) {
-  const generalFallback = await listReviews({ limit: 24 });
-  for (const item of generalFallback) {
-    if (relatedSlugs.has(item.slug)) continue;
-    relatedReviews.push(item);
-    relatedSlugs.add(item.slug);
-    if (relatedReviews.length === 4) break;
-  }
-}
+const relatedReviews = await listRelatedReviews(review, 4);
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   day: '2-digit',
