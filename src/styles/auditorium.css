@@ -231,26 +231,30 @@
   height: 8.8%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   box-sizing: border-box;
-  padding: 0.45cqw 1.15cqw 0.55cqw;
+  padding: 0.4cqw 1.2cqw 0.5cqw;
   overflow: hidden;
-  color: #fff1dc;
-  font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
-  font-size: clamp(10px, 2.05cqw, 17px);
-  font-weight: 700;
-  line-height: 1.32;
-  letter-spacing: 0.012em;
-  text-align: center;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 96%), 0 0 7px rgb(0 0 0 / 78%);
+  color: #ffe2b6;
+  font-family: "Aptos Narrow", "Arial Narrow", "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+  font-size: clamp(10px, 2.18cqw, 18px);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: 0.004em;
+  text-align: left;
+  text-shadow:
+    0 1px 1px rgb(0 0 0 / 100%),
+    0 0 4px rgb(0 0 0 / 94%),
+    0 0 9px rgb(190 92 28 / 20%);
 }
 
 .auditorium-my-pov p {
   display: -webkit-box;
+  width: 100%;
   max-width: 100%;
   margin: 0;
   overflow: hidden;
-  text-wrap: balance;
+  text-wrap: pretty;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
@@ -635,9 +639,10 @@
   .auditorium-credit-value { font-size: clamp(7px, 1.8cqw, 10px); }
 
   .auditorium-my-pov {
-    padding-inline: 0.9cqw;
-    font-size: clamp(9px, 2.25cqw, 12px);
-    line-height: 1.28;
+    padding: 0.24cqw 1cqw 0.3cqw;
+    font-size: clamp(9.5px, 2.55cqw, 12.5px);
+    line-height: 1.1;
+    letter-spacing: 0;
   }
 
   .auditorium-review-scroll {
