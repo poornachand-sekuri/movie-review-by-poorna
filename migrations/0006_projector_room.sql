@@ -1,11 +1,9 @@
 PRAGMA foreign_keys = ON;
 
--- Soft deletion preserves moderation history while keeping deleted comments
--- out of the public Lounge and Auditorium feeds.
-ALTER TABLE comments ADD COLUMN deleted_at TEXT;
-
-CREATE INDEX IF NOT EXISTS idx_comments_deleted_at
-  ON comments(deleted_at, created_at DESC, id DESC);
+-- The comments soft-delete column is added idempotently by the Projector Room
+-- data service because this rebuild already has an active comments table in D1.
+-- Keeping the ALTER out of the migration prevents a future duplicate-column
+-- failure if the runtime upgrade has already occurred.
 
 -- First-party traffic only. visitor_key is an opaque random browser cookie;
 -- no IP address or user-agent fingerprint is stored.
