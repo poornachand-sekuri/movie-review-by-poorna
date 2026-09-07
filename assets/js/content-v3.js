@@ -260,22 +260,23 @@ function setupPopup(root) {
 
 function setupSharing(root, movie) {
   const url = location.href;
-  const text = `${movie.t} — Movie Reviews By Poorna`;
+  const message = `🎬 ${movie.t}\n\nFound this take quite interesting.\n\nCheck out Poorna’s POV 👇\n${url}`;
+  const whatsappMessage = `🎬 *${movie.t}*\n\nFound this take quite interesting.\n\nCheck out *Poorna’s POV* 👇\n${url}`;
   const status = $('.cv3-share-status', root);
   const nativeShare = async () => {
-    if (navigator.share) { await navigator.share({ title: text, text, url }); return true; }
+    if (navigator.share) { await navigator.share({ text: message }); return true; }
     return false;
   };
   root.querySelectorAll('[data-share]').forEach(button => button.addEventListener('click', async () => {
     const kind = button.dataset.share;
     try {
-      if (kind === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener');
-      else if (kind === 'x') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener');
+      if (kind === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`, '_blank', 'noopener');
+      else if (kind === 'x') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
       else if (kind === 'copy') { await navigator.clipboard.writeText(url); status.textContent='Link copied'; setTimeout(()=>status.textContent='',1800); }
       else if (kind === 'instagram') {
-        if (!(await nativeShare())) { await navigator.clipboard.writeText(url); status.textContent='Link copied — paste it in Instagram'; setTimeout(()=>status.textContent='',2500); }
+        if (!(await nativeShare())) { await navigator.clipboard.writeText(message); status.textContent='Share text copied — paste it in Instagram'; setTimeout(()=>status.textContent='',2500); }
       } else if (!(await nativeShare())) {
-        await navigator.clipboard.writeText(url); status.textContent='Link copied'; setTimeout(()=>status.textContent='',1800);
+        await navigator.clipboard.writeText(message); status.textContent='Share text copied'; setTimeout(()=>status.textContent='',1800);
       }
     } catch (error) { if (error?.name !== 'AbortError') status.textContent='Unable to share right now'; }
   }));
