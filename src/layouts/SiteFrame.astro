@@ -23,6 +23,11 @@ const {
   description = 'Movie reviews, verdicts and cinema notes by Poorna.',
   preloadImages = defaultPreloadImages,
 } = Astro.props;
+
+const isPreviewHost = Astro.url.hostname.endsWith('.workers.dev');
+const robots = isPreviewHost
+  ? 'noindex,nofollow'
+  : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 ---
 
 <!doctype html>
@@ -31,7 +36,7 @@ const {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="robots" content="noindex,nofollow" />
+    <meta name="robots" content={robots} />
     <meta name="color-scheme" content="dark" />
     <link rel="preconnect" href="https://assets.moviereviewbypoorna.com" crossorigin />
     <link rel="dns-prefetch" href="//assets.moviereviewbypoorna.com" />
