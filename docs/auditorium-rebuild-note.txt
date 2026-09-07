@@ -1,1 +1,0 @@
-Auditorium rebuild starts from the newly uploaded section files and their intrinsic dimensions only. Lounge and Cafe are out of scope.
