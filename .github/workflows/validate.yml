@@ -49,6 +49,21 @@ jobs:
           grep -Fq 'export class CommentsStore' src/worker.ts
           grep -Fq 'export class AnalyticsStore' src/worker.ts
 
+      - name: Validate Projector Room server auth boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -f public/admin/index.html
+          test -f src/admin/projector-room.html
+          test -f src/pages/admin/index.ts
+          grep -Fq 'isAdminAuthenticated' src/pages/admin/index.ts
+          grep -Fq 'loginDocument' src/pages/admin/index.ts
+          grep -Fq 'Audience Dashboard' src/admin/projector-room.html
+          if grep -Fq 'Audience Dashboard' src/pages/admin/index.ts; then
+            echo 'Unauthenticated admin route must not embed dashboard markup.' >&2
+            exit 1
+          fi
+
       - name: Build production application
         run: npm run build
 
