@@ -32,6 +32,11 @@ EXIT artwork. Restyle only the CSS-generated popup EXIT fascia and Theater A-/A+
 controls as compact physical Auditorium signage/console hardware with dark enamel,
 warm-metal trim and restrained red illumination; remove the generic popup chevron.
 
+2026-09-07 mobile Theater focus height: keep the existing Focus Mode width unchanged,
+but increase only the Theater's vertical height on small screens. Stretch the approved
+focus artwork and its source-registered review/reaction/EXIT overlay layer together so
+all live controls remain aligned while the Theater uses more of the phone's screen.
+
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
 - Use the nine Premium Runtime Q99 WebP Lounge assets in R2, including the approved upright 06 and 09 opinion tickets. Archival PNG/lossless/AVIF files are masters/backups only and must not be requested by the Lounge runtime.
