@@ -44,7 +44,9 @@ const {
     <slot />
     <script>
       import { initComments } from '../lib/comments-client';
+      import { recordCinemaPageView } from '../lib/analytics-client';
       initComments();
+      recordCinemaPageView();
     </script>
   </body>
 </html>
