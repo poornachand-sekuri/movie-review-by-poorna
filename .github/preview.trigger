@@ -1,16 +1,23 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-07: Keep all approved Auditorium artwork/content geometry, focus modes,
-top/bottom navigation mappings and movie-specific Like/Dislike behavior unchanged.
-Refine only the live reaction-count presentation: add a little more horizontal
-space between each baked thumb icon and its number, and slightly increase the
-count font size in both normal Theater and Theater Focus Mode. Preserve the
-independently measured normal-04 and focus-09 reaction layouts, exact vertical
-alignment, warm cinematic ivory/gold condensed typography, tabular numbers and
-restrained glow. The baked artwork itself must remain untouched. Reaction controls
-must stay keyboard accessible and must not accidentally open Theater focus mode.
-The Auditorium background remains unwired while its artwork is finalized. The
-Lounge and The Movie Café are otherwise unchanged.
+2026-09-07: Keep all approved Lounge and Auditorium artwork geometry, focus modes,
+navigation, review content mapping and movie-specific Like/Dislike behavior unchanged.
+Add one shared moderated comments system across The Lounge and each Auditorium review.
+Public users may submit a name and comment; every new submission must be stored in
+D1 with status pending and must not appear publicly until approved by Admin later
+through The Projection Booth. Public comments reads must return approved rows only.
+The Lounge uses one Lounge-wide discussion target and reuses its existing approved
+Share Your Opinion artwork, two Recent Comments slots, name field, comment field and
+submit hit area. Auditorium comments are scoped strictly by review slug so each movie
+has an independent thread, and its live overlays are source-registered separately to
+approved Opinion artwork 07 and focus artwork 10. Focusing a Lounge or Auditorium
+opinion field must retain typed content and open the readable focus ticket where the
+existing interaction model already supports it. Show a clear awaiting-approval
+confirmation after successful submission. Include a honeypot, duplicate suppression
+and lightweight anonymous rate limiting without exposing any public moderation route.
+The future Projection Booth must be able to consume the same pending/approved/rejected
+D1 records without schema changes. The Auditorium background remains unwired while
+its artwork is finalized. The Movie Cafe is otherwise unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
