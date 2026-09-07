@@ -38,7 +38,7 @@
 
 .auditorium-reaction-count {
   position: absolute;
-  left: 46.9565217391%;
+  left: 53%;
   top: 46.6666666667%;
   transform: translateY(-50%);
   display: inline-flex;
@@ -47,7 +47,7 @@
   min-width: 2.2ch;
   color: #f5d9a3;
   font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
-  font-size: clamp(10px, 1.8cqw, 18px);
+  font-size: clamp(11px, 2cqw, 20px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.045em;
@@ -130,13 +130,13 @@
 }
 
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-count {
-  left: 50.9523809524%;
+  left: 57%;
   top: 46.6666666667%;
-  font-size: clamp(13px, 1.85cqw, 22px);
+  font-size: clamp(14px, 2.05cqw, 24px);
 }
 
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--dislike .auditorium-reaction-count {
-  left: 48.0952380952%;
+  left: 54%;
   top: 46.6666666667%;
 }
 
@@ -158,12 +158,12 @@
 
 @media (max-width: 520px) {
   .auditorium-reaction-count {
-    font-size: clamp(9px, 2.7cqw, 13px);
+    font-size: clamp(10px, 2.9cqw, 15px);
     letter-spacing: 0.03em;
   }
 
   .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-count {
-    font-size: clamp(11px, 3cqw, 16px);
+    font-size: clamp(12px, 3.2cqw, 18px);
   }
 }
 
