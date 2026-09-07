@@ -11,5 +11,11 @@
       "database_id": "6c88b16c-c302-47cf-92cd-bdc5f8470bc2",
       "migrations_dir": "migrations"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "REVIEW_ASSETS",
+      "bucket_name": "movie-review-assets"
+    }
   ]
 }
