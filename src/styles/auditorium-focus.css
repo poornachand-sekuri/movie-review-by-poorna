@@ -267,6 +267,15 @@
   outline-offset: 3px;
 }
 
+/* Use almost the full measured inner Theater screen while preserving a safe luminous-frame inset. */
+.auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
+  left: 7.182320442%;
+  top: 10.3130755064%;
+  width: 85.635359116%;
+  height: 66.2983425414%;
+  padding: 1.15cqw 1.2cqw 1.3cqw;
+}
+
 /* Enlarged sections retain their own measured content geometry. */
 .auditorium-focus-layer[data-focus-kind="clapboard"] .auditorium-section--clapboard,
 .auditorium-focus-layer[data-focus-kind="share"] .auditorium-section--share,
@@ -290,12 +299,12 @@
   }
 
   /*
-   * Mobile Theater focus keeps the current width but gets a taller canvas.
-   * The approved focus artwork and its source-registered live overlays stretch
-   * together, so review text, reactions and the baked EXIT hit area remain aligned.
+   * Mobile Theater focus keeps the approved width but uses more of the phone's
+   * vertical reading area. Artwork and source-registered overlays stretch together,
+   * so review text, reactions and the baked EXIT hit area stay aligned.
    */
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused {
-    aspect-ratio: 1.08 / 1;
+    aspect-ratio: 0.86 / 1;
   }
 
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused > .auditorium-state-layer {
@@ -308,6 +317,11 @@
     width: 100%;
     height: 100%;
     aspect-ratio: auto;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
+    padding: 1cqw 1cqw 1.15cqw;
+    line-height: 1.5;
   }
 
   .auditorium-focus-toolbar,
