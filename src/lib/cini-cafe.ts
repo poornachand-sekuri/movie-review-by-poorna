@@ -322,9 +322,9 @@ export function initCiniCafe(): void {
     const start = (state.page - 1) * PAGE_SIZE;
     const visible = filtered.slice(start, start + PAGE_SIZE);
     clearChildren(resultsLayer);
-    for (let index = 0; index < visible.length; index += 1) {
-      resultsLayer.appendChild(makeCard(visible[index], index));
-    }
+    visible.forEach((review, index) => {
+      resultsLayer.appendChild(makeCard(review, index));
+    });
 
     const first = filtered.length ? start + 1 : 0;
     const last = Math.min(start + PAGE_SIZE, filtered.length);
