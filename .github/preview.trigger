@@ -1,24 +1,16 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-07: Keep the current Auditorium Theater reading geometry and focused
-review safe viewport unchanged. Move the readability controls completely outside
-the Theater artwork so they can never compete with or overlap the review text.
-In focused Theater mode, place a compact cinematic helper toolbar immediately
-above the Theater with the message "Adjust text size for comfortable reading"
-and styled A-minus/A-plus controls. The toolbar must appear only for Theater
-focus, remain hidden for the normal page and Share Your Opinion focus, retain the
-five bounded font levels, keyboard accessibility and disabled states at limits.
-The review viewport remains fixed inside the approved Theater borders; changing
-font size only changes internal text flow/scroll length.
-
-Keep all previously approved Auditorium mapping: consistent 1.5rem visible gaps;
-source-measured Clapboard overlays; Watched In = language; stars-only rating;
-full posters resized with object-fit: contain; Related Reviews ordered by
-Director, Actor, Actress, Music Director matches then same-language/general
-fallbacks; Related titles inside their red poster openings on subtle black strips;
-improved My POV typography; approved focus artwork and EXIT behavior. The
-Auditorium background remains unwired while its artwork is being finalized. The
-Lounge and The Movie Café are intentionally unchanged.
+2026-09-07: Keep all approved Auditorium geometry/content/focus behavior unchanged
+and add source-mapped navigation hit areas to the existing top and bottom artwork.
+Top navigation: Lounge icon -> /, center Movie Reviews By Poorna brand/logo -> /,
+Cafe icon -> /search. Bottom navigation: LOUNGE half -> / and CINI CAFE half ->
+/search. Hit areas must remain visually transparent, mobile-friendly and keyboard
+accessible, with only a restrained focus/hover treatment; do not alter the baked
+artwork itself. The hit areas are mapped against the approved 2048x682 source
+canvases. Keep the Theater readability toolbar above the focused Theater and keep
+its fixed internal review viewport unchanged. The Auditorium background remains
+unwired while its artwork is finalized. The Lounge and The Movie Café are
+otherwise unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
