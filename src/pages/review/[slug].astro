@@ -2,10 +2,12 @@
 import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
 import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
+import { getReviewReactionSnapshot } from '../../lib/data/reactions';
 import { getReviewBySlug, listRelatedReviewsByCredits, listReviews } from '../../lib/data/reviews';
 import '../../styles/auditorium.css';
 import '../../styles/auditorium-navigation.css';
 import '../../styles/auditorium-focus.css';
+import '../../styles/auditorium-reactions.css';
 
 export const prerender = false;
 
@@ -17,6 +19,8 @@ if (!loadedReview) {
 }
 
 const review = loadedReview;
+const viewerReactionKey = Astro.cookies.get('mrp_reaction_voter')?.value ?? null;
+const reactionSnapshot = await getReviewReactionSnapshot(review.id, viewerReactionKey);
 const creditMatches = await listRelatedReviewsByCredits(review.id, 4);
 const relatedReviews = [...creditMatches];
 const relatedSlugs = new Set([review.slug, ...relatedReviews.map((item) => item.slug)]);
@@ -207,6 +211,44 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
             tabindex="0"
             set:html={review.bodyHtml}
           ></article>
+
+          <div
+            class="auditorium-reactions"
+            data-review-reactions
+            data-review-slug={review.slug}
+            data-viewer-reaction={reactionSnapshot.viewerReaction ?? ''}
+            aria-label={`${review.title} audience reactions`}
+          >
+            <button
+              class:list={[
+                'auditorium-reaction-button',
+                'auditorium-reaction-button--like',
+                { 'is-selected': reactionSnapshot.viewerReaction === 'like' },
+              ]}
+              type="button"
+              data-reaction-action="like"
+              aria-label={`Like ${review.title}`}
+              aria-pressed={reactionSnapshot.viewerReaction === 'like' ? 'true' : 'false'}
+            >
+              <span class="auditorium-reaction-count" data-reaction-count="like">{reactionSnapshot.likes}</span>
+            </button>
+
+            <button
+              class:list={[
+                'auditorium-reaction-button',
+                'auditorium-reaction-button--dislike',
+                { 'is-selected': reactionSnapshot.viewerReaction === 'dislike' },
+              ]}
+              type="button"
+              data-reaction-action="dislike"
+              aria-label={`Dislike ${review.title}`}
+              aria-pressed={reactionSnapshot.viewerReaction === 'dislike' ? 'true' : 'false'}
+            >
+              <span class="auditorium-reaction-count" data-reaction-count="dislike">{reactionSnapshot.dislikes}</span>
+            </button>
+
+            <span class="visually-hidden" data-reaction-status aria-live="polite"></span>
+          </div>
         </div>
 
         <button
@@ -325,10 +367,12 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
 
   <script>
     import { initAuditoriumFocus } from '../../lib/auditorium-focus';
+    import { initAuditoriumReactions } from '../../lib/auditorium-reactions';
     import { prepareCinemaPage } from '../../lib/lounge-loading';
 
     const page = document.querySelector<HTMLElement>('[data-cinema-page]');
     if (page) prepareCinemaPage(page);
     initAuditoriumFocus();
+    initAuditoriumReactions();
   </script>
 </SiteFrame>
