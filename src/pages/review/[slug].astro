@@ -4,6 +4,7 @@ import SiteFrame from '../../layouts/SiteFrame.astro';
 import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
 import { getReviewBySlug, listRelatedReviewsByCredits, listReviews } from '../../lib/data/reviews';
 import '../../styles/auditorium.css';
+import '../../styles/auditorium-navigation.css';
 
 export const prerender = false;
 
@@ -87,6 +88,26 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
           fetchpriority="high"
           decoding="async"
         />
+        <nav class="auditorium-nav-layer" aria-label="Primary cinema navigation">
+          <a
+            class="auditorium-nav-hit auditorium-nav-hit--top-lounge"
+            href="/"
+            aria-label="Go to The Lounge"
+            title="The Lounge"
+          ></a>
+          <a
+            class="auditorium-nav-hit auditorium-nav-hit--top-logo"
+            href="/"
+            aria-label="Movie Reviews By Poorna — go to The Lounge"
+            title="Movie Reviews By Poorna"
+          ></a>
+          <a
+            class="auditorium-nav-hit auditorium-nav-hit--top-cafe"
+            href="/search"
+            aria-label="Go to The Movie Café"
+            title="The Movie Café"
+          ></a>
+        </nav>
       </section>
 
       <section class="auditorium-section auditorium-section--clapboard" aria-label={`${review.title} movie details`}>
@@ -283,6 +304,20 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
           loading="lazy"
           decoding="async"
         />
+        <nav class="auditorium-nav-layer" aria-label="Footer cinema navigation">
+          <a
+            class="auditorium-nav-hit auditorium-nav-hit--bottom-lounge"
+            href="/"
+            aria-label="Go to The Lounge"
+            title="The Lounge"
+          ></a>
+          <a
+            class="auditorium-nav-hit auditorium-nav-hit--bottom-cafe"
+            href="/search"
+            aria-label="Go to The Movie Café"
+            title="The Movie Café"
+          ></a>
+        </nav>
       </section>
     </div>
   </main>
