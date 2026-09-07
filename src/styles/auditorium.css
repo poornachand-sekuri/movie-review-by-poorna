@@ -6,20 +6,47 @@
   --auditorium-stage-max: 1086px;
   --auditorium-section-gap: 1.5rem;
   --auditorium-end-space: clamp(36px, 6vw, 72px);
+  --auditorium-start-space: clamp(12px, 2vw, 24px);
   min-height: 100vh;
-  padding: clamp(12px, 2vw, 24px) 12px var(--auditorium-end-space);
+  padding: var(--auditorium-start-space) 12px var(--auditorium-end-space);
   background-color: #060505;
   color: #fff;
   overflow-x: clip;
 }
 
 .auditorium-stage {
+  /* Registered top navigation + clapboard + screen-to-seats heights.
+     The surrounding walls end at the same seating transition as the artwork. */
+  --auditorium-front-depth: 133.7154156595cqw;
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
   width: min(100%, var(--auditorium-stage-max));
   margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--auditorium-section-gap);
+}
+
+.auditorium-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: calc(-1 * var(--auditorium-start-space));
+  left: 50%;
+  width: 100vw;
+  height: calc(var(--auditorium-front-depth) + 2 * var(--auditorium-section-gap) + var(--auditorium-start-space) + 3rem);
+  transform: translateX(-50%);
+  /* Reuse the original ceiling and wall artwork at its natural proportions.
+     Only the upper image is exposed; the existing seats remain the floor. */
+  background-image: url('/images/auditorium/auditorium-surround-lossless.webp');
+  background-size: 100% auto;
+  background-position: center top;
+  background-repeat: no-repeat;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 6rem), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 6rem), transparent);
+  pointer-events: none;
 }
 
 .auditorium-audience {
@@ -565,6 +592,10 @@
 }
 
 @media (min-width: 720px) {
+  .auditorium-stage {
+    /* Same source heights, with the existing desktop section widths. */
+    --auditorium-front-depth: 95.7643120171cqw;
+  }
   .auditorium-audience {
     /* Match main's 66.667% theater width, without measuring layout in JS. */
     --auditorium-seats-start: 36.8325966851cqw;
