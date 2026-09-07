@@ -11,5 +11,20 @@
       "database_id": "6c88b16c-c302-47cf-92cd-bdc5f8470bc2",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  "env": {
+    "preview": {
+      "name": "movie-review-by-poorna-preview",
+      "workers_dev": true,
+      "preview_urls": false,
+      "d1_databases": [
+        {
+          "binding": "CONTENT_DB",
+          "database_name": "movie-review-by-poorna-content",
+          "database_id": "6c88b16c-c302-47cf-92cd-bdc5f8470bc2",
+          "migrations_dir": "migrations"
+        }
+      ]
+    }
+  }
 }
