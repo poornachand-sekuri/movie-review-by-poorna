@@ -1,5 +1,6 @@
 /* Movie-specific Theater reactions. The icons remain baked into the approved artwork;
-   these controls add only the live counts, hit areas and selected-state feedback. */
+   these controls add only the live counts, hit areas and selected-state feedback.
+   Positions below are registered to the measured 1448 x 1086 source canvases. */
 
 .auditorium-reactions {
   position: absolute;
@@ -10,8 +11,6 @@
 
 .auditorium-reaction-button {
   position: absolute;
-  top: 86.7%;
-  height: 10.8%;
   margin: 0;
   padding: 0;
   border: 0;
@@ -22,20 +21,25 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Normal Theater artwork (04): measured icon and reaction-bar geometry. */
 .auditorium-reaction-button--like {
-  left: 22.4%;
-  width: 22.5%;
+  left: 24.8618784530%;
+  top: 85.6353591160%;
+  width: 15.8839779006%;
+  height: 9.6685082873%;
 }
 
 .auditorium-reaction-button--dislike {
-  left: 56.2%;
-  width: 22.5%;
+  left: 61.8093922652%;
+  top: 85.6353591160%;
+  width: 15.8839779006%;
+  height: 9.6685082873%;
 }
 
 .auditorium-reaction-count {
   position: absolute;
-  top: 50%;
-  left: 61%;
+  left: 46.9565217391%;
+  top: 46.6666666667%;
   transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
@@ -54,12 +58,16 @@
   transition: color 140ms ease, text-shadow 140ms ease, transform 140ms ease;
 }
 
+.auditorium-reaction-button--dislike .auditorium-reaction-count {
+  top: 49.5238095238%;
+}
+
 .auditorium-reaction-button::after {
   content: '';
   position: absolute;
-  left: 20%;
+  left: 11.3043478261%;
   top: 50%;
-  width: 24%;
+  width: 29.1304347826%;
   aspect-ratio: 1;
   transform: translateY(-50%);
   border-radius: 50%;
@@ -105,10 +113,41 @@
   animation: auditorium-reaction-pop 260ms ease-out;
 }
 
-/* The same source-coordinate layer moves into Theater Focus Mode, so counts stay
-   aligned with the approved 09 reaction bar without a duplicated state. */
+/* Focus artwork (09) moves both baked thumbs, so use its independently measured
+   coordinates rather than carrying normal-mode positions into the enlarged view. */
+.auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--like {
+  left: 26.2430939227%;
+  top: 87.6611418048%;
+  width: 14.5027624309%;
+  height: 9.6685082873%;
+}
+
+.auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--dislike {
+  left: 56.9751381215%;
+  top: 88.1215469613%;
+  width: 14.5027624309%;
+  height: 9.6685082873%;
+}
+
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-count {
+  left: 50.9523809524%;
+  top: 46.6666666667%;
   font-size: clamp(13px, 1.85cqw, 22px);
+}
+
+.auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--dislike .auditorium-reaction-count {
+  left: 48.0952380952%;
+  top: 46.6666666667%;
+}
+
+.auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--like::after {
+  left: 12.3809523810%;
+  width: 31.4285714286%;
+}
+
+.auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--dislike::after {
+  left: 10.9523809524%;
+  width: 30%;
 }
 
 @keyframes auditorium-reaction-pop {
@@ -119,7 +158,6 @@
 
 @media (max-width: 520px) {
   .auditorium-reaction-count {
-    left: 62%;
     font-size: clamp(9px, 2.7cqw, 13px);
     letter-spacing: 0.03em;
   }
