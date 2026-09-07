@@ -1,0 +1,176 @@
+/* Auditorium Share Your Opinion live overlays, registered to the approved 1080 x 1456 artwork. */
+
+.auditorium-comments-window,
+.auditorium-opinion-form {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  width: 100%;
+  aspect-ratio: 1080 / 1456;
+  transform: translateY(var(--art-shift-y));
+}
+
+.auditorium-comments-window {
+  pointer-events: none;
+  font-size: clamp(10px, 2.75cqw, 17px);
+}
+
+.auditorium-comment-slot {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #a92420 rgb(0 0 0 / 16%);
+  pointer-events: auto;
+}
+
+/* Normal Opinion artwork 07: frame interiors measured from the source canvas. */
+.auditorium-comment-slot--1 {
+  left: 9.8148148148%;
+  top: 15.5219780220%;
+  width: 81.8518518519%;
+  height: 17.1703296703%;
+}
+
+.auditorium-comment-slot--2 {
+  left: 9.8148148148%;
+  top: 35.4395604396%;
+  width: 81.8518518519%;
+  height: 15.9340659341%;
+}
+
+.auditorium-opinion-form {
+  pointer-events: none;
+}
+
+.auditorium-opinion-form input,
+.auditorium-opinion-form textarea {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f4eee6;
+  caret-color: #e23931;
+  font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
+  font-size: clamp(10px, 2.55cqw, 16px);
+  font-weight: 560;
+  line-height: 1.28;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 82%);
+  pointer-events: auto;
+}
+
+.auditorium-opinion-form input::placeholder,
+.auditorium-opinion-form textarea::placeholder {
+  color: #9f9991;
+  opacity: 0.88;
+}
+
+.auditorium-opinion-form input:focus,
+.auditorium-opinion-form textarea:focus {
+  background: rgb(0 0 0 / 13%);
+  box-shadow: inset 0 0 0 1px rgb(224 67 56 / 25%), 0 0 12px rgb(218 48 39 / 10%);
+}
+
+.auditorium-opinion-form input[name="name"] {
+  left: 7.9629629630%;
+  top: 64.1483516484%;
+  width: 84.0740740741%;
+  height: 3.8461538462%;
+  padding: 0 1.2cqw;
+}
+
+.auditorium-opinion-form textarea[name="comment"] {
+  left: 7.9629629630%;
+  top: 70.1923076923%;
+  width: 84.0740740741%;
+  height: 15.1785714286%;
+  padding: 0.85cqw 1.2cqw;
+  resize: none;
+}
+
+.auditorium-opinion-form button[type="submit"] {
+  position: absolute;
+  left: 7.2222222222%;
+  top: 87.3626373626%;
+  width: 85.5555555556%;
+  height: 6.8681318681%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.8cqw;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auditorium-opinion-form button[type="submit"]:focus-visible {
+  outline: 2px solid #f0bd68;
+  outline-offset: -3px;
+}
+
+/* Focus artwork 10: use its independently measured content/input interiors. */
+.auditorium-section--opinion.is-auditorium-focused .auditorium-comments-window,
+.auditorium-section--opinion.is-auditorium-focused .auditorium-opinion-form {
+  transform: none;
+}
+
+.auditorium-section--opinion.is-auditorium-focused .auditorium-comments-window {
+  font-size: clamp(12px, 2.55cqw, 18px);
+}
+
+.auditorium-section--opinion.is-auditorium-focused .auditorium-comment-slot--1 {
+  left: 11.1111111111%;
+  top: 19.9862637363%;
+  width: 78.7037037037%;
+  height: 16.3461538462%;
+}
+
+.auditorium-section--opinion.is-auditorium-focused .auditorium-comment-slot--2 {
+  left: 11.1111111111%;
+  top: 39.1483516484%;
+  width: 78.7037037037%;
+  height: 15.1098901099%;
+}
+
+.auditorium-section--opinion.is-auditorium-focused .auditorium-opinion-form input[name="name"] {
+  left: 9.5370370370%;
+  top: 66.5521978022%;
+  width: 80.9259259259%;
+  height: 3.6401098901%;
+}
+
+.auditorium-section--opinion.is-auditorium-focused .auditorium-opinion-form textarea[name="comment"] {
+  left: 9.5370370370%;
+  top: 72.3901098901%;
+  width: 80.9259259259%;
+  height: 14.3543956044%;
+}
+
+.auditorium-section--opinion.is-auditorium-focused .auditorium-opinion-form button[type="submit"] {
+  left: 8.7962962963%;
+  top: 88.8049450549%;
+  width: 82.4074074074%;
+  height: 6.5247252747%;
+}
+
+@media (max-width: 520px) {
+  .auditorium-comments-window {
+    font-size: clamp(9px, 2.8cqw, 13px);
+  }
+
+  .auditorium-opinion-form input,
+  .auditorium-opinion-form textarea {
+    font-size: clamp(9px, 2.7cqw, 13px);
+  }
+
+  .auditorium-section--opinion.is-auditorium-focused .auditorium-comments-window {
+    font-size: clamp(11px, 2.9cqw, 15px);
+  }
+}
