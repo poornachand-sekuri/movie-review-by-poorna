@@ -1,0 +1,60 @@
+---
+import '../styles/global.css';
+import '../styles/comments.css';
+import '../styles/auditorium-runtime-fixes.css';
+import { loungeCriticalImages } from '../lib/lounge-assets';
+
+interface PreloadImage {
+  href: string;
+  fetchPriority?: 'high' | 'low' | 'auto';
+}
+
+interface Props {
+  title?: string;
+  description?: string;
+  preloadImages?: readonly PreloadImage[];
+}
+
+const defaultPreloadImages: readonly PreloadImage[] = Astro.url.pathname === '/'
+  ? loungeCriticalImages.map((href) => ({ href, fetchPriority: 'high' as const }))
+  : [];
+
+const {
+  title = 'Movie Review By Poorna',
+  description = 'Movie reviews, verdicts and cinema notes by Poorna.',
+  preloadImages = defaultPreloadImages,
+} = Astro.props;
+
+const isPreviewHost = Astro.url.hostname.endsWith('.workers.dev');
+const robots = isPreviewHost
+  ? 'noindex,nofollow'
+  : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <meta name="color-scheme" content="dark" />
+    <link rel="preconnect" href="https://assets.moviereviewbypoorna.com" crossorigin />
+    <link rel="dns-prefetch" href="//assets.moviereviewbypoorna.com" />
+    {preloadImages.map((image) => (
+      <link rel="preload" as="image" href={image.href} fetchpriority={image.fetchPriority ?? 'auto'} />
+    ))}
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+    <script>
+      import { initComments } from '../lib/comments-client';
+      import { recordCinemaPageView } from '../lib/analytics-client';
+      import { initAuditoriumSharing } from '../lib/auditorium-sharing';
+      initComments();
+      recordCinemaPageView();
+      initAuditoriumSharing();
+    </script>
+  </body>
+</html>

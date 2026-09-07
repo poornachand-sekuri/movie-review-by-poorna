@@ -1,0 +1,593 @@
+/* Auditorium v4 — artwork-first runtime with live content overlays.
+   Geometry comes only from the confirmed content/v4/responsive assets.
+   The final Auditorium background is intentionally not wired yet. */
+
+.auditorium-page {
+  --auditorium-stage-max: 1086px;
+  --auditorium-section-gap: 1.5rem;
+  min-height: 100vh;
+  padding: clamp(12px, 2vw, 24px) 12px clamp(36px, 6vw, 72px);
+  background-color: #050505;
+  background-image: var(--auditorium-background, none);
+  background-position: top center;
+  background-repeat: repeat-y;
+  background-size: 100% auto;
+  color: #fff;
+  overflow-x: clip;
+}
+
+.auditorium-stage {
+  width: min(100%, var(--auditorium-stage-max));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--auditorium-section-gap);
+}
+
+.auditorium-section {
+  position: relative;
+  margin: 0;
+  flex: 0 0 auto;
+  overflow: hidden;
+  aspect-ratio: var(--art-width) / var(--art-visible-height);
+  container-type: inline-size;
+}
+
+.auditorium-section[data-auditorium-focusable] {
+  cursor: zoom-in;
+}
+
+.auditorium-section[data-auditorium-focusable]:focus-visible {
+  outline: 2px solid rgb(220 50 42 / 72%);
+  outline-offset: 4px;
+}
+
+.auditorium-artwork,
+.auditorium-state-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+  transform: translateY(var(--art-shift-y));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.auditorium-artwork {
+  z-index: 0;
+  pointer-events: none;
+}
+
+.auditorium-state-layer {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.auditorium-state-layer[hidden] {
+  display: none;
+}
+
+.auditorium-source-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 100%;
+  aspect-ratio: var(--art-width) / var(--art-height);
+  transform: translateY(var(--art-shift-y));
+  pointer-events: none;
+}
+
+.auditorium-section--top {
+  --art-width: 2048;
+  --art-height: 682;
+  --art-visible-height: 299;
+  --art-shift-y: -30.7918%;
+}
+
+.auditorium-section--clapboard {
+  --art-width: 1536;
+  --art-height: 1024;
+  --art-visible-height: 981;
+  --art-shift-y: -1.4648%;
+}
+
+.auditorium-section--theater {
+  --art-width: 1448;
+  --art-height: 1086;
+  --art-visible-height: 1058;
+  --art-shift-y: 0%;
+}
+
+.auditorium-section--share {
+  --art-width: 2021;
+  --art-height: 374;
+  --art-visible-height: 358;
+  --art-shift-y: -2.1390%;
+}
+
+.auditorium-section--related {
+  --art-width: 2172;
+  --art-height: 724;
+  --art-visible-height: 685;
+  --art-shift-y: -3.1768%;
+}
+
+.auditorium-section--opinion {
+  --art-width: 1080;
+  --art-height: 1456;
+  --art-visible-height: 1422;
+  --art-shift-y: -0.9615%;
+}
+
+.auditorium-section--bottom {
+  --art-width: 2048;
+  --art-height: 682;
+  --art-visible-height: 324;
+  --art-shift-y: -26.2463%;
+}
+
+.auditorium-section--top,
+.auditorium-section--clapboard,
+.auditorium-section--theater,
+.auditorium-section--share,
+.auditorium-section--related,
+.auditorium-section--opinion,
+.auditorium-section--bottom {
+  width: 100%;
+}
+
+.auditorium-movie-poster-frame {
+  position: absolute;
+  left: 4.8828125%;
+  top: 16.015625%;
+  width: 31.1848958333%;
+  height: 32.12890625%;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 0.6510416667cqw;
+  background: #050505;
+}
+
+.auditorium-movie-poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  object-position: center;
+  border-radius: inherit;
+  background: #050505;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.auditorium-clap-value {
+  position: absolute;
+  left: 56%;
+  width: 35.5%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  text-align: center;
+  color: #f5ead8;
+  font-size: clamp(10px, 2.15cqw, 18px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.015em;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 80%);
+  white-space: nowrap;
+}
+
+.auditorium-clap-value--watched { top: 24.70703125%; }
+.auditorium-clap-value--release { top: 34.326171875%; }
+.auditorium-clap-value--rating { top: 43.5546875%; }
+
+.auditorium-stars {
+  color: #e2af56;
+  font-size: 1.06em;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.auditorium-credit-value {
+  position: absolute;
+  left: 24.5442708333%;
+  width: 67.4557291667%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding-left: 1cqw;
+  transform: translateY(-50%);
+  overflow: hidden;
+  color: #efe7dc;
+  font-size: clamp(8px, 1.65cqw, 14px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 82%);
+}
+
+.auditorium-credit-value--actor { top: 59.3629882813%; }
+.auditorium-credit-value--actress { top: 63.9099609375%; }
+.auditorium-credit-value--director { top: 68.398046875%; }
+.auditorium-credit-value--music { top: 73.1438476563%; }
+
+.auditorium-my-pov {
+  position: absolute;
+  left: 10.3%;
+  top: 84.1%;
+  width: 79.4%;
+  height: 8.8%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 0.4cqw 1.2cqw 0.5cqw;
+  overflow: hidden;
+  color: #ffe2b6;
+  font-family: "Aptos Narrow", "Arial Narrow", "Roboto Condensed", "Segoe UI", Arial, sans-serif;
+  font-size: clamp(10px, 2.18cqw, 18px);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: 0.004em;
+  text-align: left;
+  text-shadow:
+    0 1px 1px rgb(0 0 0 / 100%),
+    0 0 4px rgb(0 0 0 / 94%),
+    0 0 9px rgb(190 92 28 / 20%);
+}
+
+.auditorium-my-pov p {
+  display: -webkit-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  text-wrap: pretty;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.auditorium-theater-content {
+  pointer-events: none;
+}
+
+/*
+ * Normal Theater text viewport uses source-pixel geometry on the 1448x1086
+ * artwork. Starting at y=140 removes the oversized empty top band, while the
+ * viewport ends at y=675 so the baked big-screen prompt retains roughly one
+ * text-line of clear breathing room above it.
+ */
+.auditorium-review-scroll {
+  position: absolute;
+  left: 13.6%;
+  top: 12.8913443831%;
+  width: 72.8%;
+  height: 49.2633517495%;
+  box-sizing: border-box;
+  padding: 1.05cqw 2.4cqw 1.4cqw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  pointer-events: auto;
+  color: #f1ede8;
+  font-size: clamp(10px, 2.05cqw, 16px);
+  line-height: 1.55;
+  text-align: left;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 75%);
+  scrollbar-width: thin;
+  scrollbar-color: #b62e2e rgb(0 0 0 / 18%);
+}
+
+.auditorium-review-scroll::-webkit-scrollbar {
+  width: max(5px, 0.75cqw);
+}
+
+.auditorium-review-scroll::-webkit-scrollbar-track {
+  background: rgb(0 0 0 / 18%);
+  border-radius: 999px;
+}
+
+.auditorium-review-scroll::-webkit-scrollbar-thumb {
+  background: #b62e2e;
+  border-radius: 999px;
+}
+
+.auditorium-review-scroll :global(p) {
+  margin: 0 0 1em;
+}
+
+.auditorium-review-scroll :global(p:last-child) {
+  margin-bottom: 0;
+}
+
+.auditorium-review-scroll :global(img) {
+  max-width: 100%;
+  height: auto;
+}
+
+.auditorium-review-scroll:focus-visible {
+  outline: 1px solid rgb(226 175 86 / 70%);
+  outline-offset: -2px;
+}
+
+.auditorium-related-grid {
+  inset: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: auto;
+}
+
+.auditorium-related-card {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+.auditorium-related-card:nth-child(1) { left: 15.6537753223%; width: 15.4696132597%; }
+.auditorium-related-card:nth-child(2) { left: 33.4254143646%; width: 15.4696132597%; }
+.auditorium-related-card:nth-child(3) { left: 51.1970534070%; width: 15.4235727440%; }
+.auditorium-related-card:nth-child(4) { left: 68.9226519337%; width: 15.5156537753%; }
+
+.auditorium-related-poster-frame {
+  position: absolute;
+  left: 0;
+  top: 33.8397790055%;
+  width: 100%;
+  height: 33.2872928177%;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0.7366482505cqw;
+  background: #090909;
+}
+
+.auditorium-related-poster-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  object-position: center;
+  border-radius: inherit;
+  background: #090909;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.auditorium-related-title {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 21%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0.32cqw 0.4cqw;
+  overflow: hidden;
+  background: rgb(0 0 0 / 72%);
+  color: #f4ede4;
+  font-size: clamp(7px, 1.05cqw, 12px);
+  font-weight: 700;
+  line-height: 1.06;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow: 0 1px 3px #000;
+}
+
+.auditorium-related-card:focus-visible {
+  outline: none;
+}
+
+.auditorium-related-card:focus-visible .auditorium-related-poster-frame {
+  outline: 2px solid #d7a753;
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .auditorium-related-poster-frame img { transition: filter 160ms ease; }
+  .auditorium-related-card:hover .auditorium-related-poster-frame img { filter: brightness(1.08); }
+}
+
+.auditorium-focus-placeholder {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.auditorium-focus-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  align-items: safe center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: max(18px, 2.5vh) 14px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: radial-gradient(circle at 50% 42%, rgb(48 7 7 / 20%), transparent 48%), rgb(0 0 0 / 92%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.auditorium-focus-layer.is-open { display: flex; }
+
+.auditorium-focus-stage {
+  width: min(94vw, 1120px);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(8px, 1.2vh, 14px);
+}
+
+.auditorium-focus-layer.is-opinion-focused .auditorium-focus-stage {
+  width: min(88vw, 640px);
+}
+
+.auditorium-focus-stage > .auditorium-section {
+  width: 100% !important;
+  max-width: none;
+}
+
+.auditorium-section.is-auditorium-focused {
+  --art-shift-y: 0%;
+  width: 100% !important;
+  aspect-ratio: var(--art-width) / var(--art-height);
+  overflow: hidden;
+  cursor: default;
+  filter: drop-shadow(0 26px 65px rgb(0 0 0 / 92%)) drop-shadow(0 0 22px rgb(220 35 28 / 16%));
+}
+
+.auditorium-section.is-auditorium-focused > .auditorium-artwork { opacity: 0; }
+.auditorium-section.is-auditorium-focused > .auditorium-state-layer { transform: none; }
+.auditorium-section.is-auditorium-focused > .auditorium-source-layer { transform: none; }
+
+/*
+ * Focused review viewport is fixed safely inside the approved Theater screen.
+ * Font-size controls only change text flow inside this box; overflow stays
+ * scrollable, so no font level can cross the artwork boundaries.
+ */
+.auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
+  left: 8.2872928177%;
+  top: 16.5745856354%;
+  width: 83.4254143646%;
+  height: 56.1694290976%;
+  padding: 1.15cqw 2.05cqw 1.65cqw;
+  line-height: 1.58;
+  scrollbar-width: auto;
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="0"] .auditorium-review-scroll {
+  font-size: clamp(13px, 1.55cqw, 17px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="1"] .auditorium-review-scroll {
+  font-size: clamp(15px, 1.8cqw, 20px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="2"] .auditorium-review-scroll {
+  font-size: clamp(17px, 2.1cqw, 23px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="3"] .auditorium-review-scroll {
+  font-size: clamp(19px, 2.4cqw, 26px);
+}
+
+.auditorium-section--theater.is-auditorium-focused[data-font-step="4"] .auditorium-review-scroll {
+  font-size: clamp(21px, 2.7cqw, 29px);
+}
+
+.auditorium-focus-close {
+  position: absolute;
+  z-index: 7;
+  display: none;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  opacity: 1;
+  cursor: pointer;
+}
+
+.auditorium-section.is-auditorium-focused .auditorium-focus-close { display: block; }
+
+.auditorium-focus-close--theater {
+  left: 80.179558011%;
+  top: 88.581952118%;
+  width: 12.016574586%;
+  height: 8.563535912%;
+}
+
+.auditorium-focus-close--opinion {
+  left: 77.314814815%;
+  top: 0.824175824%;
+  width: 15.370370370%;
+  height: 5.288461538%;
+}
+
+.auditorium-focus-close:focus-visible {
+  outline: 2px solid rgb(255 92 74 / 85%);
+  outline-offset: -2px;
+  border-radius: 0.6cqw;
+}
+
+.auditorium-focus-open,
+.auditorium-focus-open body {
+  overflow: hidden;
+}
+
+@media (min-width: 720px) {
+  .auditorium-section--top,
+  .auditorium-section--bottom { width: 94.291%; }
+  .auditorium-section--clapboard { width: 70.718%; }
+  .auditorium-section--theater { width: 66.667%; }
+  .auditorium-section--share { width: 93.048%; }
+  .auditorium-section--related { width: 100%; }
+  .auditorium-section--opinion { width: 49.724%; }
+}
+
+@media (max-width: 520px) {
+  .auditorium-credit-value { font-size: clamp(7px, 1.8cqw, 10px); }
+
+  .auditorium-my-pov {
+    padding: 0.24cqw 1cqw 0.3cqw;
+    font-size: clamp(9.5px, 2.55cqw, 12.5px);
+    line-height: 1.1;
+    letter-spacing: 0;
+  }
+
+  .auditorium-review-scroll {
+    padding: 1cqw 2.2cqw 1.35cqw;
+    font-size: clamp(9px, 2.55cqw, 12px);
+    line-height: 1.45;
+  }
+
+  .auditorium-related-title {
+    min-height: 26%;
+    padding: 0.28cqw 0.34cqw;
+    font-size: clamp(6px, 1.35cqw, 9px);
+  }
+
+  .auditorium-focus-layer {
+    align-items: safe flex-start;
+    padding: 12px 8px 24px;
+  }
+
+  .auditorium-focus-stage,
+  .auditorium-focus-layer.is-opinion-focused .auditorium-focus-stage {
+    width: min(96vw, 640px);
+  }
+
+  .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
+    padding: 1.05cqw 2cqw 1.4cqw;
+    line-height: 1.52;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auditorium-page { scroll-behavior: auto; }
+  .auditorium-related-poster-frame img { transition: none; }
+}

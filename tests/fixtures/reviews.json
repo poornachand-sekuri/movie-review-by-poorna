@@ -1,0 +1,23 @@
+[
+  {
+    "i": 1,
+    "t": "Foundation Sample",
+    "s": "foundation-sample",
+    "d": "2026-09-01",
+    "l": "Telugu",
+    "m": "https://assets.moviereviewbypoorna.com/reviews/foundation-sample/poster.jpg",
+    "c": 0,
+    "e": "A small migration fixture.",
+    "rd": "2026-08-30",
+    "r": 4,
+    "v": "It's only a schema test.",
+    "body": "<p>Testing apostrophes, HTML and migration safety.</p>",
+    "gallery": [
+      "https://assets.moviereviewbypoorna.com/reviews/foundation-sample/gallery/01.jpg",
+      {
+        "url": "https://assets.moviereviewbypoorna.com/reviews/foundation-sample/gallery/02.jpg",
+        "alt": "Fixture still"
+      }
+    ]
+  }
+]

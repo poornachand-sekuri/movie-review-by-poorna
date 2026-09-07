@@ -1,0 +1,321 @@
+---
+import { loungeCriticalImages } from '../../lib/lounge-assets';
+
+interface Props { theme?: 'lounge' | 'auditorium' | 'cafe'; }
+const { theme = 'lounge' } = Astro.props;
+const rooms = {
+  lounge: { name: 'The Lounge', message: 'Getting the lounge ready for your grand entrance…', image: '/images/loading/lounge.png' },
+  auditorium: { name: 'The Auditorium', message: 'Hold that popcorn. The review is almost ready…', image: '/images/loading/auditorium.png' },
+  cafe: { name: 'The Movie Café', message: 'Fresh picks brewing…', image: '/images/loading/cafe.png' },
+};
+const room = rooms[theme];
+const preview = Astro.url.searchParams.get('loading-preview') === '1';
+const criticalImages = theme === 'lounge' ? loungeCriticalImages : [];
+---
+
+<style is:inline>
+  .lounge-loading-screen { display: none; }
+  html[data-lounge-state] { overflow: hidden; }
+  html[data-lounge-state="loading"] :is(.lounge-page, [data-cinema-page]) { visibility: hidden; }
+  html[data-lounge-state] .lounge-loading-screen {
+    --loading-accent: #d7bc80;
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: auto;
+    isolation: isolate;
+    padding: max(30px, env(safe-area-inset-top)) 24px max(30px, env(safe-area-inset-bottom));
+    background-color: #10211f;
+    background-image: linear-gradient(180deg, #080c1066 0%, #080c1000 25%, #080c1030 55%, #080c1080 100%), var(--loading-art);
+    background-size: cover;
+    background-position: center;
+    color: #fff4df;
+    font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
+    text-align: center;
+    opacity: 1;
+    transition: opacity 220ms ease;
+  }
+  html[data-lounge-state] .lounge-loading-screen[data-theme="auditorium"] { --loading-accent: #edb8a3; background-color: #230e16; }
+  html[data-lounge-state] .lounge-loading-screen[data-theme="cafe"] { --loading-accent: #e8c78c; background-color: #292216; }
+  html[data-lounge-state="leaving"] .lounge-loading-screen { opacity: 0; pointer-events: none; }
+  .lounge-loading-screen * { box-sizing: border-box; }
+  .lounge-loading-brand { margin: 0; color: #fff1d6; font-size: 14px; font-weight: 600; line-height: 1.7; letter-spacing: 0.14em; text-shadow: 0 2px 12px #000; }
+  .lounge-loading-brand span { display: block; color: var(--loading-accent); font-size: 12px; letter-spacing: 0.3em; }
+  .lounge-loading-card { align-self: center; justify-self: center; width: min(100%, 700px); padding: 48px 16px; margin-block: 24px; background: radial-gradient(ellipse, #080b0edd, #080b0e80 50%, transparent 72%); }
+  .lounge-loading-welcome { margin: 0 0 14px; color: var(--loading-accent); font-size: 15px; line-height: 1.5; letter-spacing: 0.2em; text-transform: uppercase; }
+  .lounge-loading-title { margin: 0 auto 24px; max-width: 12ch; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.5rem, 6.2vw, 4.5rem); font-weight: 400; line-height: 1.1; letter-spacing: -0.025em; text-wrap: balance; text-shadow: 0 2px 24px #000; }
+  .lounge-loading-message { margin: 0 auto; max-width: 32ch; min-height: 3em; color: #f3e9d8; font-size: clamp(1rem, 2vw, 1.125rem); line-height: 1.6; text-wrap: balance; text-shadow: 0 2px 10px #000; }
+  .lounge-loading-indicator { display: flex; justify-content: center; gap: 8px; margin: 30px auto 0; }
+  .lounge-loading-indicator i { width: 5px; height: 5px; border-radius: 50%; background: var(--loading-accent); animation: cinema-pulse 1.8s ease-in-out infinite; }
+  .lounge-loading-indicator i:nth-child(2) { animation-delay: 200ms; }
+  .lounge-loading-indicator i:nth-child(3) { animation-delay: 400ms; }
+  .lounge-loading-progress { display: block; width: min(100%, 160px); height: 2px; margin: 22px auto 0; overflow: hidden; border: 0; border-radius: 4px; background: #fff0ca30; color: var(--loading-accent); appearance: none; -webkit-appearance: none; }
+  .lounge-loading-progress::-webkit-progress-bar { background: #fff0ca30; }
+  .lounge-loading-progress::-webkit-progress-value { background: var(--loading-accent); transition: width 120ms ease; }
+  .lounge-loading-progress::-moz-progress-bar { background: var(--loading-accent); }
+  .lounge-loading-recovery { margin-top: 20px; padding: 14px; background: #090b0ed9; border-radius: 6px; }
+  .lounge-loading-recovery[hidden] { display: none; }
+  .lounge-loading-recovery p { margin-top: 0; color: #e1d6c8; font-size: 14px; line-height: 1.5; }
+  .lounge-loading-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+  .lounge-loading-screen button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--loading-accent); border-radius: 4px; background: #111713ee; color: #fff0ca; font: inherit; font-size: 15px; cursor: pointer; }
+  .lounge-loading-screen button:focus-visible { outline: 2px solid #fff4df; outline-offset: 4px; }
+  .lounge-loading-preview { justify-self: center; }
+  @keyframes cinema-pulse { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+
+  /* Decorative room artwork must never compete with the Lounge on phones. */
+  @media (max-width: 700px) {
+    html[data-lounge-state] .lounge-loading-screen {
+      background-image:
+        radial-gradient(circle at 50% 22%, #c49a4a24 0%, transparent 34%),
+        radial-gradient(circle at 20% 88%, #153f4138 0%, transparent 42%),
+        linear-gradient(180deg, #080b0e 0%, #101716 48%, #070808 100%);
+      background-size: auto;
+      background-position: center;
+    }
+    .lounge-loading-card { padding-block: 34px; }
+  }
+
+  @media (max-height: 540px) { .lounge-loading-card { padding-block: 20px; margin-block: 12px; } .lounge-loading-title { font-size: 2.25rem; margin-bottom: 12px; } }
+  @media (prefers-reduced-motion: reduce) { .lounge-loading-indicator i { animation: none; } html[data-lounge-state] .lounge-loading-screen { transition: none; } .lounge-loading-progress::-webkit-progress-value { transition: none; } }
+</style>
+
+<div
+  class="lounge-loading-screen"
+  data-lounge-loader
+  data-theme={theme}
+  data-room={room.name}
+  data-preview={String(preview)}
+  data-critical-images={JSON.stringify(criticalImages)}
+  style={`--loading-art: url("${room.image}")`}
+  aria-labelledby="lounge-loading-title"
+>
+  <p class="lounge-loading-brand">MOVIE REVIEWS <span>BY POORNA</span></p>
+  <div class="lounge-loading-card">
+    <p class="lounge-loading-welcome">Welcome to</p>
+    <h2 class="lounge-loading-title" id="lounge-loading-title">{room.name}</h2>
+    <p class="lounge-loading-message" data-loading-message role="status">{room.message}</p>
+    <div class="lounge-loading-indicator" aria-hidden="true"><i></i><i></i><i></i></div>
+    <progress class="lounge-loading-progress" data-loading-progress max="100" value="0" aria-label={`${room.name} loading progress`}></progress>
+    <div class="lounge-loading-recovery" data-loading-recovery hidden>
+      <p>Still preparing a few visuals. You can enter now while they finish in the background.</p>
+      <div class="lounge-loading-actions">
+        <button type="button" data-loading-retry>Try again</button>
+        <button type="button" data-loading-open>Enter {room.name}</button>
+      </div>
+    </div>
+  </div>
+  {preview && <button class="lounge-loading-preview" type="button" data-loading-preview-open>Enter {room.name}</button>}
+</div>
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const screen = document.querySelector('[data-lounge-loader]');
+    if (!screen) return;
+
+    const room = screen.dataset.room;
+    const theme = screen.dataset.theme;
+    const isPreview = screen.dataset.preview === 'true';
+    const message = screen.querySelector('[data-loading-message]');
+    const progress = screen.querySelector('[data-loading-progress]');
+    const recovery = screen.querySelector('[data-loading-recovery]');
+    const startedAt = Date.now();
+    const minimumVisibleMs = 350;
+    const recoveryDelayMs = theme === 'lounge' ? 10000 : 1200;
+    const maximumHoldMs = theme === 'lounge' ? 15000 : 2200;
+    const criticalImages = (() => {
+      try { return JSON.parse(screen.dataset.criticalImages || '[]'); }
+      catch { return []; }
+    })();
+    const fastLoungeEnabled = theme === 'lounge' && !isPreview && criticalImages.length > 0;
+    const fadeMs = fastLoungeEnabled ? 120 : 240;
+    let revealTimer;
+    let slowTimer;
+    let revealScheduled = false;
+    let fastProbeGeneration = 0;
+
+    // This runs before page markup. The loader can therefore cover parsing
+    // without waiting for the Lounge's deferred interaction bundle.
+    root.dataset.loungeState = 'loading';
+
+    const showRecovery = (text) => {
+      if (isPreview || root.dataset.loungeState !== 'loading') return;
+      message.textContent = text;
+      recovery.hidden = false;
+    };
+
+    const finish = () => {
+      const hadFocus = screen.contains(document.activeElement);
+      delete root.dataset.loungeState;
+      document.querySelector('.lounge-page, [data-cinema-page]')?.removeAttribute('aria-busy');
+      if (hadFocus) document.querySelector('.lounge-nav-hit, .back-link')?.focus({ preventScroll: true });
+    };
+
+    const beginReveal = (ready) => {
+      if (root.dataset.loungeState !== 'loading') return;
+      window.clearTimeout(revealTimer);
+      window.clearTimeout(slowTimer);
+      recovery.hidden = true;
+      if (ready) {
+        progress.value = 100;
+        message.textContent = `${room} is ready. Come on in.`;
+      } else {
+        progress.value = Math.max(Number(progress.value) || 0, 85);
+      }
+
+      root.dataset.loungeState = 'revealing';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (root.dataset.loungeState !== 'revealing') return;
+        root.dataset.loungeState = 'leaving';
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.setTimeout(finish, reduceMotion ? 0 : fadeMs);
+      }));
+    };
+
+    const reveal = (ready) => {
+      if (isPreview || root.dataset.loungeState !== 'loading' || revealScheduled) return;
+      revealScheduled = true;
+      window.clearTimeout(slowTimer);
+      recovery.hidden = true;
+      const elapsed = Date.now() - startedAt;
+      const delay = Math.max(0, minimumVisibleMs - elapsed);
+      window.setTimeout(() => beginReveal(ready), delay);
+    };
+
+    const openWhenPageParsed = (ready, generation) => {
+      if (!fastLoungeEnabled || generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
+      const openNow = () => {
+        if (generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
+        revealScheduled = true;
+        beginReveal(ready);
+      };
+
+      if (document.querySelector('.lounge-page')) {
+        openNow();
+        return;
+      }
+
+      if (typeof MutationObserver === 'undefined') {
+        window.setTimeout(openNow, 0);
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        if (!document.querySelector('.lounge-page')) return;
+        observer.disconnect();
+        openNow();
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    };
+
+    const loadCriticalImage = (url, reportSettled) => new Promise((resolve) => {
+      const image = new Image();
+      let settled = false;
+
+      const done = (ok) => {
+        if (settled) return;
+        settled = true;
+        reportSettled();
+        resolve(ok);
+      };
+
+      const settleLoadedImage = async () => {
+        if (settled) return;
+        if (image.naturalWidth <= 0) {
+          done(false);
+          return;
+        }
+
+        // Network-complete is not enough on a cold cache. Wait until the bitmap
+        // is decoded so the large Lounge backdrop can be painted on the very
+        // first frame after the loading curtain leaves.
+        if (typeof image.decode === 'function') {
+          try { await image.decode(); }
+          catch { /* A loaded image may still be paintable if decode() rejects. */ }
+        }
+        done(image.naturalWidth > 0);
+      };
+
+      image.addEventListener('load', () => { void settleLoadedImage(); }, { once: true });
+      image.addEventListener('error', () => done(false), { once: true });
+      image.decoding = 'async';
+      image.fetchPriority = 'high';
+      image.src = url;
+      if (image.complete) void settleLoadedImage();
+    });
+
+    const startFastLoungeProbe = () => {
+      if (!fastLoungeEnabled || root.dataset.loungeState !== 'loading') return;
+      const generation = ++fastProbeGeneration;
+      let settled = 0;
+      progress.value = 0;
+
+      const reportSettled = () => {
+        if (generation !== fastProbeGeneration || root.dataset.loungeState !== 'loading') return;
+        settled += 1;
+        progress.value = Math.round(settled / criticalImages.length * 100);
+      };
+
+      // No short time-based race here. The Lounge opens immediately when the
+      // background + Top Navigation + Now Reviewed are paint-ready. The 10s/15s
+      // controls below remain the only emergency escape hatches.
+      Promise.all(criticalImages.map((url) => loadCriticalImage(url, reportSettled)))
+        .then((results) => openWhenPageParsed(results.every(Boolean), generation));
+    };
+
+    slowTimer = window.setTimeout(() => {
+      showRecovery(`${room} is still preparing a few visuals.`);
+    }, recoveryDelayMs);
+
+    revealTimer = window.setTimeout(() => {
+      window.clearTimeout(slowTimer);
+      reveal(false);
+    }, maximumHoldMs);
+
+    // Auditorium / Movie Café still report readiness from prepareCinemaPage.
+    // The Lounge ignores these events because its inline probe is intentionally
+    // independent of the deferred Lounge interaction module.
+    document.addEventListener('lounge:loading-progress', (event) => {
+      if (fastLoungeEnabled || root.dataset.loungeState !== 'loading') return;
+      const { loaded, total } = event.detail;
+      progress.value = total ? Math.round(loaded / total * 100) : 0;
+    });
+
+    document.addEventListener('lounge:loading-error', () => {
+      if (fastLoungeEnabled) return;
+      window.clearTimeout(slowTimer);
+      reveal(false);
+    });
+
+    document.addEventListener('lounge:assets-ready', () => {
+      if (isPreview) {
+        progress.value = 100;
+        return;
+      }
+      if (fastLoungeEnabled) return;
+      window.clearTimeout(slowTimer);
+      reveal(true);
+    });
+
+    screen.querySelector('[data-loading-preview-open]')?.addEventListener('click', () => beginReveal(false));
+    screen.querySelector('[data-loading-retry]')?.addEventListener('click', () => window.location.reload());
+    screen.querySelector('[data-loading-open]')?.addEventListener('click', () => {
+      revealScheduled = false;
+      beginReveal(false);
+    });
+
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      if (root.dataset.loungeState === 'loading') {
+        if (fastLoungeEnabled) startFastLoungeProbe();
+        else document.dispatchEvent(new Event('lounge:resume-loading'));
+      } else if (root.dataset.loungeState) {
+        finish();
+      }
+    });
+
+    startFastLoungeProbe();
+  })();
+</script>

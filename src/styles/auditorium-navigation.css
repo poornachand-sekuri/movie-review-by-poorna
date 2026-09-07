@@ -1,0 +1,83 @@
+/* Auditorium navigation hit areas.
+   Coordinates are tied to the approved 2048x682 top/bottom artwork canvases.
+   Links remain visually transparent so the baked artwork stays untouched. */
+
+.auditorium-nav-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  aspect-ratio: var(--art-width) / var(--art-height);
+  transform: translateY(var(--art-shift-y));
+  pointer-events: none;
+}
+
+.auditorium-nav-hit {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  border-radius: 1.2cqw;
+  background: transparent;
+  color: transparent;
+  text-decoration: none;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.auditorium-nav-hit:focus-visible {
+  outline: 2px solid rgb(240 187 103 / 92%);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 1px rgb(214 50 42 / 58%), 0 0 14px rgb(214 50 42 / 22%);
+}
+
+@media (hover: hover) {
+  .auditorium-nav-hit:hover {
+    background: rgb(164 19 19 / 4%);
+    box-shadow: inset 0 0 18px rgb(214 50 42 / 7%);
+  }
+}
+
+/* Top navigation — measured around the Lounge icon, center brand and Café icon. */
+.auditorium-nav-hit--top-lounge {
+  left: 2.44140625%;   /* 50 / 2048 */
+  top: 34.457478006%;  /* 235 / 682 */
+  width: 17.08984375%; /* 350 / 2048 */
+  height: 33.724340176%; /* 230 / 682 */
+}
+
+.auditorium-nav-hit--top-logo {
+  left: 26.3671875%;   /* 540 / 2048 */
+  top: 34.457478006%;  /* 235 / 682 */
+  width: 48.095703125%; /* 985 / 2048 */
+  height: 33.724340176%; /* 230 / 682 */
+}
+
+.auditorium-nav-hit--top-cafe {
+  left: 84.228515625%; /* 1725 / 2048 */
+  top: 32.991202346%;  /* 225 / 682 */
+  width: 13.18359375%; /* 270 / 2048 */
+  height: 35.190615836%; /* 240 / 682 */
+}
+
+/* Bottom navigation — each labeled half is one generous touch target. */
+.auditorium-nav-hit--bottom-lounge {
+  left: 2.9296875%;    /* 60 / 2048 */
+  top: 30.058651026%;  /* 205 / 682 */
+  width: 45.654296875%; /* 935 / 2048 */
+  height: 39.589442815%; /* 270 / 682 */
+}
+
+.auditorium-nav-hit--bottom-cafe {
+  left: 51.416015625%; /* 1053 / 2048 */
+  top: 30.058651026%;  /* 205 / 682 */
+  width: 45.654296875%; /* 935 / 2048 */
+  height: 39.589442815%; /* 270 / 682 */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auditorium-nav-hit {
+    transition: none;
+  }
+}

@@ -1,0 +1,816 @@
+/*
+ * Premier Lounge structural baseline.
+ * Data, routes and interaction behavior remain in Astro/TypeScript; runtime
+ * artwork URLs and final presentation overrides live in lounge.css.
+ */
+
+.lounge-page {
+  --lounge-rating-color: #fff0ca;
+  --lounge-rating-shadow:
+    0 0.035em 0.06em #000,
+    0 0 0.14em rgba(255, 228, 170, 0.5),
+    0 0 0.3em rgba(217, 166, 81, 0.22);
+  --lounge-shadow: 0 16px 42px rgba(0, 0, 0, 0.72);
+
+  position: relative;
+  min-height: 100vh;
+  overflow-x: clip;
+  isolation: isolate;
+  color: #f5f3ee;
+  background: #000;
+  color-scheme: dark;
+}
+
+/* Keep the full Lounge above the page fallback and below shade/content. */
+.lounge-backdrop {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  display: block !important;
+  pointer-events: none;
+  background-color: #000;
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100% auto;
+  transform: translateZ(0);
+}
+
+.lounge-shade {
+  position: fixed;
+  z-index: 1;
+  inset: 0;
+  display: block !important;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.66) 0%, rgba(0, 0, 0, 0.12) 22%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.12) 78%, rgba(0, 0, 0, 0.66) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+.lounge-stage {
+  position: relative;
+  z-index: 2;
+  width: min(92vw, 470px);
+  margin-inline: auto;
+  padding: clamp(92px, 13vh, 128px) 0 clamp(58px, 8vh, 96px);
+  display: grid;
+  gap: 8px;
+}
+
+.lounge-panel,
+.lounge-empty {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+  container-type: inline-size;
+}
+
+.lounge-stage > .lounge-panel:not(.lounge-panel--banner) {
+  cursor: zoom-in;
+}
+
+.lounge-panel--now {
+  aspect-ratio: 1448 / 1086;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+.lounge-panel--recent {
+  aspect-ratio: 1672 / 941;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+.lounge-panel--previous {
+  aspect-ratio: 1672 / 941;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+.lounge-panel--opinion {
+  aspect-ratio: 1080 / 1456;
+  scroll-margin-top: 2rem;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
+}
+
+/* Navigation art contains generous transparent padding; crop to its marquee. */
+.lounge-panel--banner {
+  overflow: visible;
+}
+
+.lounge-banner-crop {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2048 / 286;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: center center;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.66));
+}
+
+.lounge-nav-hit {
+  position: absolute;
+  z-index: 4;
+  inset-block: 0;
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.lounge-panel--banner:not(.lounge-panel--bottom) .lounge-nav-hit--left {
+  left: 0;
+  width: 27%;
+}
+
+.lounge-panel--banner:not(.lounge-panel--bottom) .lounge-nav-hit--right {
+  right: 0;
+  width: 27%;
+}
+
+.lounge-panel--bottom .lounge-nav-hit--left {
+  left: 0;
+  width: 50%;
+}
+
+.lounge-panel--bottom .lounge-nav-hit--right {
+  right: 0;
+  width: 50%;
+}
+
+.lounge-nav-hit:hover,
+.lounge-nav-hit:focus-visible {
+  background: rgba(255, 32, 27, 0.035);
+  box-shadow: inset 0 0 18px rgba(255, 32, 27, 0.22);
+}
+
+/* ---------------- Featured review ---------------- */
+.now-poster {
+  position: absolute;
+  z-index: 2;
+  left: 11.5%;
+  top: 19.2%;
+  width: 25.5%;
+  height: 38.8%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-radius: 1.5cqw;
+}
+
+.now-poster img,
+.poster-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.now-poster img {
+  filter: drop-shadow(0 0.9cqw 1.6cqw rgba(0, 0, 0, 0.8));
+}
+
+.poster-fallback {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    #121212;
+}
+
+.now-details {
+  position: absolute;
+  z-index: 3;
+  left: 55.2%;
+  top: 19.7%;
+  width: 32.9%;
+  height: 36.2%;
+  min-width: 0;
+  overflow: hidden;
+  color: #f5f2ea;
+  text-shadow: 0 1px 2px #000, 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.now-title {
+  margin: 0 0 1.1cqw;
+  overflow: hidden;
+  color: #f4f0e9;
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  font-size: 4.15cqw;
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.now-meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.05cqw 1.45cqw;
+  color: #eee9de;
+}
+
+.now-meta > div {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.now-meta > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.now-meta dt {
+  margin: 0 0 0.15cqw;
+  color: #ef443c;
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+  font-size: 1.75cqw;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
+}
+
+.now-meta dd {
+  margin: 0;
+  overflow: hidden;
+  color: #f8f5ee;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.35cqw;
+  font-weight: 650;
+  line-height: 1.08;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.now-meta__rating dd {
+  color: var(--lounge-rating-color);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 2.55cqw;
+  letter-spacing: 0.07em;
+}
+
+.now-pov {
+  position: absolute;
+  z-index: 3;
+  left: 6.8%;
+  top: 72.2%;
+  width: 86.4%;
+  height: 17%;
+  overflow: hidden;
+  padding: 0.25cqw 0.9cqw 0.35cqw;
+  border: 0;
+  background: transparent;
+}
+
+.now-pov__label {
+  display: none;
+}
+
+.now-pov p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #f7f2ea;
+  font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
+  font-size: 3.1cqw;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0.04em 0.08em rgba(0, 0, 0, 0.7);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.now-read-hit,
+.section-view-all {
+  position: absolute;
+  z-index: 6;
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  text-decoration: none;
+  border-radius: 999px;
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.now-read-hit {
+  right: 3.8%;
+  bottom: 2.9%;
+  width: 23.5%;
+  height: 8.5%;
+}
+
+.now-read-hit:hover,
+.now-read-hit:focus-visible,
+.section-view-all:hover,
+.section-view-all:focus-visible {
+  background: rgba(255, 24, 18, 0.025);
+  box-shadow: 0 0 17px rgba(255, 32, 27, 0.28);
+}
+
+/* ---------------- Review carousels ---------------- */
+.review-carousel {
+  position: absolute;
+  z-index: 3;
+  min-width: 0;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.recent-overlay {
+  left: 7.35%;
+  right: 7.35%;
+  top: 23.6%;
+  bottom: 16.2%;
+}
+
+.previous-overlay {
+  left: 8.8%;
+  right: 8.4%;
+  top: 32.6%;
+  bottom: 23.4%;
+}
+
+.review-carousel__viewport {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.review-carousel__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0, 0, 0);
+  transition: transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.review-carousel__page {
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.recent-overlay .review-carousel__page {
+  gap: 7.35%;
+}
+
+.previous-overlay .review-carousel__page {
+  gap: 4.45%;
+}
+
+.recent-card,
+.previous-card {
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0.8cqw;
+  background: transparent;
+  color: #fff;
+  text-decoration: none;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.recent-card:hover,
+.recent-card:focus-visible,
+.previous-card:hover,
+.previous-card:focus-visible {
+  filter: brightness(1.1);
+  transform: translateY(-0.35cqw);
+}
+
+.recent-card {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  padding: 1.3cqw 0.7cqw 1.2cqw;
+}
+
+.recent-card__poster {
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 0.55cqw 0.55cqw 0.2cqw 0.2cqw;
+  background: #111;
+}
+
+.recent-card__poster img,
+.previous-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recent-card__title {
+  min-width: 0;
+  overflow: hidden;
+  margin-top: 0.6cqw;
+  padding: 0.45cqw 0.55cqw;
+  background: rgba(0, 0, 0, 0.76);
+  color: #f6f2ea;
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif;
+  font-size: 2.2cqw;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.recent-card__title > span {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  will-change: transform;
+}
+
+.recent-card__title.is-moving {
+  text-align: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-card__title > span {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.recent-card__stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.2cqw 0.55cqw 0.45cqw;
+  color: var(--lounge-rating-color);
+  text-shadow: var(--lounge-rating-shadow);
+  font-family: Arial, sans-serif;
+  font-size: 2.55cqw;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.previous-card {
+  padding: 1.1cqw 0.6cqw;
+}
+
+.previous-card img {
+  border-radius: 0.55cqw;
+}
+
+.review-carousel__control {
+  position: absolute;
+  z-index: 7;
+  top: 50%;
+  width: max(22px, 5.5cqw);
+  height: max(30px, 9cqw);
+  padding: 0;
+  border: 1px solid rgba(224, 224, 224, 0.5);
+  border-radius: 999px;
+  background: rgba(5, 5, 5, 0.82);
+  color: #ff3a32;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  font-size: max(19px, 5cqw);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.review-carousel__control--prev {
+  left: calc(var(--carousel-border-left) - var(--carousel-inset-left));
+  transform: translate(-50%, -50%);
+}
+
+.review-carousel__control--next {
+  right: calc(var(--carousel-border-right) - var(--carousel-inset-right));
+  transform: translate(50%, -50%);
+}
+
+.review-carousel__control:disabled {
+  opacity: 0.18;
+  cursor: default;
+}
+
+.section-view-all--recent,
+.section-view-all--previous {
+  right: 2.6%;
+  top: 4.4%;
+  width: 19.2%;
+  height: 12%;
+}
+
+/* ---------------- Opinion panel ---------------- */
+.comments-window {
+  position: absolute;
+  z-index: 3;
+  left: 10.65%;
+  top: 16.07%;
+  width: 81%;
+  height: 34.8901%;
+  min-height: 0;
+  max-height: none;
+  display: grid;
+  grid-template-rows: minmax(0, 234fr) minmax(0, 218fr);
+  gap: 11.0236%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 0.7cqw;
+  background: transparent;
+  color: #f5f1e9;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(12px, 3.7cqw, 20px);
+  line-height: 1.45;
+}
+
+.comment-slot {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 45, 38, 0.65) rgba(255, 255, 255, 0.05);
+}
+
+.comments-empty {
+  margin: 0;
+  color: #ddd7cd;
+}
+
+.opinion-form {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.opinion-form input,
+.opinion-form textarea {
+  position: absolute;
+  left: 7.4074%;
+  width: 85.1852%;
+  pointer-events: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0.55cqw;
+  outline: 0;
+  background: transparent;
+  color: #f5f1e9;
+  caret-color: #ff312a;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(10px, 3.7cqw, 20px);
+  line-height: 1;
+  box-shadow: none;
+}
+
+.opinion-form input {
+  top: 64.011%;
+  height: 4.2582%;
+  min-height: 0;
+  padding: 0 1.4cqw;
+}
+
+.opinion-form textarea {
+  top: 70.0549%;
+  height: 15.522%;
+  min-height: 0;
+  padding: 1.2cqw 1.4cqw;
+  line-height: 1.4;
+  resize: none;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form input,
+.lounge-panel--opinion.is-lounge-focused .opinion-form textarea {
+  font-size: clamp(16px, 3.7cqw, 20px);
+}
+
+.opinion-form input::placeholder,
+.opinion-form textarea::placeholder {
+  color: #c9c3b9;
+}
+
+.opinion-form input:focus,
+.opinion-form textarea:focus {
+  background: rgba(0, 0, 0, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(255, 63, 53, 0.5), 0 0 12px rgba(255, 32, 27, 0.12);
+}
+
+.opinion-form button {
+  position: absolute;
+  z-index: 2;
+  left: 6.8519%;
+  top: 87.6374%;
+  width: 86.2963%;
+  height: 6.3874%;
+  pointer-events: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.8cqw;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.opinion-form button:hover,
+.opinion-form button:focus-visible {
+  background: rgba(255, 35, 27, 0.05);
+  box-shadow: 0 0 18px rgba(255, 25, 18, 0.28);
+}
+
+/* The approved 09 Exit artwork reserves space above its ticket. These content
+   coordinates follow that image; the normal 06 Lounge layout keeps its geometry. */
+.lounge-panel--opinion.is-lounge-focused .comments-window {
+  left: 11.8519%;
+  top: 20.3984%;
+  width: 78.7037%;
+  height: 33.3791%;
+  grid-template-rows: minmax(0, 227fr) minmax(0, 207fr);
+  gap: 10.6996%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form input,
+.lounge-panel--opinion.is-lounge-focused .opinion-form textarea {
+  left: 8.8889%;
+  width: 82.037%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form input {
+  top: 66.4835%;
+  height: 4.1209%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form textarea {
+  top: 72.3214%;
+  height: 14.6978%;
+}
+
+.lounge-panel--opinion.is-lounge-focused .opinion-form button {
+  left: 8.3333%;
+  top: 89.011%;
+  width: 83.3333%;
+  height: 6.25%;
+}
+
+/* ---------------- Enlarged-section behavior ---------------- */
+html.lounge-focus-open,
+html.lounge-focus-open body {
+  overflow: hidden;
+}
+
+.lounge-focus-layer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(58px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom));
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.86);
+  backdrop-filter: blur(9px) saturate(0.85);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.lounge-focus-layer.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lounge-focus-stage {
+  width: min(96vw, 820px);
+  display: grid;
+  place-items: center;
+}
+
+.lounge-panel.is-lounge-focused {
+  width: 100%;
+  cursor: default;
+  filter: drop-shadow(0 24px 55px rgba(0, 0, 0, 0.88));
+}
+
+.lounge-focus-close {
+  position: fixed;
+  z-index: 102;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: 50%;
+  background: rgba(8, 8, 8, 0.9);
+  color: #ff3a31;
+  box-shadow: 0 0 18px rgba(255, 32, 27, 0.22);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.lounge-focus-placeholder {
+  width: 100%;
+  pointer-events: none;
+}
+
+.lounge-empty {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  border: 1px solid rgba(220, 220, 220, 0.5);
+  background: rgba(5, 5, 5, 0.9);
+  color: #eee9df;
+  text-align: center;
+  box-shadow: var(--lounge-shadow);
+}
+
+.lounge-nav-hit:focus-visible,
+.now-read-hit:focus-visible,
+.section-view-all:focus-visible,
+.recent-card:focus-visible,
+.previous-card:focus-visible,
+.review-carousel__control:focus-visible,
+.opinion-form input:focus-visible,
+.opinion-form textarea:focus-visible,
+.opinion-form button:focus-visible,
+.lounge-focus-close:focus-visible,
+.lounge-panel:focus-visible {
+  outline: 2px solid #ff3a31;
+  outline-offset: 2px;
+}
+
+@media (max-width: 390px) {
+  .lounge-stage {
+    width: min(94vw, 470px);
+    padding-top: clamp(84px, 11vh, 104px);
+    gap: 6px;
+  }
+
+  .lounge-backdrop {
+    background-size: 100% auto;
+  }
+
+  .review-carousel__control {
+    width: 20px;
+    height: 30px;
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 900px) and (min-height: 760px) {
+  .lounge-backdrop {
+    background-size: 100% auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-carousel__track,
+  .lounge-focus-layer,
+  .recent-card,
+  .previous-card,
+  .lounge-nav-hit,
+  .now-read-hit,
+  .section-view-all,
+  .opinion-form button {
+    transition: none;
+  }
+}

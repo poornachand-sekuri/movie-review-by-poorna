@@ -1,0 +1,44 @@
+.auditorium-review-scroll p {
+  margin: 0 0 1em;
+}
+
+.auditorium-review-scroll p:last-child {
+  margin-bottom: 0;
+}
+
+.auditorium-review-scroll img {
+  max-width: 100%;
+  height: auto;
+}
+
+.auditorium-share-actions {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.auditorium-share-hit {
+  position: absolute;
+  top: 39%;
+  width: 16%;
+  height: 49%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.auditorium-share-hit--whatsapp { left: 3%; }
+.auditorium-share-hit--x { left: 21%; }
+.auditorium-share-hit--instagram { left: 42%; }
+.auditorium-share-hit--copy { left: 62%; }
+.auditorium-share-hit--more { left: 81%; }
+
+.auditorium-share-hit:focus-visible {
+  outline: 2px solid rgb(220 50 42 / 78%);
+  outline-offset: -2px;
+  border-radius: 0.5rem;
+}

@@ -1,73 +1,84 @@
-# Movie Reviews By Poorna
+# Movie Review By Poorna — Cinema Rebuild
 
-This branch contains the new mobile-first content-page frontend built from scratch around the finalized AVIF artwork.
+`cinema-rebuild` is the development branch for the new adaptive cinema experience. The current production site remains untouched until the rebuild is explicitly approved for cutover.
 
-## Data sources
+## Cinema spaces
 
-The preserved review data remains authoritative and is not rewritten by the frontend:
+- Home — **The Lounge**
+- Individual review — **The Auditorium**
+- Search — **The Movie Café**
+- Admin — **The Projection Booth** (to be built later)
 
-- `public/data/index.json` — review/movie data
-- `public/data/cast-crew.json` — actor, actress, director and music-director enrichment
-- `public/data/related-review-rules.json` — Related Reviews ranking rules
+Routes stay conventional (`/`, `/review/[slug]`, `/search`) while the room names describe the user-facing experience.
 
-## UI artwork
+## Current technical foundation
 
-Production artwork is served from Cloudflare R2 through:
+- Astro + TypeScript application layer
+- Cloudflare Workers runtime
+- D1 database: `movie-review-by-poorna-content`
+- R2/custom-domain artwork served from `assets.moviereviewbypoorna.com`
+- Premium runtime artwork uses WebP; archival master formats stay outside normal page delivery
+- D1 stores canonical review data, movie reactions and the rebuilt moderated comments system
+- New public comments are stored as `pending`; only `approved` comments are returned publicly
 
-`https://assets.moviereviewbypoorna.com/ui/pages/content/v2/mobile/`
+## Runtime ownership
 
-The exact filenames are configured in `assets/js/config.js`.
+The implementation intentionally keeps responsibilities separated:
 
-The R2 UI namespace is split by page type so Home and Content artwork stay separate:
+- `src/pages/` — route composition and server-side page data
+- `src/layouts/` — shared document shell
+- `src/lib/data/` — D1 queries and mutations
+- `src/lib/*-assets.ts` — confirmed artwork URLs and intrinsic dimensions
+- `src/lib/*-focus.ts`, `*-reactions.ts`, `comments-client.ts` — browser interaction controllers
+- `src/styles/` — artwork registration, room-specific presentation and shared UI presentation
+- `migrations/` — append-only D1 schema history
+- `scripts/` — validation and deterministic migration utilities
+- `.github/workflows/` — validation and preview deployment only
 
-- `ui/pages/home/...`
-- `ui/pages/content/...`
+See `docs/ARCHITECTURE.md` for the detailed maintenance map.
 
-Do not restore old frontend CSS/JS from `pre-clean-reset-backup-20260830` into this implementation.
+## Development rules
 
-## Current frontend behavior
+1. Approved artwork is the visual source of truth.
+2. HTML owns semantic content and accessibility.
+3. CSS owns registration, layout and viewport/container adaptation.
+4. TypeScript owns contracts, data access and interaction logic.
+5. Do not guess artwork dimensions or overlay geometry.
+6. Do not modify Production/Main as part of rebuild work.
+7. Keep migrations additive; do not rewrite migration history after it has been applied.
+8. Delete one-off diagnostic workflows and temporary trigger files after they have served their purpose.
 
-- mobile-first content page
-- finalized Top Logo/Header artwork
-- clapboard top overlaps the body so the two assets read as one component
-- poster is always `object-fit: contain`; no cropping
-- Movie Title, language, release date, Cast & Crew, stars and My POV are live data
-- Like/Dislike uses persistent shared counts through the same-origin `/api/reactions` endpoint
-- Theater uses Top + stretchable Middle + Bottom/Seats
-- review font size does not shrink for longer reviews
-- no review scrollbar and no Read More
-- Related Reviews are ranked from `cast-crew.json` + `related-review-rules.json`
-- Related posters are contained within the reel windows
-- fixed gap between Related Reviews and Share Your Opinion
-- Comments artwork uses the final extra textarea-to-submit spacing
+## Validation
 
-## Preview routing
+Use:
 
-A review can be opened with:
+```bash
+npm run validate
+npm run build
+```
 
-`/?review=<slug>`
+`npm run validate` runs runtime guardrails, Lounge loading tests and Astro/TypeScript checks.
 
-If no slug is supplied, the newest record in `index.json` is shown.
+The preview workflow also smoke-tests D1 APIs, The Lounge, The Movie Café, Auditorium click-through and required runtime artwork before a deployment is considered successful.
 
-## Likes / dislikes
+## Deployment
 
-Production reactions are persisted by `src/worker.js` using one SQLite-backed Cloudflare Durable Object per review slug.
+Changes to runtime/application paths on `cinema-rebuild` automatically deploy to the temporary Worker:
 
-- `GET /api/reactions?slug=<movie-slug>` returns shared Like/Dislike totals plus this browser's current vote.
-- `POST /api/reactions` accepts `{ "slug": "...", "vote": "like" | "dislike" }`.
-- a first-party voter cookie ensures repeated clicks from the same browser do not inflate totals.
-- switching Like to Dislike (or vice versa) updates the existing vote instead of adding a second vote.
-- `assets/js/live-reactions.js` migrates an existing browser-local preview vote into the shared store once, then removes the legacy local value.
-- unknown review slugs are rejected against the live review catalog.
+`https://movie-review-by-poorna-preview.poornarocks.workers.dev`
 
-The Worker and static assets remain in the same Cloudflare deployment, so no cross-origin API configuration is required.
+The deployment workflow is path-based; there is no manual trigger-file editing requirement.
 
-## Comments
+## Data status
 
-Comment persistence/moderation is still intentionally separate and is not enabled by the reactions backend. `CONFIG.apiBase` remains blank for the existing comments preview flow.
+- 136 review records were migrated and verified against the legacy catalogue.
+- Review detail, credits, gallery data and full-text search are served from D1.
+- Like/Dislike totals are movie-specific and persisted in D1.
+- The rebuilt comments model supports `pending`, `approved` and `rejected` moderation states.
+- Existing publicly approved Production comments are preserved without modifying Production data.
 
-See `docs/API-CONTRACT.md` for the intended comments API and moderation contract.
+Before changing infrastructure or data contracts, also read:
 
-## R2 structure
-
-See `docs/R2-ASSETS.md` before uploading or removing AVIF files.
+- `docs/ENGINEERING-GUARDRAILS.md`
+- `docs/DATA-MIGRATION.md`
+- `docs/CLOUDFLARE-DEPLOYMENT.md`
