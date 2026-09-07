@@ -1,64 +1,84 @@
-# Movie Review By Poorna — Fresh Rebuild
+# Movie Review By Poorna — Cinema Rebuild
 
-This branch is a clean implementation. Existing production frontend code is reference-only and must not be copied into this branch.
+`cinema-rebuild` is the development branch for the new responsive cinema experience. The current production site remains untouched until the rebuild is explicitly approved for cutover.
 
-## Architecture priorities
+## Cinema spaces
 
-1. Visual Quality
-2. Cross-device layout quality
-3. Performance
-4. Maintainability
+- Home — **The Lounge**
+- Individual review — **The Auditorium**
+- Search — **The Movie Café**
+- Admin — **The Projection Booth** (to be built later)
 
-## Site concept
+Routes stay conventional (`/`, `/review/[slug]`, `/search`) while the room names describe the user-facing experience.
 
-Movie Review By Poorna is designed as one virtual movie theater with connected spaces:
+## Current technical foundation
 
-- Home: The Lounge
-- Individual Review: The Auditorium
-- Search: The Movie Café
-- Admin: The Projection Booth
+- Astro + TypeScript application layer
+- Cloudflare Workers runtime
+- D1 database: `movie-review-by-poorna-content`
+- R2/custom-domain artwork served from `assets.moviereviewbypoorna.com`
+- Premium runtime artwork uses WebP; archival master formats stay outside normal page delivery
+- D1 stores canonical review data, movie reactions and the rebuilt moderated comments system
+- New public comments are stored as `pending`; only `approved` comments are returned publicly
 
-All pages share one cinematic design language while each space retains its own purpose and mood.
+## Runtime ownership
 
-## Technical foundation
+The implementation intentionally keeps responsibilities separated:
 
-- Astro + TypeScript for the application layer.
-- Cloudflare Workers for edge rendering and APIs.
-- One D1 database for canonical structured review content after verified migration.
-- The existing R2 media store is reused with isolated, versioned paths for new AVIF UI artwork.
-- Durable Objects remain the interaction-state mechanism for reactions, comments and analytics unless measurements justify a different design.
+- `src/pages/` — route composition and server-side page data
+- `src/layouts/` — shared document shell
+- `src/lib/data/` — D1 queries and mutations
+- `src/lib/*-assets.ts` — confirmed artwork URLs and intrinsic dimensions
+- `src/lib/*-focus.ts`, `*-reactions.ts`, `comments-client.ts` — browser interaction controllers
+- `src/styles/` — artwork registration, room-specific presentation and shared UI presentation
+- `migrations/` — append-only D1 schema history
+- `scripts/` — validation and deterministic migration utilities
+- `.github/workflows/` — validation and preview deployment only
 
-## Cost-conscious deployment model
+See `docs/ARCHITECTURE.md` for the detailed maintenance map.
 
-- No permanent staging/production data duplication.
-- `cinema-rebuild` deploys temporarily to `movie-review-by-poorna-preview` while the current live site remains untouched.
-- The single canonical D1 database is `movie-review-by-poorna-content`; a second production D1 database will not be created.
-- At cutover, the approved production Worker will bind to the same D1 database and the temporary preview Worker can be removed.
-- No Cloudflare Images or KV runtime dependency is enabled.
-- Additional paid services or duplicated storage are not introduced without an explicit cost/performance review.
+## Development rules
 
-## Current status
+1. Approved artwork is the visual source of truth.
+2. HTML owns semantic content and accessibility.
+3. CSS owns registration, layout and viewport/container adaptation.
+4. TypeScript owns contracts, data access and interaction logic.
+5. Do not guess artwork dimensions or overlay geometry.
+6. Do not modify Production/Main as part of rebuild work.
+7. Keep migrations additive; do not rewrite migration history after it has been applied.
+8. Delete one-off diagnostic workflows and temporary trigger files after they have served their purpose.
 
-- The branch contains no production frontend implementation from `main`.
-- D1 schema migrations and deterministic legacy import tooling are present.
-- Automated validation covers TypeScript, Astro build, Cloudflare dry-run, migration/import smoke tests and database integrity.
-- The preserved and current live catalogues were reconciled at 136 reviews with no differences immediately before migration.
-- `CONTENT_DB` is configured for `movie-review-by-poorna-content`.
-- The canonical D1 database contains 136 verified reviews and 698 verified credits.
-- All 136 imported source hashes matched the live catalogue at migration time.
-- The server read layer is implemented for compact review lists, full review detail/credits/gallery, and FTS5 search.
-- The read APIs have been deployed to the temporary Worker and live-smoke-tested against D1: compact list, `DC` detail and `Kantara` search all passed.
-- Preview Worker: `https://movie-review-by-poorna-preview.poornarocks.workers.dev`.
-- Production `main` and existing review media remain untouched.
+## Validation
 
-## Implementation rules
+Use:
 
-- AVIF artwork provides cinematic appearance and visual framing.
-- HTML owns semantic content and accessibility.
-- CSS owns layout, sizing, spacing and adaptation across viewport/container sizes.
-- TypeScript is mandatory for application contracts and logic.
-- Client-side JavaScript is minimized and justified per interaction.
-- Review content and existing review media are migrated as data, never by copying old UI implementation.
-- Production `main` remains untouched until the rebuild is explicitly approved.
+```bash
+npm run validate
+npm run build
+```
 
-See `docs/ENGINEERING-GUARDRAILS.md`, `docs/DATA-MIGRATION.md` and `docs/CLOUDFLARE-DEPLOYMENT.md` before adding page implementation or changing the content model.
+`npm run validate` runs runtime guardrails, Lounge loading tests and Astro/TypeScript checks.
+
+The preview workflow also smoke-tests D1 APIs, The Lounge, The Movie Café, Auditorium click-through and required runtime artwork before a deployment is considered successful.
+
+## Deployment
+
+Changes to runtime/application paths on `cinema-rebuild` automatically deploy to the temporary Worker:
+
+`https://movie-review-by-poorna-preview.poornarocks.workers.dev`
+
+The deployment workflow is path-based; there is no manual trigger-file editing requirement.
+
+## Data status
+
+- 136 review records were migrated and verified against the legacy catalogue.
+- Review detail, credits, gallery data and full-text search are served from D1.
+- Like/Dislike totals are movie-specific and persisted in D1.
+- The rebuilt comments model supports `pending`, `approved` and `rejected` moderation states.
+- Existing publicly approved Production comments are preserved without modifying Production data.
+
+Before changing infrastructure or data contracts, also read:
+
+- `docs/ENGINEERING-GUARDRAILS.md`
+- `docs/DATA-MIGRATION.md`
+- `docs/CLOUDFLARE-DEPLOYMENT.md`
