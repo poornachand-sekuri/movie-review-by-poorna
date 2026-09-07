@@ -1,7 +1,3 @@
-import { initComments } from './comments-client';
-import '../styles/comments.css';
-import '../styles/auditorium-comments.css';
-
 /** Extract browser-selected artwork URLs, including multiple backgrounds. */
 export function backgroundImageUrls(background: string): string[] {
   return [...background.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*?))\s*\)/g)]
@@ -126,7 +122,6 @@ function armProgressivePosters(page: HTMLElement): void {
  * this deferred page module executes. This runtime owns poster scheduling only.
  */
 export function prepareLounge(page: HTMLElement): void {
-  initComments();
   armProgressivePosters(page);
   if (document.documentElement.dataset.loungeState === 'loading') {
     page.setAttribute('aria-busy', 'true');
@@ -135,7 +130,6 @@ export function prepareLounge(page: HTMLElement): void {
 
 /** Review and café pages still wait only for their first-paint essentials. */
 export function prepareCinemaPage(page: HTMLElement): void {
-  initComments();
   let generation = 0;
 
   const prepare = async () => {
