@@ -1,0 +1,185 @@
+name: Complete Production Comment Import
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/workflows/complete-prod-comment-import.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  import-dc-comment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PROD_BASE: https://movie-review-by-poorna.poornarocks.workers.dev
+      PREVIEW_BASE: https://movie-review-by-poorna-preview.poornarocks.workers.dev
+      D1_DATABASE: movie-review-by-poorna-content
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.nvmrc'
+          package-manager-cache: false
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build idempotent DC import SQL from Production
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          (async () => {
+            const prod = new URL('/api/comments', process.env.PROD_BASE);
+            prod.searchParams.set('target', 'review');
+            prod.searchParams.set('target_id', 'dc');
+            const response = await fetch(prod, { headers: { accept: 'application/json' } });
+            if (!response.ok) throw new Error(`Production comments returned HTTP ${response.status}`);
+            const payload = await response.json();
+            const comments = Array.isArray(payload) ? payload : payload.comments;
+            if (!Array.isArray(comments)) throw new Error('Production DC comments payload is invalid.');
+            if (!comments.length) throw new Error('Production DC has no approved comments to import.');
+
+            const q = value => `'${String(value ?? '').replaceAll("'", "''")}'`;
+            const statements = ['PRAGMA foreign_keys = ON;'];
+            for (const comment of comments) {
+              if (typeof comment.id !== 'string' || typeof comment.name !== 'string' ||
+                  typeof comment.comment !== 'string' || typeof comment.created_at !== 'string') {
+                throw new Error('Production DC comment has an unexpected shape.');
+              }
+              const source = q('production-comments-do-v1');
+              const sourceId = q(`review:dc:${comment.id}`);
+              const name = q(comment.name);
+              const body = q(comment.comment);
+              const createdAt = q(comment.created_at);
+
+              statements.push(`
+                INSERT INTO comments (
+                  target_type, target_id, review_id, author_name, body, status,
+                  submitter_key, created_at, moderated_at, approved_at
+                )
+                SELECT 'review', r.slug, r.id, ${name}, ${body}, 'approved',
+                       NULL, ${createdAt}, NULL, NULL
+                FROM reviews r
+                WHERE r.status = 'published'
+                  AND r.slug COLLATE NOCASE = 'dc'
+                  AND NOT EXISTS (
+                    SELECT 1 FROM legacy_comment_imports
+                    WHERE source = ${source} AND source_id = ${sourceId}
+                  )
+                  AND NOT EXISTS (
+                    SELECT 1 FROM comments c
+                    WHERE c.target_type = 'review'
+                      AND c.target_id COLLATE NOCASE = 'dc'
+                      AND c.author_name = ${name}
+                      AND c.body = ${body}
+                      AND c.created_at = ${createdAt}
+                  )
+                LIMIT 1;
+
+                INSERT OR IGNORE INTO legacy_comment_imports (source, source_id, comment_id)
+                SELECT ${source}, ${sourceId}, c.id
+                FROM comments c
+                WHERE c.target_type = 'review'
+                  AND c.target_id COLLATE NOCASE = 'dc'
+                  AND c.author_name = ${name}
+                  AND c.body = ${body}
+                  AND c.created_at = ${createdAt}
+                ORDER BY c.id DESC
+                LIMIT 1;
+              `);
+            }
+
+            fs.writeFileSync('/tmp/dc-import.sql', statements.join('\n'));
+            fs.writeFileSync('/tmp/prod-dc-comments.json', JSON.stringify(comments, null, 2));
+            console.log(`Production DC approved comments ready for import: ${comments.length}.`);
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Ensure import ledger exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$D1_DATABASE" --remote --command "
+            PRAGMA foreign_keys = ON;
+            CREATE TABLE IF NOT EXISTS legacy_comment_imports (
+              source TEXT NOT NULL,
+              source_id TEXT NOT NULL,
+              comment_id INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+              imported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (source, source_id),
+              UNIQUE (comment_id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_legacy_comment_imports_comment
+              ON legacy_comment_imports(comment_id);
+          "
+
+      - name: Import DC approved comment into preview D1
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$D1_DATABASE" --remote --file=/tmp/dc-import.sql
+
+      - name: Verify D1 and preview API match Production
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$D1_DATABASE" --remote --json --command "
+            SELECT id, target_type, target_id, author_name, body, status, created_at
+            FROM comments
+            WHERE target_type = 'review' AND target_id = 'dc' AND status = 'approved'
+            ORDER BY created_at DESC;
+          " > /tmp/d1-dc.json
+
+          npx wrangler d1 execute "$D1_DATABASE" --remote --json --command "
+            SELECT COUNT(*) AS imported_count
+            FROM legacy_comment_imports
+            WHERE source = 'production-comments-do-v1';
+          " > /tmp/ledger.json
+
+          curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors \
+            "$PREVIEW_BASE/api/comments?target=review&target_id=dc&limit=20" > /tmp/preview-dc.json
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const prod = JSON.parse(fs.readFileSync('/tmp/prod-dc-comments.json', 'utf8'));
+          const previewPayload = JSON.parse(fs.readFileSync('/tmp/preview-dc.json', 'utf8'));
+          const preview = Array.isArray(previewPayload) ? previewPayload : previewPayload.comments;
+          if (!Array.isArray(preview)) throw new Error('Preview DC comments API returned invalid data.');
+
+          for (const source of prod) {
+            const match = preview.find(row =>
+              row.authorName === source.name &&
+              row.body === source.comment &&
+              row.createdAt === source.created_at
+            );
+            if (!match) {
+              console.error('Production DC comment:', source);
+              console.error('Preview DC comments:', preview);
+              throw new Error('Production DC approved comment is not visible in preview API.');
+            }
+          }
+
+          console.log(`Production DC approved comments: ${prod.length}.`);
+          console.log(`Preview DC approved comments visible: ${preview.length}.`);
+          console.log('Production DC approved history is preserved in the rebuild.');
+          NODE
+
+          echo '--- Import ledger ---'
+          cat /tmp/ledger.json
+          echo '--- Preview D1 DC approved rows ---'
+          cat /tmp/d1-dc.json
