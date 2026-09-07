@@ -1,16 +1,19 @@
-name: Validate Cinema Rebuild
+name: Validate Application
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - cinema-rebuild
+      - main
   pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: cinema-rebuild-${{ github.workflow }}-${{ github.ref }}
+  group: validate-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,6 +40,15 @@ jobs:
       - name: Validate migration script syntax
         run: node --check scripts/build-legacy-seed.mjs
 
+      - name: Validate production cutover compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '"main": "./src/worker.ts"' wrangler.jsonc
+          grep -Fq 'export class ReactionStore' src/worker.ts
+          grep -Fq 'export class CommentsStore' src/worker.ts
+          grep -Fq 'export class AnalyticsStore' src/worker.ts
+
       - name: Build production application
         run: npm run build
 
@@ -44,11 +56,15 @@ jobs:
         run: npx wrangler deploy --dry-run
 
       - name: Validate preview Cloudflare bundle
+        shell: bash
         run: |
+          set -euo pipefail
+          cp wrangler.jsonc /tmp/wrangler.production.jsonc
           cp wrangler.preview.jsonc wrangler.jsonc
           npm run validate
           npm run build
           npx wrangler deploy --dry-run
+          cp /tmp/wrangler.production.jsonc wrangler.jsonc
 
       - name: Install SQLite test runner
         run: |
@@ -80,10 +96,12 @@ jobs:
 
       - name: Prove importer against preserved production catalogue
         shell: bash
+        env:
+          LEGACY_PRODUCTION_COMMIT: ab279f9d859561b6f642aee47d17d2875ade0911
         run: |
           set -euo pipefail
 
-          git fetch --no-tags --depth=1 origin main
+          git fetch --no-tags --depth=1 origin "$LEGACY_PRODUCTION_COMMIT"
           git show FETCH_HEAD:public/data/index.json > /tmp/legacy-reviews.json
           git show FETCH_HEAD:public/data/cast-crew.json > /tmp/legacy-credits.json
 
