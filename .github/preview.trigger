@@ -8,12 +8,15 @@ share one live reaction state so updates are reflected immediately in both views
 Use one anonymous browser voter key per visitor: first tap records Like/Dislike,
 tapping the same choice again removes it, and tapping the opposite choice switches
 the vote without double-counting. Store reactions by review id in D1 so each movie
-has independent counts. Place each live count immediately to the right of its baked
-thumb icon with subtle spacing, warm cinematic ivory/gold typography, tabular
-numbers and restrained glow. The baked artwork itself must remain untouched.
-Reaction controls must remain keyboard accessible and must not accidentally open
-Theater focus mode when pressed. The Auditorium background remains unwired while
-its artwork is finalized. The Lounge and The Movie Café are otherwise unchanged.
+has independent counts. Position reaction hit areas and count baselines from the
+measured 1448x1086 source geometry of both approved Theater artworks independently:
+normal artwork 04 and focus artwork 09. Each count must sit immediately to the
+right of its own baked thumb icon with subtle spacing and exact vertical alignment.
+Use warm cinematic ivory/gold condensed typography, tabular numbers and restrained
+glow. The baked artwork itself must remain untouched. Reaction controls must stay
+keyboard accessible and must not accidentally open Theater focus mode when pressed.
+The Auditorium background remains unwired while its artwork is finalized. The
+Lounge and The Movie Café are otherwise unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
