@@ -1,20 +1,14 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-07: Keep all approved Auditorium artwork/content geometry, focus modes and
-top/bottom navigation mappings unchanged. Add persistent movie-specific Like and
-Dislike integration to the Theater reaction bar. Existing aggregate counts must
-render on initial review-page load. Normal Auditorium and Theater Focus Mode must
-share one live reaction state so updates are reflected immediately in both views.
-Use one anonymous browser voter key per visitor: first tap records Like/Dislike,
-tapping the same choice again removes it, and tapping the opposite choice switches
-the vote without double-counting. Store reactions by review id in D1 so each movie
-has independent counts. Position reaction hit areas and count baselines from the
-measured 1448x1086 source geometry of both approved Theater artworks independently:
-normal artwork 04 and focus artwork 09. Each count must sit immediately to the
-right of its own baked thumb icon with subtle spacing and exact vertical alignment.
-Use warm cinematic ivory/gold condensed typography, tabular numbers and restrained
-glow. The baked artwork itself must remain untouched. Reaction controls must stay
-keyboard accessible and must not accidentally open Theater focus mode when pressed.
+2026-09-07: Keep all approved Auditorium artwork/content geometry, focus modes,
+top/bottom navigation mappings and movie-specific Like/Dislike behavior unchanged.
+Refine only the live reaction-count presentation: add a little more horizontal
+space between each baked thumb icon and its number, and slightly increase the
+count font size in both normal Theater and Theater Focus Mode. Preserve the
+independently measured normal-04 and focus-09 reaction layouts, exact vertical
+alignment, warm cinematic ivory/gold condensed typography, tabular numbers and
+restrained glow. The baked artwork itself must remain untouched. Reaction controls
+must stay keyboard accessible and must not accidentally open Theater focus mode.
 The Auditorium background remains unwired while its artwork is finalized. The
 Lounge and The Movie Café are otherwise unchanged.
 
