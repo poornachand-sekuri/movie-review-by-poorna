@@ -1,0 +1,279 @@
+name: Import Production Approved Comments
+
+on:
+  push:
+    branches:
+      - cinema-rebuild
+    paths:
+      - '.github/workflows/import-prod-approved-comments.yml'
+      - '.github/import-prod-comments.trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  import-comments:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PROD_BASE: https://movie-review-by-poorna.poornarocks.workers.dev
+      PREVIEW_BASE: https://movie-review-by-poorna-preview.poornarocks.workers.dev
+      D1_DATABASE: movie-review-by-poorna-content
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.nvmrc'
+          package-manager-cache: false
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Ensure idempotent import ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$D1_DATABASE" --remote --command "
+            PRAGMA foreign_keys = ON;
+            CREATE TABLE IF NOT EXISTS legacy_comment_imports (
+              source TEXT NOT NULL,
+              source_id TEXT NOT NULL,
+              comment_id INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+              imported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (source, source_id),
+              UNIQUE (comment_id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_legacy_comment_imports_comment
+              ON legacy_comment_imports(comment_id);
+          "
+
+      - name: Fetch approved Production comments and build import SQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const prodBase = process.env.PROD_BASE;
+          const source = 'production-comments-do-v1';
+
+          const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const sql = value => `'${String(value ?? '').replaceAll("'", "''")}'`;
+
+          async function fetchJson(url, attempts = 4) {
+            let lastError;
+            for (let attempt = 1; attempt <= attempts; attempt += 1) {
+              try {
+                const response = await fetch(url, {
+                  headers: { accept: 'application/json' },
+                  redirect: 'follow',
+                });
+                if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+                return await response.json();
+              } catch (error) {
+                lastError = error;
+                if (attempt < attempts) await sleep(350 * attempt);
+              }
+            }
+            throw lastError;
+          }
+
+          const catalog = await fetchJson(`${prodBase}/data/index.json`);
+          if (!Array.isArray(catalog)) throw new Error('Production catalog is not an array.');
+          const slugs = [...new Set(catalog.map(row => row?.s).filter(value => typeof value === 'string' && value.trim()))];
+
+          const targets = [
+            { prodTarget: 'home', prodId: 'home', targetType: 'lounge', targetId: 'lounge' },
+            ...slugs.map(slug => ({ prodTarget: 'review', prodId: slug, targetType: 'review', targetId: slug })),
+          ];
+
+          const imported = [];
+          const warnings = [];
+          let cursor = 0;
+          const workers = Array.from({ length: 10 }, async () => {
+            while (true) {
+              const index = cursor++;
+              if (index >= targets.length) return;
+              const target = targets[index];
+              const url = new URL('/api/comments', prodBase);
+              url.searchParams.set('target', target.prodTarget);
+              url.searchParams.set('target_id', target.prodId);
+
+              let payload;
+              try {
+                payload = await fetchJson(url.toString());
+              } catch (error) {
+                warnings.push(`${target.prodTarget}:${target.prodId} -> ${error?.message || error}`);
+                continue;
+              }
+
+              const comments = Array.isArray(payload) ? payload : payload?.comments;
+              if (!Array.isArray(comments)) {
+                warnings.push(`${target.prodTarget}:${target.prodId} -> invalid payload`);
+                continue;
+              }
+              if (comments.length >= 10) {
+                warnings.push(`${target.prodTarget}:${target.prodId} returned 10 comments; Production public API may cap this thread.`);
+              }
+
+              for (const comment of comments) {
+                if (!comment || typeof comment.id !== 'string' || typeof comment.name !== 'string' ||
+                    typeof comment.comment !== 'string' || typeof comment.created_at !== 'string') continue;
+                imported.push({ ...target, ...comment });
+              }
+            }
+          });
+          await Promise.all(workers);
+
+          imported.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)) || a.id.localeCompare(b.id));
+
+          const lines = [
+            'PRAGMA foreign_keys = ON;',
+            'BEGIN TRANSACTION;',
+          ];
+
+          for (const row of imported) {
+            const sourceId = `${row.prodTarget}:${row.prodId}:${row.id}`;
+            const targetType = sql(row.targetType);
+            const targetId = sql(row.targetId);
+            const name = sql(row.name);
+            const body = sql(row.comment);
+            const createdAt = sql(row.created_at);
+            const sourceSql = sql(source);
+            const sourceIdSql = sql(sourceId);
+
+            if (row.targetType === 'lounge') {
+              lines.push(`
+                INSERT INTO comments (
+                  target_type, target_id, review_id, author_name, body, status,
+                  submitter_key, created_at, moderated_at, approved_at
+                )
+                SELECT ${targetType}, ${targetId}, NULL, ${name}, ${body}, 'approved',
+                       NULL, ${createdAt}, NULL, NULL
+                WHERE NOT EXISTS (
+                  SELECT 1 FROM legacy_comment_imports
+                  WHERE source = ${sourceSql} AND source_id = ${sourceIdSql}
+                )
+                AND NOT EXISTS (
+                  SELECT 1 FROM comments
+                  WHERE target_type = ${targetType}
+                    AND target_id COLLATE NOCASE = ${targetId}
+                    AND author_name = ${name}
+                    AND body = ${body}
+                    AND created_at = ${createdAt}
+                );
+                INSERT OR IGNORE INTO legacy_comment_imports (source, source_id, comment_id)
+                SELECT ${sourceSql}, ${sourceIdSql}, id
+                FROM comments
+                WHERE target_type = ${targetType}
+                  AND target_id COLLATE NOCASE = ${targetId}
+                  AND author_name = ${name}
+                  AND body = ${body}
+                  AND created_at = ${createdAt}
+                ORDER BY id DESC
+                LIMIT 1;
+              `);
+            } else {
+              lines.push(`
+                INSERT INTO comments (
+                  target_type, target_id, review_id, author_name, body, status,
+                  submitter_key, created_at, moderated_at, approved_at
+                )
+                SELECT ${targetType}, r.slug, r.id, ${name}, ${body}, 'approved',
+                       NULL, ${createdAt}, NULL, NULL
+                FROM reviews r
+                WHERE r.status = 'published'
+                  AND r.slug COLLATE NOCASE = ${targetId}
+                  AND NOT EXISTS (
+                    SELECT 1 FROM legacy_comment_imports
+                    WHERE source = ${sourceSql} AND source_id = ${sourceIdSql}
+                  )
+                  AND NOT EXISTS (
+                    SELECT 1 FROM comments c
+                    WHERE c.target_type = ${targetType}
+                      AND c.target_id COLLATE NOCASE = r.slug
+                      AND c.author_name = ${name}
+                      AND c.body = ${body}
+                      AND c.created_at = ${createdAt}
+                  )
+                LIMIT 1;
+                INSERT OR IGNORE INTO legacy_comment_imports (source, source_id, comment_id)
+                SELECT ${sourceSql}, ${sourceIdSql}, c.id
+                FROM comments c
+                WHERE c.target_type = ${targetType}
+                  AND c.target_id COLLATE NOCASE = ${targetId}
+                  AND c.author_name = ${name}
+                  AND c.body = ${body}
+                  AND c.created_at = ${createdAt}
+                ORDER BY c.id DESC
+                LIMIT 1;
+              `);
+            }
+          }
+
+          lines.push('COMMIT;');
+          fs.writeFileSync('/tmp/import-prod-comments.sql', lines.join('\n'));
+          fs.writeFileSync('/tmp/import-prod-comments.json', JSON.stringify(imported, null, 2));
+
+          const byTarget = new Map();
+          for (const row of imported) {
+            const key = `${row.targetType}:${row.targetId}`;
+            byTarget.set(key, (byTarget.get(key) || 0) + 1);
+          }
+          console.log(`Production catalog: ${slugs.length} review slug(s).`);
+          console.log(`Approved public comments discovered: ${imported.length}.`);
+          console.log(`Threads containing approved comments: ${byTarget.size}.`);
+          console.log(`DC approved comments discovered: ${byTarget.get('review:dc') || 0}.`);
+          console.log(`Lounge/Home approved comments discovered: ${byTarget.get('lounge:lounge') || 0}.`);
+          if (warnings.length) {
+            console.log('Import scan warnings:');
+            warnings.forEach(warning => console.log(`- ${warning}`));
+          }
+          NODE
+
+      - name: Import approved comments into preview D1
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$D1_DATABASE" --remote --file=/tmp/import-prod-comments.sql
+
+      - name: Verify imported rows in D1 and public preview APIs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '--- Imported Production comment ledger ---'
+          npx wrangler d1 execute "$D1_DATABASE" --remote --json --command "
+            SELECT COUNT(*) AS imported_count
+            FROM legacy_comment_imports
+            WHERE source = 'production-comments-do-v1';
+          "
+
+          echo '--- Approved DC/Lounge rows in preview D1 ---'
+          npx wrangler d1 execute "$D1_DATABASE" --remote --json --command "
+            SELECT target_type, target_id, COUNT(*) AS approved_count
+            FROM comments
+            WHERE status = 'approved'
+              AND ((target_type = 'review' AND target_id = 'dc') OR target_type = 'lounge')
+            GROUP BY target_type, target_id
+            ORDER BY target_type, target_id;
+          "
+
+          curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors \
+            "$PREVIEW_BASE/api/comments?target=review&target_id=dc&limit=20" > /tmp/preview-dc-comments.json
+          curl --fail --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors \
+            "$PREVIEW_BASE/api/comments?target=lounge&target_id=lounge&limit=20" > /tmp/preview-lounge-comments.json
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const dc = JSON.parse(fs.readFileSync('/tmp/preview-dc-comments.json', 'utf8'));
+          const lounge = JSON.parse(fs.readFileSync('/tmp/preview-lounge-comments.json', 'utf8'));
+          if (!Array.isArray(dc.comments)) throw new Error('Preview DC comments API did not return a comments array.');
+          if (!Array.isArray(lounge.comments)) throw new Error('Preview Lounge comments API did not return a comments array.');
+          console.log(`Preview DC approved comments visible: ${dc.comments.length}.`);
+          console.log(`Preview Lounge approved comments visible: ${lounge.comments.length}.`);
+          NODE
