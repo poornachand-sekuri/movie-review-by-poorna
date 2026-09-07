@@ -1,0 +1,141 @@
+/* Movie-specific Theater reactions. The icons remain baked into the approved artwork;
+   these controls add only the live counts, hit areas and selected-state feedback. */
+
+.auditorium-reactions {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.auditorium-reaction-button {
+  position: absolute;
+  top: 86.7%;
+  height: 10.8%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auditorium-reaction-button--like {
+  left: 22.4%;
+  width: 22.5%;
+}
+
+.auditorium-reaction-button--dislike {
+  left: 56.2%;
+  width: 22.5%;
+}
+
+.auditorium-reaction-count {
+  position: absolute;
+  top: 50%;
+  left: 61%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 2.2ch;
+  color: #f5d9a3;
+  font-family: "Arial Narrow", "Roboto Condensed", "Aptos Narrow", Arial, sans-serif;
+  font-size: clamp(10px, 1.8cqw, 18px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.045em;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 96%),
+    0 0 7px rgb(220 49 39 / 24%);
+  transition: color 140ms ease, text-shadow 140ms ease, transform 140ms ease;
+}
+
+.auditorium-reaction-button::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  top: 50%;
+  width: 24%;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgb(228 42 33 / 0%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease, box-shadow 140ms ease;
+}
+
+.auditorium-reaction-button.is-selected .auditorium-reaction-count,
+.auditorium-reaction-button[aria-pressed="true"] .auditorium-reaction-count {
+  color: #ffd178;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 9px rgb(255 96 70 / 38%);
+}
+
+.auditorium-reaction-button.is-selected::after,
+.auditorium-reaction-button[aria-pressed="true"]::after {
+  opacity: 1;
+  box-shadow: 0 0 15px 5px rgb(228 42 33 / 14%);
+}
+
+.auditorium-reaction-button:hover:not(:disabled) .auditorium-reaction-count {
+  color: #ffe3aa;
+}
+
+.auditorium-reaction-button:focus-visible {
+  outline: 2px solid rgb(240 187 103 / 88%);
+  outline-offset: -2px;
+  border-radius: 999px;
+}
+
+.auditorium-reaction-button:disabled {
+  cursor: wait;
+}
+
+.auditorium-reactions.is-updating .auditorium-reaction-count {
+  opacity: 0.62;
+}
+
+.auditorium-reactions.just-updated .auditorium-reaction-count {
+  animation: auditorium-reaction-pop 260ms ease-out;
+}
+
+/* The same source-coordinate layer moves into Theater Focus Mode, so counts stay
+   aligned with the approved 09 reaction bar without a duplicated state. */
+.auditorium-section--theater.is-auditorium-focused .auditorium-reaction-count {
+  font-size: clamp(13px, 1.85cqw, 22px);
+}
+
+@keyframes auditorium-reaction-pop {
+  0% { transform: translateY(-50%) scale(1); }
+  45% { transform: translateY(-50%) scale(1.15); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+@media (max-width: 520px) {
+  .auditorium-reaction-count {
+    left: 62%;
+    font-size: clamp(9px, 2.7cqw, 13px);
+    letter-spacing: 0.03em;
+  }
+
+  .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-count {
+    font-size: clamp(11px, 3cqw, 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auditorium-reaction-count,
+  .auditorium-reaction-button::after {
+    transition: none;
+  }
+
+  .auditorium-reactions.just-updated .auditorium-reaction-count {
+    animation: none;
+  }
+}
