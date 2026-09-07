@@ -65,13 +65,11 @@ export function initAuditoriumSharing(): void {
   const actions = document.createElement('div');
   actions.className = 'auditorium-share-actions';
   actions.setAttribute('aria-label', 'Share this review');
-  actions.append(
-    button('whatsapp', 'Share this review on WhatsApp'),
-    button('x', 'Share this review on X'),
-    button('instagram', 'Share this review using Instagram'),
-    button('copy', 'Copy review link'),
-    button('more', 'More share options'),
-  );
+  actions.appendChild(button('whatsapp', 'Share this review on WhatsApp'));
+  actions.appendChild(button('x', 'Share this review on X'));
+  actions.appendChild(button('instagram', 'Share this review using Instagram'));
+  actions.appendChild(button('copy', 'Copy review link'));
+  actions.appendChild(button('more', 'More share options'));
 
   const status = document.createElement('span');
   status.className = 'visually-hidden';
@@ -79,7 +77,8 @@ export function initAuditoriumSharing(): void {
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
 
-  root.append(actions, status);
+  root.appendChild(actions);
+  root.appendChild(status);
 
   actions.addEventListener('click', async (event) => {
     const target = event.target;
