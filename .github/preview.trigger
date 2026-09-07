@@ -27,6 +27,11 @@ slot/form construction for both rooms.
 geometry unchanged, but render the POV as a left-aligned, warmer high-contrast reading
 block with stronger condensed typography and improved small-screen readability.
 
+2026-09-07 focus control refinement: preserve all focus behavior and approved baked
+EXIT artwork. Restyle only the CSS-generated popup EXIT fascia and Theater A-/A+ reading
+controls as compact physical Auditorium signage/console hardware with dark enamel,
+warm-metal trim and restrained red illumination; remove the generic popup chevron.
+
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
 - Use the nine Premium Runtime Q99 WebP Lounge assets in R2, including the approved upright 06 and 09 opinion tickets. Archival PNG/lossless/AVIF files are masters/backups only and must not be requested by the Lounge runtime.
