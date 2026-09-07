@@ -1,16 +1,19 @@
 Deploy the current cinema-rebuild branch to the temporary preview Worker.
 
-2026-09-07: Keep all approved Auditorium geometry/content/focus behavior unchanged
-and add source-mapped navigation hit areas to the existing top and bottom artwork.
-Top navigation: Lounge icon -> /, center Movie Reviews By Poorna brand/logo -> /,
-Cafe icon -> /search. Bottom navigation: LOUNGE half -> / and CINI CAFE half ->
-/search. Hit areas must remain visually transparent, mobile-friendly and keyboard
-accessible, with only a restrained focus/hover treatment; do not alter the baked
-artwork itself. The hit areas are mapped against the approved 2048x682 source
-canvases. Keep the Theater readability toolbar above the focused Theater and keep
-its fixed internal review viewport unchanged. The Auditorium background remains
-unwired while its artwork is finalized. The Lounge and The Movie Café are
-otherwise unchanged.
+2026-09-07: Keep the approved Auditorium artwork/content geometry and top/bottom
+navigation mappings unchanged. Extend the existing Auditorium focus/layover system
+to every content section except Top Navigation and Bottom Navigation. Focusable
+sections are: Clapboard Details, Theater, Share This Review, Related Reviews and
+Share Your Opinion. Theater keeps the approved 09 focus artwork, fixed internal
+review viewport and external readability toolbar. Share Your Opinion keeps the
+approved 10 focus artwork and baked EXIT hit area. Clapboard, Share This Review
+and Related Reviews enlarge their existing approved artwork/content without
+swapping or redrawing it and use one shared cinematic EXIT toolbar outside the
+artwork. Related Review poster links remain interactive in focus mode. Keep Escape
+and backdrop-click closing, page scroll locking, keyboard activation and exact
+section restoration on close. Top and Bottom Navigation remain navigation-only
+and must never open focus mode. The Auditorium background remains unwired while
+its artwork is finalized. The Lounge and The Movie Café are otherwise unchanged.
 
 Current Lounge invariants:
 - Preserve the existing review ordering, routes, two-page carousels, swipe controls, focus behavior, opinion UI and 1rem Home section spacing.
