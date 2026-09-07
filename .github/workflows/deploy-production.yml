@@ -70,12 +70,19 @@ jobs:
           fetch '/admin/' /tmp/admin.html
           fetch '/api/health' /tmp/health.json
 
+          admin_session_status=$(curl --silent --show-error --output /tmp/admin-session.json \
+            --write-out '%{http_code}' \
+            --retry 6 --retry-delay 2 --retry-all-errors \
+            "$PRODUCTION_URL/api/admin/session")
+          test "$admin_session_status" = "401"
+
           node <<'NODE'
           const fs = require('node:fs');
           const lounge = fs.readFileSync('/tmp/lounge.html', 'utf8');
           const cafe = fs.readFileSync('/tmp/cafe.html', 'utf8');
           const review = fs.readFileSync('/tmp/review.html', 'utf8');
           const admin = fs.readFileSync('/tmp/admin.html', 'utf8');
+          const adminSession = JSON.parse(fs.readFileSync('/tmp/admin-session.json', 'utf8'));
           const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
 
           if (health.status !== 'ok') throw new Error('Production health endpoint failed.');
@@ -90,8 +97,14 @@ jobs:
             throw new Error('Production Auditorium did not render the DC review.');
           }
           if (!admin.includes('The Projector Room') || !admin.includes('ENTER PROJECTOR ROOM')) {
-            throw new Error('Production Projector Room did not render.');
+            throw new Error('Production Projector Room login did not render.');
+          }
+          if (admin.includes('Audience Dashboard') || admin.includes('Manage Reviews') || admin.includes('id="adminView"')) {
+            throw new Error('Unauthenticated Projector Room leaked protected dashboard/editor markup.');
+          }
+          if (adminSession.authenticated !== false) {
+            throw new Error('Unauthenticated admin session endpoint did not report authenticated=false.');
           }
 
-          console.log('Production smoke tests passed: Lounge, Cini Cafe, Auditorium, Projector Room and API health.');
+          console.log('Production smoke tests passed: Lounge, Cini Cafe, Auditorium, protected Projector Room login and API health.');
           NODE
