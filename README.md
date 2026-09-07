@@ -1,6 +1,6 @@
 # Movie Review By Poorna — Cinema Rebuild
 
-`cinema-rebuild` is the development branch for the new responsive cinema experience. The current production site remains untouched until the rebuild is explicitly approved for cutover.
+`cinema-rebuild` is the development branch for the new adaptive cinema experience. The current production site remains untouched until the rebuild is explicitly approved for cutover.
 
 ## Cinema spaces
 
