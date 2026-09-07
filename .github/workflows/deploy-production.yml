@@ -1,0 +1,97 @@
+name: Deploy Production
+
+on:
+  workflow_run:
+    workflows:
+      - Validate Application
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: movie-review-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PRODUCTION_URL: https://www.moviereviewbypoorna.com
+
+    steps:
+      - name: Checkout validated production commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'main' }}
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: '.nvmrc'
+          package-manager-cache: false
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Deploy production Worker
+        run: npx wrangler deploy
+
+      - name: Smoke-test production
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fetch() {
+            local path="$1"
+            local output="$2"
+            curl --fail --silent --show-error --location \
+              --retry 12 --retry-delay 2 --retry-all-errors \
+              "$PRODUCTION_URL$path" > "$output"
+          }
+
+          sleep 3
+          fetch '/' /tmp/lounge.html
+          fetch '/search?q=Kantara' /tmp/cafe.html
+          fetch '/review/dc' /tmp/review.html
+          fetch '/admin/' /tmp/admin.html
+          fetch '/api/health' /tmp/health.json
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const lounge = fs.readFileSync('/tmp/lounge.html', 'utf8');
+          const cafe = fs.readFileSync('/tmp/cafe.html', 'utf8');
+          const review = fs.readFileSync('/tmp/review.html', 'utf8');
+          const admin = fs.readFileSync('/tmp/admin.html', 'utf8');
+          const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+
+          if (health.status !== 'ok') throw new Error('Production health endpoint failed.');
+          if (!lounge.includes('lounge-stage') || !lounge.includes('Movie Reviews By Poorna')) {
+            throw new Error('Production Lounge did not render the rebuilt experience.');
+          }
+          if (lounge.includes('name="robots" content="noindex,nofollow"')) {
+            throw new Error('Production Lounge is incorrectly marked noindex.');
+          }
+          if (!cafe.includes('Kantara')) throw new Error('Production Cini Cafe search did not render results.');
+          if (!review.includes('The Auditorium') || !review.includes('DC')) {
+            throw new Error('Production Auditorium did not render the DC review.');
+          }
+          if (!admin.includes('The Projector Room') || !admin.includes('ENTER PROJECTOR ROOM')) {
+            throw new Error('Production Projector Room did not render.');
+          }
+
+          console.log('Production smoke tests passed: Lounge, Cini Cafe, Auditorium, Projector Room and API health.');
+          NODE
