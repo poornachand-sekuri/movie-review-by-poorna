@@ -159,7 +159,7 @@ export function prepareCinemaPage(page: HTMLElement): void {
     });
 
     const critical = [...artwork, ...images.slice(0, 1)];
-    const jobs = critical.map((image) => settleWithin(waitForImage(image), 1500));
+    const jobs = critical.map((image) => settleWithin(waitForImage(image), 25000));
     let loaded = 0;
 
     const progress = () => {

@@ -220,6 +220,7 @@ function loadingScreenHarness({
 
   const window = new EventTarget();
   const timers = [];
+  let now = 1000;
   const frames = [];
   let reloaded = false;
   window.setTimeout = (callback, delay) => { timers.push({ callback, delay, cleared: false }); return timers.length; };
@@ -245,27 +246,31 @@ function loadingScreenHarness({
     JSON,
     Boolean,
     Promise,
-    Date: { now: () => 1000 },
+    Date: { now: () => now },
     requestAnimationFrame: (callback) => frames.push(callback),
   });
 
-  return { root, message, progress, recovery, buttons, document, window, timers, frames, reloaded: () => reloaded };
+  return { root, message, progress, recovery, buttons, document, window, timers, frames, advance: (ms) => { now += ms; }, reloaded: () => reloaded };
 }
 
-test('Lounge emergency guardrails remain ten-second recovery and fifteen-second hard fail-open', () => {
-  const h = loadingScreenHarness();
+for (const theme of ['lounge', 'auditorium', 'cafe']) {
+test(`${theme} shows recovery at twenty seconds and fails open at twenty-five`, () => {
+  const h = loadingScreenHarness({ theme });
   assert.equal(h.root.dataset.loungeState, 'loading');
 
-  const slow = h.timers.find((timer) => timer.delay === 10000);
-  const hardStop = h.timers.find((timer) => timer.delay === 15000);
+  const slow = h.timers.find((timer) => timer.delay === 20000);
+  const hardStop = h.timers.find((timer) => timer.delay === 25000);
   assert(slow);
   assert(hardStop);
 
+  assert.equal(h.recovery.hidden, true);
+  h.advance(20000);
   slow.callback();
   assert.equal(h.recovery.hidden, false);
 
+  h.advance(5000);
   hardStop.callback();
-  const minimumDelay = h.timers.find((timer) => timer.delay === 350);
+  const minimumDelay = h.timers.find((timer) => timer.delay === 0);
   assert(minimumDelay);
   minimumDelay.callback();
   assert.equal(h.root.dataset.loungeState, 'revealing');
@@ -277,7 +282,19 @@ test('Lounge emergency guardrails remain ten-second recovery and fifteen-second 
   assert.equal(h.root.dataset.loungeState, undefined);
 });
 
-test('fast Lounge probe opens as soon as critical frames and page markup are ready', async () => {
+test(`${theme} retains its loading screen for five seconds even when ready early`, () => {
+  const h = loadingScreenHarness({ theme });
+  h.document.dispatchEvent(new Event('lounge:assets-ready'));
+  assert.equal(h.root.dataset.loungeState, 'loading');
+  const minimum = h.timers.find((timer) => timer.delay === 5000);
+  assert(minimum);
+  h.advance(5000);
+  minimum.callback();
+  assert.equal(h.root.dataset.loungeState, 'revealing');
+});
+}
+
+test('fast Lounge probe respects the five-second minimum with cached frames', async () => {
   const h = loadingScreenHarness({
     criticalImages: ['/banner.webp', '/now.webp'],
     pageParsed: true,
@@ -286,6 +303,11 @@ test('fast Lounge probe opens as soon as critical frames and page markup are rea
   await tick();
   await tick();
 
+  assert.equal(h.root.dataset.loungeState, 'loading');
+  const minimum = h.timers.find((timer) => timer.delay === 5000);
+  assert(minimum);
+  h.advance(5000);
+  minimum.callback();
   assert.equal(h.root.dataset.loungeState, 'revealing');
   assert.equal(h.progress.value, 100);
   assert.equal(h.recovery.hidden, true);
@@ -299,7 +321,7 @@ test('fast Lounge probe opens as soon as critical frames and page markup are rea
 
 test('loading design preview deliberately stays open until manually entered', () => {
   const h = loadingScreenHarness({ preview: true });
-  h.timers.find((timer) => timer.delay === 15000).callback();
+  h.timers.find((timer) => timer.delay === 25000).callback();
   assert.equal(h.root.dataset.loungeState, 'loading');
   h.document.dispatchEvent(new Event('lounge:assets-ready'));
   assert.equal(h.root.dataset.loungeState, 'loading');
