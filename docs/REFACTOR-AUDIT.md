@@ -44,8 +44,9 @@ An isolated SQLite harness executed the actual baseline and refactored SQL using
 | Full admin list contract without compact mode | 51,395 bytes | 51,395 bytes |
 | Initial Auditorium client reaction reads | 1 | 0; SSR state retained |
 | Café search-text construction | Per review on each filter/page pass | Once per catalogue item |
+| Production Worker upload from CI | 715.13 KiB (178.46 KiB gzip) | 727.24 KiB (181.62 KiB gzip) |
 
-These are operation/payload measurements, not claims about a percentage improvement in live response time. Network latency and production traffic must be measured after a preview deployment. Image transfer sizes are unchanged.
+These are operation/payload measurements, not claims about a percentage improvement in live response time. Network latency and production traffic must be measured after a preview deployment. Image transfer sizes are unchanged. The Worker bundle is slightly larger with server-rendered Café cards and the shared renderer; this is a server deployment size, not a browser download size.
 
 The save transaction follows [Cloudflare's documented D1 batch semantics](https://developers.cloudflare.com/d1/worker-api/d1-database/). JSON table inputs keep parameter and statement counts bounded within [D1 limits](https://developers.cloudflare.com/d1/platform/limits/).
 
@@ -55,10 +56,11 @@ The save transaction follows [Cloudflare's documented D1 batch semantics](https:
 - Actual SQL runs against isolated SQLite with all six migrations applied.
 - Fixture importer: 1 review, 4 credits, 2 gallery items; FTS, integrity and foreign-key checks.
 - Static comparison confirms final Lounge declaration values for every exact selector/media/importance combination match baseline. This is not a substitute for browser visual review.
-- Astro/TypeScript validation and both production/preview build/dry-run gates are required before approval.
+- [GitHub CI run 34172980438](https://github.com/poornachand-sekuri/movie-review-by-poorna/actions/runs/34172980438) passed on implementation commit `2768ec1`: 25 tests, Astro/TypeScript (zero errors/warnings), production and preview builds, and both deployment dry-runs.
+- Preserved production catalogue import passed: 136 reviews, 698 credits, integrity/foreign-key checks.
 - Shared deployment smoke tests cover all four pages, auth boundaries, public APIs, indexing and required Lounge WebP artwork.
 
-Local Cloudflare builds were interrupted by environment network approval cancellation. GitHub CI is the authoritative build check for this branch. Live preview smoke tests and compact/medium/wide visual review require deploying this branch; they have not been claimed as completed.
+Local Cloudflare builds were interrupted by environment network approval cancellation. GitHub CI completed both build checks successfully for this branch. Live preview smoke tests and compact/medium/wide visual review require deploying this branch; they have not been claimed as completed.
 
 ## Intentionally retained
 
