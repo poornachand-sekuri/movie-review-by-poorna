@@ -37,6 +37,6 @@ The workflows call the same scripts. There are no trigger files, one-off patch w
 
 D1 is authoritative for review content, reactions, comments and page-view analytics. R2 stores media and approved UI artwork at existing custom-domain URLs. Keep versioned immutable artwork paths and original image quality/transparency. No lossy conversion or image resizing is performed by this refactor.
 
-Migrations are not automatically applied on deployment. Preserve migration history and use the documented data migration procedure for separately authorized schema changes. Retain the old Durable Object class exports for namespace/deployment compatibility; current requests use D1.
+Migrations are not automatically applied on deployment. Preserve migration history and use the documented data migration procedure for separately authorized schema changes. Retain the old Durable Object class exports for namespace/deployment compatibility. The read-only `LEGACY_REACTIONS` binding copies preserved votes once into D1; it must point at the original production ReactionStore namespace (preview uses `script_name`). Reaction schema initialization creates the import marker table safely on first use. New votes continue to use D1 only.
 
 Preview pages carry `noindex,nofollow`; production public pages remain indexable. Admin documents and responses remain private/no-store.

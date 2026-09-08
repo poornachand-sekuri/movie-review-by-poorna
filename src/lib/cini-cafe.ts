@@ -1,3 +1,4 @@
+import { watchReactionChanges } from './reaction-sync';
 import { renderCafeCard } from './cini-cafe-card';
 import type { CiniCafeReview } from './data/cini-cafe';
 import { createCafeFilter, yearOf, type CafeState, type CafeSort } from './cini-cafe-filter';
@@ -240,27 +241,34 @@ export function initCiniCafe(): void {
     syncLabels();
     stage.setAttribute('aria-busy', 'false');
     scheduleTitleFit();
+    if (updateCards) void refreshVisibleLikes();
   }
 
-  async function refreshVisibleLikes(): Promise<void> {
+  const reactionRevisions = new Map<string, number>();
+  async function refreshVisibleLikes(changedSlug?: string): Promise<void> {
     const cards = Array.from(resultsLayer.querySelectorAll('[data-review-slug]')) as unknown as HTMLElement[];
-    await Promise.allSettled(cards.map(async (card) => {
-      const slug = card.dataset.reviewSlug;
-      if (!slug) return;
+    const slugs = changedSlug ? [changedSlug] : cards.map((card) => card.dataset.reviewSlug).filter((slug): slug is string => !!slug);
+    await Promise.allSettled(slugs.map(async (slug) => {
+      const item = state.catalogue.find((review) => review.slug === slug);
+      if (!item) return;
+      const revision = (reactionRevisions.get(slug) ?? 0) + 1;
+      reactionRevisions.set(slug, revision);
 
       const response = await fetch(`/api/reviews/${encodeURIComponent(slug)}/reactions`, {
         credentials: 'same-origin',
         headers: { accept: 'application/json' },
         cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
       });
       if (!response.ok) return;
 
       const payload = await response.json() as { likes?: unknown };
-      const likes = Math.max(0, Number(payload.likes) || 0);
-      const item = state.catalogue.find((review) => review.slug === slug);
-      if (item) item.likes = likes;
+      if (!Number.isInteger(payload.likes) || Number(payload.likes) < 0 || reactionRevisions.get(slug) !== revision) return;
+      const likes = Number(payload.likes);
+      item.likes = likes;
 
-      const node = card.querySelector('[data-review-likes]') as unknown as HTMLElement | null;
+      const card = Array.from(resultsLayer.querySelectorAll<HTMLElement>('[data-review-slug]')).find((node) => node.dataset.reviewSlug === slug);
+      const node = card?.querySelector<HTMLElement>('[data-review-likes]');
       if (node) {
         node.textContent = String(likes);
         node.setAttribute('aria-label', `${likes} like${likes === 1 ? '' : 's'}`);
@@ -304,9 +312,7 @@ export function initCiniCafe(): void {
   });
 
   window.addEventListener('resize', scheduleTitleFit, { passive: true });
-  window.addEventListener('pageshow', (event) => {
-    if (event.persisted) void refreshVisibleLikes();
-  });
+  watchReactionChanges((slug) => { void refreshVisibleLikes(slug); });
 
   render(false);
 }

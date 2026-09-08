@@ -17,5 +17,33 @@
       "binding": "REVIEW_ASSETS",
       "bucket_name": "movie-review-assets"
     }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "LEGACY_REACTIONS",
+        "class_name": "ReactionStore"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-reactions",
+      "new_sqlite_classes": [
+        "ReactionStore"
+      ]
+    },
+    {
+      "tag": "v2-comments",
+      "new_sqlite_classes": [
+        "CommentsStore"
+      ]
+    },
+    {
+      "tag": "v3-admin-analytics",
+      "new_sqlite_classes": [
+        "AnalyticsStore"
+      ]
+    }
   ]
 }

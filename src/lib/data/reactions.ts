@@ -1,4 +1,5 @@
 import { getContentDb } from '../cloudflare/content-db';
+import { importLegacyReactions } from './legacy-reactions';
 
 export type ReviewReaction = 'like' | 'dislike';
 
@@ -20,11 +21,16 @@ interface ReactionAggregateRow {
 
 let reactionSchemaReady: Promise<void> | null = null;
 
-async function ensureReactionSchema(): Promise<void> {
+export async function ensureReactionSchema(): Promise<void> {
   if (!reactionSchemaReady) {
     reactionSchemaReady = (async () => {
       const db = getContentDb();
       await db.batch([
+        db.prepare(`CREATE TABLE IF NOT EXISTS legacy_reaction_imports (
+          review_id INTEGER PRIMARY KEY REFERENCES reviews(id) ON DELETE CASCADE,
+          source_slug TEXT NOT NULL, source_votes INTEGER NOT NULL,
+          imported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`),
         db.prepare(`
           CREATE TABLE IF NOT EXISTS review_reaction_votes (
             review_id INTEGER NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
@@ -80,12 +86,15 @@ async function getPublishedReviewId(slug: string): Promise<number | null> {
 export async function getReviewReactionSnapshot(
   reviewId: number,
   voterKey?: string | null,
+  legacyVoterKey?: string | null,
 ): Promise<ReviewReactionSnapshot> {
   if (!Number.isInteger(reviewId) || reviewId <= 0) {
     return { likes: 0, dislikes: 0, viewerReaction: null };
   }
 
   await ensureReactionSchema();
+  await importLegacyReactions(reviewId);
+  await reconcileVoterIdentity(reviewId, voterKey, legacyVoterKey);
   const db = getContentDb();
   const normalizedVoterKey = normalizeVoterKey(voterKey);
 
@@ -111,17 +120,20 @@ export async function getReviewReactionSnapshot(
 export async function getReviewReactionSnapshotBySlug(
   slug: string,
   voterKey?: string | null,
+  legacyVoterKey?: string | null,
 ): Promise<ReviewReactionSnapshot | null> {
   await ensureReactionSchema();
   const reviewId = await getPublishedReviewId(slug);
   if (!reviewId) return null;
-  return getReviewReactionSnapshot(reviewId, voterKey);
+  return getReviewReactionSnapshot(reviewId, voterKey, legacyVoterKey);
 }
 
 export async function setReviewReaction(
   slug: string,
   voterKey: string,
-  reaction: ReviewReaction,
+  reaction: ReviewReaction | null,
+  legacyVoterKey?: string | null,
+  explicit = false,
 ): Promise<ReviewReactionSnapshot | null> {
   await ensureReactionSchema();
 
@@ -131,8 +143,10 @@ export async function setReviewReaction(
   const reviewId = await getPublishedReviewId(slug);
   if (!reviewId) return null;
 
+  await importLegacyReactions(reviewId);
+  await reconcileVoterIdentity(reviewId, normalizedVoterKey, legacyVoterKey);
   const db = getContentDb();
-  const existing = await db
+  const existing = explicit ? null : await db
     .prepare(
       `SELECT reaction
        FROM review_reaction_votes
@@ -142,7 +156,7 @@ export async function setReviewReaction(
     .bind(reviewId, normalizedVoterKey)
     .first<{ reaction: string }>();
 
-  if (existing?.reaction === reaction) {
+  if (reaction === null || existing?.reaction === reaction) {
     await db
       .prepare('DELETE FROM review_reaction_votes WHERE review_id = ?1 AND voter_key = ?2')
       .bind(reviewId, normalizedVoterKey)
@@ -166,4 +180,25 @@ export async function setReviewReaction(
   }
 
   return getReviewReactionSnapshot(reviewId, normalizedVoterKey);
+}
+
+// Browsers that visited both runtimes may carry both cookies. Keep their newer
+// D1 choice and merge the old identity instead of counting the same browser twice.
+async function reconcileVoterIdentity(reviewId: number, voterKey?: string | null, legacyVoterKey?: string | null) {
+  const current = normalizeVoterKey(voterKey);
+  const legacy = normalizeVoterKey(legacyVoterKey);
+  if (!current || !legacy || current === legacy) return;
+  const db = getContentDb();
+  await db.batch([
+    db.prepare(`INSERT INTO review_reaction_votes (review_id, voter_key, reaction, created_at, updated_at)
+      SELECT review_id, ?2, reaction, created_at, updated_at FROM review_reaction_votes
+      WHERE review_id = ?1 AND voter_key = ?3
+      ON CONFLICT(review_id, voter_key) DO NOTHING`).bind(reviewId, current, legacy),
+    db.prepare('DELETE FROM review_reaction_votes WHERE review_id = ?1 AND voter_key = ?2').bind(reviewId, legacy),
+  ]);
+}
+
+export async function ensureAllReactionImports(): Promise<void> {
+  await ensureReactionSchema();
+  await importLegacyReactions();
 }

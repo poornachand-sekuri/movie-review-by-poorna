@@ -69,6 +69,7 @@
             await loadReviews();
     }
     async function loadAnalytics() {
+        if (el.refreshAnalytics.disabled) return;
         el.refreshAnalytics.disabled = true;
         el.syncReactions.disabled = true;
         try {
@@ -86,6 +87,14 @@
             el.syncReactions.disabled = false;
         }
     }
+    const refreshDashboard = () => {
+        if (!el.admin.classList.contains('hidden') && state.panel === 'dashboard' && document.visibilityState !== 'hidden') void loadAnalytics();
+    };
+    window.addEventListener('focus', refreshDashboard);
+    document.addEventListener('visibilitychange', refreshDashboard);
+    window.addEventListener('storage', event => { if (event.key === 'mrp:reaction-change') refreshDashboard(); });
+    window.addEventListener('pageshow', event => { if (event.persisted) refreshDashboard(); });
+    setInterval(refreshDashboard, 15000);
     el.refreshAnalytics.addEventListener('click', () => loadAnalytics());
     el.days.addEventListener('change', () => loadAnalytics());
     el.syncReactions.addEventListener('click', () => loadAnalytics());

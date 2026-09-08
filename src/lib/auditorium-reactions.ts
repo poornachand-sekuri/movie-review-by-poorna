@@ -1,3 +1,5 @@
+import { publishReactionChange, watchReactionChanges } from './reaction-sync';
+
 type ReactionKind = 'like' | 'dislike';
 
 interface ReactionPayload {
@@ -60,13 +62,15 @@ export function initAuditoriumReactions(): void {
 
   let revision = 0;
   const loadLatest = async () => {
-    const requestedRevision = revision;
+    if (root.classList.contains('is-updating')) return;
+    const requestedRevision = ++revision;
     try {
       const response = await fetch(endpoint, {
         method: 'GET',
         credentials: 'same-origin',
         cache: 'no-store',
         headers: { accept: 'application/json' },
+        signal: AbortSignal.timeout(10000),
       });
       if (!response.ok) return;
       const payload: unknown = await response.json();
@@ -98,7 +102,8 @@ export function initAuditoriumReactions(): void {
             accept: 'application/json',
             'content-type': 'application/json',
           },
-          body: JSON.stringify({ reaction }),
+          body: JSON.stringify({ reaction: root.dataset.viewerReaction === reaction ? null : reaction, mode: 'set' }),
+          signal: AbortSignal.timeout(10000),
         });
 
         const payload: unknown = await response.json();
@@ -106,6 +111,7 @@ export function initAuditoriumReactions(): void {
 
         revision += 1;
         applySnapshot(root, payload);
+        publishReactionChange(slug);
         root.classList.remove('just-updated');
         void root.offsetWidth;
         root.classList.add('just-updated');
@@ -116,6 +122,7 @@ export function initAuditoriumReactions(): void {
         }
       } catch {
         if (status) status.textContent = 'Could not update your reaction. Please try again.';
+        setBusy(root, false);
         await loadLatest();
       } finally {
         setBusy(root, false);
@@ -123,8 +130,9 @@ export function initAuditoriumReactions(): void {
     });
   }
 
-  // The initial snapshot is rendered by the server. Refresh restored pages only.
-  window.addEventListener('pageshow', (event) => {
-    if (event.persisted) void loadLatest();
+  // Own votes render from the confirmed write. Other tabs refresh immediately;
+  // visible pages also pick up other visitors' votes without a manual reload.
+  watchReactionChanges((changedSlug) => {
+    if (!changedSlug || changedSlug === slug) void loadLatest();
   });
 }

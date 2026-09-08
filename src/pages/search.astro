@@ -9,6 +9,7 @@ import { renderCafeCard } from '../lib/cini-cafe-card';
 
 export const prerender = false;
 
+Astro.response.headers.set('cache-control', 'no-store');
 const catalogue = await listCiniCafeReviews();
 const query = Astro.url.searchParams.get('q') ?? '';
 const initialResults = createCafeFilter(catalogue)({ query, language: '', year: '', sort: 'latest' });
