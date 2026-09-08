@@ -1,83 +1,52 @@
-# Rebuild Architecture Map
+# Architecture and ownership
 
-This document explains where a change belongs. The goal is to keep visual iteration fast without letting room-specific behavior leak across the application.
+## Document shell
 
-## Pages
+`src/layouts/SiteFrame.astro` owns document metadata, global styles, preload hints and first-party analytics. It does not initialize room-specific sharing or comments. `global.css` and `tokens.css` contain shared primitives only.
 
-### The Lounge — `src/pages/index.astro`
+## Lounge
 
-Owns Lounge server data and page composition. Lounge artwork configuration lives in `src/lib/lounge-assets.ts`; loading behavior lives in `src/lib/lounge-loading.ts` and `src/components/lounge/LoungeLoading.astro`. Lounge presentation is consolidated through `src/styles/lounge.css` and `src/styles/lounge-reset.css`.
+`src/pages/index.astro` selects 17 compact reviews and renders the featured/recent/previous panels. `src/lib/lounge.ts` owns carousels, focus controls and title animation. `lounge-loading.ts` progressively releases lower posters; the inline `LoungeLoading.astro` component owns first-screen readiness and recovery timers.
 
-### The Auditorium — `src/pages/review/[slug].astro`
+`src/styles/lounge.css` is the single Lounge stylesheet. Its established cascade preserves normal, focused and narrow-screen geometry. Edit the owning declaration rather than adding another override file. `lounge-assets.ts` defines critical images used by both the loader and head preloads. CSS owns structural frames.
 
-Owns one review page and composes confirmed Auditorium artwork with live review data. Keep the route file focused on composition and server data selection.
+## Auditorium
 
-Auditorium browser behavior is split by responsibility:
+`src/pages/review/[slug].astro` renders one review. Once it resolves the review, it loads reaction state and related reviews concurrently.
 
-- `src/lib/auditorium-focus.ts` — popup/focus movement, close behavior and text-size controls
-- `src/lib/auditorium-reactions.ts` — Like/Dislike browser state
-- `src/lib/comments-client.ts` — public approved-comments rendering and pending submission UI
+Browser controllers have separate responsibilities: `auditorium-focus.ts`, `auditorium-reactions.ts`, `auditorium-sharing.ts` and the shared `comments-client.ts`. The SSR reaction snapshot is initial state; successful writes and restored-page refreshes keep it current.
 
-Auditorium styles are intentionally split by interaction area:
+Styles are scoped by feature: core registration in `auditorium.css`, then navigation, focus, reactions, sharing and comments styles. Approved top-wall artwork and the continuous lower seating remain unchanged. The clapboard and theater fill the available viewport width; other panels retain their registered proportions.
 
-- `auditorium.css` — core artwork registration and content geometry
-- `auditorium-navigation.css` — source-registered navigation hit areas
-- `auditorium-focus.css` — focus-mode presentation and focus-only controls
-- `auditorium-reactions.css` — reaction counters/hit targets
-- `auditorium-comments.css` — Share Your Opinion live overlays
+## Movie Café
 
-When changing a control, edit the narrowest owning stylesheet instead of adding a later override elsewhere.
+`src/pages/search.astro` loads a compact D1 catalogue, renders the first six filtered cards on the server and embeds escaped catalogue JSON for local filtering. Review bodies are excluded.
 
-### The Movie Café — `src/pages/search.astro`
+`cini-cafe-filter.ts` owns search normalization, date precedence and sorting. It indexes searchable text once and reuses results across pagination. `cini-cafe-card.ts` is the escaped HTML renderer shared by SSR and browser updates. `cini-cafe.ts` owns controls, pagination, title fitting and restored-page reaction refreshes. `/search?q=...` initializes both server and browser search state.
 
-Owns search-page composition. Search data comes from the shared review data layer/API rather than a separate catalogue.
+## Projector Room
 
-### The Projection Booth
+`src/pages/admin/index.ts` authenticates on the server before returning `src/admin/projector-room.html`. Unauthenticated visitors receive only the login document. `public/admin/admin.js` handles the editor, dashboard, moderation and uploads; `admin.css` owns its existing appearance.
 
-Not implemented yet. Future moderation UI should use the existing comments data model rather than creating a second comments store.
+The admin list requests `?compact=1` and loads full review text only when a review is opened. Legacy list callers can omit that option to retain the original response shape and full body. Dashboard reactions are read directly from D1; no client sync loop is necessary. The old sync API remains available for compatibility.
 
-## Data layer
+## Data and HTTP boundaries
 
-`src/lib/data/` is the only normal home for D1 business queries:
+- `reviews.ts`: compact lists, full review detail, FTS and credit matches.
+- `related-reviews.ts`: credit-first, same-language, then general-recency fallback.
+- `cini-cafe.ts`: compact catalogue and searchable credit names.
+- `reactions.ts`: persisted viewer votes and totals.
+- `comments.ts`: public approved comments, pending submissions and rate limiting.
+- `admin-reviews.ts`: validated edits and atomic review/credits/gallery saves.
+- `admin-comments.ts`: soft deletion, moderation queues and counts.
+- `analytics.ts`: first-party views and dashboard aggregates.
 
-- `reviews.ts` — lists, detail, search-related review selection
-- `reactions.ts` — movie-specific reaction snapshots and updates
-- `comments.ts` — public approved reads, pending submissions and moderation-ready state helpers
+Schema initialization remains where needed for existing databases. The comment soft-delete column is an intentional runtime upgrade described in migration 0006. Analytics setup is independent of comment schema inspection. Do not remove these compatibility paths merely because migration files also contain table definitions.
 
-Route handlers in `src/pages/api/` should validate HTTP input, call the data layer and shape the response. They should not duplicate SQL.
+API routes validate HTTP inputs, enforce authentication/origin boundaries and call the data layer. `admin/values.ts`, `http/json.ts` and `http/origin.ts` own shared normalization/response behavior.
 
-## Migrations
+## Deployment and validation
 
-`migrations/` is append-only history. Do not edit an already-applied migration to change current behavior. Add the next numbered migration instead.
+The three workflows are documented in `CLOUDFLARE-DEPLOYMENT.md`. `scripts/cloudflare.mjs` chooses and verifies the Worker target; `smoke-site.mjs` shares live checks between preview and production. `check-importer.mjs` tests all migrations and retained import data without requiring a system SQLite installation.
 
-## Artwork
-
-Runtime artwork URLs and dimensions belong in the room asset modules, not scattered through page files. Source-registered coordinates belong beside the component/feature that consumes them.
-
-Do not introduce an alternate asset filename until the object has been confirmed in R2.
-
-## Shared layout and comments
-
-`src/layouts/SiteFrame.astro` owns the document shell, global metadata and shared style/runtime initialization.
-
-`src/styles/comments.css` contains only presentation shared by Lounge and Auditorium comment cards/toasts. Artwork-specific comment geometry stays in the relevant room stylesheet.
-
-## CI / deployment
-
-Only two long-lived GitHub Actions workflows are expected for this branch:
-
-- `validate-cinema-rebuild.yml` — guardrails, type/Astro checks, build and migration/import smoke tests
-- `deploy-preview.yml` — validation, build, Worker deploy and live smoke tests
-
-Geometry probes, asset inventories and one-time migration inspection workflows must be temporary and removed after use.
-
-## Refactor safety checklist
-
-Before deleting or moving a runtime module:
-
-1. Verify its imports/usages.
-2. Preserve route/API response contracts.
-3. Preserve confirmed artwork geometry.
-4. Run `npm run validate` and `npm run build`.
-5. Let the preview workflow complete all live smoke tests.
-6. Test the affected room on the preview URL.
+Before publishing, run `npm run validate`, build/dry-run both configurations, and complete preview smoke tests. Production additionally requires visual checks at representative compact, medium and wide viewports. Avoid deleting migrations, compatibility exports or external API routes based only on an absence of current internal imports.

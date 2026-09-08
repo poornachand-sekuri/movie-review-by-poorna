@@ -44,67 +44,15 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Build production application
+      - name: Validate manual production deployment
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run validate
+
+      - name: Build validated production commit
         run: npm run build
 
       - name: Deploy production Worker
-        run: npx wrangler deploy
+        run: node scripts/cloudflare.mjs production deploy
 
-      - name: Smoke-test production
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          fetch() {
-            local path="$1"
-            local output="$2"
-            curl --fail --silent --show-error --location \
-              --retry 12 --retry-delay 2 --retry-all-errors \
-              "$PRODUCTION_URL$path" > "$output"
-          }
-
-          sleep 3
-          fetch '/' /tmp/lounge.html
-          fetch '/search?q=Kantara' /tmp/cafe.html
-          fetch '/review/dc' /tmp/review.html
-          fetch '/admin/' /tmp/admin.html
-          fetch '/api/health' /tmp/health.json
-
-          admin_session_status=$(curl --silent --show-error --location --output /tmp/admin-session.json \
-            --write-out '%{http_code}' \
-            --retry 6 --retry-delay 2 --retry-all-errors \
-            "$PRODUCTION_URL/api/admin/session")
-          test "$admin_session_status" = "401"
-
-          node <<'NODE'
-          const fs = require('node:fs');
-          const lounge = fs.readFileSync('/tmp/lounge.html', 'utf8');
-          const cafe = fs.readFileSync('/tmp/cafe.html', 'utf8');
-          const review = fs.readFileSync('/tmp/review.html', 'utf8');
-          const admin = fs.readFileSync('/tmp/admin.html', 'utf8');
-          const adminSession = JSON.parse(fs.readFileSync('/tmp/admin-session.json', 'utf8'));
-          const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
-
-          if (health.status !== 'ok') throw new Error('Production health endpoint failed.');
-          if (!lounge.includes('lounge-stage') || !lounge.includes('Movie Reviews By Poorna')) {
-            throw new Error('Production Lounge did not render the rebuilt experience.');
-          }
-          if (lounge.includes('name="robots" content="noindex,nofollow"')) {
-            throw new Error('Production Lounge is incorrectly marked noindex.');
-          }
-          if (!cafe.includes('Kantara')) throw new Error('Production Cini Cafe search did not render results.');
-          if (!review.includes('The Auditorium') || !review.includes('DC')) {
-            throw new Error('Production Auditorium did not render the DC review.');
-          }
-          if (!admin.includes('The Projector Room') || !admin.includes('ENTER PROJECTOR ROOM')) {
-            throw new Error('Production Projector Room login did not render.');
-          }
-          if (admin.includes('Audience Dashboard') || admin.includes('Manage Reviews') || admin.includes('id="adminView"')) {
-            throw new Error('Unauthenticated Projector Room leaked protected dashboard/editor markup.');
-          }
-          if (adminSession.authenticated !== false) {
-            throw new Error('Unauthenticated admin session endpoint did not report authenticated=false.');
-          }
-
-          console.log('Production smoke tests passed: Lounge, Cini Cafe, Auditorium, protected Projector Room login and API health.');
-          NODE
+      - name: Smoke-test all four pages and APIs
+        run: npm run smoke -- "$PRODUCTION_URL" production

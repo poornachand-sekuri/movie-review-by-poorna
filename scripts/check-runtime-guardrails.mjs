@@ -61,11 +61,11 @@ const reviewPage = readRequired('src/pages/review/[slug].astro');
 const siteFrame = readRequired('src/layouts/SiteFrame.astro');
 const loungeAssets = readRequired('src/lib/lounge-assets.ts');
 const loungeCss = readRequired('src/styles/lounge.css');
-const loungeReset = readRequired('src/styles/lounge-reset.css');
 const loungeLoading = readRequired('src/lib/lounge-loading.ts');
 const loadingComponent = readRequired('src/components/lounge/LoungeLoading.astro');
 
 const removedLoungeFiles = [
+  'src/styles/lounge-reset.css',
   'src/styles/lounge-content.css',
   'src/styles/lounge-corners.css',
   'src/styles/lounge-polish.css',
@@ -101,7 +101,6 @@ for (const file of runtimeArtwork) {
 const legacyArtworkPattern = /Movie_Reviews_By_Poorna[^"')\s]*\.(?:png|avif)/i;
 for (const [path, content] of [
   ['src/styles/lounge.css', loungeCss],
-  ['src/styles/lounge-reset.css', loungeReset],
 ]) {
   if (legacyArtworkPattern.test(content)) {
     violations.push(`${path}: legacy PNG/AVIF Lounge runtime artwork reference detected`);
@@ -175,6 +174,24 @@ for (const timing of [
   if (!loadingComponent.includes(timing)) {
     violations.push(`src/components/lounge/LoungeLoading.astro: loader guardrail changed unexpectedly: ${timing}`);
   }
+}
+
+for (const path of ['wrangler.jsonc', 'wrangler.preview.jsonc']) {
+  const config = JSON.parse(readRequired(path));
+  if (config.main !== './src/worker.ts' || !config.r2_buckets?.some((item) => item.binding === 'REVIEW_ASSETS')) {
+    violations.push(`${path}: compatibility Worker entry and admin R2 binding are required`);
+  }
+}
+const worker = readRequired('src/worker.ts');
+for (const name of ['ReactionStore', 'CommentsStore', 'AnalyticsStore']) {
+  if (!worker.includes(`export class ${name}`)) violations.push(`src/worker.ts: preserve ${name} compatibility export`);
+}
+const adminRoute = readRequired('src/pages/admin/index.ts');
+const adminTemplate = readRequired('src/admin/projector-room.html');
+if (existsSync('public/admin/index.html') || !adminRoute.includes('isAdminAuthenticated') ||
+    !adminRoute.includes('loginDocument') || adminRoute.includes('Audience Dashboard') ||
+    !adminTemplate.includes('Audience Dashboard')) {
+  violations.push('Projector Room must keep protected markup behind server authentication');
 }
 
 if (violations.length > 0) {

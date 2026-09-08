@@ -58,7 +58,9 @@ export function initAuditoriumReactions(): void {
   const status = root.querySelector<HTMLElement>('[data-reaction-status]');
   const endpoint = `/api/reviews/${encodeURIComponent(slug)}/reactions`;
 
+  let revision = 0;
   const loadLatest = async () => {
+    const requestedRevision = revision;
     try {
       const response = await fetch(endpoint, {
         method: 'GET',
@@ -68,7 +70,7 @@ export function initAuditoriumReactions(): void {
       });
       if (!response.ok) return;
       const payload: unknown = await response.json();
-      if (isReactionPayload(payload)) applySnapshot(root, payload);
+      if (requestedRevision === revision && isReactionPayload(payload)) applySnapshot(root, payload);
     } catch {
       // Server-rendered counts remain visible when a refresh request is unavailable.
     }
@@ -83,6 +85,7 @@ export function initAuditoriumReactions(): void {
       const reaction = button.dataset.reactionAction as ReactionKind | undefined;
       if (reaction !== 'like' && reaction !== 'dislike') return;
 
+      revision += 1;
       setBusy(root, true);
       if (status) status.textContent = reaction === 'like' ? 'Updating like.' : 'Updating dislike.';
 
@@ -101,6 +104,7 @@ export function initAuditoriumReactions(): void {
         const payload: unknown = await response.json();
         if (!response.ok || !isReactionPayload(payload)) throw new Error('Reaction update failed.');
 
+        revision += 1;
         applySnapshot(root, payload);
         root.classList.remove('just-updated');
         void root.offsetWidth;
@@ -119,5 +123,8 @@ export function initAuditoriumReactions(): void {
     });
   }
 
-  void loadLatest();
+  // The initial snapshot is rendered by the server. Refresh restored pages only.
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) void loadLatest();
+  });
 }

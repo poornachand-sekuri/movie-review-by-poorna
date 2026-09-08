@@ -1,20 +1,20 @@
+import { isSameOriginWrite } from '../../../lib/http/origin';
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import {
-  adminReactionSyncWindow,
   archiveAdminReview,
   createAdminReview,
-  getAdminAnalytics,
   getAdminReview,
-  listAdminComments,
   listAdminReviews,
-  moderateAdminComment,
   updateAdminReview,
   type AdminReviewInput,
-} from '../../../lib/data/admin-console';
+} from '../../../lib/data/admin-reviews';
+import { adminReactionSyncWindow, getAdminAnalytics } from '../../../lib/data/analytics';
+import { listAdminComments, moderateAdminComment } from '../../../lib/data/admin-comments';
+import { clean, slugify } from '../../../lib/admin/values';
+import { jsonResponse } from '../../../lib/http/json';
 import {
   isAdminAuthenticated,
-  isSameOriginWrite,
   loginAdmin,
   logoutAdmin,
 } from '../../../lib/admin/auth';
@@ -33,29 +33,7 @@ function bindings(): AdminBindings {
 }
 
 function json(payload: unknown, status = 200): Response {
-  return Response.json(payload, {
-    status,
-    headers: {
-      'cache-control': 'no-store',
-      'content-type': 'application/json; charset=utf-8',
-      'x-content-type-options': 'nosniff',
-    },
-  });
-}
-
-function clean(value: unknown, max = 1000): string {
-  return String(value ?? '').trim().slice(0, max);
-}
-
-function slugify(value: unknown): string {
-  return String(value ?? '')
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 100);
+  return jsonResponse(payload, { status });
 }
 
 function safeImageExtension(name: string, type: string): string | null {
@@ -193,7 +171,7 @@ async function handle(request: Request): Promise<Response> {
     }
 
     if (pathname === '/api/admin/reviews' && request.method === 'GET') {
-      return json(await listAdminReviews());
+      return json(await listAdminReviews(url.searchParams.get('compact') === '1'));
     }
     if (pathname === '/api/admin/reviews' && request.method === 'POST') {
       const input = await request.json().catch(() => null) as AdminReviewInput | null;

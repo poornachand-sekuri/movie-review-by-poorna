@@ -24,15 +24,11 @@ function cookieValue(request: Request, name: string): string | null {
   const cookie = request.headers.get('cookie') ?? '';
   for (const part of cookie.split(';')) {
     const [key, ...value] = part.trim().split('=');
-    if (key === name) return decodeURIComponent(value.join('='));
+    if (key === name) {
+      try { return decodeURIComponent(value.join('=')); } catch { return null; }
+    }
   }
   return null;
-}
-
-export function isSameOriginWrite(request: Request): boolean {
-  const requestUrl = new URL(request.url);
-  const origin = request.headers.get('origin');
-  return !origin || origin === requestUrl.origin;
 }
 
 async function secureEqual(a: string, b: string): Promise<boolean> {

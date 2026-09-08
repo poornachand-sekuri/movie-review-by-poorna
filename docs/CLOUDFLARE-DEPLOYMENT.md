@@ -1,70 +1,42 @@
-# Cloudflare Deployment Model
+# Cloudflare deployment
 
-## Goal
+## Targets
 
-Keep the rebuild safe without maintaining duplicate production/staging data infrastructure.
+| Target | Source configuration | Worker | Public URL |
+| --- | --- | --- | --- |
+| Production | `wrangler.jsonc` | `movie-review-by-poorna` | https://www.moviereviewbypoorna.com |
+| Preview | `wrangler.preview.jsonc` | `movie-review-by-poorna-preview` | https://movie-review-by-poorna-preview.poornarocks.workers.dev |
 
-## Temporary preview
+Both targets use the custom `src/worker.ts` entry, the `CONTENT_DB` binding to `movie-review-by-poorna-content`, and the `REVIEW_ASSETS` binding to `movie-review-assets`. Preview is code isolation; edits, reactions, comments and uploads use shared stores.
 
-During development, `cinema-rebuild` deploys to the temporary Worker name `movie-review-by-poorna-preview` and a workers.dev test URL. The current live Worker/domain stays untouched until launch approval.
+The Astro adapter receives `configPath` explicitly from `MRP_DEPLOY_TARGET`. The build script validates that target, generates the matching types, builds the app and verifies `dist/server/wrangler.json`. Deployment uses that compiled configuration and rejects mismatched Worker names/database bindings. Source configurations are never copied over one another.
 
-This preview Worker is temporary code isolation, not a permanent second environment.
+## Workflows
 
-## D1
+1. `validate.yml`: on pull requests/main or manual invocation, run guardrails, behavioral tests and Astro checks; build and dry-run production and preview; verify all migrations and the fixture/legacy catalogue import.
+2. `deploy-preview.yml`: manual on the chosen branch; validate, build preview, deploy preview, then smoke-test all four pages and APIs. The job summary includes direct test links.
+3. `deploy-production.yml`: after successful main validation, deploy the exact validated commit. Manual execution always checks out main and validates before building. Production deployments are serialized.
 
-Use one content database only:
+Required GitHub secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The Projector Room uses Worker secrets `ADMIN_PASSWORD` and optionally `ADMIN_SESSION_SECRET` on each target. No secret values belong in Git.
 
-- Database: `movie-review-by-poorna-content`
-- Binding: `CONTENT_DB`
+## Commands
 
-This database is the single canonical D1 database planned for the new site. Do not create a second production D1 database at cutover.
-
-After approval, the production Worker binds to this same database.
-
-## R2 and AVIF artwork
-
-Do not create a second R2 bucket merely for the rebuild. Reuse the existing `movie-review-assets` bucket, with new artwork stored under a separate immutable namespace so old review media cannot be overwritten accidentally.
-
-Recommended namespace:
-
-```text
-ui/site/v1/
-├── shared/
-├── lounge/
-│   ├── compact/
-│   ├── medium/
-│   └── wide/
-├── auditorium/
-│   ├── compact/
-│   ├── medium/
-│   └── wide/
-├── movie-cafe/
-│   ├── compact/
-│   ├── medium/
-│   └── wide/
-└── projection-booth/
-    ├── compact/
-    ├── medium/
-    └── wide/
+```bash
+npm run validate
+npm run build
+node scripts/cloudflare.mjs production dry-run
+npm run build:preview
+node scripts/cloudflare.mjs preview dry-run
 ```
 
-Never overwrite a deployed immutable AVIF when its visual content changes; publish a new versioned path.
+For an authorized deployment, use `npm run deploy:preview` or `npm run deploy:production`; each validates and builds first. `npm run preview` serves the most recently compiled app locally and does not publish it.
 
-## Existing review media
+The workflows call the same scripts. There are no trigger files, one-off patch workflows or automatic preview pushes. A successful merge into main starts validation and subsequently production deployment.
 
-Existing posters and review images remain at their existing R2/public URLs. No copying is required unless a future measured requirement justifies it.
+## Storage and media
 
-## Optional services
+D1 is authoritative for review content, reactions, comments and page-view analytics. R2 stores media and approved UI artwork at existing custom-domain URLs. Keep versioned immutable artwork paths and original image quality/transparency. No lossy conversion or image resizing is performed by this refactor.
 
-No Cloudflare Images runtime binding and no KV session store are enabled by default. Additional Cloudflare services are added only when they solve a demonstrated requirement and their cost/performance impact has been reviewed.
+Migrations are not automatically applied on deployment. Preserve migration history and use the documented data migration procedure for separately authorized schema changes. Retain the old Durable Object class exports for namespace/deployment compatibility; current requests use D1.
 
-## Cutover
-
-At launch:
-
-1. Keep the same D1 database.
-2. Keep the same existing R2 media store.
-3. Point the approved production Worker/domain at the new code and the same content database.
-4. Remove the temporary preview Worker after final verification.
-
-This gives us safe development isolation without paying the complexity cost of permanently duplicated infrastructure.
+Preview pages carry `noindex,nofollow`; production public pages remain indexable. Admin documents and responses remain private/no-store.

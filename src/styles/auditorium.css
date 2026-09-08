@@ -367,15 +367,15 @@
   border-radius: 999px;
 }
 
-.auditorium-review-scroll :global(p) {
+.auditorium-review-scroll p {
   margin: 0 0 1em;
 }
 
-.auditorium-review-scroll :global(p:last-child) {
+.auditorium-review-scroll p:last-child {
   margin-bottom: 0;
 }
 
-.auditorium-review-scroll :global(img) {
+.auditorium-review-scroll img {
   max-width: 100%;
   height: auto;
 }

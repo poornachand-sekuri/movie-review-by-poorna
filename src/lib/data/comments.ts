@@ -13,11 +13,6 @@ export interface PublicComment {
   approvedAt: string | null;
 }
 
-export interface CommentModerationItem extends PublicComment {
-  status: CommentStatus;
-  reviewTitle: string | null;
-}
-
 interface ResolvedTarget {
   targetType: CommentTargetType;
   targetId: string;
@@ -46,7 +41,6 @@ interface CountRow {
 }
 
 const MAX_PUBLIC_COMMENTS = 20;
-const MAX_MODERATION_COMMENTS = 100;
 const SUBMISSION_WINDOW_MINUTES = 10;
 const MAX_SUBMISSIONS_PER_WINDOW = 3;
 
@@ -66,7 +60,7 @@ export class CommentTargetNotFoundError extends Error {
   }
 }
 
-async function ensureCommentSchema(): Promise<void> {
+export async function ensureCommentSchema(): Promise<void> {
   if (!commentSchemaReady) {
     commentSchemaReady = (async () => {
       const db = getContentDb();
@@ -119,10 +113,6 @@ function clampInteger(value: number, fallback: number, minimum: number, maximum:
 
 function parseTargetType(value: string): CommentTargetType | null {
   return value === 'lounge' || value === 'review' ? value : null;
-}
-
-function parseStatus(value: string | undefined): CommentStatus {
-  return value === 'approved' || value === 'rejected' ? value : 'pending';
 }
 
 function mapPublicComment(row: CommentRow): PublicComment {
@@ -261,59 +251,4 @@ export async function submitPendingComment(input: {
 
   const id = Number(result.meta.last_row_id ?? 0);
   return { id, status: 'pending' };
-}
-
-export async function listCommentsForModeration(
-  status: CommentStatus = 'pending',
-  limit = 50,
-): Promise<readonly CommentModerationItem[]> {
-  await ensureCommentSchema();
-  const safeLimit = clampInteger(limit, 50, 1, MAX_MODERATION_COMMENTS);
-  const db = getContentDb();
-  const result = await db
-    .prepare(
-      `SELECT
-         c.id,
-         c.target_type,
-         c.target_id,
-         c.author_name,
-         c.body,
-         c.status,
-         c.created_at,
-         c.approved_at,
-         r.title AS review_title
-       FROM comments c
-       LEFT JOIN reviews r ON r.id = c.review_id
-       WHERE c.status = ?1
-       ORDER BY c.created_at DESC, c.id DESC
-       LIMIT ?2`,
-    )
-    .bind(status, safeLimit)
-    .run<CommentRow>();
-
-  return result.results.map((row) => ({
-    ...mapPublicComment(row),
-    status: parseStatus(row.status),
-    reviewTitle: row.review_title ?? null,
-  }));
-}
-
-export async function moderateComment(commentId: number, status: 'approved' | 'rejected'): Promise<boolean> {
-  await ensureCommentSchema();
-  if (!Number.isInteger(commentId) || commentId <= 0) return false;
-
-  const db = getContentDb();
-  const result = await db
-    .prepare(
-      `UPDATE comments
-       SET
-         status = ?2,
-         moderated_at = CURRENT_TIMESTAMP,
-         approved_at = CASE WHEN ?2 = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END
-       WHERE id = ?1`,
-    )
-    .bind(commentId, status)
-    .run();
-
-  return Number(result.meta.changes ?? 0) > 0;
 }
