@@ -71,3 +71,6 @@ jobs:
           FROM reviews r LEFT JOIN legacy_reaction_imports i ON i.review_id = r.id
           LEFT JOIN review_reaction_votes v ON v.review_id = r.id
           WHERE r.slug = 'dc' GROUP BY r.id;"
+
+      - name: Audit all deployed content pages (read-only)
+        run: node scripts/audit-content.mjs https://moviereviewbypoorna.com
