@@ -42,7 +42,7 @@ test('failed gallery writes roll back the entire update and new review', async (
   assert.equal(await publicReviews.getReviewBySlug('failed-create'), null);
 });
 
-test('largest supported save uses a fixed six-statement transaction and preserves all content', async () => {
+test('largest supported save uses a fixed-size transaction and preserves all content', async () => {
   const credits = Object.fromEntries(['actors', 'actresses', 'directors', 'music_directors'].map((role) =>
     [role, Array.from({ length: 30 }, (_, index) => `${role} ${index}`)]));
   const gallery = Array.from({ length: 30 }, (_, index) => `/gallery-${index}.webp`);

@@ -167,19 +167,20 @@ export async function listApprovedComments(
       `SELECT
          id,
          target_type,
-         target_id,
+         ?2 AS target_id,
          author_name,
          body,
          created_at,
          approved_at
        FROM comments
        WHERE target_type = ?1
-         AND target_id COLLATE NOCASE = ?2
+         AND ((?1 = 'review' AND review_id = ?4)
+           OR (?1 = 'lounge' AND target_id COLLATE NOCASE = ?2))
          AND status = 'approved'
        ORDER BY COALESCE(approved_at, created_at) DESC, id DESC
        LIMIT ?3`,
     )
-    .bind(target.targetType, target.targetId, safeLimit)
+    .bind(target.targetType, target.targetId, safeLimit, target.reviewId)
     .run<CommentRow>();
 
   return result.results.map(mapPublicComment);
@@ -222,13 +223,14 @@ export async function submitPendingComment(input: {
        FROM comments
        WHERE submitter_key = ?1
          AND target_type = ?2
-         AND target_id COLLATE NOCASE = ?3
+         AND ((?2 = 'review' AND review_id = ?6)
+           OR (?2 = 'lounge' AND target_id COLLATE NOCASE = ?3))
          AND body = ?4
          AND created_at >= datetime('now', ?5)
        ORDER BY id DESC
        LIMIT 1`,
     )
-    .bind(submitterKey, target.targetType, target.targetId, body, `-${SUBMISSION_WINDOW_MINUTES} minutes`)
+    .bind(submitterKey, target.targetType, target.targetId, body, `-${SUBMISSION_WINDOW_MINUTES} minutes`, target.reviewId)
     .first<{ id: number }>();
 
   if (duplicate?.id) return { id: duplicate.id, status: 'pending' };

@@ -53,6 +53,8 @@ Before publishing, run `npm run validate`, build/dry-run both configurations, an
 
 ## Preserved reactions
 
+New review creation records a zero-vote migration marker in the same transaction as the review. A newly added review never inherits a preserved store from an older review that used the same slug. Editing a review retains its stable database ID and reactions, and updates its comments' target slug atomically. Public comment reads and duplicate checks use that stable review ID, including for records renamed before this repair. Regression tests cover creation, discovery across public surfaces, edits, slug reuse, reaction/comment isolation, and archiving using isolated SQLite data.
+
 The original production `ReactionStore` namespace is read through the `LEGACY_REACTIONS` binding. Its binding-only RPC exports existing vote rows without modifying the old store. Each review is copied into D1 together with a `legacy_reaction_imports` completion marker in one transaction. Existing D1 votes win on identity conflicts; completed imports never replay, including after a reader removes a vote. A failed export remains retryable and is not silently treated as zero.
 
 The Auditorium imports its review before reading or writing; Café and dashboard reads finish any remaining published-review imports first. Preview reads the production namespace by explicit `script_name`, and continues using the shared D1 store. No new active reaction store is introduced. Both `mrp_voter` (old) and `mrp_reaction_voter` (current) cookies are recognized; where both identify the same returning browser, its newer D1 choice takes precedence.
