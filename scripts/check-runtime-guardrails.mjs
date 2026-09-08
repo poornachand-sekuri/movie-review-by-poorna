@@ -168,7 +168,7 @@ if (!siteFrame.includes("fetchPriority: 'high' as const")) {
 }
 
 for (const timing of [
-  'const minimumVisibleMs = 5000;',
+  'const minimumVisibleMs = 3000;',
   'const recoveryDelayMs = 20000;',
   'const maximumHoldMs = 25000;',
 ]) {
