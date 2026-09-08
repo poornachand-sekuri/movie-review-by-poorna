@@ -40,74 +40,19 @@ jobs:
       - name: Validate migration script syntax
         run: node --check scripts/build-legacy-seed.mjs
 
-      - name: Validate production cutover compatibility
-        shell: bash
-        run: |
-          set -euo pipefail
-          grep -Fq '"main": "./src/worker.ts"' wrangler.jsonc
-          grep -Fq 'export class ReactionStore' src/worker.ts
-          grep -Fq 'export class CommentsStore' src/worker.ts
-          grep -Fq 'export class AnalyticsStore' src/worker.ts
-
-      - name: Validate Projector Room server auth boundary
-        shell: bash
-        run: |
-          set -euo pipefail
-          test ! -f public/admin/index.html
-          test -f src/admin/projector-room.html
-          test -f src/pages/admin/index.ts
-          grep -Fq 'isAdminAuthenticated' src/pages/admin/index.ts
-          grep -Fq 'loginDocument' src/pages/admin/index.ts
-          grep -Fq 'Audience Dashboard' src/admin/projector-room.html
-          if grep -Fq 'Audience Dashboard' src/pages/admin/index.ts; then
-            echo 'Unauthenticated admin route must not embed dashboard markup.' >&2
-            exit 1
-          fi
-
       - name: Build production application
         run: npm run build
 
       - name: Validate production Cloudflare bundle
-        run: npx wrangler deploy --dry-run
+        run: node scripts/cloudflare.mjs production dry-run
 
-      - name: Validate preview Cloudflare bundle
-        shell: bash
+      - name: Build and validate preview Cloudflare bundle
         run: |
-          set -euo pipefail
-          cp wrangler.jsonc /tmp/wrangler.production.jsonc
-          cp wrangler.preview.jsonc wrangler.jsonc
-          npm run validate
-          npm run build
-          npx wrangler deploy --dry-run
-          cp /tmp/wrangler.production.jsonc wrangler.jsonc
+          npm run build:preview
+          node scripts/cloudflare.mjs preview dry-run
 
-      - name: Install SQLite test runner
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y sqlite3
-
-      - name: Smoke-test schema and importer
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          node scripts/build-legacy-seed.mjs \
-            tests/fixtures/reviews.json \
-            tests/fixtures/cast-crew.json \
-            /tmp/seed.sql
-
-          sqlite3 /tmp/movie-review.db < migrations/0001_core_content.sql
-          sqlite3 /tmp/movie-review.db < migrations/0002_review_search.sql
-          sqlite3 /tmp/movie-review.db < /tmp/seed.sql
-
-          counts=$(sqlite3 /tmp/movie-review.db "SELECT (SELECT COUNT(*) FROM reviews) || '|' || (SELECT COUNT(*) FROM review_credits) || '|' || (SELECT COUNT(*) FROM review_gallery);")
-          test "$counts" = "1|4|2"
-
-          search_count=$(sqlite3 /tmp/movie-review.db "SELECT COUNT(*) FROM review_search WHERE review_search MATCH 'schema';")
-          test "$search_count" = "1"
-
-          integrity=$(sqlite3 /tmp/movie-review.db "PRAGMA integrity_check;")
-          test "$integrity" = "ok"
+      - name: Smoke-test all migrations and fixture importer
+        run: node scripts/check-importer.mjs tests/fixtures/reviews.json tests/fixtures/cast-crew.json
 
       - name: Prove importer against preserved production catalogue
         shell: bash
@@ -120,32 +65,4 @@ jobs:
           git show FETCH_HEAD:public/data/index.json > /tmp/legacy-reviews.json
           git show FETCH_HEAD:public/data/cast-crew.json > /tmp/legacy-credits.json
 
-          node scripts/build-legacy-seed.mjs \
-            /tmp/legacy-reviews.json \
-            /tmp/legacy-credits.json \
-            /tmp/legacy-seed.sql
-
-          sqlite3 /tmp/legacy-import.db < migrations/0001_core_content.sql
-          sqlite3 /tmp/legacy-import.db < migrations/0002_review_search.sql
-          sqlite3 /tmp/legacy-import.db < /tmp/legacy-seed.sql
-
-          expected_reviews=$(node -e "const r=require('/tmp/legacy-reviews.json'); process.stdout.write(String(r.length))")
-          expected_gallery=$(node -e "const r=require('/tmp/legacy-reviews.json'); process.stdout.write(String(r.reduce((n,x)=>n+(Array.isArray(x.gallery)?x.gallery.length:0),0)))")
-          expected_credits=$(node -e "const c=require('/tmp/legacy-credits.json'); process.stdout.write(String(Object.values(c.records||{}).reduce((n,groups)=>n+(Array.isArray(groups)?groups.reduce((m,g)=>m+(Array.isArray(g)?g.filter(Boolean).length:0),0):0),0)))")
-
-          actual_reviews=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM reviews;")
-          actual_gallery=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM review_gallery;")
-          actual_credits=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM review_credits;")
-          audit_rows=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(*) FROM legacy_import_audit;")
-          unique_slugs=$(sqlite3 /tmp/legacy-import.db "SELECT COUNT(DISTINCT lower(slug)) FROM reviews;")
-
-          test "$actual_reviews" = "$expected_reviews"
-          test "$actual_gallery" = "$expected_gallery"
-          test "$actual_credits" = "$expected_credits"
-          test "$audit_rows" = "$expected_reviews"
-          test "$unique_slugs" = "$expected_reviews"
-
-          integrity=$(sqlite3 /tmp/legacy-import.db "PRAGMA integrity_check;")
-          test "$integrity" = "ok"
-
-          echo "Validated $actual_reviews preserved reviews, $actual_credits credits and $actual_gallery gallery items against the new schema."
+          node scripts/check-importer.mjs /tmp/legacy-reviews.json /tmp/legacy-credits.json

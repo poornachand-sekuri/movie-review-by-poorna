@@ -1,84 +1,50 @@
-# Movie Review By Poorna — Cinema Rebuild
+# Movie Review By Poorna
 
-`cinema-rebuild` is the development branch for the new adaptive cinema experience. The current production site remains untouched until the rebuild is explicitly approved for cutover.
+Astro and TypeScript on Cloudflare Workers, with D1 content and R2 artwork.
 
-## Cinema spaces
+| Room | Route | Responsibility |
+| --- | --- | --- |
+| Lounge | `/` | Featured, recent and previous reviews; audience comments |
+| Auditorium | `/review/[slug]` | Review, cast, verdict, reactions, sharing and related reviews |
+| Movie Café | `/search` | Search, filters, sorting and paginated review cards |
+| Projector Room | `/admin/` | Authenticated editing, media uploads, moderation and analytics |
 
-- Home — **The Lounge**
-- Individual review — **The Auditorium**
-- Search — **The Movie Café**
-- Admin — **The Projection Booth** (to be built later)
+Production: [moviereviewbypoorna.com](https://www.moviereviewbypoorna.com).
+Preview: [preview Worker](https://movie-review-by-poorna-preview.poornarocks.workers.dev).
 
-Routes stay conventional (`/`, `/review/[slug]`, `/search`) while the room names describe the user-facing experience.
+## Local development
 
-## Current technical foundation
-
-- Astro + TypeScript application layer
-- Cloudflare Workers runtime
-- D1 database: `movie-review-by-poorna-content`
-- R2/custom-domain artwork served from `assets.moviereviewbypoorna.com`
-- Premium runtime artwork uses WebP; archival master formats stay outside normal page delivery
-- D1 stores canonical review data, movie reactions and the rebuilt moderated comments system
-- New public comments are stored as `pending`; only `approved` comments are returned publicly
-
-## Runtime ownership
-
-The implementation intentionally keeps responsibilities separated:
-
-- `src/pages/` — route composition and server-side page data
-- `src/layouts/` — shared document shell
-- `src/lib/data/` — D1 queries and mutations
-- `src/lib/*-assets.ts` — confirmed artwork URLs and intrinsic dimensions
-- `src/lib/*-focus.ts`, `*-reactions.ts`, `comments-client.ts` — browser interaction controllers
-- `src/styles/` — artwork registration, room-specific presentation and shared UI presentation
-- `migrations/` — append-only D1 schema history
-- `scripts/` — validation and deterministic migration utilities
-- `.github/workflows/` — validation and preview deployment only
-
-See `docs/ARCHITECTURE.md` for the detailed maintenance map.
-
-## Development rules
-
-1. Approved artwork is the visual source of truth.
-2. HTML owns semantic content and accessibility.
-3. CSS owns registration, layout and viewport/container adaptation.
-4. TypeScript owns contracts, data access and interaction logic.
-5. Do not guess artwork dimensions or overlay geometry.
-6. Do not modify Production/Main as part of rebuild work.
-7. Keep migrations additive; do not rewrite migration history after it has been applied.
-8. Delete one-off diagnostic workflows and temporary trigger files after they have served their purpose.
-
-## Validation
-
-Use:
+Use the Node version in `.nvmrc` and install pinned dependencies with `npm ci`.
 
 ```bash
+npm run dev
 npm run validate
 npm run build
+npm run build:preview
 ```
 
-`npm run validate` runs runtime guardrails, Lounge loading tests and Astro/TypeScript checks.
-
-The preview workflow also smoke-tests D1 APIs, The Lounge, The Movie Café, Auditorium click-through and required runtime artwork before a deployment is considered successful.
+`validate` runs code/artwork/auth guardrails, behavioral regression tests and Astro/TypeScript checks. Tests use an isolated SQLite database and never write live data.
 
 ## Deployment
 
-Changes to runtime/application paths on `cinema-rebuild` automatically deploy to the temporary Worker:
+Three workflows have separate responsibilities:
 
-`https://movie-review-by-poorna-preview.poornarocks.workers.dev`
+- **Validate Application** checks pull requests and main, builds both Worker configurations, dry-runs each bundle, and verifies migrations plus the preserved legacy import.
+- **Deploy Preview** runs manually on the selected branch, then checks all four pages, public APIs, admin access boundaries and artwork.
+- **Deploy Production** deploys the exact main commit after validation succeeds. A manual production run checks out main and validates it first.
 
-The deployment workflow is path-based; there is no manual trigger-file editing requirement.
+Local deployment commands are `npm run deploy:preview` and `npm run deploy:production`. Both validate and build the chosen target before publishing. The deployment script refuses a compiled Worker with the wrong target name. Neither command rewrites the production configuration.
 
-## Data status
+Preview and production share D1 and R2; preview isolates code, not user data. Preview pages are marked noindex.
 
-- 136 review records were migrated and verified against the legacy catalogue.
-- Review detail, credits, gallery data and full-text search are served from D1.
-- Like/Dislike totals are movie-specific and persisted in D1.
-- The rebuilt comments model supports `pending`, `approved` and `rejected` moderation states.
-- Existing publicly approved Production comments are preserved without modifying Production data.
+## Maintenance
 
-Before changing infrastructure or data contracts, also read:
+Approved artwork, its proportions and overlay coordinates are the visual source of truth. Text and controls remain semantic HTML. Page-specific scripts and styles belong to their page; data queries belong to `src/lib/data`.
 
-- `docs/ENGINEERING-GUARDRAILS.md`
-- `docs/DATA-MIGRATION.md`
-- `docs/CLOUDFLARE-DEPLOYMENT.md`
+Migrations are append-only. Preserve the compatibility Durable Object exports in `src/worker.ts`; deleting them can affect historical deployments and stored namespaces.
+
+- [Architecture and ownership](docs/ARCHITECTURE.md)
+- [Deployment configuration](docs/CLOUDFLARE-DEPLOYMENT.md)
+- [Engineering guardrails](docs/ENGINEERING-GUARDRAILS.md)
+- [Data migration history](docs/DATA-MIGRATION.md)
+- [Refactor audit and verification](docs/REFACTOR-AUDIT.md)

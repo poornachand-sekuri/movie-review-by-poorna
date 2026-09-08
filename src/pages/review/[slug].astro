@@ -5,6 +5,8 @@ import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
 import { getReviewReactionSnapshot } from '../../lib/data/reactions';
 import { listRelatedReviews } from '../../lib/data/related-reviews';
 import { getReviewBySlug } from '../../lib/data/reviews';
+import '../../styles/comments.css';
+import '../../styles/auditorium-sharing.css';
 import '../../styles/auditorium.css';
 import '../../styles/auditorium-navigation.css';
 import '../../styles/auditorium-focus.css';
@@ -22,8 +24,10 @@ if (!loadedReview) {
 
 const review = loadedReview;
 const viewerReactionKey = Astro.cookies.get('mrp_reaction_voter')?.value ?? null;
-const reactionSnapshot = await getReviewReactionSnapshot(review.id, viewerReactionKey);
-const relatedReviews = await listRelatedReviews(review, 4);
+const [reactionSnapshot, relatedReviews] = await Promise.all([
+  getReviewReactionSnapshot(review.id, viewerReactionKey),
+  listRelatedReviews(review, 4),
+]);
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   day: '2-digit',
@@ -360,12 +364,16 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
   </main>
 
   <script>
+    import { initComments } from '../../lib/comments-client';
+    import { initAuditoriumSharing } from '../../lib/auditorium-sharing';
     import { initAuditoriumFocus } from '../../lib/auditorium-focus';
     import { initAuditoriumReactions } from '../../lib/auditorium-reactions';
     import { prepareCinemaPage } from '../../lib/lounge-loading';
 
     const page = document.querySelector<HTMLElement>('[data-cinema-page]');
     if (page) prepareCinemaPage(page);
+    initComments();
+    initAuditoriumSharing();
     initAuditoriumFocus();
     initAuditoriumReactions();
   </script>

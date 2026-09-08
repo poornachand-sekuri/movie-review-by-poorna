@@ -1,36 +1,11 @@
+import { renderCafeCard } from './cini-cafe-card';
 import type { CiniCafeReview } from './data/cini-cafe';
+import { createCafeFilter, yearOf, type CafeState, type CafeSort } from './cini-cafe-filter';
 
 const PAGE_SIZE = 6;
 
-type CafeSort = 'latest' | 'oldest' | 'title-az' | 'title-za';
 type ValueControl = HTMLElement & { value: string };
 type FocusableValueControl = ValueControl & { focus: () => void };
-
-interface CafeState {
-  catalogue: CiniCafeReview[];
-  query: string;
-  language: string;
-  year: string;
-  sort: CafeSort;
-  page: number;
-}
-
-function yearOf(review: CiniCafeReview): string {
-  const value = review.releaseDate || review.reviewedDate || '';
-  return String(value).match(/^(\d{4})/)?.[1] ?? '';
-}
-
-function searchableText(review: CiniCafeReview): string {
-  return [review.title, review.language, yearOf(review), ...review.searchTerms]
-    .filter(Boolean)
-    .join(' ')
-    .toLocaleLowerCase();
-}
-
-function starString(rating: number | null): string {
-  const rounded = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
-  return `${'★'.repeat(rounded)}${'☆'.repeat(5 - rounded)}`;
-}
 
 function pageWindow(current: number, total: number): number[] {
   if (total <= 4) return Array.from({ length: total }, (_, index) => index + 1);
@@ -64,82 +39,6 @@ function readCatalogue(): CiniCafeReview[] {
   } catch {
     return [];
   }
-}
-
-function filteredReviews(state: CafeState): CiniCafeReview[] {
-  const query = state.query.trim().toLocaleLowerCase();
-  const list = state.catalogue.filter((review) => {
-    if (query && !searchableText(review).includes(query)) return false;
-    if (state.language && review.language !== state.language) return false;
-    if (state.year && yearOf(review) !== state.year) return false;
-    return true;
-  });
-
-  const latest = (a: CiniCafeReview, b: CiniCafeReview) =>
-    String(b.releaseDate || b.reviewedDate || '').localeCompare(String(a.releaseDate || a.reviewedDate || '')) || b.id - a.id;
-  const titleAZ = (a: CiniCafeReview, b: CiniCafeReview) =>
-    a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
-
-  if (state.sort === 'oldest') list.sort((a, b) => -latest(a, b));
-  else if (state.sort === 'title-az') list.sort(titleAZ);
-  else if (state.sort === 'title-za') list.sort((a, b) => -titleAZ(a, b));
-  else list.sort(latest);
-
-  return list;
-}
-
-function makeCard(review: CiniCafeReview, index: number): HTMLElement {
-  const article = document.createElement('article');
-  article.className = 'cini-cafe-review-card';
-  article.dataset.reviewSlug = review.slug;
-
-  const link = document.createElement('a');
-  link.className = 'cini-cafe-review-link';
-  link.setAttribute('href', `/review/${encodeURIComponent(review.slug)}`);
-  link.setAttribute('aria-label', `Read ${review.title} review`);
-
-  const posterZone = document.createElement('div');
-  posterZone.className = 'cini-cafe-poster-zone';
-  if (review.posterUrl) {
-    const poster = document.createElement('img');
-    poster.setAttribute('src', review.posterUrl);
-    poster.setAttribute('alt', `${review.title} poster`);
-    poster.setAttribute('loading', index < 3 ? 'eager' : 'lazy');
-    poster.setAttribute('decoding', 'async');
-    posterZone.appendChild(poster);
-  }
-
-  const info = document.createElement('div');
-  info.className = 'cini-cafe-review-info';
-
-  const title = document.createElement('h2');
-  title.className = 'cini-cafe-review-title';
-  title.textContent = review.title;
-  title.setAttribute('title', review.title);
-
-  const meta = document.createElement('p');
-  meta.className = 'cini-cafe-review-meta';
-  meta.textContent = [review.language, yearOf(review)].filter(Boolean).join(' • ');
-
-  const stars = document.createElement('div');
-  stars.className = 'cini-cafe-review-stars';
-  stars.textContent = starString(review.rating);
-  stars.setAttribute('aria-label', `${Math.round(Number(review.rating) || 0)} out of 5 stars`);
-
-  const likes = document.createElement('div');
-  likes.className = 'cini-cafe-review-likes';
-  likes.dataset.reviewLikes = review.slug;
-  likes.textContent = String(review.likes);
-  likes.setAttribute('aria-label', `${review.likes} like${review.likes === 1 ? '' : 's'}`);
-
-  info.appendChild(title);
-  info.appendChild(meta);
-  link.appendChild(posterZone);
-  link.appendChild(info);
-  link.appendChild(stars);
-  link.appendChild(likes);
-  article.appendChild(link);
-  return article;
 }
 
 function fitOneTitle(title: HTMLElement): void {
@@ -228,11 +127,19 @@ export function initCiniCafe(): void {
 
   const state: CafeState = {
     catalogue: readCatalogue(),
-    query: '',
+    query: new URLSearchParams(window.location.search).get('q') ?? '',
     language: '',
     year: '',
     sort: 'latest',
     page: 1,
+  };
+
+  const filteredReviews = createCafeFilter(state.catalogue);
+  searchInput.value = state.query;
+  let titleFrame = 0;
+  const scheduleTitleFit = () => {
+    cancelAnimationFrame(titleFrame);
+    titleFrame = requestAnimationFrame(fitTitles);
   };
 
   const languages = [...new Set(
@@ -314,17 +221,14 @@ export function initCiniCafe(): void {
     pagination.appendChild(next);
   }
 
-  function render(): void {
+  function render(updateCards = true): void {
     const filtered = filteredReviews(state);
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (state.page > totalPages) state.page = totalPages;
 
     const start = (state.page - 1) * PAGE_SIZE;
     const visible = filtered.slice(start, start + PAGE_SIZE);
-    clearChildren(resultsLayer);
-    visible.forEach((review, index) => {
-      resultsLayer.appendChild(makeCard(review, index));
-    });
+    if (updateCards) resultsLayer.innerHTML = visible.map(renderCafeCard).join('');
 
     const first = filtered.length ? start + 1 : 0;
     const last = Math.min(start + PAGE_SIZE, filtered.length);
@@ -335,7 +239,7 @@ export function initCiniCafe(): void {
     renderPagination(totalPages);
     syncLabels();
     stage.setAttribute('aria-busy', 'false');
-    requestAnimationFrame(fitTitles);
+    scheduleTitleFit();
   }
 
   async function refreshVisibleLikes(): Promise<void> {
@@ -399,10 +303,10 @@ export function initCiniCafe(): void {
     searchInput.focus();
   });
 
-  window.addEventListener('resize', () => requestAnimationFrame(fitTitles));
+  window.addEventListener('resize', scheduleTitleFit, { passive: true });
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) void refreshVisibleLikes();
   });
 
-  render();
+  render(false);
 }

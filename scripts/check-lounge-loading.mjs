@@ -101,7 +101,11 @@ test('prepareLounge schedules lower posters without duplicating Lounge readiness
   globalThis.document = document;
   globalThis.window = { innerHeight: 800 };
   globalThis.IntersectionObserver = class {
-    constructor(callback) { this.callback = callback; }
+    constructor(callback, options) {
+      assert.equal(options.rootMargin, '680px 0px');
+      assert(options.rootMargin.split(/\s+/).every((value) => /^-?[\d.]+(?:px|%)$/.test(value)), 'Observer margins require px or %');
+      this.callback = callback;
+    }
     observe(target) { observed.push(target); }
     unobserve() {}
   };
@@ -343,5 +347,19 @@ test('broken auditorium poster reports the problem but still opens', async () =>
     await tick();
     assert.equal(env.events.some((e) => e.name === 'lounge:loading-error'), true);
     assert.equal(env.events.some((e) => e.name === 'lounge:assets-ready'), true);
+  } finally { env.restore(); }
+});
+
+test('cinema preparation preserves explicit eager delivery for server-rendered content', async () => {
+  const env = cinemaEnvironment();
+  const artwork = new ImageDouble();
+  const featured = new ImageDouble();
+  featured.loading = 'eager';
+  featured.hasAttribute = (name) => name === 'loading';
+  env.page.querySelectorAll = (selector) => selector === 'img' ? [artwork, featured] : [];
+  try {
+    prepareCinemaPage(env.page);
+    await tick();
+    assert.equal(featured.loading, 'eager');
   } finally { env.restore(); }
 });

@@ -4,10 +4,15 @@ import SiteFrame from '../layouts/SiteFrame.astro';
 import { ciniCafeRuntimeAsset } from '../lib/cini-cafe-assets';
 import { listCiniCafeReviews } from '../lib/data/cini-cafe';
 import '../styles/cini-cafe.css';
+import { createCafeFilter } from '../lib/cini-cafe-filter';
+import { renderCafeCard } from '../lib/cini-cafe-card';
 
 export const prerender = false;
 
 const catalogue = await listCiniCafeReviews();
+const query = Astro.url.searchParams.get('q') ?? '';
+const initialResults = createCafeFilter(catalogue)({ query, language: '', year: '', sort: 'latest' });
+const initialCards = initialResults.slice(0, 6).map(renderCafeCard).join('');
 const catalogueJson = JSON.stringify(catalogue)
   .replaceAll('&', '\\u0026')
   .replaceAll('<', '\\u003c')
@@ -22,7 +27,7 @@ const catalogueJson = JSON.stringify(catalogue)
   <LoungeLoading theme="cafe" />
 
   <main class="cini-cafe-page" data-cinema-page aria-label="Cini Cafe review search">
-    <section class="cini-cafe-stage" data-cini-cafe-stage aria-busy="true">
+    <section class="cini-cafe-stage" data-cini-cafe-stage aria-busy="false">
       <h1 class="visually-hidden">Cini Cafe</h1>
 
       <img
@@ -50,12 +55,14 @@ const catalogueJson = JSON.stringify(catalogue)
       ></a>
       <span class="cini-cafe-hotspot cini-cafe-hotspot--top-cafe" aria-hidden="true"></span>
 
-      <form class="cini-cafe-search-form" data-cini-search-form role="search">
+      <form class="cini-cafe-search-form" data-cini-search-form role="search" action="/search" method="get">
         <label class="visually-hidden" for="cini-cafe-search">Search reviews</label>
         <input
           id="cini-cafe-search"
           class="cini-cafe-search-input"
           data-cini-search
+          name="q"
+          value={query}
           type="search"
           autocomplete="off"
           placeholder="Search movies, actors, directors…"
@@ -94,13 +101,13 @@ const catalogueJson = JSON.stringify(catalogue)
       </div>
 
       <p class="cini-cafe-serving" aria-live="polite">
-        <span class="cini-cafe-serving-range" data-cini-serving-range></span>
-        <span class="cini-cafe-serving-total" data-cini-serving-total></span>
+        <span class="cini-cafe-serving-range" data-cini-serving-range>{initialResults.length ? `1–${Math.min(6, initialResults.length)}` : '0'}</span>
+        <span class="cini-cafe-serving-total" data-cini-serving-total>{initialResults.length}</span>
       </p>
 
-      <section class="cini-cafe-results" data-cini-results aria-label="Review results"></section>
+      <section class="cini-cafe-results" data-cini-results aria-label="Review results" set:html={initialCards}></section>
       <nav class="cini-cafe-pagination" data-cini-pagination aria-label="Review pages"></nav>
-      <p class="cini-cafe-empty" data-cini-empty hidden>No reviews match your search.</p>
+      <p class="cini-cafe-empty" data-cini-empty hidden={initialResults.length !== 0}>No reviews match your search.</p>
 
       <a
         class="cini-cafe-hotspot cini-cafe-hotspot--bottom-lounge"
@@ -112,7 +119,7 @@ const catalogueJson = JSON.stringify(catalogue)
     </section>
   </main>
 
-  <script id="cini-cafe-catalogue" type="application/json" set:html={catalogueJson}></script>
+  <script is:inline id="cini-cafe-catalogue" type="application/json" set:html={catalogueJson}></script>
 
   <script>
     import { initCiniCafe } from '../lib/cini-cafe';

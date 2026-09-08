@@ -110,7 +110,7 @@ function armProgressivePosters(page: HTMLElement): void {
     });
   }, {
     root: null,
-    rootMargin: '85vh 0px 85vh',
+    rootMargin: `${Math.round(window.innerHeight * 0.85)}px 0px`,
     threshold: 0.01,
   });
 
@@ -142,8 +142,12 @@ export function prepareCinemaPage(page: HTMLElement): void {
 
     const images = [...page.querySelectorAll<HTMLImageElement>('img')];
     images.forEach((image, index) => {
-      image.loading = index === 0 ? 'eager' : 'lazy';
-      if (index === 0) image.fetchPriority = 'high';
+      if (index === 0) {
+        image.loading = 'eager';
+        image.fetchPriority = 'high';
+      } else if (!image.hasAttribute('loading')) {
+        image.loading = 'lazy';
+      }
     });
 
     const artwork = [...urls].map((url) => {

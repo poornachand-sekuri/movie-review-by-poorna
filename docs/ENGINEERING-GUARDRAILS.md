@@ -13,26 +13,26 @@ A lower priority must not silently damage a higher priority. When a visual choic
 
 ## One-theater design system
 
-Movie Review By Poorna is one virtual movie theater. Every public/admin page is a connected space in the same building and must share the same design DNA: typography, materials, lighting, signage, spacing rhythm, motion language, controls and AVIF art direction.
+Movie Review By Poorna is one virtual movie theater. Every public/admin page is a connected space in the same building and must share the same design DNA: typography, materials, lighting, signage, spacing rhythm, motion language, controls and approved artwork.
 
 Locked page identities:
 
 - Home: The Lounge
 - Individual review: The Auditorium
 - Search: The Movie Café
-- Admin: The Projection Booth
+- Admin: The Projector Room
 
 Each page can have its own room-specific mood, but it must never look like a separate website.
 
-## AVIF ownership
+## Artwork ownership
 
-AVIF artwork owns cinematic appearance, texture, lighting, frames and decorative environment.
+Approved image artwork owns cinematic appearance, texture, lighting, frames and decorative environment.
 
 HTML owns semantic content, accessibility and document structure.
 
 CSS owns geometry, flow, spacing, sizing and viewport/container adaptation.
 
-Live review text, movie titles, dates, ratings, navigation labels, search results and form content must not be baked into AVIF artwork.
+Live review text, movie titles, dates, ratings, navigation labels, search results and form content must not be baked into image artwork.
 
 Complex artwork may use separate compact, medium and wide art-direction variants. Variants are chosen by layout need, not by individual phone model.
 
@@ -45,7 +45,7 @@ Complex artwork may use separate compact, medium and wide art-direction variants
 - Review pages should fetch/render the active review plus only the compact related/list data they need.
 - R2 UI artwork must use versioned immutable URLs.
 - Below-the-fold imagery is lazy loaded unless a measured UX reason requires otherwise.
-- Any single above-the-fold AVIF over 600 KB triggers an explicit performance review.
+- Any single above-the-fold image over 600 KB triggers an explicit performance review.
 - Any page whose above-the-fold visual assets exceed 1.2 MB triggers an explicit performance review.
 - These image thresholds are review gates, not automatic visual-quality compromises.
 
@@ -57,7 +57,7 @@ Core/searchable fields use typed columns. Credits and gallery items use related 
 
 R2 stores media and UI artwork, not review business data.
 
-Durable Objects remain the preferred persistence mechanism for high-write interaction state such as reactions, comments and analytics unless measurements justify a change.
+D1 is the current authoritative store for reactions, comments and analytics. Retain legacy Durable Object exports for deployment and namespace compatibility; do not create a second active interaction store.
 
 ## Migration safety
 

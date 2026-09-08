@@ -5,5 +5,3 @@ export const ciniCafeRuntimeAsset = {
   width: 1024,
   height: 1536,
 } as const;
-
-export const ciniCafeCriticalImages = [ciniCafeRuntimeAsset.src] as const;

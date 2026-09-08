@@ -1,5 +1,6 @@
+import { isSameOriginWrite } from '../../lib/http/origin';
 import type { APIRoute } from 'astro';
-import { recordPageView } from '../../lib/data/admin-console';
+import { recordPageView } from '../../lib/data/analytics';
 
 export const prerender = false;
 
@@ -7,13 +8,8 @@ const VISITOR_COOKIE = 'mrp_visitor';
 const VISITOR_MAX_AGE = 60 * 60 * 24 * 365;
 const PAGE_TYPES = new Set(['home', 'review', 'cine-cafe', 'other']);
 
-function sameOrigin(request: Request): boolean {
-  const origin = request.headers.get('origin');
-  return !origin || origin === new URL(request.url).origin;
-}
-
 export const POST: APIRoute = async ({ request, cookies }) => {
-  if (!sameOrigin(request)) {
+  if (!isSameOriginWrite(request)) {
     return Response.json({ error: 'Cross-origin request rejected.' }, { status: 403 });
   }
 

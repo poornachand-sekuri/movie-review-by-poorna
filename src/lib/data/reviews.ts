@@ -143,48 +143,22 @@ export async function listReviews(options: ReviewListOptions = {}): Promise<read
   const limit = clampInteger(options.limit, DEFAULT_LIST_LIMIT, 1, MAX_LIST_LIMIT);
   const offset = clampInteger(options.offset, 0, 0, 10_000);
   const language = options.language?.trim().slice(0, 80) || null;
-  const orderBy =
-    options.order === 'added'
-      ? `CASE
-           WHEN EXISTS (
-             SELECT 1
-             FROM legacy_import_audit legacy
-             WHERE legacy.review_id = reviews.id
-           ) THEN 1
-           ELSE 0
-         END ASC,
-         CASE
-           WHEN EXISTS (
-             SELECT 1
-             FROM legacy_import_audit legacy
-             WHERE legacy.review_id = reviews.id
-           ) THEN NULL
-           ELSE created_at
-         END DESC,
-         reviewed_date DESC,
-         id DESC`
-      : 'reviewed_date DESC, id DESC';
-
-  const statement = language
-    ? db
-        .prepare(
-          `SELECT ${SUMMARY_COLUMNS}
-           FROM reviews
-           WHERE status = 'published'
-             AND language COLLATE NOCASE = ?1
-           ORDER BY ${orderBy}
-           LIMIT ?2 OFFSET ?3`,
-        )
-        .bind(language, limit, offset)
-    : db
-        .prepare(
-          `SELECT ${SUMMARY_COLUMNS}
-           FROM reviews
-           WHERE status = 'published'
-           ORDER BY ${orderBy}
-           LIMIT ?1 OFFSET ?2`,
-        )
-        .bind(limit, offset);
+  const added = options.order === 'added';
+  const source = added
+    ? 'reviews LEFT JOIN legacy_import_audit legacy ON legacy.review_id = reviews.id'
+    : 'reviews';
+  const orderBy = added
+    ? `CASE WHEN legacy.review_id IS NOT NULL THEN 1 ELSE 0 END ASC,
+       CASE WHEN legacy.review_id IS NOT NULL THEN NULL ELSE created_at END DESC,
+       reviewed_date DESC, id DESC`
+    : 'reviewed_date DESC, id DESC';
+  const statement = db.prepare(`
+    SELECT ${SUMMARY_COLUMNS}
+    FROM ${source}
+    WHERE status = 'published' ${language ? 'AND language COLLATE NOCASE = ?1' : ''}
+    ORDER BY ${orderBy}
+    LIMIT ?${language ? 2 : 1} OFFSET ?${language ? 3 : 2}
+  `).bind(...(language ? [language, limit, offset] : [limit, offset]));
 
   const result = await statement.run<ReviewSummaryRow>();
   return result.results.map(mapSummary);

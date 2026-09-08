@@ -1,7 +1,5 @@
 ---
 import '../styles/global.css';
-import '../styles/comments.css';
-import '../styles/auditorium-runtime-fixes.css';
 import { loungeCriticalImages } from '../lib/lounge-assets';
 
 interface PreloadImage {
@@ -49,12 +47,8 @@ const robots = isPreviewHost
   <body>
     <slot />
     <script>
-      import { initComments } from '../lib/comments-client';
       import { recordCinemaPageView } from '../lib/analytics-client';
-      import { initAuditoriumSharing } from '../lib/auditorium-sharing';
-      initComments();
       recordCinemaPageView();
-      initAuditoriumSharing();
     </script>
   </body>
 </html>
