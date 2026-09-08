@@ -122,7 +122,7 @@ const criticalImages = theme === 'lounge' ? loungeCriticalImages : [];
     const progress = screen.querySelector('[data-loading-progress]');
     const recovery = screen.querySelector('[data-loading-recovery]');
     const startedAt = Date.now();
-    const minimumVisibleMs = 5000;
+    const minimumVisibleMs = 3000;
     const recoveryDelayMs = 20000;
     const maximumHoldMs = 25000;
     const criticalImages = (() => {
@@ -259,7 +259,7 @@ const criticalImages = theme === 'lounge' ? loungeCriticalImages : [];
 
       // No short time-based race here. The Lounge opens immediately when the
       // background + Top Navigation + Now Reviewed are paint-ready, subject to
-      // the shared 5s minimum. The 20s/25s controls are emergency escape hatches.
+      // the shared 3s minimum. The 20s/25s controls are emergency escape hatches.
       Promise.all(criticalImages.map((url) => loadCriticalImage(url, reportSettled)))
         .then((results) => openWhenPageParsed(results.every(Boolean), generation));
     };
