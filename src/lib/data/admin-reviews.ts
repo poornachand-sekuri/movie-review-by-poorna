@@ -1,5 +1,7 @@
 import { getContentDb } from '../cloudflare/content-db';
 import { clean, slugify } from '../admin/values';
+import { ensureReactionSchema } from './reactions';
+import { ensureCommentSchema } from './comments';
 
 const CREDIT_FIELDS = ['actors', 'actresses', 'directors', 'music_directors'] as const;
 type CreditField = (typeof CREDIT_FIELDS)[number];
@@ -301,7 +303,14 @@ export async function createAdminReview(input: AdminReviewInput): Promise<AdminR
     value.posterUrl,
     CREDIT_FIELDS.flatMap((field) => value.credits[field]).join(' '),
   );
-  const [result] = await db.batch([statement, ...contentStatements(value.slug, value.credits, value.gallery)]);
+  await ensureReactionSchema();
+  const [result] = await db.batch([
+    statement,
+    // New reviews have no pre-cutover votes, even when reusing a renamed URL.
+    db.prepare(`INSERT INTO legacy_reaction_imports (review_id, source_slug, source_votes)
+      SELECT id, slug, 0 FROM reviews WHERE slug = ?1`).bind(value.slug),
+    ...contentStatements(value.slug, value.credits, value.gallery),
+  ]);
 
   const reviewId = Number(result?.meta.last_row_id ?? 0);
   if (!reviewId) throw new Error('Unable to create the review.');
@@ -358,7 +367,12 @@ export async function updateAdminReview(reviewId: number, input: AdminReviewInpu
     value.posterUrl,
     CREDIT_FIELDS.flatMap((field) => value.credits[field]).join(' '),
   );
-  await db.batch([statement, ...contentStatements(value.slug, value.credits, value.gallery)]);
+  await ensureCommentSchema();
+  await db.batch([
+    statement,
+    db.prepare("UPDATE comments SET target_id = ?2 WHERE target_type = 'review' AND review_id = ?1").bind(reviewId, value.slug),
+    ...contentStatements(value.slug, value.credits, value.gallery),
+  ]);
   return getAdminReview(reviewId);
 }
 
@@ -371,4 +385,3 @@ export async function archiveAdminReview(reviewId: number): Promise<boolean> {
   `).bind(reviewId).run();
   return Number(result.meta.changes ?? 0) > 0;
 }
-
