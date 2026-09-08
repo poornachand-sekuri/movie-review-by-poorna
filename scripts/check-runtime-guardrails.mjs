@@ -168,8 +168,9 @@ if (!siteFrame.includes("fetchPriority: 'high' as const")) {
 }
 
 for (const timing of [
-  "const recoveryDelayMs = theme === 'lounge' ? 10000 : 1200;",
-  "const maximumHoldMs = theme === 'lounge' ? 15000 : 2200;",
+  'const minimumVisibleMs = 5000;',
+  'const recoveryDelayMs = 20000;',
+  'const maximumHoldMs = 25000;',
 ]) {
   if (!loadingComponent.includes(timing)) {
     violations.push(`src/components/lounge/LoungeLoading.astro: loader guardrail changed unexpectedly: ${timing}`);
