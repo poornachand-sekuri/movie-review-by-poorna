@@ -56,3 +56,18 @@ jobs:
 
       - name: Smoke-test all four pages and APIs
         run: npm run smoke -- "$PRODUCTION_URL" production
+
+      - name: Verify preserved reaction import and aggregate totals
+        run: >-
+          npx wrangler d1 execute CONTENT_DB --remote --config wrangler.jsonc
+          --command "SELECT COUNT(*) AS published_reviews,
+          COUNT(i.review_id) AS imported_review_stores,
+          COALESCE(SUM(i.source_votes), 0) AS preserved_votes
+          FROM reviews r LEFT JOIN legacy_reaction_imports i ON i.review_id = r.id
+          WHERE r.status = 'published';
+          SELECT r.slug, MAX(i.source_votes) AS preserved_votes,
+          COALESCE(SUM(v.reaction = 'like'), 0) AS likes,
+          COALESCE(SUM(v.reaction = 'dislike'), 0) AS dislikes
+          FROM reviews r LEFT JOIN legacy_reaction_imports i ON i.review_id = r.id
+          LEFT JOIN review_reaction_votes v ON v.review_id = r.id
+          WHERE r.slug = 'dc' GROUP BY r.id;"

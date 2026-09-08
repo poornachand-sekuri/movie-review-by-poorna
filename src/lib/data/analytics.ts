@@ -1,3 +1,4 @@
+import { ensureAllReactionImports } from './reactions';
 import { getContentDb } from '../cloudflare/content-db';
 import { clean } from '../admin/values';
 import { getAdminCommentCounts } from './admin-comments';
@@ -25,6 +26,7 @@ export async function recordPageView(input: {
 }
 
 export async function getAdminAnalytics(days = 30): Promise<Record<string, unknown>> {
+  await ensureAllReactionImports();
   await ensureAnalyticsSchema();
   const safeDays = Math.max(1, Math.min(365, Math.trunc(Number(days) || 30)));
   const window = `-${safeDays} days`;

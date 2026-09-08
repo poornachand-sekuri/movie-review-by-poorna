@@ -34,6 +34,7 @@ const bundled = JSON.parse(readFileSync(bundledPath, 'utf8'));
 assert.equal(bundled.name, expectedName, `Build ${target} before ${action}.`);
 assert.deepEqual(bundled.d1_databases?.map(({ binding, database_id }) => ({ binding, database_id })),
   expected.d1_databases.map(({ binding, database_id }) => ({ binding, database_id })));
+assert.deepEqual(bundled.durable_objects, expected.durable_objects, 'Compiled legacy reaction binding must match the source.');
 if (action !== 'build') {
   run('node_modules/wrangler/bin/wrangler.js', [
     'deploy', '--config', bundledPath, ...(action === 'dry-run' ? ['--dry-run'] : []),

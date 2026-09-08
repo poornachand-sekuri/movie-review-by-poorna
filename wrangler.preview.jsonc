@@ -18,5 +18,14 @@
       "binding": "REVIEW_ASSETS",
       "bucket_name": "movie-review-assets"
     }
-  ]
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "LEGACY_REACTIONS",
+        "class_name": "ReactionStore",
+        "script_name": "movie-review-by-poorna"
+      }
+    ]
+  }
 }

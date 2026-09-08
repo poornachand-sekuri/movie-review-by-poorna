@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { initAuditoriumReactions } from '../src/lib/auditorium-reactions.ts';
+import { installBindings } from './helpers/d1.mjs';
+installBindings({});
+const { initAuditoriumReactions } = await import('../src/lib/auditorium-reactions.ts');
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 class Node extends EventTarget {
@@ -29,8 +31,8 @@ function setup() {
   const buttons = [...nodes.entries()].filter(([selector]) => selector.includes('action')).map(([, node]) => node);
   root.querySelector = (selector) => nodes.get(selector);
   root.querySelectorAll = () => buttons;
-  globalThis.document = { querySelector: () => root };
-  globalThis.window = new EventTarget();
+  globalThis.document = Object.assign(new EventTarget(), { querySelector: () => root, visibilityState: 'visible' });
+  globalThis.window = Object.assign(new EventTarget(), { setInterval: () => 1, clearInterval() {} });
   const calls = [];
   globalThis.fetch = (url, options) => new Promise((resolve) => calls.push({ url, ...options, resolve }));
   initAuditoriumReactions();
@@ -64,4 +66,24 @@ test('an older refresh cannot overwrite a completed vote', async () => {
   assert.equal(h.nodes.get('[data-reaction-count="like"]').textContent, '5');
   assert.equal(button.attributes.get('aria-pressed'), 'true');
   assert.equal(button.disabled, false);
+});
+
+test('cross-tab updates refresh counts and rapid repeated clicks send one explicit write', async () => {
+  const h=setup();
+  const event=new Event('storage');event.key='mrp:reaction-change';event.newValue=JSON.stringify({slug:'test'});
+  window.dispatchEvent(event);
+  reply(h.calls[0],1,'like');await tick();
+  const button=h.nodes.get('[data-reaction-action="like"]');
+  button.dispatchEvent(new Event('click'));button.dispatchEvent(new Event('click'));
+  assert.equal(h.calls.length,2);
+  assert.deepEqual(JSON.parse(h.calls[1].body),{reaction:null,mode:'set'});
+  reply(h.calls[1],0);await tick();
+  assert.equal(h.nodes.get('[data-reaction-count="like"]').textContent,'0');
+  assert.equal(button.attributes.get('aria-pressed'),'false');
+});
+
+test('out-of-order refreshes do not replace newer totals', async () => {
+  const h=setup();h.restorePage();h.restorePage();
+  reply(h.calls[1],7);await tick();reply(h.calls[0],2);await tick();
+  assert.equal(h.nodes.get('[data-reaction-count="like"]').textContent,'7');
 });

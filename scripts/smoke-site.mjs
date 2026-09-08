@@ -1,3 +1,4 @@
+import { smokeReactions } from './smoke-reactions.mjs';
 import assert from 'node:assert/strict';
 import { appendFileSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -74,6 +75,7 @@ for (const name of artwork) {
   const bytes = Buffer.from(await response.arrayBuffer());
   assert(bytes.subarray(0, 4).equals(Buffer.from('RIFF')) && bytes.subarray(8, 12).equals(Buffer.from('WEBP')), `Invalid artwork: ${name}`);
 }
+await smokeReactions(origin);
 console.log(`Passed: all four pages, auth boundary, APIs, indexing and artwork at ${origin}`);
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY,

@@ -20,8 +20,9 @@ export const GET: APIRoute = async ({ params, cookies }) => {
   if (!slug) return apiError(400, 'INVALID_REVIEW_SLUG', 'A review slug is required.');
 
   try {
-    const voterKey = cookies.get(VOTER_COOKIE)?.value ?? null;
-    const snapshot = await getReviewReactionSnapshotBySlug(slug, voterKey);
+    const legacyVoterKey = cookies.get('mrp_voter')?.value ?? null;
+    const voterKey = cookies.get(VOTER_COOKIE)?.value ?? legacyVoterKey;
+    const snapshot = await getReviewReactionSnapshotBySlug(slug, voterKey, legacyVoterKey);
     if (!snapshot) return apiError(404, 'REVIEW_NOT_FOUND', 'Review not found.');
 
     return jsonResponse({ slug, ...snapshot });
@@ -34,6 +35,10 @@ export const GET: APIRoute = async ({ params, cookies }) => {
 export const POST: APIRoute = async ({ params, request, cookies }) => {
   const slug = params.slug?.trim();
   if (!slug) return apiError(400, 'INVALID_REVIEW_SLUG', 'A review slug is required.');
+
+  if (request.headers.get('origin') && request.headers.get('origin') !== new URL(request.url).origin) {
+    return apiError(403, 'INVALID_ORIGIN', 'Cross-origin reactions are not allowed.');
+  }
 
   let body: unknown;
   try {
@@ -48,12 +53,15 @@ export const POST: APIRoute = async ({ params, request, cookies }) => {
       : null,
   );
 
-  if (!reaction) {
+  const explicit = !!body && typeof body === 'object' && 'mode' in body && body.mode === 'set';
+  const clearing = explicit && !!body && typeof body === 'object' && 'reaction' in body && body.reaction === null;
+  if (!reaction && !clearing) {
     return apiError(400, 'INVALID_REACTION', 'Reaction must be like or dislike.');
   }
 
   try {
-    let voterKey = cookies.get(VOTER_COOKIE)?.value?.trim() ?? '';
+    const legacyVoterKey = cookies.get('mrp_voter')?.value ?? null;
+    let voterKey = cookies.get(VOTER_COOKIE)?.value?.trim() || legacyVoterKey || '';
     if (!voterKey) {
       voterKey = crypto.randomUUID();
       cookies.set(VOTER_COOKIE, voterKey, {
@@ -65,7 +73,7 @@ export const POST: APIRoute = async ({ params, request, cookies }) => {
       });
     }
 
-    const snapshot = await setReviewReaction(slug, voterKey, reaction);
+    const snapshot = await setReviewReaction(slug, voterKey, reaction, legacyVoterKey, explicit);
     if (!snapshot) return apiError(404, 'REVIEW_NOT_FOUND', 'Review not found.');
 
     return jsonResponse({ slug, ...snapshot });
