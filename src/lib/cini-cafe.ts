@@ -137,6 +137,7 @@ export function initCiniCafe(): void {
 
   const filteredReviews = createCafeFilter(state.catalogue);
   searchInput.value = state.query;
+  sortSelect.value = state.sort;
   let titleFrame = 0;
   const scheduleTitleFit = () => {
     cancelAnimationFrame(titleFrame);

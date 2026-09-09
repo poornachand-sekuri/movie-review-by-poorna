@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import { createCafeFilter, yearOf } from '../src/lib/cini-cafe-filter.ts';
 
 const catalogue = [
@@ -10,6 +11,17 @@ const catalogue = [
 const defaults = { query: '', language: '', year: '', sort: 'latest' };
 const filter = createCafeFilter(catalogue);
 const ids = (filters) => filter({ ...defaults, ...filters }).map((review) => review.id);
+
+test('both Café navigation icons link to a fresh page without query or filters', () => {
+  const page = readFileSync(new URL('../src/pages/search.astro', import.meta.url), 'utf8');
+  for (const position of ['top', 'bottom']) {
+    const link = page.match(new RegExp(`<a\\s+class="cini-cafe-hotspot cini-cafe-hotspot--${position}-cafe"[\\s\\S]*?</a>`))?.[0];
+    assert(link, `${position} Café icon must be a keyboard-accessible link`);
+    assert.match(link, /href="\/search"/);
+    assert.match(link, /aria-label="Reload Cini Café and reset search and filters"/);
+    assert.doesNotMatch(link, /aria-hidden/);
+  }
+});
 
 test('Café sorting keeps release-date precedence, reviewed-date fallback and ID ties', () => {
   assert.deepEqual(ids({}), [2, 3, 1]);
