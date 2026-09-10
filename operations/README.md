@@ -6,7 +6,7 @@ The owner requested a fresh start on September 10, 2026: remove existing likes/d
 
 - Database: `movie-review-by-poorna-content`, ID `6c88b16c-c302-47cf-92cd-bdc5f8470bc2`, binding `CONTENT_DB` in `wrangler.jsonc`.
 - Production and preview share this database; both will show the reset.
-- First deploy the accompanying code to both Workers through the existing required checks. It removes automatic legacy imports/identity reconciliation, reaction polling and per-filter Café requests. The existing dashboard change also removes periodic analytics requests.
+- Apply the new additive indexes in migration 0008 before deploying the accompanying code to both Workers through the existing required checks. Index construction is an explicit operation, not a page-request task. The code removes automatic legacy imports/identity reconciliation, reaction polling and per-filter Café requests. The existing dashboard change also removes periodic analytics requests.
 - Before changing data, keep a private D1 export or Time Travel recovery bookmark. Do not commit backups or credentials. The namespace compatibility exports and historical Durable Object storage remain retained but are no longer consulted by application requests. No legacy comment import script should be rerun after this reset.
 - Run the reset once, after D1 access resumes. An exhausted daily allowance cannot be replenished by deleting rows. Do not repeatedly attempt the operation while D1 rejects queries.
 
@@ -16,6 +16,12 @@ From the repository root, using the existing Cloudflare operator credentials:
 
 ```bash
 npx wrangler d1 time-travel info CONTENT_DB --config wrangler.jsonc
+npx wrangler d1 execute CONTENT_DB --remote --config wrangler.jsonc --file migrations/0008_targeted_review_reads.sql
+```
+
+After deploying the code and verifying both Workers, execute the separately authorized reset:
+
+```bash
 npx wrangler d1 execute CONTENT_DB --remote --config wrangler.jsonc --file operations/reset-prelaunch-engagement.sql
 ```
 
@@ -30,3 +36,7 @@ The fixed `prelaunch-2026-09-10` marker makes an accidental retry a no-op, inclu
 Initial page loads obtain current counts. A vote's successful write response updates the current page; same-browser cross-tab notifications and back/forward-cache restoration can request fresh counts. Idle tabs and focus changes issue no scheduled reaction requests. Café searches, filters, sorting and pagination use the loaded catalogue. Other visitors' later votes become visible when the page is reloaded or otherwise refreshed. Comments still require moderation and page views are recorded once per page load, with no timer. Dashboard Refresh/date changes continue to request up-to-date totals.
 
 Query-plan and request-behavior tests verify the changed work pattern locally. Measure production D1 rows read after release; do not infer an unlimited capacity or guaranteed daily budget from empty tables.
+
+## Individual-review lookup checks
+
+The test fixture contains 3,000 reviews. Public slug and admin ID reads seek a unique index/primary key; cast, gallery and vote queries use only that review's indexed children. Public comments have separate review/Lounge predicates and indexes matching their complete display order, so they stop at the requested limit. Related Reviews excludes already-selected IDs in SQL and fetches only its remaining slots; same-language recency uses the new compound index. Normal catalogue browsing and dashboard totals intentionally span multiple reviews. Confirm the corresponding `EXPLAIN QUERY PLAN` output on D1 after applying 0008; physical D1 row counts include supporting index/related-record reads and are not guaranteed to equal one for an entire review page.

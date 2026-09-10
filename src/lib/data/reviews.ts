@@ -227,6 +227,37 @@ export async function listRelatedReviewsByCredits(
   return result.results.map(mapSummary);
 }
 
+// The Related Reviews strip only needs the unfilled slots, excluding selections
+// in SQL rather than fetching 20/24 rows and discarding most of them in JS.
+export async function listRecentRelatedReviews(options: {
+  excludeIds: readonly number[];
+  limit: number;
+  language?: string | null;
+}): Promise<readonly ReviewSummary[]> {
+  const limit = clampInteger(options.limit, 4, 1, 4);
+  const language = options.language?.trim().slice(0, 80) || null;
+  const excluded = [...new Set(options.excludeIds)].filter((id) => Number.isInteger(id) && id > 0).slice(0, 5);
+  const bindings: (string | number)[] = [];
+  const where = ["status = 'published'"];
+  if (language) {
+    bindings.push(language);
+    where.push(`language COLLATE NOCASE = ?${bindings.length}`);
+  }
+  if (excluded.length) {
+    const placeholders = excluded.map((id) => { bindings.push(id); return `?${bindings.length}`; });
+    where.push(`id NOT IN (${placeholders.join(', ')})`);
+  }
+  bindings.push(limit);
+  const result = await getContentDb().prepare(`
+    SELECT ${SUMMARY_COLUMNS}
+    FROM reviews
+    WHERE ${where.join(' AND ')}
+    ORDER BY reviewed_date DESC, id DESC
+    LIMIT ?${bindings.length}
+  `).bind(...bindings).run<ReviewSummaryRow>();
+  return result.results.map(mapSummary);
+}
+
 export async function getReviewBySlug(slug: string): Promise<ReviewDetail | null> {
   const normalizedSlug = slug.trim().slice(0, 180);
   if (!normalizedSlug) return null;

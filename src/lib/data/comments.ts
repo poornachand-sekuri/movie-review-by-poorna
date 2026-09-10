@@ -162,6 +162,11 @@ export async function listApprovedComments(
 
   const safeLimit = clampInteger(limit, 2, 1, MAX_PUBLIC_COMMENTS);
   const db = getContentDb();
+  // Separate predicates let each target use its ordered index and stop at LIMIT.
+  // A shared OR can make SQLite inspect approved comments for unrelated reviews.
+  const targetPredicate = target.targetType === 'review'
+    ? "target_type = 'review' AND review_id = ?1"
+    : "target_type = 'lounge' AND target_id COLLATE NOCASE = ?1";
   const result = await db
     .prepare(
       `SELECT
@@ -173,14 +178,12 @@ export async function listApprovedComments(
          created_at,
          approved_at
        FROM comments
-       WHERE target_type = ?1
-         AND ((?1 = 'review' AND review_id = ?4)
-           OR (?1 = 'lounge' AND target_id COLLATE NOCASE = ?2))
+       WHERE ${targetPredicate}
          AND status = 'approved'
        ORDER BY COALESCE(approved_at, created_at) DESC, id DESC
        LIMIT ?3`,
     )
-    .bind(target.targetType, target.targetId, safeLimit, target.reviewId)
+    .bind(target.reviewId ?? target.targetId, target.targetId, safeLimit)
     .run<CommentRow>();
 
   return result.results.map(mapPublicComment);
@@ -217,20 +220,21 @@ export async function submitPendingComment(input: {
     throw new CommentRateLimitError();
   }
 
+  const duplicateTarget = target.targetType === 'review'
+    ? "target_type = 'review' AND review_id = ?2"
+    : "target_type = 'lounge' AND target_id COLLATE NOCASE = ?2";
   const duplicate = await db
     .prepare(
       `SELECT id
        FROM comments
        WHERE submitter_key = ?1
-         AND target_type = ?2
-         AND ((?2 = 'review' AND review_id = ?6)
-           OR (?2 = 'lounge' AND target_id COLLATE NOCASE = ?3))
-         AND body = ?4
-         AND created_at >= datetime('now', ?5)
+         AND ${duplicateTarget}
+         AND body = ?3
+         AND created_at >= datetime('now', ?4)
        ORDER BY id DESC
        LIMIT 1`,
     )
-    .bind(submitterKey, target.targetType, target.targetId, body, `-${SUBMISSION_WINDOW_MINUTES} minutes`, target.reviewId)
+    .bind(submitterKey, target.reviewId ?? target.targetId, body, `-${SUBMISSION_WINDOW_MINUTES} minutes`)
     .first<{ id: number }>();
 
   if (duplicate?.id) return { id: duplicate.id, status: 'pending' };
