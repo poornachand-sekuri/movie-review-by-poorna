@@ -272,13 +272,14 @@
 .auditorium-focus-layer[data-focus-kind="theater"] {
   --focus-top-space: max(8px, env(safe-area-inset-top));
   --focus-bottom-space: max(8px, env(safe-area-inset-bottom));
-  --focus-available-height: calc(100dvh - var(--focus-top-space) - var(--focus-bottom-space));
   padding: var(--focus-top-space) max(8px, env(safe-area-inset-right)) var(--focus-bottom-space) max(8px, env(safe-area-inset-left));
 }
 
 .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-stage {
   position: relative;
-  width: min(100%, calc(max(40rem, var(--focus-available-height)) * 821 / 1915));
+  /* Use the full overlay width; scroll vertically instead of shrinking the art. */
+  width: 100%;
+  flex-shrink: 0;
   gap: 0;
 }
 
@@ -340,15 +341,6 @@
   min-height: 32px;
   transform: translateY(-50%);
   border-radius: 6px;
-}
-
-/* Compact layouts use the available width rather than shrinking the reading
-   screen to fit the viewport height. The overlay scrolls the intact portrait. */
-@media (max-width: 768px) {
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-stage {
-    width: 100%;
-    flex-shrink: 0;
-  }
 }
 
 /* Enlarged sections retain their own measured content geometry. */
