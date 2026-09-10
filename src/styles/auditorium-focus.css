@@ -342,6 +342,15 @@
   border-radius: 6px;
 }
 
+/* Compact layouts use the available width rather than shrinking the reading
+   screen to fit the viewport height. The overlay scrolls the intact portrait. */
+@media (max-width: 768px) {
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-stage {
+    width: 100%;
+    flex-shrink: 0;
+  }
+}
+
 /* Enlarged sections retain their own measured content geometry. */
 .auditorium-focus-layer[data-focus-kind="clapboard"] .auditorium-section--clapboard,
 .auditorium-focus-layer[data-focus-kind="share"] .auditorium-section--share,
