@@ -1,54 +1,14 @@
-/*
- * Shared movie/review display policy.
- *
- * Runtime posters remain fully visible with `contain`. Any spare frame area is
- * filled by a softened copy of the same poster so no important artwork is
- * cropped and no plain black letterbox bars remain. Decorative backgrounds,
- * navigation artwork and auditorium ambience are intentionally excluded.
- */
+/* Shared poster policy: fill the allocated image opening without stretching.
+ * Different image/frame ratios crop at the edges. Corner masks belong to the
+ * frame, so their geometry scales with the decorative artwork. */
 .now-poster img,
 .recent-card__poster img,
 .previous-card img,
 .cini-cafe-poster-zone img,
 .auditorium-movie-poster,
 .auditorium-related-poster-frame img {
-  object-fit: contain !important;
-  object-position: center !important;
-  background: transparent !important;
-}
-
-.review-image-fill-frame {
-  isolation: isolate;
-  background-color: #050505;
-}
-
-.review-image-fill-frame::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: -4%;
-  background-image: var(--review-image-fill, none);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  filter: blur(10px) brightness(0.48) saturate(0.82);
-  transform: scale(1.08);
-  opacity: 0.92;
-  pointer-events: none;
-}
-
-.review-image-fill-frame > img {
-  position: relative;
-  z-index: 1;
-}
-
-/* Grid items are the frame itself in Previously Reviewed. */
-.previous-card.review-image-fill-frame {
-  position: relative;
-}
-
-.previous-card.review-image-fill-frame::before {
-  filter: blur(9px) grayscale(1) sepia(0.55) brightness(0.48) saturate(0.72);
+  object-fit: cover;
+  object-position: center;
 }
 
 /*

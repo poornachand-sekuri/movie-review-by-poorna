@@ -1,12 +1,3 @@
-const posterSelector = [
-  '.now-poster img',
-  '.recent-card__poster img',
-  '.previous-card img',
-  '.cini-cafe-poster-zone img',
-  '.auditorium-movie-poster',
-  '.auditorium-related-poster-frame img',
-].join(', ');
-
 const marqueeTargetSelector = [
   '.now-title',
   '.cini-cafe-review-title',
@@ -17,26 +8,6 @@ const marqueeSelector = '[data-global-title-marquee]';
 const marqueeAnimations = new Map<HTMLElement, Animation>();
 let initialized = false;
 let refreshFrame = 0;
-
-function cssUrl(value: string): string {
-  return `url("${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`;
-}
-
-function syncPosterFill(image: HTMLImageElement): void {
-  const frame = image.parentElement;
-  if (!frame) return;
-
-  const source = image.currentSrc || image.src;
-  if (!source) return;
-
-  frame.classList.add('review-image-fill-frame');
-  image.classList.add('review-image-contained');
-  frame.style.setProperty('--review-image-fill', cssUrl(source));
-
-  if (image.dataset.reviewFillBound === 'true') return;
-  image.dataset.reviewFillBound = 'true';
-  image.addEventListener('load', () => syncPosterFill(image), { passive: true });
-}
 
 function prepareMarquee(element: HTMLElement): void {
   element.dataset.globalTitleMarquee = 'true';
@@ -99,7 +70,6 @@ function fitMarquee(element: HTMLElement, reduceMotion: boolean): void {
 function refreshReviewDisplay(): void {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  document.querySelectorAll<HTMLImageElement>(posterSelector).forEach(syncPosterFill);
   document.querySelectorAll<HTMLElement>(marqueeTargetSelector).forEach(prepareMarquee);
   document.querySelectorAll<HTMLElement>(marqueeSelector).forEach((title) => fitMarquee(title, reduceMotion));
 }
@@ -125,13 +95,11 @@ export function initReviewDisplay(): void {
 
   if (typeof MutationObserver !== 'undefined') {
     const observer = new MutationObserver((records) => {
-      if (records.some((record) => record.type === 'childList' || record.type === 'attributes')) scheduleRefresh();
+      if (records.some((record) => record.type === 'childList')) scheduleRefresh();
     });
     observer.observe(document.body, {
       childList: true,
       subtree: true,
-      attributes: true,
-      attributeFilter: ['src', 'srcset'],
     });
   }
 }

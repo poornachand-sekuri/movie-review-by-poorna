@@ -1,0 +1,163 @@
+{
+  "recent": {
+    "sourceWidth": 1672,
+    "sourceHeight": 941,
+    "sourceSha256": "423b7b63b1174c03be555c205a8382b8496edde0ec81f0dba26f7956b4bf4218",
+    "frames": [
+      {
+        "file": "recent-1.svg",
+        "x": 126,
+        "y": 228,
+        "width": 264,
+        "height": 572,
+        "maskHeight": 434.72,
+        "points": 49
+      },
+      {
+        "file": "recent-2.svg",
+        "x": 510,
+        "y": 228,
+        "width": 260,
+        "height": 572,
+        "maskHeight": 434.72,
+        "points": 49
+      },
+      {
+        "file": "recent-3.svg",
+        "x": 892,
+        "y": 227,
+        "width": 255,
+        "height": 573,
+        "maskHeight": 435.48,
+        "points": 41
+      },
+      {
+        "file": "recent-4.svg",
+        "x": 1270,
+        "y": 228,
+        "width": 260,
+        "height": 572,
+        "maskHeight": 434.72,
+        "points": 46
+      }
+    ]
+  },
+  "previous": {
+    "sourceWidth": 1672,
+    "sourceHeight": 941,
+    "sourceSha256": "9a931350c587cd6328f625a037d8ab313893599407c3322311cec830511277a2",
+    "frames": [
+      {
+        "file": "previous-1.svg",
+        "x": 153,
+        "y": 312,
+        "width": 276,
+        "height": 415,
+        "maskHeight": 415,
+        "points": 130
+      },
+      {
+        "file": "previous-2.svg",
+        "x": 511,
+        "y": 312,
+        "width": 280,
+        "height": 415,
+        "maskHeight": 415,
+        "points": 63
+      },
+      {
+        "file": "previous-3.svg",
+        "x": 871,
+        "y": 312,
+        "width": 278,
+        "height": 415,
+        "maskHeight": 415,
+        "points": 52
+      },
+      {
+        "file": "previous-4.svg",
+        "x": 1231,
+        "y": 312,
+        "width": 281,
+        "height": 415,
+        "maskHeight": 415,
+        "points": 57
+      }
+    ]
+  },
+  "clapboard": {
+    "sourceWidth": 1295,
+    "sourceHeight": 1215,
+    "sourceSha256": "1c62ac3d840c35de0b2730e94b12897526a059f1c12b197d48e0c77a942aa0dc",
+    "frames": [
+      {
+        "file": "clapboard-1.svg",
+        "x": 61,
+        "y": 314,
+        "width": 405,
+        "height": 274,
+        "maskHeight": 274,
+        "points": 27
+      }
+    ]
+  },
+  "related": {
+    "sourceWidth": 2172,
+    "sourceHeight": 724,
+    "sourceSha256": "ad9297b8f8a20375b1ecab4135d55c7c69eb434a476fa4898ff9433b1ca30005",
+    "frames": [
+      {
+        "file": "related-1.svg",
+        "x": 340,
+        "y": 244,
+        "width": 337,
+        "height": 242,
+        "maskHeight": 242,
+        "points": 65
+      },
+      {
+        "file": "related-2.svg",
+        "x": 726,
+        "y": 244,
+        "width": 336,
+        "height": 242,
+        "maskHeight": 242,
+        "points": 56
+      },
+      {
+        "file": "related-3.svg",
+        "x": 1111,
+        "y": 244,
+        "width": 336,
+        "height": 242,
+        "maskHeight": 242,
+        "points": 55
+      },
+      {
+        "file": "related-4.svg",
+        "x": 1497,
+        "y": 244,
+        "width": 337,
+        "height": 242,
+        "maskHeight": 242,
+        "points": 61
+      }
+    ]
+  },
+  "now": {
+    "sourceWidth": 1310,
+    "sourceHeight": 1200,
+    "sourceSha256": "23e4478dda92a4f12b1b7ccb8be7a9ccfe4b7d69ceb441eb0a15dc2f2c3e7798",
+    "frames": [
+      {
+        "file": "now-1.svg",
+        "x": 67,
+        "y": 276,
+        "width": 532,
+        "height": 388,
+        "maskHeight": 388,
+        "points": 83
+      }
+    ]
+  }
+}

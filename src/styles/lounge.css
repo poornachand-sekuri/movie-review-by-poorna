@@ -175,7 +175,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .now-poster img {
@@ -356,7 +356,7 @@
 .previous-card:hover,
 .previous-card:focus-visible {
   filter: brightness(1.1);
-  transform: translateY(-0.35cqw);
+  transform: none;
 }
 
 .recent-card {
@@ -1058,166 +1058,205 @@ html.lounge-focus-open body {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Runtime poster fitting                                                     */
-/* -------------------------------------------------------------------------- */
+/* Poster openings traced from the approved red borders. See public/images/poster-masks/geometry.json. */
 
-/* Now Reviewed: fill the usable area inside the baked red poster frame. */
 .now-poster {
-  /* Inset from the new red frame at x=64..600, y=275..667. */
-  left: 5.5%;
-  top: 23.5%;
-  width: 39.75%;
-  height: 31.5%;
+  left: 5.1145038168%;
+  top: 23.0000000000%;
+  width: 40.6106870229%;
+  height: 32.3333333333%;
   padding: 0;
   border: 0;
   border-radius: 0;
+  overflow: hidden;
+  -webkit-mask: url("/images/poster-masks/now-1.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/now-1.svg") 0 0 / 100% 100% no-repeat;
 }
 
-.now-poster img,
-.now-poster .poster-fallback {
+.now-poster img, .now-poster .poster-fallback, .recent-card__poster img, .recent-card__poster .poster-fallback {
+  position: absolute;
+  inset: 0;
   display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  clip-path: none;
+  transform: none;
   box-shadow: none;
+}
+.now-poster img {
   filter: none;
 }
 
-/* Recent Reviews: lower 24% remains reserved for title and stars. */
 .recent-overlay {
-  --carousel-inset-left: 7.715cqw;
-  --carousel-inset-right: 8.493cqw;
+  --carousel-inset-left: 7.5358851675cqw;
+  --carousel-inset-right: 8.4928229665cqw;
   --carousel-border-left: 3.11cqw;
   --carousel-border-right: 3.05cqw;
   left: var(--carousel-inset-left);
   right: var(--carousel-inset-right);
-  top: 24.230%;
-  bottom: 14.984%;
+  top: 24.1232731137%;
+  bottom: 14.9840595112%;
 }
 
 .recent-overlay .review-carousel__page {
-  gap: 8.779%;
+  position: relative;
+  display: block;
 }
-
 .recent-card {
+  position: absolute;
   padding: 0;
-  grid-template-rows: minmax(0, 76fr) minmax(0, 12fr) minmax(0, 12fr);
   background: transparent;
   border-radius: 0;
 }
 
+.recent-card {
+  display: grid;
+  grid-template-rows: minmax(0, 76fr) minmax(0, 12fr) minmax(0, 12fr);
+}
 .recent-card__poster {
   position: relative;
   min-height: 0;
   margin: 0;
   border-radius: 0;
+  overflow: hidden;
 }
-
-.recent-card__poster img,
-.recent-card__poster .poster-fallback {
-  display: block;
-  box-shadow: none;
-}
-
 .recent-card__title {
   margin-top: 0;
 }
 
-/* Previously Reviewed: fill the four film-strip poster windows. */
+.recent-card:nth-child(1) {
+  left: 0.0000000000%;
+  top: 0.1745200698%;
+  width: 18.8034188034%;
+  height: 99.8254799302%;
+}
+
+.recent-card:nth-child(1) .recent-card__poster {
+  -webkit-mask: url("/images/poster-masks/recent-1.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/recent-1.svg") 0 0 / 100% 100% no-repeat;
+}
+
+.recent-card:nth-child(2) {
+  left: 27.3504273504%;
+  top: 0.1745200698%;
+  width: 18.5185185185%;
+  height: 99.8254799302%;
+}
+
+.recent-card:nth-child(2) .recent-card__poster {
+  -webkit-mask: url("/images/poster-masks/recent-2.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/recent-2.svg") 0 0 / 100% 100% no-repeat;
+}
+
+.recent-card:nth-child(3) {
+  left: 54.5584045584%;
+  top: 0.0000000000%;
+  width: 18.1623931624%;
+  height: 100.0000000000%;
+}
+
+.recent-card:nth-child(3) .recent-card__poster {
+  -webkit-mask: url("/images/poster-masks/recent-3.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/recent-3.svg") 0 0 / 100% 100% no-repeat;
+}
+
+.recent-card:nth-child(4) {
+  left: 81.4814814815%;
+  top: 0.1745200698%;
+  width: 18.5185185185%;
+  height: 99.8254799302%;
+}
+
+.recent-card:nth-child(4) .recent-card__poster {
+  -webkit-mask: url("/images/poster-masks/recent-4.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/recent-4.svg") 0 0 / 100% 100% no-repeat;
+}
+
 .previous-overlay {
-  --carousel-inset-left: 9.270cqw;
-  --carousel-inset-right: 9.629cqw;
+  --carousel-inset-left: 9.1507177033cqw;
+  --carousel-inset-right: 9.5693779904cqw;
   --carousel-border-left: 0.93cqw;
   --carousel-border-right: 1.14cqw;
   left: var(--carousel-inset-left);
   right: var(--carousel-inset-right);
-  top: 33.262%;
-  bottom: 22.954%;
+  top: 33.1562167906%;
+  bottom: 22.7417640808%;
 }
 
 .previous-overlay .review-carousel__page {
-  gap: 6.22%;
+  position: relative;
+  display: block;
 }
-
 .previous-card {
+  position: absolute;
   padding: 0;
   background: transparent;
   border-radius: 0;
 }
 
-.previous-card img,
-.previous-card .poster-fallback {
+.previous-card:nth-child(1) {
+  left: 0.0000000000%;
+  top: 0.0000000000%;
+  width: 20.3090507726%;
+  height: 100.0000000000%;
+}
+
+.previous-card:nth-child(1) {
+  -webkit-mask: url("/images/poster-masks/previous-1.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/previous-1.svg") 0 0 / 100% 100% no-repeat;
+}
+
+.previous-card:nth-child(2) {
+  left: 26.3428991906%;
+  top: 0.0000000000%;
+  width: 20.6033848418%;
+  height: 100.0000000000%;
+}
+
+.previous-card:nth-child(2) {
+  -webkit-mask: url("/images/poster-masks/previous-2.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/previous-2.svg") 0 0 / 100% 100% no-repeat;
+}
+
+.previous-card:nth-child(3) {
+  left: 52.8329654157%;
+  top: 0.0000000000%;
+  width: 20.4562178072%;
+  height: 100.0000000000%;
+}
+
+.previous-card:nth-child(3) {
+  -webkit-mask: url("/images/poster-masks/previous-3.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/previous-3.svg") 0 0 / 100% 100% no-repeat;
+}
+
+.previous-card:nth-child(4) {
+  left: 79.3230316409%;
+  top: 0.0000000000%;
+  width: 20.6769683591%;
+  height: 100.0000000000%;
+}
+
+.previous-card:nth-child(4) {
+  -webkit-mask: url("/images/poster-masks/previous-4.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/previous-4.svg") 0 0 / 100% 100% no-repeat;
+}
+
+.previous-card img, .previous-card .poster-fallback {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
   transform: none;
-  clip-path: inset(clamp(1px, 0.18cqw, 3px) round 7.5%);
+  clip-path: none;
   border-radius: 0;
 }
-
 .previous-card img {
   filter: grayscale(1) sepia(0.72) saturate(0.85) contrast(1.08) brightness(0.98);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Runtime poster corner masks                                                */
-/* -------------------------------------------------------------------------- */
-
-.now-poster {
-  --poster-corner-cut: clamp(7px, 2.45cqw, 24px);
-  background: transparent;
-  overflow: hidden;
-  -webkit-mask:
-    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 50.1% no-repeat,
-    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 50.1% no-repeat,
-    radial-gradient(circle at 0 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 100% / 50.1% 50.1% no-repeat,
-    radial-gradient(circle at 100% 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 100% / 50.1% 50.1% no-repeat;
-  mask:
-    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 50.1% no-repeat,
-    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 50.1% no-repeat,
-    radial-gradient(circle at 0 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 100% / 50.1% 50.1% no-repeat,
-    radial-gradient(circle at 100% 100%, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 100% / 50.1% 50.1% no-repeat;
-}
-
-.now-poster img,
-.now-poster .poster-fallback {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 0;
-  clip-path: none;
-  transform: none;
-}
-
-.recent-card__poster {
-  --poster-corner-cut: clamp(5px, 1.65cqw, 17px);
-  background: transparent;
-  overflow: hidden;
-  -webkit-mask:
-    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 51% no-repeat,
-    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 51% no-repeat,
-    linear-gradient(#000 0 0) 0 100% / 100% 50% no-repeat;
-  mask:
-    radial-gradient(circle at 0 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 0 0 / 50.1% 51% no-repeat,
-    radial-gradient(circle at 100% 0, transparent 0 calc(var(--poster-corner-cut) - 1px), #000 var(--poster-corner-cut)) 100% 0 / 50.1% 51% no-repeat,
-    linear-gradient(#000 0 0) 0 100% / 100% 50% no-repeat;
-}
-
-.recent-card__poster img,
-.recent-card__poster .poster-fallback {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 0;
-  clip-path: none;
-  transform: none;
-}
 /* Cache-bust the replaced R2 Lounge/Cini Cafe artwork without changing layout. */
 html body .lounge-panel--bottom .lounge-banner-crop {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/07_Lounge_Cini_Cafe_Banner_runtime_q99.webp?v=exact-palette-20260906-1519") !important;
