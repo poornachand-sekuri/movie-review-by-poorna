@@ -1,12 +1,10 @@
 /*
- * Review image fitting policy.
+ * Shared movie/review display policy.
  *
- * Runtime movie/review artwork inside fixed UI frames must remain fully visible.
- * Decorative backgrounds and full-bleed ambience are intentionally excluded.
- *
- * `contain` preserves the source aspect ratio and resizes the image to fit the
- * available frame without cropping. The important flag protects this policy
- * from older page-specific `cover` rules that still exist in the visual CSS.
+ * Runtime posters remain fully visible with `contain`. Any spare frame area is
+ * filled by a softened copy of the same poster so no important artwork is
+ * cropped and no plain black letterbox bars remain. Decorative backgrounds,
+ * navigation artwork and auditorium ambience are intentionally excluded.
  */
 .now-poster img,
 .recent-card__poster img,
@@ -16,4 +14,80 @@
 .auditorium-related-poster-frame img {
   object-fit: contain !important;
   object-position: center !important;
+  background: transparent !important;
+}
+
+.review-image-fill-frame {
+  isolation: isolate;
+  background-color: #050505;
+}
+
+.review-image-fill-frame::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: -4%;
+  background-image: var(--review-image-fill, none);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(10px) brightness(0.48) saturate(0.82);
+  transform: scale(1.08);
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.review-image-fill-frame > img {
+  position: relative;
+  z-index: 1;
+}
+
+/* Grid items are the frame itself in Previously Reviewed. */
+.previous-card.review-image-fill-frame {
+  position: relative;
+}
+
+.previous-card.review-image-fill-frame::before {
+  filter: blur(9px) grayscale(1) sepia(0.55) brightness(0.48) saturate(0.72);
+}
+
+/*
+ * Long movie titles use the same back-and-forth rolling behavior as Recent
+ * Reviews. The inner span is the moving track; short titles stay centered.
+ */
+[data-global-title-marquee] {
+  min-width: 0;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-wrap: nowrap !important;
+  text-overflow: clip !important;
+}
+
+[data-global-title-marquee] > span {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+[data-global-title-marquee].is-moving > span {
+  min-width: 0;
+}
+
+/* Cini Cafe used a three-line shrink-to-fit title. Rolling now owns overflow. */
+.cini-cafe-review-title[data-global-title-marquee] {
+  display: block !important;
+  -webkit-box-orient: initial !important;
+  -webkit-line-clamp: unset !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-global-title-marquee] > span {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
