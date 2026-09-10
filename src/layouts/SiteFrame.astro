@@ -48,6 +48,9 @@ const robots = isPreviewHost
     <slot />
     <script>
       import { recordCinemaPageView } from '../lib/analytics-client';
+      import { initReviewDisplay } from '../lib/review-display';
+
+      initReviewDisplay();
       recordCinemaPageView();
     </script>
   </body>
