@@ -1,0 +1,105 @@
+/*
+ * Focused Theater screen extension — source-of-truth geometry from the approved
+ * 1448 × 1086 Theater Focus overlay.
+ *
+ * The existing readable screen runs from y=112 through y=832 (720 px). This
+ * adds exactly 360 px, making the screen 1080 px tall (+50%) while preserving
+ * everything above the lower screen continuation and every control/seat below
+ * it. Only the speaker-free lower screen/side-rail band (y=600..832) stretches;
+ * the header, curtains, speakers, seats, reaction bar and EXIT art remain at
+ * their original source proportions.
+ */
+
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork {
+  /* 1086 + 360 = 1446 virtual source pixels. */
+  aspect-ratio: 1448 / 1446;
+}
+
+/* Preserve the approved artwork exactly through source y=600. */
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork
+  > .auditorium-state-layer--theater-focus {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: top center;
+  clip-path: inset(0 0 44.7513812155% 0);
+}
+
+/*
+ * Continue only the lower screen/side-rail band. The original 232 px strip
+ * (y=600..832) becomes 592 px, adding the requested 360 px without deforming
+ * the header, speaker stacks or lower controls.
+ */
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork::before,
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  pointer-events: none;
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/content/v4/res%70onsive/09_Theater_Focus_Overlay_transparent_lossless.webp?v=20260908-native");
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+}
+
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork::before {
+  top: 41.4364640884cqw;
+  height: 16.0220994475cqw;
+  background-position: center -41.4364640884cqw;
+  transform: scaleY(2.5517241379);
+  transform-origin: top center;
+}
+
+/* Preserve source y=832..1086 exactly and move it down by the new 360 px. */
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork::after {
+  top: 82.320441989cqw;
+  height: 17.5414364641cqw;
+  background-position: center -57.4585635359cqw;
+}
+
+/* The live-content coordinate plane now follows the 1448 × 1446 focus canvas. */
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused
+  > .auditorium-source-layer {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+/* Readable screen: y=112, height 1080 on the new 1446 px focus canvas. */
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-review-scroll {
+  top: 7.7455048409%;
+  height: 74.6887966805%;
+}
+
+/* Move the untouched baked reaction controls down with their preserved artwork. */
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-reaction-button--like {
+  top: 90.7330567082%;
+  height: 7.2614107884%;
+}
+
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-reaction-button--dislike {
+  top: 91.0788381743%;
+  height: 7.2614107884%;
+}
+
+/* EXIT hit target remains registered to the unchanged EXIT artwork. */
+.auditorium-focus-layer[data-focus-kind="theater"]
+  .auditorium-section--theater.is-auditorium-focused
+  > .auditorium-focus-close--theater {
+  top: 91.4246196405%;
+  height: 6.43153527%;
+}
