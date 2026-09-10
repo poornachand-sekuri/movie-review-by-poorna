@@ -1,13 +1,13 @@
-/* Shared poster policy: fill the allocated image opening without stretching.
- * Different image/frame ratios crop at the edges. Corner masks belong to the
- * frame, so their geometry scales with the decorative artwork. */
+/* Shared poster policy: show the complete image at its natural proportions.
+ * Different image/frame ratios leave space around the centered poster.
+ * Corner masks remain registered to the decorative artwork. */
 .now-poster img,
 .recent-card__poster img,
 .previous-card img,
 .cini-cafe-poster-zone img,
 .auditorium-movie-poster,
 .auditorium-related-poster-frame img {
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 
