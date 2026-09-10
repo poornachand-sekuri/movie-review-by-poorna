@@ -109,7 +109,7 @@ const featuredPov = featured?.verdict?.trim() || '';
               </dl>
             </div>
 
-            <div class="now-pov">
+            <div class="now-pov" data-pov-fit tabindex="0" role="region" aria-label="My POV">
               <span class="now-pov__label"><span aria-hidden="true">◉</span> My POV</span>
               <p>{featuredPov || 'POV coming soon.'}</p>
             </div>
