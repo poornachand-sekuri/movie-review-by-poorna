@@ -182,6 +182,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
           data-auditorium-theater
           data-auditorium-focusable="theater"
           data-font-step="2"
+          style={{ '--desktop-theater-art': `url("${assets.theaterFocus.src}")` }}
           tabindex="0"
         >
           <img
@@ -204,6 +205,14 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
             data-auditorium-focus-art
             hidden
           />
+
+          <div class="auditorium-desktop-scenery" aria-hidden="true">
+            <span class="auditorium-desktop-scenery__header"></span>
+            <span class="auditorium-desktop-scenery__wall auditorium-desktop-scenery__wall--left"></span>
+            <span class="auditorium-desktop-scenery__wall auditorium-desktop-scenery__wall--right"></span>
+            <span class="auditorium-desktop-scenery__seats"></span>
+            <span class="auditorium-desktop-scenery__floor"></span>
+          </div>
 
           <div class="auditorium-source-layer auditorium-theater-content">
             <article
