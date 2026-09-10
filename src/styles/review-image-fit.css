@@ -1,0 +1,19 @@
+/*
+ * Review image fitting policy.
+ *
+ * Runtime movie/review artwork inside fixed UI frames must remain fully visible.
+ * Decorative backgrounds and full-bleed ambience are intentionally excluded.
+ *
+ * `contain` preserves the source aspect ratio and resizes the image to fit the
+ * available frame without cropping. The important flag protects this policy
+ * from older page-specific `cover` rules that still exist in the visual CSS.
+ */
+.now-poster img,
+.recent-card__poster img,
+.previous-card img,
+.cini-cafe-poster-zone img,
+.auditorium-movie-poster,
+.auditorium-related-poster-frame img {
+  object-fit: contain !important;
+  object-position: center !important;
+}
