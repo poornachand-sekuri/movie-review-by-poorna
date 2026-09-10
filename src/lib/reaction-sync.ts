@@ -4,7 +4,7 @@ export function publishReactionChange(slug: string): void {
   try {
     localStorage.setItem(CHANGE_KEY, JSON.stringify({ slug, nonce: crypto.randomUUID() }));
   } catch {
-    // Focus/visibility and periodic refresh still work when storage is unavailable.
+    // The current page already has the confirmed write; a reload updates other tabs.
   }
 }
 
@@ -17,13 +17,6 @@ export function watchReactionChanges(refresh: (slug?: string) => void): void {
       if (typeof message.slug === 'string') refresh(message.slug);
     } catch { /* Ignore unrelated or malformed storage events. */ }
   });
-  window.addEventListener('focus', whenVisible);
-  document.addEventListener('visibilitychange', whenVisible);
-  let timer: number | undefined;
-  const start = () => {
-    if (timer === undefined) timer = window.setInterval(whenVisible, 15000);
-  };
-  window.addEventListener('pagehide', () => { window.clearInterval(timer); timer = undefined; });
-  window.addEventListener('pageshow', (event) => { start(); if (event.persisted) whenVisible(); });
-  start();
+  // Back/forward cache restores stale HTML without a new server render.
+  window.addEventListener('pageshow', (event) => { if (event.persisted) whenVisible(); });
 }

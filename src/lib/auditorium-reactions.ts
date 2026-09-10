@@ -130,8 +130,8 @@ export function initAuditoriumReactions(): void {
     });
   }
 
-  // Own votes render from the confirmed write. Other tabs refresh immediately;
-  // visible pages also pick up other visitors' votes without a manual reload.
+  // Own votes render from the confirmed write. Other tabs and restored pages
+  // refresh on demand; an idle visible page does not poll the database.
   watchReactionChanges((changedSlug) => {
     if (!changedSlug || changedSlug === slug) void loadLatest();
   });

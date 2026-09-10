@@ -20,9 +20,8 @@ export const GET: APIRoute = async ({ params, cookies }) => {
   if (!slug) return apiError(400, 'INVALID_REVIEW_SLUG', 'A review slug is required.');
 
   try {
-    const legacyVoterKey = cookies.get('mrp_voter')?.value ?? null;
-    const voterKey = cookies.get(VOTER_COOKIE)?.value ?? legacyVoterKey;
-    const snapshot = await getReviewReactionSnapshotBySlug(slug, voterKey, legacyVoterKey);
+    const voterKey = cookies.get(VOTER_COOKIE)?.value ?? null;
+    const snapshot = await getReviewReactionSnapshotBySlug(slug, voterKey);
     if (!snapshot) return apiError(404, 'REVIEW_NOT_FOUND', 'Review not found.');
 
     return jsonResponse({ slug, ...snapshot });
@@ -60,8 +59,7 @@ export const POST: APIRoute = async ({ params, request, cookies }) => {
   }
 
   try {
-    const legacyVoterKey = cookies.get('mrp_voter')?.value ?? null;
-    let voterKey = cookies.get(VOTER_COOKIE)?.value?.trim() || legacyVoterKey || '';
+    let voterKey = cookies.get(VOTER_COOKIE)?.value?.trim() || '';
     if (!voterKey) {
       voterKey = crypto.randomUUID();
       cookies.set(VOTER_COOKIE, voterKey, {
@@ -73,7 +71,7 @@ export const POST: APIRoute = async ({ params, request, cookies }) => {
       });
     }
 
-    const snapshot = await setReviewReaction(slug, voterKey, reaction, legacyVoterKey, explicit);
+    const snapshot = await setReviewReaction(slug, voterKey, reaction, explicit);
     if (!snapshot) return apiError(404, 'REVIEW_NOT_FOUND', 'Review not found.');
 
     return jsonResponse({ slug, ...snapshot });

@@ -37,7 +37,7 @@ test('new review automatically appears in detail, Lounge, Café and search with 
 });
 
 test('slug edits preserve identity, reactions and approved comments', async () => {
-  await reactions.setReviewReaction(input.s,'original-reader','like',null,true);
+  await reactions.setReviewReaction(input.s,'original-reader','like',true);
   const submitted = await comments.submitPendingComment({targetType:'review',targetId:input.s,name:'Reader',comment:'Original comment',submitterKey:'comment-reader'});
   await moderation.moderateAdminComment(submitted.id,'approve');
   await admin.updateAdminReview(original.i,{...input,s:'renamed-slug',t:'Updated movie',body:'<p>Updated review.</p>'});
@@ -60,7 +60,7 @@ test('a new review reusing the old slug starts at zero without inheriting preser
   assert.equal(legacyReads,beforeReads,'new reviews must not consult the old namespace');
   const submitted = await comments.submitPendingComment({targetType:'review',targetId:input.s,name:'Reader',comment:'Original comment',submitterKey:'comment-reader'});
   assert.equal(db.sqlite.prepare('SELECT review_id FROM comments WHERE id=?').get(submitted.id).review_id,added.i);
-  await reactions.setReviewReaction(input.s,'new-reader','dislike',null,true);
+  await reactions.setReviewReaction(input.s,'new-reader','dislike',true);
   assert.equal((await reactions.getReviewReactionSnapshotBySlug('renamed-slug')).dislikes,0);
   const totals=(await analytics.getAdminAnalytics()).reactionTotals;
   assert.deepEqual(totals,{like:1,dislike:1});

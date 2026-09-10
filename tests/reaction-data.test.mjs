@@ -27,21 +27,20 @@ const get = async (slug='dc') => api.GET({params:{slug},cookies});
 const post = async (body, slug='dc', origin='https://example.com') => api.POST({params:{slug},cookies,request:new Request(`https://example.com/api/reviews/${slug}/reactions`,{method:'POST',headers:{'content-type':'application/json',origin},body:JSON.stringify(body)})});
 const snapshot = async () => (await get()).json();
 
-test('preserved DC Like imports once; API, Café and dashboard agree', async () => {
+test('fresh-start API, Café and dashboard ignore archived votes and old cookies', async () => {
   const before = legacy.prepare('SELECT * FROM votes').all();
   jar.set('mrp_voter', 'original-reader');
   const response = await get('DC');
   assert.equal(response.headers.get('cache-control'), 'no-store');
-  assert.deepEqual(await response.json(), {slug:'DC',likes:1,dislikes:0,viewerReaction:'like'});
-  assert.equal((await cafe.listCiniCafeReviews()).find(x=>x.slug==='dc').likes,1);
-  assert.deepEqual((await analytics.getAdminAnalytics()).reactionTotals,{like:1,dislike:0});
-  const reads=exports;
+  assert.deepEqual(await response.json(), {slug:'DC',likes:0,dislikes:0,viewerReaction:null});
+  assert.equal((await cafe.listCiniCafeReviews()).find(x=>x.slug==='dc').likes,0);
+  assert.deepEqual((await analytics.getAdminAnalytics()).reactionTotals,{like:0,dislike:0});
   await snapshot();
-  assert.equal(exports,reads,'completed imports must not reread the old store');
+  assert.equal(exports,0,'application requests must never consult the old store');
   assert.deepEqual(legacy.prepare('SELECT * FROM votes').all(),before,'the old store stays untouched');
 });
 
-test('old cookie can remove original vote; it is never resurrected by reads', async () => {
+test('old cookies cannot resurrect a removed vote', async () => {
   assert.equal((await (await post({reaction:null,mode:'set'})).json()).viewerReaction,null);
   for(let i=0;i<3;i++) assert.equal((await snapshot()).likes,0);
 });
@@ -58,10 +57,13 @@ test('new cookie persists, explicit retries are idempotent, switches and removal
   assert.deepEqual(await (await post({reaction:null,mode:'set'})).json(),{slug:'dc',likes:0,dislikes:0,viewerReaction:null});
 });
 
-test('returning browser with both cookies is counted once and keeps its newer choice', async () => {
-  db.sqlite.exec("INSERT INTO review_reaction_votes (review_id,voter_key,reaction) VALUES (1,'old-cookie','like'),(1,'new-cookie','dislike');");
+test('returning browsers use their current cookie without identity-migration writes', async () => {
+  db.sqlite.exec("INSERT INTO review_reaction_votes (review_id,voter_key,reaction) VALUES (1,'new-cookie','dislike');");
   jar.set('mrp_voter','old-cookie');jar.set('mrp_reaction_voter','new-cookie');
   assert.deepEqual(await snapshot(),{slug:'dc',likes:0,dislikes:1,viewerReaction:'dislike'});
+  const before = db.metrics.statements;
+  assert.deepEqual(await reactions.getReviewReactionSnapshot(1, 'new-cookie'),{likes:0,dislikes:1,viewerReaction:'dislike'});
+  assert.equal(db.metrics.statements - before, 1, 'a warm snapshot needs only its indexed aggregate');
   await post({reaction:null,mode:'set'});
   assert.equal((await snapshot()).likes,0);
 });
@@ -73,13 +75,14 @@ test('invalid requests and unknown reviews do not change votes', async () => {
   assert.equal((await snapshot()).likes,0);
 });
 
-test('failed import remains retryable and creates no completion marker or partial votes', async () => {
+test('an unavailable archive cannot break a new review or create import work', async () => {
   db.sqlite.exec("INSERT INTO reviews (id,slug,title,reviewed_date,body_html,status) VALUES (3,'retry','Retry','2026-09-01','<p>Retry</p>','published');");
   fail=true;
-  await assert.rejects(reactions.getReviewReactionSnapshotBySlug('retry'));
+  assert.equal((await reactions.getReviewReactionSnapshotBySlug('retry')).likes,0);
   assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM legacy_reaction_imports WHERE review_id=3').get().n,0);
   fail=false;
   assert.equal((await reactions.getReviewReactionSnapshotBySlug('retry')).likes,0);
+  assert.equal(exports,0);
 });
 
 test('legacy reader handles empty namespaces without creating a table', () => {

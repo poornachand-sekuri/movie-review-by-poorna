@@ -7,8 +7,9 @@ import { readLegacyVotePage } from './lib/legacy-reaction-reader';
  *
  * These classes intentionally remain exported during the D1 cutover so
  * Cloudflare keeps the existing Durable Object namespaces and their stored
- * data intact. ReactionStore exposes a read-only, binding-only export for the
- * one-time D1 import. All new votes continue to be written exclusively to D1.
+ * data intact. ReactionStore retains its historical read-only, binding-only
+ * export, but application requests no longer import old votes after the
+ * owner-authorized fresh start. All new votes are written exclusively to D1.
  */
 export class ReactionStore extends DurableObject<Env> {
   async exportVotes(after = '') {

@@ -14,7 +14,7 @@
 
 `src/pages/review/[slug].astro` renders one review. Once it resolves the review, it loads reaction state and related reviews concurrently.
 
-Browser controllers have separate responsibilities: `auditorium-focus.ts`, `auditorium-reactions.ts`, `auditorium-sharing.ts` and the shared `comments-client.ts`. The SSR reaction snapshot is initial state; confirmed writes, cross-tab notifications, focus/restored-page refreshes and a 15-second visible-page refresh keep it current. New clients submit explicit reaction state so retries do not invert a vote.
+Browser controllers have separate responsibilities: `auditorium-focus.ts`, `auditorium-reactions.ts`, `auditorium-sharing.ts` and the shared `comments-client.ts`. The SSR reaction snapshot is initial state; confirmed writes, cross-tab notifications and back/forward-cache restoration update it on demand. Idle pages, focus and visibility changes never poll. Other visitors' later votes become visible on the next refresh. New clients submit explicit reaction state so retries do not invert a vote.
 
 Styles are scoped by feature: core registration in `auditorium.css`, then navigation, focus, reactions, sharing and comments styles. Approved top-wall artwork and the continuous lower seating remain unchanged. The clapboard and theater fill the available viewport width; other panels retain their registered proportions.
 
@@ -22,7 +22,7 @@ Styles are scoped by feature: core registration in `auditorium.css`, then naviga
 
 `src/pages/search.astro` loads a compact D1 catalogue, renders the first six filtered cards on the server and embeds escaped catalogue JSON for local filtering. Review bodies are excluded.
 
-`cini-cafe-filter.ts` owns search normalization, date precedence and sorting. It indexes searchable text once and reuses results across pagination. `cini-cafe-card.ts` is the escaped HTML renderer shared by SSR and browser updates. `cini-cafe.ts` owns controls, pagination, title fitting and restored-page reaction refreshes. `/search?q=...` initializes both server and browser search state.
+`cini-cafe-filter.ts` owns search normalization, date precedence and sorting. It indexes searchable text once and reuses results across pagination. `cini-cafe-card.ts` is the escaped HTML renderer shared by SSR and browser updates. `cini-cafe.ts` owns controls, pagination, title fitting and restored-page reaction refreshes. Search, filter, sort and pagination changes reuse loaded counts without per-card reaction requests. `/search?q=...` initializes both server and browser search state.
 
 ## Projector Room
 
@@ -32,11 +32,11 @@ The admin list requests `?compact=1` and loads full review text only when a revi
 
 ## Data and HTTP boundaries
 
-Quota-sensitive reads use the existing indexes to restrict work to the requested records. The legacy-reaction import check has separate single-review and full-catalogue predicates; a nullable-parameter OR must not turn per-review reaction refreshes into catalogue scans. The full-catalogue path remains available for pending imports, and completed imports retain their durable markers.
+Quota-sensitive reads use the existing indexes to restrict work to requested records. Following the owner-authorized prelaunch reset, application requests no longer call legacy reaction import or identity-reconciliation code. The retained legacy importer is historical compatibility tooling only, with no application call sites. Its indexed lookup and durable markers remain covered for old-Worker/reset compatibility.
 
 Related-review candidates drive the final review lookup by primary key. SQLite's explicit `CROSS JOIN` fixes that loop order so the published-status index cannot make the final join visit every published review. Credit priority, credit position, recency, ID tie-breaking, publication filtering and language/general fallbacks are preserved. See [SQLite's join-order documentation](https://www.sqlite.org/optoverview.html#manual_control_of_query_plans_using_cross_join).
 
-September 10 query metrics supplied by the owner show 41,490 legacy-import checks reading 5.73 million rows and 10,245 credit-based related-review queries reading 2.07 million rows. These are reported query totals; the screenshots do not establish a separate UTC-day breakdown or distinguish visitors, preview traffic and automated audits. The dashboard's four traffic aggregates shown total about 32,480 rows, so removing dashboard polling alone does not address the dominant consumers. Local query-plan regression tests cover the two targeted lookups; production row-read savings must be measured after deployment.
+September 10 query metrics supplied by the owner show 41,490 legacy-import checks reading 5.73 million rows and 10,245 credit-based related-review queries reading 2.07 million rows. These are reported query totals; the screenshots do not establish a separate UTC-day breakdown or distinguish visitors, preview traffic and automated audits. The dashboard's four traffic aggregates shown total about 32,480 rows, so removing dashboard polling alone does not address the dominant consumers. The final fresh-start change retires the legacy check from application traffic entirely. Query-plan tests cover the related lookup and retained importer; production row-read savings must be measured after deployment.
 
 - `reviews.ts`: compact lists, full review detail, FTS and credit matches.
 - `related-reviews.ts`: credit-first, same-language, then general-recency fallback.
@@ -61,8 +61,8 @@ Before publishing, run `npm run validate`, build/dry-run both configurations, an
 
 New review creation records a zero-vote migration marker in the same transaction as the review. A newly added review never inherits a preserved store from an older review that used the same slug. Editing a review retains its stable database ID and reactions, and updates its comments' target slug atomically. Public comment reads and duplicate checks use that stable review ID, including for records renamed before this repair. Regression tests cover creation, discovery across public surfaces, edits, slug reuse, reaction/comment isolation, and archiving using isolated SQLite data.
 
-The original production `ReactionStore` namespace is read through the `LEGACY_REACTIONS` binding. Its binding-only RPC exports existing vote rows without modifying the old store. Each review is copied into D1 together with a `legacy_reaction_imports` completion marker in one transaction. Existing D1 votes win on identity conflicts; completed imports never replay, including after a reader removes a vote. A failed export remains retryable and is not silently treated as zero.
+The owner requested clearing prelaunch engagement on September 10, 2026. The separately executed, atomic and replay-safe operation is documented in `operations/README.md`; it clears D1 votes, every comment state and page-view history while preserving all review content and assets. It installs durable import barriers for existing reviews and retains a completion record. No reset runs on page requests, deployment or ordinary migrations.
 
-The Auditorium imports its review before reading or writing; Café and dashboard reads finish any remaining published-review imports first. Preview reads the production namespace by explicit `script_name`, and continues using the shared D1 store. No new active reaction store is introduced. Both `mrp_voter` (old) and `mrp_reaction_voter` (current) cookies are recognized; where both identify the same returning browser, its newer D1 choice takes precedence.
+`ReactionStore`, `CommentsStore` and `AnalyticsStore` exports and their historical storage remain retained for deployment compatibility. The application never reads the preserved vote namespace, and uses only the current `mrp_reaction_voter` cookie without legacy identity-migration writes. The old `mrp_voter` cookie cannot restore votes. Both Workers share D1, so deployment/reset verification must cover preview as well as production.
 
 Production smoke checks exercise Like, idempotent retry, reload, independent visitor totals, switching, isolation, removal, and SSR/Café parity with a temporary random voter that is removed in `finally`. The deployment summary query reports only aggregate migration/count data, never voter identifiers.

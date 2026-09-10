@@ -25,10 +25,9 @@ if (!loadedReview) {
 
 const review = loadedReview;
 Astro.response.headers.set('cache-control', 'private, no-store');
-const legacyVoterKey = Astro.cookies.get('mrp_voter')?.value ?? null;
-const viewerReactionKey = Astro.cookies.get('mrp_reaction_voter')?.value ?? legacyVoterKey;
+const viewerReactionKey = Astro.cookies.get('mrp_reaction_voter')?.value ?? null;
 const [reactionSnapshot, relatedReviews] = await Promise.all([
-  getReviewReactionSnapshot(review.id, viewerReactionKey, legacyVoterKey),
+  getReviewReactionSnapshot(review.id, viewerReactionKey),
   listRelatedReviews(review, 4),
 ]);
 

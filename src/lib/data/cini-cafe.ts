@@ -1,4 +1,4 @@
-import { ensureAllReactionImports } from './reactions';
+import { ensureReactionSchema } from './reactions';
 import { getContentDb } from '../cloudflare/content-db';
 
 export interface CiniCafeReview {
@@ -32,7 +32,7 @@ interface CafeCreditRow {
 }
 
 export async function listCiniCafeReviews(): Promise<readonly CiniCafeReview[]> {
-  await ensureAllReactionImports();
+  await ensureReactionSchema();
   const db = getContentDb();
   const [reviewResult, creditResult] = await db.batch([
     db.prepare(`

@@ -32,15 +32,27 @@ function setup() {
   root.querySelector = (selector) => nodes.get(selector);
   root.querySelectorAll = () => buttons;
   globalThis.document = Object.assign(new EventTarget(), { querySelector: () => root, visibilityState: 'visible' });
-  globalThis.window = Object.assign(new EventTarget(), { setInterval: () => 1, clearInterval() {} });
+  const timers = [];
+  globalThis.window = Object.assign(new EventTarget(), { setInterval: (...args) => { timers.push(args); return 1; }, clearInterval() {} });
   const calls = [];
   globalThis.fetch = (url, options) => new Promise((resolve) => calls.push({ url, ...options, resolve }));
   initAuditoriumReactions();
-  return { root, nodes, calls, restorePage() {
+  return { root, nodes, calls, timers, restorePage() {
     const event = new Event('pageshow'); event.persisted = true; window.dispatchEvent(event);
   } };
 }
 const reply = (call, likes, viewerReaction = null) => call.resolve(Response.json({ likes, dislikes: 0, viewerReaction }));
+
+test('idle, focus and visibility events do not schedule or send reaction requests', () => {
+  const h = setup();
+  for (let i = 0; i < 5; i++) {
+    window.dispatchEvent(new Event('focus'));
+    document.dispatchEvent(new Event('visibilitychange'));
+    window.dispatchEvent(new Event('pageshow'));
+  }
+  assert.equal(h.timers.length, 0);
+  assert.equal(h.calls.length, 0);
+});
 
 test('server-rendered reactions need no duplicate request; restored pages refresh', async () => {
   const h = setup();

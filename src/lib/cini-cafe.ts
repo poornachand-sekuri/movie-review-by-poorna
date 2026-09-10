@@ -242,7 +242,7 @@ export function initCiniCafe(): void {
     syncLabels();
     stage.setAttribute('aria-busy', 'false');
     scheduleTitleFit();
-    if (updateCards) void refreshVisibleLikes();
+    // Filtering and pagination reuse the counts in the loaded catalogue.
   }
 
   const reactionRevisions = new Map<string, number>();
