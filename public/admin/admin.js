@@ -77,7 +77,7 @@
             state.analytics = data;
             renderAnalytics(data);
             updateCommentBadges(data.commentCounts || {});
-            el.reactionSyncStatus.textContent = `Live D1 reaction totals across ${data.reviewCount || 0} reviews.`;
+            el.reactionSyncStatus.textContent = `Totals across ${data.reviewCount || 0} reviews. Use Refresh to update.`;
         }
         catch (err) {
             toast(err.message, true);
@@ -87,14 +87,8 @@
             el.syncReactions.disabled = false;
         }
     }
-    const refreshDashboard = () => {
-        if (!el.admin.classList.contains('hidden') && state.panel === 'dashboard' && document.visibilityState !== 'hidden') void loadAnalytics();
-    };
-    window.addEventListener('focus', refreshDashboard);
-    document.addEventListener('visibilitychange', refreshDashboard);
-    window.addEventListener('storage', event => { if (event.key === 'mrp:reaction-change') refreshDashboard(); });
-    window.addEventListener('pageshow', event => { if (event.persisted) refreshDashboard(); });
-    setInterval(refreshDashboard, 15000);
+    // Historical analytics are loaded on dashboard entry or explicit actions only.
+    // Idle timers and browser lifecycle events must not repeat these D1 scans.
     el.refreshAnalytics.addEventListener('click', () => loadAnalytics());
     el.days.addEventListener('change', () => loadAnalytics());
     el.syncReactions.addEventListener('click', () => loadAnalytics());

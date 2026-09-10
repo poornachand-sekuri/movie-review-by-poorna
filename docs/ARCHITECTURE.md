@@ -28,7 +28,7 @@ Styles are scoped by feature: core registration in `auditorium.css`, then naviga
 
 `src/pages/admin/index.ts` authenticates on the server before returning `src/admin/projector-room.html`. Unauthenticated visitors receive only the login document. `public/admin/admin.js` handles the editor, dashboard, moderation and uploads; `admin.css` owns its existing appearance.
 
-The admin list requests `?compact=1` and loads full review text only when a review is opened. Legacy list callers can omit that option to retain the original response shape and full body. Dashboard reactions are read directly from D1 and refresh on focus, reaction notifications and every 15 seconds while visible. The old sync API remains available for compatibility.
+The admin list requests `?compact=1` and loads full review text only when a review is opened. Legacy list callers can omit that option to retain the original response shape and full body. Dashboard totals are read directly from D1 on dashboard entry, date-range changes, explicit Refresh actions and relevant admin mutations. They do not poll or refresh on browser focus, visibility changes, cross-tab votes or history restoration: recalculating historical analytics repeatedly consumes the shared daily D1 read allowance. Public review voting and count synchronization remain independent. The old sync API remains available for compatibility.
 
 ## Data and HTTP boundaries
 
