@@ -5,65 +5,6 @@ import { initPovFit } from './pov-fit';
 initComments();
 initPovFit();
 
-const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-const animations = new Map<HTMLElement, Animation>();
-
-function fitMarquee(element: HTMLElement) {
-  const track = element.querySelector('span');
-  if (!(track instanceof HTMLElement)) return;
-
-  animations.get(element)?.cancel();
-  animations.delete(element);
-  track.style.transform = 'translateX(0)';
-  element.classList.remove('is-moving');
-
-  if (motionQuery.matches || element.closest('[data-carousel-page][aria-hidden="true"]')) return;
-
-  const style = getComputedStyle(element);
-  const containerWidth = element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-  const trackWidth = track.scrollWidth;
-  if (containerWidth <= 0 || trackWidth <= 0) return;
-
-  const overflow = trackWidth - containerWidth;
-  if (overflow <= 1) return;
-
-  const travelMs = Math.max(2500, (overflow / 16) * 1000);
-  const pauseMs = 1500;
-  const totalMs = 2 * (travelMs + pauseMs);
-  const endX = -overflow;
-
-  element.classList.add('is-moving');
-
-  const animation = track.animate(
-    [
-      { transform: 'translateX(0)', offset: 0 },
-      { transform: 'translateX(0)', offset: pauseMs / totalMs },
-      { transform: `translateX(${endX}px)`, offset: (pauseMs + travelMs) / totalMs },
-      { transform: `translateX(${endX}px)`, offset: (2 * pauseMs + travelMs) / totalMs },
-      { transform: 'translateX(0)', offset: 1 },
-    ],
-    { duration: totalMs, iterations: Infinity, easing: 'linear' },
-  );
-  animations.set(element, animation);
-}
-
-const marqueeTitles = [...document.querySelectorAll<HTMLElement>('[data-title-marquee]')];
-let marqueeFrame = 0;
-const fitAllMarquees = () => {
-  cancelAnimationFrame(marqueeFrame);
-  marqueeFrame = requestAnimationFrame(() => marqueeTitles.forEach(fitMarquee));
-};
-
-fitAllMarquees();
-document.fonts?.ready?.then(fitAllMarquees).catch(() => {});
-motionQuery.addEventListener('change', () => fitAllMarquees());
-window.addEventListener('resize', fitAllMarquees, { passive: true });
-
-if (typeof ResizeObserver !== 'undefined') {
-  const observer = new ResizeObserver(() => fitAllMarquees());
-  marqueeTitles.forEach((element) => observer.observe(element));
-}
-
 const reviewCarousels = [...document.querySelectorAll<HTMLElement>('[data-review-carousel]')];
 
 reviewCarousels.forEach((carousel) => {
@@ -97,8 +38,6 @@ reviewCarousels.forEach((carousel) => {
     if (previousButton) previousButton.disabled = pageIndex === 0;
     if (nextButton) nextButton.disabled = pageIndex === pages.length - 1;
     if (status) status.textContent = `Page ${pageIndex + 1} of ${pages.length}`;
-
-    fitAllMarquees();
   };
 
   previousButton?.addEventListener('click', (event) => {
@@ -223,7 +162,6 @@ if (loungePage && focusableSections.length > 0) {
     closeButton.tabIndex = 0;
 
     requestAnimationFrame(() => {
-      fitAllMarquees();
       if (focusedSection === section) initialFocus.focus({ preventScroll: initialFocus === closeButton });
     });
   };
@@ -245,7 +183,6 @@ if (loungePage && focusableSections.length > 0) {
     document.documentElement.classList.remove('lounge-focus-open');
 
     requestAnimationFrame(() => {
-      fitAllMarquees();
       section.focus({ preventScroll: true });
     });
   };

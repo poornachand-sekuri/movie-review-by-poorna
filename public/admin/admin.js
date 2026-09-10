@@ -1,7 +1,7 @@
 (() => {
     const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
     const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    const state = { panel: 'dashboard', analytics: null, comments: [], commentStatus: 'pending', reviews: [], current: null, isNew: false, slugTouched: false, posterFile: null, galleryFiles: [], gallery: [] };
+    const state = { panel: 'dashboard', comments: [], commentStatus: 'pending', reviews: [], current: null, isNew: false, slugTouched: false, posterFile: null, galleryFiles: [], gallery: [] };
     const el = {
         login: $('#loginView'), admin: $('#adminView'), loginForm: $('#loginForm'), loginPassword: $('#loginPassword'), loginError: $('#loginError'), logout: $('#logoutBtn'), toast: $('#toast'),
         dashboard: $('#dashboardPanel'), commentsPanel: $('#commentsPanel'), reviewsPanel: $('#reviewsPanel'), days: $('#analyticsDays'), refreshAnalytics: $('#refreshAnalytics'), syncReactions: $('#syncReactions'), reactionSyncStatus: $('#reactionSyncStatus'),
@@ -49,10 +49,18 @@
     catch (err) {
         el.loginError.textContent = err.message;
     } });
-    el.logout.addEventListener('click', async () => { try {
-        await api('/api/admin/logout', { method: 'POST', body: '{}' });
-    }
-    catch { } showLogin(); });
+    el.logout.addEventListener('click', async (event) => {
+        event.preventDefault();
+        if (el.logout.disabled) return;
+        el.logout.disabled = true;
+        try {
+            await api('/api/admin/logout', { method: 'POST', body: '{}' });
+        } catch {
+            // Reload through the server authentication boundary even if the request fails.
+        } finally {
+            location.replace('/admin/');
+        }
+    });
     $$('.nav-tab').forEach(button => button.addEventListener('click', () => setPanel(button.dataset.panel)));
     async function setPanel(panel) {
         state.panel = panel;
@@ -74,7 +82,6 @@
         el.syncReactions.disabled = true;
         try {
             const data = await api(`/api/admin/analytics?days=${encodeURIComponent(el.days.value)}`);
-            state.analytics = data;
             renderAnalytics(data);
             updateCommentBadges(data.commentCounts || {});
             el.reactionSyncStatus.textContent = `Live D1 reaction totals across ${data.reviewCount || 0} reviews.`;

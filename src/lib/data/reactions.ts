@@ -3,7 +3,7 @@ import { importLegacyReactions } from './legacy-reactions';
 
 export type ReviewReaction = 'like' | 'dislike';
 
-export interface ReviewReactionSnapshot {
+interface ReviewReactionSnapshot {
   likes: number;
   dislikes: number;
   viewerReaction: ReviewReaction | null;

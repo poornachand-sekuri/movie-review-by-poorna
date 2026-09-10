@@ -1,5 +1,33 @@
 # Whole-site refactor audit
 
+## September 10 runtime cleanup
+
+Baseline: main commit `80af0a6ca9067396c99a8443fad4eff8e1d51ff2`. Branch: `refactor/site-runtime-cleanup`.
+
+The follow-up audit covers the Lounge, Auditorium, Café and Projector Room entrypoints, their shared controllers/styles, API and data-module references, public assets, scripts and deployment entrypoints. Changes are limited to confirmed duplication and unused code introduced or retained during subsequent feature work.
+
+| Area | Confirmed finding | Cleanup |
+| --- | --- | --- |
+| Public movie titles | Lounge and shared display duplicated animation timing, measurement and listeners | One animation controller; one resize/motion/DOM refresh owner for recent, featured, Café and related titles |
+| Dynamic display | Every body mutation restarted rolling titles; removed Café cards remained in the animation map | Ignore unrelated comment/reaction text changes, reuse unchanged animations, cancel removed tracks and release their resize observations |
+| Café | The old three-line measuring clone and inline font fitter still competed with rolling titles | Remove the obsolete fitter and resize listener; preserve CSS typography and the no-JavaScript fallback |
+| Café DOM/pagination | Repeated casts through `unknown`, manual child-removal helper and separately hardcoded server/client page size | Use typed DOM queries and native `replaceChildren`; share the six-card page size |
+| Lounge CSS | Earlier dimensions, poster rules and focus styles were unconditionally superseded | Remove 35 shadowed declarations and merge five adjacent rules without moving surviving declarations |
+| Projector Room | Injected capture-phase logout script suppressed a second logout handler; analytics state was never read | One logout handler retaining the protected-route reload, deduplicated repeated clicks and removed write-only state |
+| Types | Five internal types were needlessly exported; one status alias had no consumers | Keep internal types local and remove the unused alias |
+
+Verification:
+
+- All 52 automated tests pass, including seven new title lifecycle and admin logout regression tests.
+- `npm run validate` passes: naming/loading/artwork guardrails, tests, generated Worker types and Astro/TypeScript checks. Zero errors and zero warnings; the existing clipboard fallback produces one deprecation hint.
+- Static CSS comparison confirms all 819 effective exact-selector/condition/property values match the baseline, including `!important` precedence. Lounge CSS shrinks from 29,928 to 28,621 bytes (1,268 to 1,187 lines).
+- The production Astro/Cloudflare build completes successfully.
+- This comparison checks the CSS cascade, not rendered pixels. Browser visual review has not been completed for this branch.
+
+The file/reference audit did not establish that any remaining standalone file is safe to delete. All poster masks, geometry reference data, loading artwork, theatre scenery, migration/import scripts, public routes and deployed compatibility exports remain necessary. Their retention is deliberate. MY POV fitting and its approved panel geometry, artwork URLs, image palettes/transparency, APIs, database contents, authentication checks and mobile/desktop theatre styling remain intact. Production deployment is a separate step.
+
+## Earlier architecture refactor
+
 Baseline: main commit `65edf623e0034cd61c5b7c657fb4fba2d8af1df8`. Work is isolated on `site-refactor-performance`.
 
 ## Scope and method

@@ -1,26 +1,17 @@
 import { watchReactionChanges } from './reaction-sync';
 import { renderCafeCard } from './cini-cafe-card';
 import type { CiniCafeReview } from './data/cini-cafe';
-import { createCafeFilter, yearOf, type CafeState, type CafeSort } from './cini-cafe-filter';
+import { CAFE_PAGE_SIZE, createCafeFilter, yearOf, type CafeState, type CafeSort } from './cini-cafe-filter';
 
-const PAGE_SIZE = 6;
-
-type ValueControl = HTMLElement & { value: string };
-type FocusableValueControl = ValueControl & { focus: () => void };
+// Worker and DOM declarations disagree on HTMLSelectElement.remove(). Only
+// its value contract is needed here, alongside standard HTMLElement methods.
+type SelectControl = HTMLElement & Pick<HTMLSelectElement, 'value'>;
 
 function pageWindow(current: number, total: number): number[] {
   if (total <= 4) return Array.from({ length: total }, (_, index) => index + 1);
   if (current <= 2) return [1, 2, 3, 4];
   if (current >= total - 1) return [total - 3, total - 2, total - 1, total];
   return [current - 1, current, current + 1, current + 2];
-}
-
-function queryHtml(selector: string): HTMLElement | null {
-  return document.querySelector(selector) as unknown as HTMLElement | null;
-}
-
-function clearChildren(node: HTMLElement): void {
-  while (node.firstChild) node.removeChild(node.firstChild);
 }
 
 function appendOption(control: HTMLElement, label: string, value: string): void {
@@ -31,7 +22,7 @@ function appendOption(control: HTMLElement, label: string, value: string): void 
 }
 
 function readCatalogue(): CiniCafeReview[] {
-  const node = queryHtml('#cini-cafe-catalogue');
+  const node = document.querySelector<HTMLElement>('#cini-cafe-catalogue');
   if (!node?.textContent) return [];
 
   try {
@@ -42,67 +33,22 @@ function readCatalogue(): CiniCafeReview[] {
   }
 }
 
-function fitOneTitle(title: HTMLElement): void {
-  const text = title.textContent?.trim() ?? '';
-  if (!text || title.clientWidth <= 0) return;
-
-  title.style.fontSize = '';
-  const computed = getComputedStyle(title);
-  const startSize = Number.parseFloat(computed.fontSize) || 18;
-  const minimum = 12;
-  const lineHeightRatio = 1.05;
-
-  const measure = title.cloneNode(true) as unknown as HTMLElement;
-  measure.style.position = 'fixed';
-  measure.style.visibility = 'hidden';
-  measure.style.pointerEvents = 'none';
-  measure.style.left = '-9999px';
-  measure.style.top = '0';
-  measure.style.width = `${title.clientWidth}px`;
-  measure.style.height = 'auto';
-  measure.style.maxHeight = 'none';
-  measure.style.overflow = 'visible';
-  measure.style.display = 'block';
-  measure.style.whiteSpace = 'normal';
-  measure.style.lineHeight = String(lineHeightRatio);
-  measure.style.setProperty('-webkit-line-clamp', 'unset');
-  measure.style.setProperty('-webkit-box-orient', 'unset');
-  document.body.appendChild(measure);
-
-  let size = startSize;
-  while (size > minimum) {
-    measure.style.fontSize = `${size}px`;
-    if (measure.scrollHeight <= size * lineHeightRatio * 3 + 2) break;
-    size -= 0.5;
-  }
-
-  measure.remove();
-  title.style.fontSize = `${Math.max(minimum, size)}px`;
-}
-
-function fitTitles(): void {
-  const titles = document.querySelectorAll('.cini-cafe-review-title');
-  for (const title of Array.from(titles)) {
-    fitOneTitle(title as unknown as HTMLElement);
-  }
-}
-
 export function initCiniCafe(): void {
-  const stageNode = queryHtml('[data-cini-cafe-stage]');
-  const resultsNode = queryHtml('[data-cini-results]');
-  const searchInputNode = queryHtml('[data-cini-search]');
-  const searchFormNode = queryHtml('[data-cini-search-form]');
-  const languageNode = queryHtml('[data-cini-language]');
-  const yearNode = queryHtml('[data-cini-year]');
-  const sortNode = queryHtml('[data-cini-sort]');
-  const languageLabelNode = queryHtml('[data-cini-language-label]');
-  const yearLabelNode = queryHtml('[data-cini-year-label]');
-  const sortLabelNode = queryHtml('[data-cini-sort-label]');
-  const clearNode = queryHtml('[data-cini-clear]');
-  const servingRangeNode = queryHtml('[data-cini-serving-range]');
-  const servingTotalNode = queryHtml('[data-cini-serving-total]');
-  const paginationNode = queryHtml('[data-cini-pagination]');
-  const emptyNode = queryHtml('[data-cini-empty]');
+  const stageNode = document.querySelector<HTMLElement>('[data-cini-cafe-stage]');
+  const resultsNode = document.querySelector<HTMLElement>('[data-cini-results]');
+  const searchInputNode = document.querySelector<HTMLInputElement>('[data-cini-search]');
+  const searchFormNode = document.querySelector<HTMLFormElement>('[data-cini-search-form]');
+  const languageNode = document.querySelector<SelectControl>('[data-cini-language]');
+  const yearNode = document.querySelector<SelectControl>('[data-cini-year]');
+  const sortNode = document.querySelector<SelectControl>('[data-cini-sort]');
+  const languageLabelNode = document.querySelector<HTMLElement>('[data-cini-language-label]');
+  const yearLabelNode = document.querySelector<HTMLElement>('[data-cini-year-label]');
+  const sortLabelNode = document.querySelector<HTMLElement>('[data-cini-sort-label]');
+  const clearNode = document.querySelector<HTMLElement>('[data-cini-clear]');
+  const servingRangeNode = document.querySelector<HTMLElement>('[data-cini-serving-range]');
+  const servingTotalNode = document.querySelector<HTMLElement>('[data-cini-serving-total]');
+  const paginationNode = document.querySelector<HTMLElement>('[data-cini-pagination]');
+  const emptyNode = document.querySelector<HTMLElement>('[data-cini-empty]');
 
   if (
     !stageNode || !resultsNode || !searchInputNode || !searchFormNode || !languageNode || !yearNode ||
@@ -110,21 +56,21 @@ export function initCiniCafe(): void {
     !servingRangeNode || !servingTotalNode || !paginationNode || !emptyNode
   ) return;
 
-  const stage = stageNode as HTMLElement;
-  const resultsLayer = resultsNode as HTMLElement;
-  const searchInput = searchInputNode as FocusableValueControl;
-  const searchForm = searchFormNode as HTMLElement;
-  const languageSelect = languageNode as ValueControl;
-  const yearSelect = yearNode as ValueControl;
-  const sortSelect = sortNode as ValueControl;
-  const languageLabel = languageLabelNode as HTMLElement;
-  const yearLabel = yearLabelNode as HTMLElement;
-  const sortLabel = sortLabelNode as HTMLElement;
-  const clearButton = clearNode as HTMLElement;
-  const servingRange = servingRangeNode as HTMLElement;
-  const servingTotal = servingTotalNode as HTMLElement;
-  const pagination = paginationNode as HTMLElement;
-  const emptyState = emptyNode as HTMLElement;
+  const stage = stageNode;
+  const resultsLayer = resultsNode;
+  const searchInput = searchInputNode;
+  const searchForm = searchFormNode;
+  const languageSelect = languageNode;
+  const yearSelect = yearNode;
+  const sortSelect = sortNode;
+  const languageLabel = languageLabelNode;
+  const yearLabel = yearLabelNode;
+  const sortLabel = sortLabelNode;
+  const clearButton = clearNode;
+  const servingRange = servingRangeNode;
+  const servingTotal = servingTotalNode;
+  const pagination = paginationNode;
+  const emptyState = emptyNode;
 
   const state: CafeState = {
     catalogue: readCatalogue(),
@@ -138,12 +84,6 @@ export function initCiniCafe(): void {
   const filteredReviews = createCafeFilter(state.catalogue);
   searchInput.value = state.query;
   sortSelect.value = state.sort;
-  let titleFrame = 0;
-  const scheduleTitleFit = () => {
-    cancelAnimationFrame(titleFrame);
-    titleFrame = requestAnimationFrame(fitTitles);
-  };
-
   const languages = [...new Set(
     state.catalogue
       .map((review) => review.language?.trim())
@@ -152,11 +92,11 @@ export function initCiniCafe(): void {
   const years = [...new Set(state.catalogue.map(yearOf).filter(Boolean))]
     .sort((a, b) => Number(b) - Number(a));
 
-  clearChildren(languageSelect);
+  languageSelect.replaceChildren();
   appendOption(languageSelect, 'All Languages', '');
   for (const language of languages) appendOption(languageSelect, language, language);
 
-  clearChildren(yearSelect);
+  yearSelect.replaceChildren();
   appendOption(yearSelect, 'All Years', '');
   for (const year of years) appendOption(yearSelect, year, year);
 
@@ -174,7 +114,7 @@ export function initCiniCafe(): void {
   }
 
   function setPage(nextPage: number): void {
-    const totalPages = Math.max(1, Math.ceil(filteredReviews(state).length / PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(filteredReviews(state).length / CAFE_PAGE_SIZE));
     state.page = Math.max(1, Math.min(totalPages, nextPage));
     render();
 
@@ -183,7 +123,7 @@ export function initCiniCafe(): void {
   }
 
   function renderPagination(totalPages: number): void {
-    clearChildren(pagination);
+    pagination.replaceChildren();
 
     const previous = document.createElement('button');
     previous.className = 'cini-cafe-page-arrow cini-cafe-page-arrow--previous';
@@ -225,15 +165,15 @@ export function initCiniCafe(): void {
 
   function render(updateCards = true): void {
     const filtered = filteredReviews(state);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / CAFE_PAGE_SIZE));
     if (state.page > totalPages) state.page = totalPages;
 
-    const start = (state.page - 1) * PAGE_SIZE;
-    const visible = filtered.slice(start, start + PAGE_SIZE);
+    const start = (state.page - 1) * CAFE_PAGE_SIZE;
+    const visible = filtered.slice(start, start + CAFE_PAGE_SIZE);
     if (updateCards) resultsLayer.innerHTML = visible.map(renderCafeCard).join('');
 
     const first = filtered.length ? start + 1 : 0;
-    const last = Math.min(start + PAGE_SIZE, filtered.length);
+    const last = Math.min(start + CAFE_PAGE_SIZE, filtered.length);
     servingRange.textContent = filtered.length ? `${first}–${last}` : '0';
     servingTotal.textContent = String(filtered.length);
 
@@ -241,13 +181,12 @@ export function initCiniCafe(): void {
     renderPagination(totalPages);
     syncLabels();
     stage.setAttribute('aria-busy', 'false');
-    scheduleTitleFit();
     if (updateCards) void refreshVisibleLikes();
   }
 
   const reactionRevisions = new Map<string, number>();
   async function refreshVisibleLikes(changedSlug?: string): Promise<void> {
-    const cards = Array.from(resultsLayer.querySelectorAll('[data-review-slug]')) as unknown as HTMLElement[];
+    const cards = Array.from(resultsLayer.querySelectorAll<HTMLElement>('[data-review-slug]'));
     const slugs = changedSlug ? [changedSlug] : cards.map((card) => card.dataset.reviewSlug).filter((slug): slug is string => !!slug);
     await Promise.allSettled(slugs.map(async (slug) => {
       const item = state.catalogue.find((review) => review.slug === slug);
@@ -312,7 +251,6 @@ export function initCiniCafe(): void {
     searchInput.focus();
   });
 
-  window.addEventListener('resize', scheduleTitleFit, { passive: true });
   watchReactionChanges((slug) => { void refreshVisibleLikes(slug); });
 
   render(false);

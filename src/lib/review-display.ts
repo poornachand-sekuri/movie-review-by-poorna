@@ -1,4 +1,5 @@
 import { initPosterBackgrounds, refreshPosterBackgrounds } from './poster-background';
+import { createTitleMarqueeController } from './title-marquee';
 
 const marqueeTargetSelector = [
   '.now-title',
@@ -6,8 +7,11 @@ const marqueeTargetSelector = [
   '.auditorium-related-title',
 ].join(', ');
 
-const marqueeSelector = '[data-global-title-marquee]';
-const marqueeAnimations = new Map<HTMLElement, Animation>();
+const marqueeSelector = '[data-title-marquee], [data-global-title-marquee]';
+const titleSelector = `${marqueeTargetSelector}, ${marqueeSelector}`;
+const marquees = createTitleMarqueeController();
+const titles = new Set<HTMLElement>();
+let resizeObserver: ResizeObserver | undefined;
 let initialized = false;
 let refreshFrame = 0;
 
@@ -27,59 +31,47 @@ function prepareMarquee(element: HTMLElement): void {
   element.appendChild(track);
 }
 
-function fitMarquee(element: HTMLElement, reduceMotion: boolean): void {
-  const track = element.querySelector<HTMLElement>(':scope > [data-review-title-track]');
-  if (!track) return;
-
-  marqueeAnimations.get(element)?.cancel();
-  marqueeAnimations.delete(element);
-  track.style.transform = 'translateX(0)';
-  element.classList.remove('is-moving');
-
-  // Cini Cafe previously used inline font shrinking. Rolling titles now own
-  // overflow behavior, so remove that old runtime override when present.
-  element.style.fontSize = '';
-
-  if (reduceMotion || element.closest('[aria-hidden="true"]')) return;
-
-  const style = getComputedStyle(element);
-  const containerWidth = element.clientWidth - parseFloat(style.paddingLeft || '0') - parseFloat(style.paddingRight || '0');
-  const trackWidth = track.scrollWidth;
-  if (containerWidth <= 0 || trackWidth <= 0) return;
-
-  const overflow = trackWidth - containerWidth;
-  if (overflow <= 1) return;
-
-  const travelMs = Math.max(2500, (overflow / 16) * 1000);
-  const pauseMs = 1500;
-  const totalMs = 2 * (travelMs + pauseMs);
-  const endX = -overflow;
-
-  element.classList.add('is-moving');
-  const animation = track.animate(
-    [
-      { transform: 'translateX(0)', offset: 0 },
-      { transform: 'translateX(0)', offset: pauseMs / totalMs },
-      { transform: `translateX(${endX}px)`, offset: (pauseMs + travelMs) / totalMs },
-      { transform: `translateX(${endX}px)`, offset: (2 * pauseMs + travelMs) / totalMs },
-      { transform: 'translateX(0)', offset: 1 },
-    ],
-    { duration: totalMs, iterations: Infinity, easing: 'linear' },
-  );
-  marqueeAnimations.set(element, animation);
-}
-
 function refreshReviewDisplay(): void {
+  refreshFrame = 0;
   refreshPosterBackgrounds();
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   document.querySelectorAll<HTMLElement>(marqueeTargetSelector).forEach(prepareMarquee);
-  document.querySelectorAll<HTMLElement>(marqueeSelector).forEach((title) => fitMarquee(title, reduceMotion));
+  const currentTitles = new Set(document.querySelectorAll<HTMLElement>(marqueeSelector));
+  for (const title of titles) {
+    if (currentTitles.has(title)) continue;
+    marquees.remove(title);
+    resizeObserver?.unobserve(title);
+    titles.delete(title);
+  }
+  for (const title of currentTitles) {
+    if (!titles.has(title)) {
+      titles.add(title);
+      resizeObserver?.observe(title);
+    }
+    marquees.fit(title, reduceMotion);
+  }
 }
 
 function scheduleRefresh(): void {
-  cancelAnimationFrame(refreshFrame);
-  refreshFrame = requestAnimationFrame(refreshReviewDisplay);
+  if (!refreshFrame) refreshFrame = requestAnimationFrame(refreshReviewDisplay);
+}
+
+function containsTitle(node: Node): boolean {
+  return node instanceof Element && (node.matches(titleSelector) || Boolean(node.querySelector(titleSelector)));
+}
+
+function affectsReviewDisplay(record: MutationRecord): boolean {
+  if (record.type === 'attributes') {
+    return record.attributeName === 'aria-hidden'
+      ? containsTitle(record.target)
+      : record.target instanceof HTMLImageElement;
+  }
+  const target = record.target instanceof Element ? record.target : record.target.parentElement;
+  if (target?.closest(titleSelector)) return true;
+  return [...record.addedNodes, ...record.removedNodes].some((node) =>
+    containsTitle(node) || (node instanceof Element && (node.matches('img') || Boolean(node.querySelector('img')))),
+  );
 }
 
 export function initReviewDisplay(): void {
@@ -89,6 +81,7 @@ export function initReviewDisplay(): void {
   }
   initialized = true;
   initPosterBackgrounds();
+  if (typeof ResizeObserver !== 'undefined') resizeObserver = new ResizeObserver(scheduleRefresh);
 
   refreshReviewDisplay();
   document.fonts?.ready?.then(scheduleRefresh).catch(() => {});
@@ -99,13 +92,14 @@ export function initReviewDisplay(): void {
 
   if (typeof MutationObserver !== 'undefined') {
     const observer = new MutationObserver((records) => {
-      if (records.some((record) => record.type === 'childList' || record.type === 'attributes')) scheduleRefresh();
+      if (records.some(affectsReviewDisplay)) scheduleRefresh();
     });
     observer.observe(document.body, {
       childList: true,
       subtree: true,
+      characterData: true,
       attributes: true,
-      attributeFilter: ['src', 'srcset', 'sizes'],
+      attributeFilter: ['src', 'srcset', 'sizes', 'aria-hidden'],
     });
   }
 }

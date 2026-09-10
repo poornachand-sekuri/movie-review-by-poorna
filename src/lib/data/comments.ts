@@ -1,9 +1,8 @@
 import { getContentDb } from '../cloudflare/content-db';
 
 export type CommentTargetType = 'lounge' | 'review';
-export type CommentStatus = 'pending' | 'approved' | 'rejected';
 
-export interface PublicComment {
+interface PublicComment {
   id: number;
   targetType: CommentTargetType;
   targetId: string;
