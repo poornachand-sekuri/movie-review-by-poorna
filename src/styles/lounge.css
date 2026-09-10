@@ -72,9 +72,10 @@
 }
 
 .lounge-panel--now {
-  aspect-ratio: 1448 / 1086;
-  background-position: center;
-  background-size: 100% 100%;
+  /* Approved transparent panel: 1310 × 1200, including the title band. */
+  aspect-ratio: 1310 / 1200;
+  background-position: center top;
+  background-size: 100% auto;
   background-repeat: no-repeat;
   filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.7));
 }
@@ -230,10 +231,11 @@
 .now-pov {
   position: absolute;
   z-index: 3;
-  left: 6.8%;
-  top: 72.2%;
-  width: 86.4%;
-  height: 17%;
+  /* Interior y=809..1073: below the MY POV plaque and above its bottom rim. */
+  left: 5.5%;
+  top: 67.4%;
+  width: 89%;
+  height: 22%;
   overflow: hidden;
   padding: 0.25cqw 0.9cqw 0.35cqw;
   border: 0;
@@ -257,7 +259,7 @@
   letter-spacing: 0.01em;
   text-shadow: 0 0.04em 0.08em rgba(0, 0, 0, 0.7);
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 5;
 }
 
 .now-read-hit,
@@ -277,9 +279,9 @@
 
 .now-read-hit {
   right: 3.8%;
-  bottom: 2.9%;
+  bottom: 2.5%;
   width: 23.5%;
-  height: 8.5%;
+  height: 6.5%;
 }
 
 .now-read-hit:hover,
@@ -759,7 +761,7 @@ html.lounge-focus-open body {
 }
 
 .lounge-panel--now {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_runtime_q99.webp") !important;
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_runtime_q99.webp?v=expanded-pov-8eecb9e062b7") !important;
 }
 
 /* Structural frames are always requested; only movie posters are progressive. */
@@ -800,12 +802,12 @@ html.lounge-focus-open body {
   margin-inline: auto;
 }
 
-/* Now Reviewed: stamp-centred cinema billing composition. */
+/* Billing stays inside the right ticket; the title uses the new band above. */
 .now-details {
-  left: 54.9%;
-  top: 17.9%;
-  width: 34.9%;
-  height: 39.2%;
+  left: 54.8%;
+  top: 23.5%;
+  width: 35.6%;
+  height: 31.5%;
   overflow: hidden;
   pointer-events: none;
 }
@@ -813,10 +815,10 @@ html.lounge-focus-open body {
 .now-title {
   position: absolute;
   z-index: 2;
-  top: 5%;
-  left: 16%;
-  right: 16%;
-  height: 17%;
+  top: 10.3%;
+  left: 6%;
+  right: 6%;
+  height: 9%;
   min-height: 0;
   margin: 0;
   display: flex;
@@ -832,7 +834,7 @@ html.lounge-focus-open body {
   font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
   font-size: clamp(12px, 4.2cqw, 28px);
   font-weight: 900;
-  line-height: 0.94;
+  line-height: 1.2;
   letter-spacing: 0.075em;
   text-align: center;
   text-transform: uppercase;
@@ -949,15 +951,15 @@ html.lounge-focus-open body {
     drop-shadow(0 0 18px rgba(255, 35, 28, 0.12));
 }
 
-.lounge-panel--now.is-lounge-focused {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/08_Now_Reviewed_With_Exit_runtime_q99.webp") !important;
-}
-
 .lounge-panel--opinion.is-lounge-focused {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/09_Share_Your_Opinion_With_Exit_runtime_q99.webp?v=palette-lock-20260906-1542") !important;
 }
 
 .lounge-focus-layer.is-opinion-focused {
+  align-items: safe center;
+}
+
+.lounge-focus-layer:has(.lounge-panel--now.is-lounge-focused) {
   align-items: safe center;
 }
 
@@ -974,8 +976,7 @@ html.lounge-focus-open body {
   opacity: 0;
 }
 
-/* Transparent click target aligned to baked EXIT artwork. */
-.lounge-panel--now.is-lounge-focused > .lounge-focus-close,
+/* Transparent click target aligned to the opinion panel's baked EXIT artwork. */
 .lounge-panel--opinion.is-lounge-focused > .lounge-focus-close {
   position: absolute;
   z-index: 20;
@@ -995,6 +996,23 @@ html.lounge-focus-open body {
   box-shadow: none;
   opacity: 1;
   cursor: pointer;
+}
+
+/* Now Reviewed reuses the new artwork in focus mode. Its semantic close
+   control sits above the panel, keeping the title band and artwork clear. */
+.lounge-panel--now.is-lounge-focused > .lounge-focus-close {
+  position: absolute;
+  z-index: 20;
+  top: -48px;
+  right: 0;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  color: #fff8eb;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  background: rgba(8, 8, 8, 0.9);
+  box-shadow: 0 0 18px rgba(255, 32, 27, 0.22);
+  opacity: 1;
 }
 
 .lounge-panel--now.is-lounge-focused > .lounge-focus-close:focus-visible,
@@ -1045,10 +1063,11 @@ html.lounge-focus-open body {
 
 /* Now Reviewed: fill the usable area inside the baked red poster frame. */
 .now-poster {
-  left: 5.18%;
-  top: 17.50%;
-  width: 40.54%;
-  height: 39.69%;
+  /* Inset from the new red frame at x=64..600, y=275..667. */
+  left: 5.5%;
+  top: 23.5%;
+  width: 39.75%;
+  height: 31.5%;
   padding: 0;
   border: 0;
   border-radius: 0;

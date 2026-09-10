@@ -74,6 +74,7 @@ const featuredPov = featured?.verdict?.trim() || '';
         featured ? (
           <section class="lounge-panel lounge-panel--now" aria-labelledby="now-reviewed-heading">
             <h2 id="now-reviewed-heading" class="visually-hidden">Now Reviewed</h2>
+            <h2 class="now-title">{featured.title}</h2>
 
             <div class="now-poster" aria-label={`${featured.title} poster`}>
               {featured.posterUrl ? (
@@ -90,7 +91,6 @@ const featuredPov = featured?.verdict?.trim() || '';
             </div>
 
             <div class="now-details">
-              <h2 class="now-title">{featured.title}</h2>
               <dl class="now-meta">
                 <div>
                   <dt>Released</dt>

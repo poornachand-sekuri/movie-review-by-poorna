@@ -3,7 +3,7 @@ const LOUNGE_RUNTIME_BASE = 'https://assets.moviereviewbypoorna.com/ui/pages/hom
 export const loungeRuntimeAssets = {
   background: `${LOUNGE_RUNTIME_BASE}/01_Movie_Reviews_By_Poorna_Premier_Lounge_Background_runtime_q99.webp`,
   topBanner: `${LOUNGE_RUNTIME_BASE}/02_Movie_Reviews_By_Poorna_Banner_runtime_q99.webp`,
-  nowReviewed: `${LOUNGE_RUNTIME_BASE}/03_Now_Reviewed_Panel_runtime_q99.webp`,
+  nowReviewed: `${LOUNGE_RUNTIME_BASE}/03_Now_Reviewed_Panel_runtime_q99.webp?v=expanded-pov-8eecb9e062b7`,
 } as const;
 
 /**
