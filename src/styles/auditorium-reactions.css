@@ -1,6 +1,6 @@
 /* Movie-specific Theater reactions. The icons remain baked into the approved artwork;
    these controls add only the live counts, hit areas and selected-state feedback.
-   Positions below are registered to the measured 1448 x 1086 source canvases. */
+   Normal and focus positions use their own measured source canvases. */
 
 .auditorium-reactions {
   position: absolute;
@@ -113,41 +113,46 @@
   animation: auditorium-reaction-pop 260ms ease-out;
 }
 
-/* Focus artwork (09) moves both baked thumbs, so use its independently measured
-   coordinates rather than carrying normal-mode positions into the enlarged view. */
+/* Portrait focus artwork (09), 821 x 1915: the bar spans x=25..795,
+   y=1625..1704. Each half stays clickable; counts sit beside the baked icons. */
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--like {
-  left: 26.2430939227%;
-  top: 87.6611418048%;
-  width: 14.5027624309%;
-  height: 9.6685082873%;
+  left: 3.0451%;
+  top: 86.9452%;
+  width: 46.5286%;
+  height: 4.1253%;
+  min-height: 32px;
+  transform: translateY(-50%);
 }
 
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--dislike {
-  left: 56.9751381215%;
-  top: 88.1215469613%;
-  width: 14.5027624309%;
-  height: 9.6685082873%;
+  left: 50.4263%;
+  top: 86.9452%;
+  width: 46.4068%;
+  height: 4.1253%;
+  min-height: 32px;
+  transform: translateY(-50%);
 }
 
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-count {
-  left: 57%;
-  top: 46.6666666667%;
-  font-size: clamp(14px, 2.05cqw, 24px);
+  left: 64%;
+  top: 50%;
+  max-width: 33%;
+  font-size: clamp(12px, 3.2cqw, 18px);
 }
 
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--dislike .auditorium-reaction-count {
-  left: 54%;
-  top: 46.6666666667%;
+  left: 58%;
+  top: 50%;
 }
 
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--like::after {
-  left: 12.3809523810%;
-  width: 31.4285714286%;
+  left: 43%;
+  width: 14%;
 }
 
 .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button--dislike::after {
-  left: 10.9523809524%;
-  width: 30%;
+  left: 36%;
+  width: 14%;
 }
 
 @keyframes auditorium-reaction-pop {

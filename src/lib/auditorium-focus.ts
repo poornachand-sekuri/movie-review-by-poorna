@@ -195,6 +195,8 @@ export function initAuditoriumFocus(): void {
 
     const focusArtwork = section.querySelector<HTMLImageElement>('[data-auditorium-focus-art]');
     if (focusArtwork) {
+      // Fetch alternate artwork immediately when requested, not on initial page load.
+      focusArtwork.loading = 'eager';
       focusArtwork.hidden = false;
       section.classList.add('has-auditorium-focus-artwork');
     }
