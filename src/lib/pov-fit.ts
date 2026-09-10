@@ -19,24 +19,15 @@ export function initPovFit(): void {
       const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const minimum = Math.min(maximum, rootSize * 0.875);
       const style = getComputedStyle(panel);
-      // Optional panel-specific reduction applies after fitting, including
-      // the scrolling fallback, so a smaller ceiling cannot be fitted away.
-      const fontScale = Math.min(1, Math.max(0.5, parseFloat(style.getPropertyValue('--pov-font-scale')) || 1));
       const availableHeight = panel.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - 1;
       const fits = () => paragraph.getBoundingClientRect().height <= availableHeight
         && paragraph.scrollWidth <= paragraph.clientWidth;
       const setSize = (size: number) => { paragraph.style.fontSize = `${size}px`; };
 
-      if (fits()) {
-        setSize(maximum * fontScale);
-        return;
-      }
+      if (fits()) return;
       setSize(minimum);
       // Preserve complete content and readable type when scrolling is necessary.
-      if (!fits()) {
-        setSize(minimum * fontScale);
-        return;
-      }
+      if (!fits()) return;
 
       let low = minimum;
       let high = maximum;
@@ -46,7 +37,7 @@ export function initPovFit(): void {
         if (fits()) low = middle;
         else high = middle;
       }
-      setSize(low * fontScale);
+      setSize(low);
     };
 
     const schedule = () => {
