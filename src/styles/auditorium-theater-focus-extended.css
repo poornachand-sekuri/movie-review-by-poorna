@@ -66,7 +66,7 @@
 
 /* The live-content coordinate plane now follows the 1448 × 1446 focus canvas. */
 .auditorium-focus-layer[data-focus-kind="theater"]
-  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork
   > .auditorium-source-layer {
   width: 100%;
   height: 100%;
@@ -75,7 +75,7 @@
 
 /* Readable screen: y=112, height 1080 on the new 1446 px focus canvas. */
 .auditorium-focus-layer[data-focus-kind="theater"]
-  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork
   .auditorium-review-scroll {
   top: 7.7455048409%;
   height: 74.6887966805%;
@@ -83,14 +83,14 @@
 
 /* Move the untouched baked reaction controls down with their preserved artwork. */
 .auditorium-focus-layer[data-focus-kind="theater"]
-  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork
   .auditorium-reaction-button--like {
   top: 90.7330567082%;
   height: 7.2614107884%;
 }
 
 .auditorium-focus-layer[data-focus-kind="theater"]
-  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork
   .auditorium-reaction-button--dislike {
   top: 91.0788381743%;
   height: 7.2614107884%;
@@ -98,7 +98,7 @@
 
 /* EXIT hit target remains registered to the unchanged EXIT artwork. */
 .auditorium-focus-layer[data-focus-kind="theater"]
-  .auditorium-section--theater.is-auditorium-focused
+  .auditorium-section--theater.is-auditorium-focused.has-auditorium-focus-artwork
   > .auditorium-focus-close--theater {
   top: 91.4246196405%;
   height: 6.43153527%;
