@@ -267,13 +267,79 @@
   outline-offset: 3px;
 }
 
-/* Use almost the full measured inner Theater screen while preserving a safe luminous-frame inset. */
+/* The approved 821 x 1915 portrait is scaled as one canvas, never cropped or
+   stretched. Its blank top band belongs to the live reading toolbar. */
+.auditorium-focus-layer[data-focus-kind="theater"] {
+  --focus-top-space: max(8px, env(safe-area-inset-top));
+  --focus-bottom-space: max(8px, env(safe-area-inset-bottom));
+  --focus-available-height: calc(100dvh - var(--focus-top-space) - var(--focus-bottom-space));
+  padding: var(--focus-top-space) max(8px, env(safe-area-inset-right)) var(--focus-bottom-space) max(8px, env(safe-area-inset-left));
+}
+
+.auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-stage {
+  position: relative;
+  width: min(100%, calc(max(40rem, var(--focus-available-height)) * 821 / 1915));
+  gap: 0;
+}
+
+.auditorium-section--theater.is-auditorium-focused {
+  --art-width: 821;
+  --art-height: 1915;
+  --art-visible-height: 1915;
+}
+
+.auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reading-toolbar {
+  position: absolute;
+  z-index: 8;
+  left: 7.3%;
+  top: 0.5%;
+  width: 85.4%;
+  height: 6.2%;
+  min-height: 44px;
+  padding: 4px 6px 4px 9px;
+  gap: 6px;
+  border-radius: 7px;
+}
+
+.auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reading-toolbar-message {
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reading-toolbar-actions {
+  gap: 4px;
+  padding-left: 6px;
+}
+
+.auditorium-focus-layer[data-focus-kind="theater"] .auditorium-font-control {
+  min-width: 36px;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 6px;
+  font-size: 16px;
+}
+
+/* Measured inside the luminous screen: x=68..752, y=230..1438. */
 .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
-  left: 7.182320442%;
-  top: 10.3130755064%;
-  width: 85.635359116%;
-  height: 66.2983425414%;
-  padding: 1.15cqw 1.2cqw 1.3cqw;
+  left: 8.2826%;
+  top: 12.0104%;
+  width: 83.3130%;
+  height: 63.0809%;
+  padding: 6px 7px 8px;
+  line-height: 1.5;
+  scrollbar-width: thin;
+}
+
+/* Keep the hit target centered on the baked EXIT sign, with a touch-size floor. */
+.auditorium-section--theater.is-auditorium-focused .auditorium-focus-close--theater {
+  left: 39.2205%;
+  top: 92.2193%;
+  width: 21.8027%;
+  height: 3.4465%;
+  min-height: 32px;
+  transform: translateY(-50%);
+  border-radius: 6px;
 }
 
 /* Enlarged sections retain their own measured content geometry. */
@@ -296,32 +362,6 @@
   .auditorium-focus-layer[data-focus-kind="related"] .auditorium-focus-stage,
   .auditorium-focus-layer[data-focus-kind="opinion"] .auditorium-focus-stage {
     width: min(96vw, 640px);
-  }
-
-  /*
-   * Mobile Theater focus keeps the approved width but uses more of the phone's
-   * vertical reading area. Artwork and source-registered overlays stretch together,
-   * so review text, reactions and the baked EXIT hit area stay aligned.
-   */
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused {
-    aspect-ratio: 0.86 / 1;
-  }
-
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused > .auditorium-state-layer {
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-  }
-
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused > .auditorium-source-layer {
-    width: 100%;
-    height: 100%;
-    aspect-ratio: auto;
-  }
-
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
-    padding: 1cqw 1cqw 1.15cqw;
-    line-height: 1.5;
   }
 
   .auditorium-focus-toolbar,

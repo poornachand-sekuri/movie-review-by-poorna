@@ -522,21 +522,6 @@
 .auditorium-section.is-auditorium-focused > .auditorium-state-layer { transform: none; }
 .auditorium-section.is-auditorium-focused > .auditorium-source-layer { transform: none; }
 
-/*
- * Focused review viewport is fixed safely inside the approved Theater screen.
- * Font-size controls only change text flow inside this box; overflow stays
- * scrollable, so no font level can cross the artwork boundaries.
- */
-.auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
-  left: 8.2872928177%;
-  top: 16.5745856354%;
-  width: 83.4254143646%;
-  height: 56.1694290976%;
-  padding: 1.15cqw 2.05cqw 1.65cqw;
-  line-height: 1.58;
-  scrollbar-width: auto;
-}
-
 .auditorium-section--theater.is-auditorium-focused[data-font-step="0"] .auditorium-review-scroll {
   font-size: clamp(13px, 1.55cqw, 17px);
 }
@@ -575,13 +560,6 @@
 }
 
 .auditorium-section.is-auditorium-focused .auditorium-focus-close { display: block; }
-
-.auditorium-focus-close--theater {
-  left: 80.179558011%;
-  top: 88.581952118%;
-  width: 12.016574586%;
-  height: 8.563535912%;
-}
 
 .auditorium-focus-close--opinion {
   left: 77.314814815%;
@@ -645,10 +623,6 @@
     width: min(96vw, 640px);
   }
 
-  .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
-    padding: 1.05cqw 2cqw 1.4cqw;
-    line-height: 1.52;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

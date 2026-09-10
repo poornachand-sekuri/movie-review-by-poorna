@@ -7,9 +7,9 @@ export type AuditoriumRuntimeAsset = {
   height: number;
 };
 
-function asset(file: string, width: number, height: number): AuditoriumRuntimeAsset {
+function asset(file: string, width: number, height: number, version = AUDITORIUM_ARTWORK_VERSION): AuditoriumRuntimeAsset {
   return {
-    src: `${AUDITORIUM_RUNTIME_BASE}/${file}?v=${AUDITORIUM_ARTWORK_VERSION}`,
+    src: `${AUDITORIUM_RUNTIME_BASE}/${file}?v=${version}`,
     width,
     height,
   };
@@ -31,6 +31,6 @@ export const auditoriumRuntimeAssets = {
   background: asset('01_Auditorium_Background_master_lossless.webp', 965, 1630),
 
   // Alternate interaction states. These are deliberately not part of normal flow.
-  theaterFocus: asset('09_Theater_Focus_Overlay_transparent_lossless.webp', 1448, 1086),
+  theaterFocus: asset('09_Theater_Focus_Overlay_transparent_lossless.webp', 821, 1915, '20260910-focus-portrait'),
   shareOpinionExit: asset('10_Share_Your_Opinion_With_Exit_lossless.webp', 1080, 1456),
 } as const;
