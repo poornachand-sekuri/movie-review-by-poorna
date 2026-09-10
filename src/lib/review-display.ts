@@ -7,6 +7,12 @@ const posterSelector = [
   '.auditorium-related-poster-frame img',
 ].join(', ');
 
+const marqueeTargetSelector = [
+  '.now-title',
+  '.cini-cafe-review-title',
+  '.auditorium-related-title',
+].join(', ');
+
 const marqueeSelector = '[data-global-title-marquee]';
 const marqueeAnimations = new Map<HTMLElement, Animation>();
 let initialized = false;
@@ -32,8 +38,24 @@ function syncPosterFill(image: HTMLImageElement): void {
   image.addEventListener('load', () => syncPosterFill(image), { passive: true });
 }
 
+function prepareMarquee(element: HTMLElement): void {
+  element.dataset.globalTitleMarquee = 'true';
+
+  let track = element.querySelector<HTMLElement>(':scope > [data-review-title-track]');
+  if (track) return;
+
+  const text = element.textContent?.trim() ?? '';
+  if (!text) return;
+
+  element.textContent = '';
+  track = document.createElement('span');
+  track.dataset.reviewTitleTrack = 'true';
+  track.textContent = text;
+  element.appendChild(track);
+}
+
 function fitMarquee(element: HTMLElement, reduceMotion: boolean): void {
-  const track = element.querySelector<HTMLElement>(':scope > span');
+  const track = element.querySelector<HTMLElement>(':scope > [data-review-title-track]');
   if (!track) return;
 
   marqueeAnimations.get(element)?.cancel();
@@ -78,6 +100,7 @@ function refreshReviewDisplay(): void {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   document.querySelectorAll<HTMLImageElement>(posterSelector).forEach(syncPosterFill);
+  document.querySelectorAll<HTMLElement>(marqueeTargetSelector).forEach(prepareMarquee);
   document.querySelectorAll<HTMLElement>(marqueeSelector).forEach((title) => fitMarquee(title, reduceMotion));
 }
 
