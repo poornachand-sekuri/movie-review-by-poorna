@@ -229,7 +229,6 @@
 }
 
 .now-pov {
-  --pov-font-scale: 0.9;
   position: absolute;
   z-index: 3;
   /* Interior y=809..1073: below the MY POV plaque and above its bottom rim. */
