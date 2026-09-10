@@ -1,0 +1,161 @@
+/* Desktop uses a live landscape frame, not an enlarged portrait bitmap.
+   The original artwork and measured mobile hit areas remain below 769px. */
+@media (min-width: 769px) {
+  .auditorium-focus-layer[data-focus-kind="theater"] {
+    padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-stage {
+    height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom)));
+    min-height: 0;
+    gap: 10px;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reading-toolbar {
+    position: relative;
+    inset: auto;
+    flex: 0 0 54px;
+    width: 100%;
+    height: 54px;
+    min-height: 0;
+    padding: 8px 16px;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reading-toolbar-message {
+    font-size: 14px;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-font-control {
+    min-width: 44px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused {
+    flex: 1 1 0;
+    min-height: 0;
+    aspect-ratio: auto;
+    border: 1px solid #754337;
+    border-radius: 12px;
+    background:
+      linear-gradient(90deg, #350a09, transparent 24px, transparent calc(100% - 24px), #350a09),
+      radial-gradient(ellipse at 50% 0, #33110d, #0c0908 60%);
+    box-shadow: inset 3px 0 8px #d32b2940, inset -3px 0 8px #d32b2940, 0 12px 40px #0009;
+    filter: none;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater::before {
+    content: '—  THE AUDITORIUM  —';
+    position: absolute;
+    top: 14px;
+    left: 0;
+    width: 100%;
+    color: #ff544b;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-align: center;
+    text-shadow: 0 0 12px #e22a27;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater > .auditorium-artwork,
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater > .auditorium-state-layer {
+    display: none;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-theater-content {
+    inset: 46px 18px 0;
+    width: auto;
+    height: auto;
+    aspect-ratio: auto;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 64px;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 24px max(24px, calc((100% - 70ch) / 2));
+    border: 1px solid #80c8d0;
+    border-radius: 10px;
+    background: #080b0d;
+    box-shadow: 0 0 3px #70e2ef, 2px 0 9px #dc3028a0, -2px 0 9px #dc3028a0;
+    line-height: 1.6;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-reactions {
+    position: relative;
+    inset: auto;
+    width: calc(100% - 126px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-button {
+    position: relative;
+    inset: auto;
+    transform: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: auto;
+    min-width: 110px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid #8c3430;
+    border-radius: 6px;
+    background: #190c0a;
+    color: #ff9a83;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button--like::before { content: 'LIKE'; }
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button--dislike::before { content: 'DISLIKE'; }
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button::before {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button::after { display: none; }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-reaction-count {
+    position: static;
+    transform: none;
+    max-width: none;
+    min-width: 1ch;
+    font-size: 16px;
+    animation: none;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button[aria-pressed="true"] {
+    border-color: #ffc477;
+    background: #46200f;
+    box-shadow: 0 0 8px #e34b2333;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-focus-close--theater {
+    inset: auto 18px 12px auto;
+    width: 110px;
+    height: 40px;
+    min-height: 40px;
+    transform: none;
+    border: 1px solid #ed5348;
+    border-radius: 6px;
+    background: linear-gradient(#45140e, #180906);
+    color: #ffe1cc;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    box-shadow: 0 0 10px #df2b2244;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-close--theater::before { content: 'EXIT ›'; }
+}
