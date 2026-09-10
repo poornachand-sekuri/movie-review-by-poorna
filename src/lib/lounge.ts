@@ -210,8 +210,8 @@ if (loungePage && focusableSections.length > 0) {
     section.classList.add('is-lounge-focused');
     const isOpinion = section.classList.contains('lounge-panel--opinion');
     focusLayer.classList.toggle('is-opinion-focused', isOpinion);
-    // Each focused artwork owns its EXIT tab; CSS maps this semantic
-    // button to the corresponding image coordinates.
+    // CSS places this semantic close control on the opinion artwork's EXIT
+    // tab or above the new Now Reviewed panel.
     section.appendChild(closeButton);
     closeButton.setAttribute('aria-label', isOpinion ? 'Exit enlarged Share Your Opinion' : 'Close enlarged section');
     focusLayer.classList.add('is-open');

@@ -37,6 +37,9 @@ jobs:
       - name: Validate application
         run: npm run validate
 
+      - name: Verify approved Now Reviewed uploads (read-only)
+        run: node scripts/check-now-reviewed-artwork.mjs
+
       - name: Validate migration script syntax
         run: node --check scripts/build-legacy-seed.mjs
 
