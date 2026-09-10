@@ -72,8 +72,10 @@
 }
 
 .lounge-panel--now {
-  /* Approved transparent panel: 1310 × 1200, including the title band. */
-  aspect-ratio: 1310 / 1200;
+  /* Approved 1310 × 1275 panel: only the MY POV interior gained 75px.
+     Keep overlay coordinates in artwork pixels so the upper ticket stays put. */
+  --now-art-height: 1275;
+  aspect-ratio: 1310 / var(--now-art-height);
   background-position: center top;
   background-size: 100% auto;
   background-repeat: no-repeat;
@@ -231,11 +233,11 @@
 .now-pov {
   position: absolute;
   z-index: 3;
-  /* Interior y=809..1073: below the MY POV plaque and above its bottom rim. */
+  /* Safe area y=808.8..1147.8: preserve both rim insets and use all 75 added pixels. */
   left: 5.5%;
-  top: 67.4%;
+  top: calc(808.8 / var(--now-art-height) * 100%);
   width: 89%;
-  height: 22%;
+  height: calc(339 / var(--now-art-height) * 100%);
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -280,9 +282,9 @@
 
 .now-read-hit {
   right: 3.8%;
-  bottom: 2.5%;
+  bottom: calc(30 / var(--now-art-height) * 100%);
   width: 23.5%;
-  height: 6.5%;
+  height: calc(78 / var(--now-art-height) * 100%);
 }
 
 .now-read-hit:hover,
@@ -762,7 +764,7 @@ html.lounge-focus-open body {
 }
 
 .lounge-panel--now {
-  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_runtime_q99.webp?v=expanded-pov-8eecb9e062b7") !important;
+  background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/03_Now_Reviewed_Panel_runtime_q99.webp?v=pov25-0f2fb92abad5") !important;
 }
 
 /* Structural frames are always requested; only movie posters are progressive. */
@@ -806,9 +808,9 @@ html.lounge-focus-open body {
 /* Billing stays inside the right ticket; the title uses the new band above. */
 .now-details {
   left: 54.8%;
-  top: 23.5%;
+  top: calc(282 / var(--now-art-height) * 100%);
   width: 35.6%;
-  height: 31.5%;
+  height: calc(378 / var(--now-art-height) * 100%);
   overflow: hidden;
   pointer-events: none;
 }
@@ -816,10 +818,10 @@ html.lounge-focus-open body {
 .now-title {
   position: absolute;
   z-index: 2;
-  top: 10.3%;
+  top: calc(123.6 / var(--now-art-height) * 100%);
   left: 6%;
   right: 6%;
-  height: 9%;
+  height: calc(108 / var(--now-art-height) * 100%);
   min-height: 0;
   margin: 0;
   display: flex;
@@ -1062,9 +1064,9 @@ html.lounge-focus-open body {
 
 .now-poster {
   left: 5.1145038168%;
-  top: 23.0000000000%;
+  top: calc(276 / var(--now-art-height) * 100%);
   width: 40.6106870229%;
-  height: 32.3333333333%;
+  height: calc(388 / var(--now-art-height) * 100%);
   padding: 0;
   border: 0;
   border-radius: 0;

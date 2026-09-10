@@ -146,8 +146,8 @@
   },
   "now": {
     "sourceWidth": 1310,
-    "sourceHeight": 1200,
-    "sourceSha256": "23e4478dda92a4f12b1b7ccb8be7a9ccfe4b7d69ceb441eb0a15dc2f2c3e7798",
+    "sourceHeight": 1275,
+    "sourceSha256": "ed3f20c3f0275d77e30bd0f8a43ce3fa7f39cc076a043aefe628f06f467d1ccb",
     "frames": [
       {
         "file": "now-1.svg",

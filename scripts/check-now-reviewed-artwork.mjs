@@ -3,12 +3,13 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { loungeRuntimeAssets } from '../src/lib/lounge-assets.ts';
 
-// Approved 1310 × 1200 exports. Exact matches also preserve their verified
+// Approved 1310 × 1275 exports, with the MY POV interior increased by 25%.
+// Exact matches also preserve their verified
 // exterior-only alpha channel, colors, and the geometry used by lounge.css.
 const files = [
-  ['03_Now_Reviewed_Panel.png', '23e4478dda92a4f12b1b7ccb8be7a9ccfe4b7d69ceb441eb0a15dc2f2c3e7798'],
-  ['03_Now_Reviewed_Panel_lossless.webp', '1a55973a98bfc108f002c16f306f9e004d9781cf12d0b986d4599f9cd8bacff9'],
-  ['03_Now_Reviewed_Panel_runtime_q99.webp', '8eecb9e062b71406367b8050d2e003ca2e88386718510e58ae6529f27d92ba54'],
+  ['03_Now_Reviewed_Panel.png', 'ed3f20c3f0275d77e30bd0f8a43ce3fa7f39cc076a043aefe628f06f467d1ccb'],
+  ['03_Now_Reviewed_Panel_lossless.webp', '707cbb04b989b5009599948ec902e346df4de140553ed101ef683758ddb90029'],
+  ['03_Now_Reviewed_Panel_runtime_q99.webp', '0f2fb92abad57d11c7064022186f22bed0943f20b6d353c7e2820bdf6beade59'],
 ];
 const runtimeUrl = new URL(loungeRuntimeAssets.nowReviewed);
 const css = readFileSync(new URL('../src/styles/lounge.css', import.meta.url), 'utf8');
