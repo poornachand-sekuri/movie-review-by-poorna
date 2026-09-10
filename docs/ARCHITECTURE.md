@@ -32,6 +32,12 @@ The admin list requests `?compact=1` and loads full review text only when a revi
 
 ## Data and HTTP boundaries
 
+Quota-sensitive reads use the existing indexes to restrict work to the requested records. The legacy-reaction import check has separate single-review and full-catalogue predicates; a nullable-parameter OR must not turn per-review reaction refreshes into catalogue scans. The full-catalogue path remains available for pending imports, and completed imports retain their durable markers.
+
+Related-review candidates drive the final review lookup by primary key. SQLite's explicit `CROSS JOIN` fixes that loop order so the published-status index cannot make the final join visit every published review. Credit priority, credit position, recency, ID tie-breaking, publication filtering and language/general fallbacks are preserved. See [SQLite's join-order documentation](https://www.sqlite.org/optoverview.html#manual_control_of_query_plans_using_cross_join).
+
+September 10 query metrics supplied by the owner show 41,490 legacy-import checks reading 5.73 million rows and 10,245 credit-based related-review queries reading 2.07 million rows. These are reported query totals; the screenshots do not establish a separate UTC-day breakdown or distinguish visitors, preview traffic and automated audits. The dashboard's four traffic aggregates shown total about 32,480 rows, so removing dashboard polling alone does not address the dominant consumers. Local query-plan regression tests cover the two targeted lookups; production row-read savings must be measured after deployment.
+
 - `reviews.ts`: compact lists, full review detail, FTS and credit matches.
 - `related-reviews.ts`: credit-first, same-language, then general-recency fallback.
 - `cini-cafe.ts`: compact catalogue and searchable credit names.

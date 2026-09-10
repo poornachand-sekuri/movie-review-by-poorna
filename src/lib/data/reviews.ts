@@ -172,6 +172,8 @@ export async function listRelatedReviewsByCredits(
 
   const db = getContentDb();
   const relatedLimit = clampInteger(limit, 4, 1, 4);
+  // Keep candidate IDs outside the final join so SQLite looks up matching
+  // reviews by primary key instead of visiting every published review.
   const result = await db
     .prepare(
       `WITH current_credits AS (
@@ -214,7 +216,7 @@ export async function listRelatedReviewsByCredits(
          r.poster_url,
          cm.match_rank
        FROM candidate_matches cm
-       JOIN reviews r ON r.id = cm.candidate_review_id
+       CROSS JOIN reviews r ON r.id = cm.candidate_review_id
        WHERE r.status = 'published'
        ORDER BY cm.match_rank ASC, r.reviewed_date DESC, r.id DESC
        LIMIT ?2`,
