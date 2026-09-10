@@ -17,7 +17,7 @@ import '../../styles/auditorium-focus-desktop.css';
 export const prerender = false;
 
 const slug = Astro.params.slug ?? '';
-const loadedReview = await getReviewBySlug(slug);
+const loadedReview = await getReviewBySlug(slug, { includeGallery: false });
 
 if (!loadedReview) {
   return Astro.redirect('/');

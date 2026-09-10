@@ -2,6 +2,7 @@ import { getContentDb } from '../cloudflare/content-db';
 import { importLegacyReactions } from './legacy-reactions';
 
 export type ReviewReaction = 'like' | 'dislike';
+export const MAX_REACTION_COUNT_SLUGS = 6;
 
 interface ReviewReactionSnapshot {
   likes: number;
@@ -106,11 +107,12 @@ async function readReactionSnapshot(reviewId: number, voterKey?: string | null):
   const row = await db
     .prepare(
       `SELECT
-         COALESCE(SUM(CASE WHEN reaction = 'like' THEN 1 ELSE 0 END), 0) AS likes,
-         COALESCE(SUM(CASE WHEN reaction = 'dislike' THEN 1 ELSE 0 END), 0) AS dislikes,
-         MAX(CASE WHEN voter_key = ?2 THEN reaction ELSE NULL END) AS viewer_reaction
-       FROM review_reaction_votes
-       WHERE review_id = ?1`,
+         COALESCE(t.likes, 0) AS likes,
+         COALESCE(t.dislikes, 0) AS dislikes,
+         v.reaction AS viewer_reaction
+       FROM (SELECT ?1 AS review_id) requested
+       LEFT JOIN review_reaction_totals t ON t.review_id = requested.review_id
+       LEFT JOIN review_reaction_votes v ON v.review_id = requested.review_id AND v.voter_key = ?2`,
     )
     .bind(reviewId, normalizedVoterKey ?? '')
     .first<ReactionAggregateRow>();
@@ -189,18 +191,47 @@ export async function setReviewReaction(
 
 // Browsers that visited both runtimes may carry both cookies. Keep their newer
 // D1 choice and merge the old identity instead of counting the same browser twice.
-async function reconcileVoterIdentity(reviewId: number, voterKey?: string | null, legacyVoterKey?: string | null) {
+async function reconcileVoterIdentity(reviewId: number | readonly number[], voterKey?: string | null, legacyVoterKey?: string | null) {
   const current = normalizeVoterKey(voterKey);
   const legacy = normalizeVoterKey(legacyVoterKey);
   if (!current || !legacy || current === legacy) return;
   const db = getContentDb();
+  const ids = JSON.stringify(typeof reviewId === 'number' ? [reviewId] : reviewId);
   await db.batch([
     db.prepare(`INSERT INTO review_reaction_votes (review_id, voter_key, reaction, created_at, updated_at)
       SELECT review_id, ?2, reaction, created_at, updated_at FROM review_reaction_votes
-      WHERE review_id = ?1 AND voter_key = ?3
-      ON CONFLICT(review_id, voter_key) DO NOTHING`).bind(reviewId, current, legacy),
-    db.prepare('DELETE FROM review_reaction_votes WHERE review_id = ?1 AND voter_key = ?2').bind(reviewId, legacy),
+      WHERE review_id IN (SELECT value FROM json_each(?1)) AND voter_key = ?3
+      ON CONFLICT(review_id, voter_key) DO NOTHING`).bind(ids, current, legacy),
+    db.prepare('DELETE FROM review_reaction_votes WHERE review_id IN (SELECT value FROM json_each(?1)) AND voter_key = ?2').bind(ids, legacy),
   ]);
+}
+
+/** Public counts for one visible Café page; personal vote state stays on the detail endpoint. */
+export async function listReviewReactionCounts(
+  slugs: readonly string[],
+  voterKey?: string | null,
+  legacyVoterKey?: string | null,
+): Promise<readonly { slug: string; likes: number; dislikes: number }[]> {
+  if (slugs.length === 0) return [];
+  if (slugs.length > MAX_REACTION_COUNT_SLUGS || slugs.some(slug => !slug.trim() || slug.length > 180)) {
+    throw new Error('Request between one and six review slugs.');
+  }
+  await ensureReactionSchema();
+  const db = getContentDb();
+  const requested = await db.prepare(`SELECT DISTINCT r.id, r.slug
+    FROM json_each(?1) requested CROSS JOIN reviews r ON r.slug COLLATE NOCASE = requested.value
+    WHERE r.status = 'published'`)
+    .bind(JSON.stringify([...new Set(slugs.map(slug => slug.trim()))])).run<{ id: number; slug: string }>();
+  const ids = requested.results.map(row => row.id);
+  if (ids.length === 0) return [];
+  await importLegacyReactions(ids);
+  await reconcileVoterIdentity(ids, voterKey, legacyVoterKey);
+  const result = await db.prepare(`SELECT r.slug, COALESCE(t.likes, 0) AS likes, COALESCE(t.dislikes, 0) AS dislikes
+    FROM json_each(?1) requested CROSS JOIN reviews r ON r.id = requested.value
+    LEFT JOIN review_reaction_totals t ON t.review_id = r.id
+    WHERE r.status = 'published'`)
+    .bind(JSON.stringify(ids)).run<{ slug: string; likes: number; dislikes: number }>();
+  return result.results;
 }
 
 export async function ensureAllReactionImports(): Promise<void> {

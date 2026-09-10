@@ -187,32 +187,44 @@ export function initCiniCafe(): void {
   async function refreshVisibleLikes(changedSlug?: string): Promise<void> {
     const cards = Array.from(resultsLayer.querySelectorAll<HTMLElement>('[data-review-slug]'));
     const slugs = changedSlug ? [changedSlug] : cards.map((card) => card.dataset.reviewSlug).filter((slug): slug is string => !!slug);
-    await Promise.allSettled(slugs.map(async (slug) => {
-      const item = state.catalogue.find((review) => review.slug === slug);
-      if (!item) return;
+    const revisions = new Map<string, number>();
+    for (const slug of slugs) {
+      if (!state.catalogue.some(review => review.slug === slug)) continue;
       const revision = (reactionRevisions.get(slug) ?? 0) + 1;
       reactionRevisions.set(slug, revision);
-
-      const response = await fetch(`/api/reviews/${encodeURIComponent(slug)}/reactions`, {
+      revisions.set(slug, revision);
+    }
+    if (revisions.size === 0) return;
+    const query = new URLSearchParams();
+    for (const slug of revisions.keys()) query.append('slug', slug);
+    try {
+      const response = await fetch(`/api/reaction-counts?${query}`, {
         credentials: 'same-origin',
         headers: { accept: 'application/json' },
         cache: 'no-store',
         signal: AbortSignal.timeout(10000),
       });
       if (!response.ok) return;
-
-      const payload = await response.json() as { likes?: unknown };
-      if (!Number.isInteger(payload.likes) || Number(payload.likes) < 0 || reactionRevisions.get(slug) !== revision) return;
-      const likes = Number(payload.likes);
-      item.likes = likes;
-
-      const card = Array.from(resultsLayer.querySelectorAll<HTMLElement>('[data-review-slug]')).find((node) => node.dataset.reviewSlug === slug);
-      const node = card?.querySelector<HTMLElement>('[data-review-likes]');
-      if (node) {
-        node.textContent = String(likes);
-        node.setAttribute('aria-label', `${likes} like${likes === 1 ? '' : 's'}`);
+      const payload = await response.json() as { counts?: { slug: string; likes: unknown }[] };
+      if (!Array.isArray(payload.counts)) return;
+      for (const row of payload.counts) {
+        if (!row || !revisions.has(row.slug) || !Number.isInteger(row.likes) || Number(row.likes) < 0 ||
+            reactionRevisions.get(row.slug) !== revisions.get(row.slug)) continue;
+        const item = state.catalogue.find(review => review.slug === row.slug);
+        if (!item) continue;
+        const likes = Number(row.likes);
+        item.likes = likes;
+        const card = Array.from(resultsLayer.querySelectorAll<HTMLElement>('[data-review-slug]'))
+          .find(node => node.dataset.reviewSlug === row.slug);
+        const node = card?.querySelector<HTMLElement>('[data-review-likes]');
+        if (node) {
+          node.textContent = String(likes);
+          node.setAttribute('aria-label', `${likes} like${likes === 1 ? '' : 's'}`);
+        }
       }
-    }));
+    } catch {
+      // Preserve the last confirmed counts; a later visible refresh can retry.
+    }
   }
 
   searchForm.addEventListener('submit', (event) => event.preventDefault());

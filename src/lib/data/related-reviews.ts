@@ -1,5 +1,5 @@
 import type { ReviewDetail, ReviewSummary } from '../../domain/review';
-import { listRelatedReviewsByCredits, listReviews } from './reviews';
+import { listRelatedReviewsByCredits, listRelatedReviewFallback } from './reviews';
 
 const DEFAULT_RELATED_LIMIT = 4;
 const MAX_RELATED_LIMIT = 4;
@@ -19,23 +19,14 @@ export async function listRelatedReviews(
 ): Promise<readonly ReviewSummary[]> {
   const requestedLimit = normalizeLimit(limit);
   const selected = [...(await listRelatedReviewsByCredits(review.id, requestedLimit))];
-  const seenSlugs = new Set([review.slug, ...selected.map((item) => item.slug)]);
-
-  const appendUnique = (items: readonly ReviewSummary[]) => {
-    for (const item of items) {
-      if (seenSlugs.has(item.slug)) continue;
-      selected.push(item);
-      seenSlugs.add(item.slug);
-      if (selected.length >= requestedLimit) break;
-    }
-  };
+  const excludedIds = () => [review.id, ...selected.map(item => item.id)];
 
   if (selected.length < requestedLimit && review.language) {
-    appendUnique(await listReviews({ limit: 20, language: review.language }));
+    selected.push(...await listRelatedReviewFallback(excludedIds(), requestedLimit - selected.length, review.language));
   }
 
   if (selected.length < requestedLimit) {
-    appendUnique(await listReviews({ limit: 24 }));
+    selected.push(...await listRelatedReviewFallback(excludedIds(), requestedLimit - selected.length));
   }
 
   return selected.slice(0, requestedLimit);

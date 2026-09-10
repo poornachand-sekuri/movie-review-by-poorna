@@ -14,11 +14,15 @@ class Node extends EventTarget {
   toggleAttribute(name, enabled) { enabled ? this.attributes.set(name, '') : this.attributes.delete(name); }
   focus() { this.focused = true; }
   scrollIntoView() {}
-  querySelector() { return null; }
+  querySelector() { return this.likeNode ?? null; }
   querySelectorAll() {
-    return [...this.innerHTML.matchAll(/data-review-slug="([^"]+)"/g)].map((match) => {
-      const card = new Node(); card.dataset.reviewSlug = match[1]; return card;
-    });
+    if (this.parsedHTML !== this.innerHTML) {
+      this.parsedHTML = this.innerHTML;
+      this.cards = [...this.innerHTML.matchAll(/data-review-slug="([^"]+)"/g)].map((match) => {
+        const card = new Node(); card.dataset.reviewSlug = match[1]; card.likeNode = new Node(); return card;
+      });
+    }
+    return this.cards;
   }
 }
 
@@ -42,7 +46,12 @@ test('Cafe controls attach to the rendered page and preserve search, paging and 
   globalThis.document = document;
   globalThis.window = window;
   const requests = [];
-  globalThis.fetch = async url => { requests.push(url); return Response.json({ likes: 3 }); };
+  globalThis.fetch = async url => {
+    requests.push(url);
+    const slugs = new URL(url, 'https://example.com').searchParams.getAll('slug');
+    assert(slugs.length > 0 && slugs.length <= 6);
+    return Response.json({ counts: slugs.map(slug => ({ slug, likes: 3, dislikes: 0 })) });
+  };
   initCiniCafe();
   const get = name => nodes.get(`[data-cini-${name}]`);
   assert.equal(get('serving-range').textContent, '1–6');
@@ -52,19 +61,33 @@ test('Cafe controls attach to the rendered page and preserve search, paging and 
   assert.equal(interval, 15000);
   get('pagination').children.find(child => child.attributes.get('aria-label') === 'Next page').dispatchEvent(new Event('click'));
   assert.equal(get('serving-range').textContent, '7–12');
-  assert.equal(requests.length, 6);
+  assert.equal(requests.length, 1);
   get('search').value = 'Movie 1';
   get('search').dispatchEvent(new Event('input'));
   assert.equal(get('serving-range').textContent, '1–6');
   assert.equal(get('serving-total').textContent, '6');
-  assert.equal(requests.length, 12);
+  assert.equal(requests.length, 2);
   document.visibilityState = 'hidden'; timer();
-  assert.equal(requests.length, 12, 'hidden tabs do not poll');
+  assert.equal(requests.length, 2, 'hidden tabs do not poll');
   document.visibilityState = 'visible'; timer();
-  assert.equal(requests.length, 18);
+  assert.equal(requests.length, 3);
   get('clear').dispatchEvent(new Event('click'));
   assert.equal(get('serving-total').textContent, '14');
   assert.equal(get('search').value, '');
   assert(get('search').focused);
-  await new Promise(resolve => setImmediate(resolve));
+  const flush = () => new Promise(resolve => setImmediate(resolve));
+  await flush();
+  assert(results.querySelectorAll().every(card => card.likeNode.textContent === '3'));
+  const pending = [];
+  globalThis.fetch = url => new Promise(resolve => pending.push({ url, resolve }));
+  timer(); timer();
+  const reply = (index, likes) => pending[index].resolve(Response.json({ counts:
+    new URL(pending[index].url, 'https://example.com').searchParams.getAll('slug').map(slug => ({ slug, likes })) }));
+  reply(1, 9); await flush();
+  reply(0, 1); await flush();
+  assert(results.querySelectorAll().every(card => card.likeNode.textContent === '9'), 'late older response cannot overwrite current counts');
+  timer(); reply(2, -1); await flush();
+  assert(results.querySelectorAll().every(card => card.likeNode.textContent === '9'), 'malformed counts preserve the last confirmed value');
+  timer(); pending[3].resolve(new Response('', { status: 503 })); await flush();
+  assert(results.querySelectorAll().every(card => card.likeNode.textContent === '9'), 'temporary failures preserve confirmed counts');
 });

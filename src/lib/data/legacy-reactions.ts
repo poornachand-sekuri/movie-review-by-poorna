@@ -6,21 +6,23 @@ interface LegacyNamespace {
   getByName(slug: string): { exportVotes(after: string): Promise<LegacyVoteRow[]> };
 }
 
-export async function importLegacyReactions(reviewId?: number): Promise<void> {
+export async function importLegacyReactions(reviewId?: number | readonly number[]): Promise<void> {
   const source = (env as unknown as { LEGACY_REACTIONS?: LegacyNamespace }).LEGACY_REACTIONS;
   // Local databases have no production binding. Do not mark them as imported.
   if (!source) return;
+  if (Array.isArray(reviewId) && reviewId.length === 0) return;
   const db = getContentDb();
   const pendingQuery = db.prepare(`
     SELECT r.id, COALESCE(json_extract(a.source_json, '$.s'), r.slug) AS source_slug
-    FROM reviews r
+    FROM ${Array.isArray(reviewId) ? 'json_each(?1) requested CROSS JOIN reviews r ON r.id = requested.value' : 'reviews r'}
     LEFT JOIN legacy_import_audit a ON a.review_id = r.id
     LEFT JOIN legacy_reaction_imports i ON i.review_id = r.id
     WHERE i.review_id IS NULL AND r.status = 'published'
-      ${reviewId === undefined ? '' : 'AND r.id = ?1'}
+      ${typeof reviewId === 'number' ? 'AND r.id = ?1' : ''}
   `);
   // A single-review read must use the primary key, not scan the catalogue.
-  const pending = await (reviewId === undefined ? pendingQuery : pendingQuery.bind(reviewId))
+  const pending = await (reviewId === undefined ? pendingQuery
+    : pendingQuery.bind(typeof reviewId === 'number' ? reviewId : JSON.stringify(reviewId)))
     .run<{ id: number; source_slug: string }>();
 
   // Bound cold-store work on the first catalogue read; subsequent reads are D1-only.

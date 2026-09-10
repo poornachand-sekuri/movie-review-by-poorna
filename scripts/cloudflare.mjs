@@ -36,6 +36,7 @@ assert.deepEqual(bundled.d1_databases?.map(({ binding, database_id }) => ({ bind
   expected.d1_databases.map(({ binding, database_id }) => ({ binding, database_id })));
 assert.deepEqual(bundled.durable_objects, expected.durable_objects, 'Compiled legacy reaction binding must match the source.');
 if (action !== 'build') {
+  if (action === 'deploy') run('scripts/apply-read-efficiency.mjs', [target]);
   run('node_modules/wrangler/bin/wrangler.js', [
     'deploy', '--config', bundledPath, ...(action === 'dry-run' ? ['--dry-run'] : []),
   ]);
