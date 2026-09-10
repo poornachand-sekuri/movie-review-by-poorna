@@ -238,6 +238,9 @@
   top: calc(808.8 / var(--now-art-height) * 100%);
   width: 89%;
   height: calc(339 / var(--now-art-height) * 100%);
+  /* The compact card scales with its artwork; its fitting floor must too.
+     The paragraph keeps its own comfortable maximum below. */
+  font-size: min(3.5cqw, 0.875rem);
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;

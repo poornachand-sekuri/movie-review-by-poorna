@@ -17,8 +17,10 @@ export function initPovFit(): void {
       paragraph.style.removeProperty('font-size');
       const maximum = parseFloat(getComputedStyle(paragraph).fontSize);
       const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-      const minimum = Math.min(maximum, rootSize * 0.875);
       const style = getComputedStyle(panel);
+      // A compact artwork panel may supply a smaller, container-scaled floor.
+      // Other panels retain the root-relative readable minimum.
+      const minimum = Math.min(maximum, rootSize * 0.875, parseFloat(style.fontSize));
       const availableHeight = panel.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - 1;
       const fits = () => paragraph.getBoundingClientRect().height <= availableHeight
         && paragraph.scrollWidth <= paragraph.clientWidth;
