@@ -113,6 +113,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
         />
 
         <div class="auditorium-source-layer auditorium-clapboard-content">
+          <h2 class="auditorium-movie-title" tabindex="0">{review.title}</h2>
           {
             review.posterUrl && (
               <div class="auditorium-movie-poster-frame">
