@@ -3,7 +3,7 @@ import { importLegacyReactions } from './legacy-reactions';
 
 export type ReviewReaction = 'like' | 'dislike';
 
-export interface ReviewReactionSnapshot {
+interface ReviewReactionSnapshot {
   likes: number;
   dislikes: number;
   viewerReaction: ReviewReaction | null;
@@ -95,6 +95,11 @@ export async function getReviewReactionSnapshot(
   await ensureReactionSchema();
   await importLegacyReactions(reviewId);
   await reconcileVoterIdentity(reviewId, voterKey, legacyVoterKey);
+  return readReactionSnapshot(reviewId, voterKey);
+}
+
+// Call after the import and identity reconciliation have completed.
+async function readReactionSnapshot(reviewId: number, voterKey?: string | null): Promise<ReviewReactionSnapshot> {
   const db = getContentDb();
   const normalizedVoterKey = normalizeVoterKey(voterKey);
 
@@ -179,7 +184,7 @@ export async function setReviewReaction(
       .run();
   }
 
-  return getReviewReactionSnapshot(reviewId, normalizedVoterKey);
+  return readReactionSnapshot(reviewId, normalizedVoterKey);
 }
 
 // Browsers that visited both runtimes may carry both cookies. Keep their newer

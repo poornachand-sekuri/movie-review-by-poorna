@@ -1,7 +1,7 @@
 (() => {
     const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
     const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    const state = { panel: 'dashboard', analytics: null, comments: [], commentStatus: 'pending', reviews: [], current: null, isNew: false, slugTouched: false, posterFile: null, galleryFiles: [], gallery: [] };
+    const state = { panel: 'dashboard', comments: [], commentStatus: 'pending', reviews: [], current: null, isNew: false, slugTouched: false, posterFile: null, galleryFiles: [], gallery: [] };
     const el = {
         login: $('#loginView'), admin: $('#adminView'), loginForm: $('#loginForm'), loginPassword: $('#loginPassword'), loginError: $('#loginError'), logout: $('#logoutBtn'), toast: $('#toast'),
         dashboard: $('#dashboardPanel'), commentsPanel: $('#commentsPanel'), reviewsPanel: $('#reviewsPanel'), days: $('#analyticsDays'), refreshAnalytics: $('#refreshAnalytics'), syncReactions: $('#syncReactions'), reactionSyncStatus: $('#reactionSyncStatus'),
@@ -49,10 +49,15 @@
     catch (err) {
         el.loginError.textContent = err.message;
     } });
-    el.logout.addEventListener('click', async () => { try {
-        await api('/api/admin/logout', { method: 'POST', body: '{}' });
-    }
-    catch { } showLogin(); });
+    el.logout.addEventListener('click', async () => {
+        if (el.logout.disabled) return;
+        el.logout.disabled = true;
+        try {
+            await api('/api/admin/logout', { method: 'POST', body: '{}' });
+        }
+        catch { }
+        finally { location.replace('/admin/'); }
+    });
     $$('.nav-tab').forEach(button => button.addEventListener('click', () => setPanel(button.dataset.panel)));
     async function setPanel(panel) {
         state.panel = panel;
@@ -74,7 +79,6 @@
         el.syncReactions.disabled = true;
         try {
             const data = await api(`/api/admin/analytics?days=${encodeURIComponent(el.days.value)}`);
-            state.analytics = data;
             renderAnalytics(data);
             updateCommentBadges(data.commentCounts || {});
             el.reactionSyncStatus.textContent = `Live D1 reaction totals across ${data.reviewCount || 0} reviews.`;
@@ -169,7 +173,12 @@
     el.newBtn.addEventListener('click', newReview);
     $$('[data-new-review]').forEach(button => button.addEventListener('click', newReview));
     async function openReview(id) { try {
-        const review = await api(`/api/admin/reviews/${id}`);
+        applyReview(await api(`/api/admin/reviews/${id}`));
+    }
+    catch (err) {
+        toast(err.message, true);
+    } }
+    function applyReview(review) {
         state.current = review;
         state.isNew = false;
         state.slugTouched = true;
@@ -180,9 +189,6 @@
         showEditor();
         renderReviewList();
     }
-    catch (err) {
-        toast(err.message, true);
-    } }
     function newReview() { state.current = null; state.isNew = true; state.slugTouched = false; state.posterFile = null; state.galleryFiles = []; state.gallery = []; el.form.reset(); el.reviewEditor.innerHTML = ''; el.rating.value = ''; el.publishDate.value = new Date().toISOString().slice(0, 10); el.language.value = 'Telugu'; el.sourceBadge.textContent = 'NEW'; el.sourceBadge.className = 'badge'; el.reviewIdText.textContent = ''; el.editorTitle.textContent = 'New Review'; el.preview.classList.add('disabled'); el.preview.href = '#'; el.deleteBtn.classList.add('hidden'); el.mobileDelete.classList.add('hidden'); updateStars(); renderPoster(); renderGallery(); updateCounts(); showEditor(); renderReviewList(); setTimeout(() => el.title.focus(), 50); }
     function fillForm(r) { el.title.value = r.t || ''; el.slug.value = r.s || ''; el.publishDate.value = r.d || ''; el.releaseDate.value = r.rd || ''; el.language.value = r.l || ''; el.rating.value = r.r == null ? '' : String(r.r); el.posterUrl.value = r.m || ''; el.verdict.value = r.v || ''; el.excerpt.value = r.e || ''; el.reviewEditor.innerHTML = r.body || ''; el.actors.value = (r.cast_crew?.actors || []).join(', '); el.actresses.value = (r.cast_crew?.actresses || []).join(', '); el.directors.value = (r.cast_crew?.directors || []).join(', '); el.musicDirectors.value = (r.cast_crew?.music_directors || []).join(', '); el.sourceBadge.textContent = 'D1'; el.sourceBadge.className = 'badge managed'; el.reviewIdText.textContent = `ID ${r.i}`; el.editorTitle.textContent = r.t || 'Edit Review'; el.preview.href = `/review/${encodeURIComponent(r.s)}`; el.preview.classList.remove('disabled'); el.deleteBtn.classList.remove('hidden'); el.mobileDelete.classList.remove('hidden'); updateStars(); renderPoster(); renderGallery(); updateCounts(); }
     function showEditor() { el.empty.classList.add('hidden'); el.form.classList.remove('hidden'); el.admin.classList.add('editing'); window.scrollTo(0, 0); }
@@ -287,13 +293,8 @@
         else
             result = await api(`/api/admin/reviews/${state.current.i}`, { method: 'PUT', body: JSON.stringify(payload) });
         toast('Review saved and published to the D1 catalog.');
-        state.posterFile = null;
-        state.galleryFiles = [];
-        state.gallery = gallery;
-        state.isNew = false;
-        state.current = result.review;
+        applyReview(result.review);
         await loadReviews();
-        await openReview(result.review.i);
     }
     catch (err) {
         toast(err.message, true);

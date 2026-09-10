@@ -6,7 +6,7 @@
 
 ## Lounge
 
-`src/pages/index.astro` selects 17 compact reviews and renders the featured/recent/previous panels. `src/lib/lounge.ts` owns carousels, focus controls and title animation. `lounge-loading.ts` progressively releases lower posters; the inline `LoungeLoading.astro` component owns first-screen readiness and recovery timers.
+`src/pages/index.astro` selects 17 compact reviews and renders the featured/recent/previous panels. `src/lib/lounge.ts` owns carousels and focus controls. The shared `review-display.ts` owns title animation across rooms, including carousel visibility, reduced motion and removal of replaced cards. `lounge-loading.ts` progressively releases lower posters; the inline `LoungeLoading.astro` component owns first-screen readiness and recovery timers.
 
 `src/styles/lounge.css` is the single Lounge stylesheet. Its established cascade preserves normal, focused and narrow-screen geometry. Edit the owning declaration rather than adding another override file. `lounge-assets.ts` defines critical images used by both the loader and head preloads. CSS owns structural frames.
 
@@ -22,13 +22,13 @@ Styles are scoped by feature: core registration in `auditorium.css`, then naviga
 
 `src/pages/search.astro` loads a compact D1 catalogue, renders the first six filtered cards on the server and embeds escaped catalogue JSON for local filtering. Review bodies are excluded.
 
-`cini-cafe-filter.ts` owns search normalization, date precedence and sorting. It indexes searchable text once and reuses results across pagination. `cini-cafe-card.ts` is the escaped HTML renderer shared by SSR and browser updates. `cini-cafe.ts` owns controls, pagination, title fitting and restored-page reaction refreshes. `/search?q=...` initializes both server and browser search state.
+`cini-cafe-filter.ts` owns the shared six-card page size, search normalization, date precedence and sorting. It indexes searchable text once and reuses results across pagination. `cini-cafe-card.ts` is the escaped HTML renderer shared by SSR and browser updates. `cini-cafe.ts` owns controls, pagination and reaction refreshes. Shared `review-display.ts` handles rolling titles; the obsolete three-line font fitter has been removed. `/search?q=...` initializes both server and browser search state.
 
 ## Projector Room
 
 `src/pages/admin/index.ts` authenticates on the server before returning `src/admin/projector-room.html`. Unauthenticated visitors receive only the login document. `public/admin/admin.js` handles the editor, dashboard, moderation and uploads; `admin.css` owns its existing appearance.
 
-The admin list requests `?compact=1` and loads full review text only when a review is opened. Legacy list callers can omit that option to retain the original response shape and full body. Dashboard reactions are read directly from D1 and refresh on focus, reaction notifications and every 15 seconds while visible. The old sync API remains available for compatibility.
+The admin list requests `?compact=1` and loads full review text only when a review is opened. After a save, the editor reuses the returned canonical review and refreshes only the compact list. `admin.js` owns logout and reloads the server-authenticated route after the logout request settles. Legacy list callers can omit that option to retain the original response shape and full body. Dashboard reactions are read directly from D1 and refresh on focus, reaction notifications and every 15 seconds while visible. The old sync API remains available for compatibility.
 
 ## Data and HTTP boundaries
 
@@ -60,3 +60,11 @@ The original production `ReactionStore` namespace is read through the `LEGACY_RE
 The Auditorium imports its review before reading or writing; Café and dashboard reads finish any remaining published-review imports first. Preview reads the production namespace by explicit `script_name`, and continues using the shared D1 store. No new active reaction store is introduced. Both `mrp_voter` (old) and `mrp_reaction_voter` (current) cookies are recognized; where both identify the same returning browser, its newer D1 choice takes precedence.
 
 Production smoke checks exercise Like, idempotent retry, reload, independent visitor totals, switching, isolation, removal, and SSR/Café parity with a temporary random voter that is removed in `finally`. The deployment summary query reports only aggregate migration/count data, never voter identifiers.
+
+## Query and cleanup audit, September 10, 2026
+
+The fresh `refactor/architecture-cost-audit` branch starts at main `80af0a6`. Single-review legacy import checks now use a direct primary-key predicate; catalogue imports still cover all outstanding published reviews. Voting reuses the prepared reaction read after its write instead of checking the migration marker twice. Related-review lookup keeps the credit candidate set before primary-key review lookups, preserving role ranking and published-only filtering. No database migration is required for these changes.
+
+The cleanup also removes 27 superseded Lounge declarations, an unused comment-status type and write-only admin analytics state. File-local types are no longer unnecessarily exported. Existing artwork, loading timings, POV fitting, API shapes, polling intervals, historical votes and release gates remain unchanged. No complete asset, migration or compatibility file was proven unused.
+
+For a solo maintainer, the next cost improvements should be small: batch the six visible Cafe like-count reads; give public comments a matching indexed lookup; and limit related-review fallback reads to the missing slots. Keep exact dashboard unique-visitor semantics and local Cafe filtering. Preview currently shares production D1/R2 and the preserved reaction namespace, so use isolated local fixtures for development. A separate preview dataset is needed before using preview for disposable editorial changes.

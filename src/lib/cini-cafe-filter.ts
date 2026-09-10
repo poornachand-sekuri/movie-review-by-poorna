@@ -1,5 +1,7 @@
 import type { CiniCafeReview } from './data/cini-cafe';
 
+export const CAFE_PAGE_SIZE = 6;
+
 export type CafeSort = 'latest' | 'oldest' | 'title-az' | 'title-za';
 export interface CafeState {
   catalogue: CiniCafeReview[];

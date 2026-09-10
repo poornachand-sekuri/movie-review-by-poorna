@@ -1,5 +1,5 @@
 export type ReviewStatus = 'draft' | 'published' | 'archived';
-export type ReviewListOrder = 'reviewed' | 'added';
+type ReviewListOrder = 'reviewed' | 'added';
 
 export interface ReviewSummary {
   id: number;
