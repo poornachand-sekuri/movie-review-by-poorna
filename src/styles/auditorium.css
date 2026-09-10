@@ -235,16 +235,16 @@
 
 .auditorium-movie-poster-frame {
   position: absolute;
-  /* Inset into the new red frame: source x=63–464, y=315–586. */
-  left: 4.8648648649%;
-  top: 25.9259259259%;
-  width: 30.9652509653%;
-  height: 22.304526749%;
+  /* Measured opening inside the approved red poster border. */
+  left: 4.7104247104%;
+  top: 25.8436213992%;
+  width: 31.2741312741%;
+  height: 22.5514403292%;
   overflow: hidden;
-  box-sizing: border-box;
   border: 0;
-  border-radius: 0.6510416667cqw;
-  background: #050505;
+  border-radius: 0;
+  -webkit-mask: url("/images/poster-masks/clapboard-1.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/clapboard-1.svg") 0 0 / 100% 100% no-repeat;
 }
 
 .auditorium-movie-poster {
@@ -252,7 +252,7 @@
   width: 100%;
   height: 100%;
   max-width: none;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   border-radius: inherit;
   background: #050505;
@@ -440,14 +440,11 @@
 
 .auditorium-related-poster-frame {
   position: absolute;
-  left: 0;
-  top: 33.8397790055%;
-  width: 100%;
-  height: 33.2872928177%;
+  top: 33.7016574586%;
+  height: 33.4254143646%;
   overflow: hidden;
   border: 0;
-  border-radius: 0.7366482505cqw;
-  background: #090909;
+  border-radius: 0;
 }
 
 .auditorium-related-poster-frame img {
@@ -455,7 +452,7 @@
   width: 100%;
   height: 100%;
   max-width: none;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   border-radius: inherit;
   background: #090909;
@@ -658,4 +655,30 @@
 @media (prefers-reduced-motion: reduce) {
   .auditorium-page { scroll-behavior: auto; }
   .auditorium-related-poster-frame img { transition: none; }
+}
+
+/* Each film window retains its own measured inward corners. */
+.auditorium-related-card:nth-child(1) .auditorium-related-poster-frame {
+  left: 0.0000000000%;
+  width: 100.2976190476%;
+  -webkit-mask: url("/images/poster-masks/related-1.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/related-1.svg") 0 0 / 100% 100% no-repeat;
+}
+.auditorium-related-card:nth-child(2) .auditorium-related-poster-frame {
+  left: 0.0000000000%;
+  width: 100.0000000000%;
+  -webkit-mask: url("/images/poster-masks/related-2.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/related-2.svg") 0 0 / 100% 100% no-repeat;
+}
+.auditorium-related-card:nth-child(3) .auditorium-related-poster-frame {
+  left: -0.2985074627%;
+  width: 100.2985074627%;
+  -webkit-mask: url("/images/poster-masks/related-3.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/related-3.svg") 0 0 / 100% 100% no-repeat;
+}
+.auditorium-related-card:nth-child(4) .auditorium-related-poster-frame {
+  left: 0.0000000000%;
+  width: 100.0000000000%;
+  -webkit-mask: url("/images/poster-masks/related-4.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("/images/poster-masks/related-4.svg") 0 0 / 100% 100% no-repeat;
 }
