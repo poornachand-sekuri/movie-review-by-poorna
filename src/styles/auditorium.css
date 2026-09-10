@@ -20,7 +20,8 @@
   /* Registered top navigation + clapboard + screen-to-seats heights.
      The surrounding walls end at the same seating transition as the artwork. */
   --auditorium-top-depth: 14.599609375cqw;
-  --auditorium-front-depth: calc(var(--auditorium-top-depth) + var(--auditorium-screen-width) * 1.191158062845);
+  --auditorium-clapboard-depth: calc(var(--auditorium-screen-width) * 1158 / 1295);
+  --auditorium-front-depth: calc(var(--auditorium-top-depth) + var(--auditorium-clapboard-depth) + var(--auditorium-screen-width) * 0.552486187845);
   position: relative;
   isolation: isolate;
   container-type: inline-size;
@@ -146,10 +147,12 @@
 }
 
 .auditorium-section--clapboard {
-  --art-width: 1536;
-  --art-height: 1024;
-  --art-visible-height: 981;
-  --art-shift-y: -1.4648%;
+  /* 1295 × 1215 approved master. Trim only transparent rows 0–31/1190–1214;
+     all registered overlays remain in the original source coordinate system. */
+  --art-width: 1295;
+  --art-height: 1215;
+  --art-visible-height: 1158;
+  --art-shift-y: -2.633744856%;
 }
 
 .auditorium-section--theater {
@@ -204,12 +207,39 @@
   width: var(--auditorium-screen-width);
 }
 
+.auditorium-movie-title {
+  position: absolute;
+  left: 5.4054054054%;
+  right: 5.4054054054%;
+  top: 12.7572016461%;
+  height: 11.5226337449%;
+  display: flex;
+  align-items: safe center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 1cqw;
+  box-sizing: border-box;
+  overflow: auto;
+  pointer-events: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #b72c28 transparent;
+  color: #ffe2b6;
+  font-size: clamp(14px, 3.2cqw, 44px);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 4px #000;
+}
+
 .auditorium-movie-poster-frame {
   position: absolute;
-  left: 4.8828125%;
-  top: 16.015625%;
-  width: 31.1848958333%;
-  height: 32.12890625%;
+  /* Inset into the new red frame: source x=63–464, y=315–586. */
+  left: 4.8648648649%;
+  top: 25.9259259259%;
+  width: 30.9652509653%;
+  height: 22.304526749%;
   overflow: hidden;
   box-sizing: border-box;
   border: 0;
@@ -232,8 +262,9 @@
 
 .auditorium-clap-value {
   position: absolute;
-  left: 56%;
-  width: 35.5%;
+  /* Start after the enlarged baked labels, in the clear right-hand column. */
+  left: 69.111969112%;
+  width: 25.8687258687%;
   min-height: 0;
   display: flex;
   align-items: center;
@@ -243,15 +274,16 @@
   color: #f5ead8;
   font-size: clamp(10px, 2.15cqw, 18px);
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.15;
   letter-spacing: 0.015em;
   text-shadow: 0 1px 4px rgb(0 0 0 / 80%);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-.auditorium-clap-value--watched { top: 24.70703125%; }
-.auditorium-clap-value--release { top: 34.326171875%; }
-.auditorium-clap-value--rating { top: 43.5546875%; }
+.auditorium-clap-value--watched { top: 31.4403292181%; }
+.auditorium-clap-value--release { top: 38.683127572%; }
+.auditorium-clap-value--rating { top: 45.6790123457%; }
 
 .auditorium-stars {
   color: #e2af56;
@@ -262,8 +294,8 @@
 
 .auditorium-credit-value {
   position: absolute;
-  left: 24.5442708333%;
-  width: 67.4557291667%;
+  left: 31.2741312741%;
+  width: 63.3204633205%;
   min-width: 0;
   box-sizing: border-box;
   padding-left: 1cqw;
@@ -280,17 +312,18 @@
   text-shadow: 0 1px 3px rgb(0 0 0 / 82%);
 }
 
-.auditorium-credit-value--actor { top: 59.3629882813%; }
-.auditorium-credit-value--actress { top: 63.9099609375%; }
-.auditorium-credit-value--director { top: 68.398046875%; }
-.auditorium-credit-value--music { top: 73.1438476563%; }
+.auditorium-credit-value--actor { top: 56.9547325103%; }
+.auditorium-credit-value--actress { top: 60.9053497942%; }
+.auditorium-credit-value--director { top: 64.9382716049%; }
+.auditorium-credit-value--music { top: 68.6419753086%; }
 
 .auditorium-my-pov {
   position: absolute;
-  left: 10.3%;
-  right: 4%;
-  top: 84.1%;
-  height: 8.8%;
+  /* Clear writing area below MY POV, ending above the bolts/bottom border. */
+  left: 6.1776061776%;
+  right: 5.4054054054%;
+  top: 76.2962962963%;
+  height: 17.366255144%;
   box-sizing: border-box;
   padding: 0.4cqw 1.2cqw 0.5cqw;
   overflow-x: hidden;

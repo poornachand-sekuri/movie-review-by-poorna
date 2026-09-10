@@ -22,7 +22,8 @@ function asset(file: string, width: number, height: number, version = AUDITORIUM
  */
 export const auditoriumRuntimeAssets = {
   topNavigation: asset('02_Movie_Reviews_By_Poorna_Banner_lossless.webp', 2048, 682),
-  clapboard: asset('03_Clapboard_Details_transparent_lossless.webp', 1536, 1024),
+  // Approved transparent master: title band, larger labels and expanded MY POV.
+  clapboard: asset('03_Clapboard_Details_transparent_lossless.webp', 1295, 1215, '20260910-clapboard-cdb077d6'),
   theater: asset('04_Theater_Seats_Reactions_master_lossless.webp', 1448, 1086),
   shareReview: asset('05_Share_This_Review_transparent_lossless.webp', 2021, 374),
   relatedReviews: asset('06_Related_Reviews_transparent_lossless.webp', 2172, 724),
