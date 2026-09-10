@@ -1,5 +1,7 @@
 /* Desktop uses a live landscape frame, not an enlarged portrait bitmap.
    The original artwork and measured mobile hit areas remain below 769px. */
+.auditorium-desktop-scenery { display: none; }
+
 @media (min-width: 769px) {
   .auditorium-focus-layer[data-focus-kind="theater"] {
     padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
@@ -33,6 +35,7 @@
   }
 
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused {
+    --desktop-seat-height: clamp(48px, 10dvh, 88px);
     flex: 1 1 0;
     min-height: 0;
     aspect-ratio: auto;
@@ -45,18 +48,71 @@
     filter: none;
   }
 
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater::before {
-    content: '—  THE AUDITORIUM  —';
+  /* Reuse measured regions of the approved lossless portrait. Each region
+     keeps its own scale instead of enlarging the whole portrait canvas. */
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery {
+    display: block;
     position: absolute;
-    top: 14px;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery :where(span) {
+    position: absolute;
+    background-image: var(--desktop-theater-art);
+    background-repeat: no-repeat;
+  }
+
+  /* Source header y=147..217, scaled uniformly to 80%. */
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery__header {
+    top: 0;
+    left: 0;
+    height: 56px;
+    width: 100%;
+    background-size: 656.8px 1532px;
+    background-position: center -117.6px;
+  }
+
+  /* Original red wall lights, x=0..44 and x=777..821. */
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery__wall {
+    top: 56px;
+    bottom: calc(64px + var(--desktop-seat-height));
+    width: 36px;
+    background-size: 671.7273px 1566.8182px;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery__wall--left {
+    left: 0;
+    background-position: left center;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery__wall--right {
+    right: 0;
+    background-position: right center;
+  }
+
+  /* Seat backs y=1524..1620 exclude the baked reaction bar below them.
+     Repeat intact seat groups horizontally, preserving chair proportions. */
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery__seats {
+    bottom: 64px;
     left: 0;
     width: 100%;
-    color: #ff544b;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.22em;
-    text-align: center;
-    text-shadow: 0 0 12px #e22a27;
+    height: var(--desktop-seat-height);
+    background-size: calc(var(--desktop-seat-height) * 8.5520833333) calc(var(--desktop-seat-height) * 19.9479166667);
+    background-position: center calc(var(--desktop-seat-height) * -15.875);
+    background-repeat: repeat-x;
+  }
+
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-desktop-scenery__floor {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 64px;
+    background-image: linear-gradient(#0009, #0009), var(--desktop-theater-art);
+    background-size: auto, 553.0947px 1290.1053px;
+    background-position: center, center bottom;
+    background-repeat: no-repeat, repeat-x;
   }
 
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater > .auditorium-artwork,
@@ -65,12 +121,12 @@
   }
 
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-theater-content {
-    inset: 46px 18px 0;
+    inset: 56px 44px 0;
     width: auto;
     height: auto;
     aspect-ratio: auto;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 64px;
+    grid-template-rows: minmax(0, 1fr) calc(64px + var(--desktop-seat-height));
   }
 
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-review-scroll {
@@ -90,6 +146,8 @@
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-reactions {
     position: relative;
     inset: auto;
+    align-self: end;
+    height: 64px;
     width: calc(100% - 126px);
     display: flex;
     align-items: center;
@@ -116,12 +174,15 @@
     color: #ff9a83;
   }
 
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button--like::before { content: 'LIKE'; }
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button--dislike::before { content: 'DISLIKE'; }
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button--like::before { background-position: -90px -814px; }
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button--dislike::before { background-position: -272px -814px; }
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button::before {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    content: '';
+    width: 36px;
+    height: 36px;
+    background-image: var(--desktop-theater-art);
+    background-size: 410.5px 957.5px;
+    background-repeat: no-repeat;
   }
 
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-reaction-button::after { display: none; }
@@ -142,20 +203,22 @@
   }
 
   .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-section--theater.is-auditorium-focused .auditorium-focus-close--theater {
-    inset: auto 18px 12px auto;
+    inset: auto 18px 10px auto;
     width: 110px;
-    height: 40px;
-    min-height: 40px;
+    height: 44px;
+    min-height: 44px;
     transform: none;
-    border: 1px solid #ed5348;
+    border: 0;
     border-radius: 6px;
-    background: linear-gradient(#45140e, #180906);
-    color: #ffe1cc;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    box-shadow: 0 0 10px #df2b2244;
+    background: transparent;
+    box-shadow: none;
   }
 
-  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-close--theater::before { content: 'EXIT ›'; }
+  /* Original illuminated EXIT sign: source x=310..510, y=1725..1805. */
+  .auditorium-focus-layer[data-focus-kind="theater"] .auditorium-focus-close--theater::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--desktop-theater-art) -170.5px -948.75px / 451.55px 1053.25px no-repeat;
+  }
 }
