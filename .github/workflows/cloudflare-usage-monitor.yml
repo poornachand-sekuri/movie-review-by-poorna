@@ -1,0 +1,38 @@
+name: Cloudflare Usage Monitor
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ops/free-quota-monitor]
+    paths:
+      - .github/workflows/cloudflare-usage-monitor.yml
+      - scripts/cloudflare-usage-monitor.mjs
+      - tests/cloudflare-usage-monitor.test.mjs
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-usage-monitor
+  cancel-in-progress: false
+
+jobs:
+  usage:
+    name: Read Cloudflare usage metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Check report calculations and failure handling
+        run: node --test tests/cloudflare-usage-monitor.test.mjs
+      - name: Fetch recorded analytics (no application or D1 SQL requests)
+        env:
+          CLOUDFLARE_ANALYTICS_API_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/cloudflare-usage-monitor.mjs
