@@ -1,3 +1,5 @@
+import { initPosterBackgrounds, refreshPosterBackgrounds } from './poster-background';
+
 const marqueeTargetSelector = [
   '.now-title',
   '.cini-cafe-review-title',
@@ -68,6 +70,7 @@ function fitMarquee(element: HTMLElement, reduceMotion: boolean): void {
 }
 
 function refreshReviewDisplay(): void {
+  refreshPosterBackgrounds();
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   document.querySelectorAll<HTMLElement>(marqueeTargetSelector).forEach(prepareMarquee);
@@ -85,6 +88,7 @@ export function initReviewDisplay(): void {
     return;
   }
   initialized = true;
+  initPosterBackgrounds();
 
   refreshReviewDisplay();
   document.fonts?.ready?.then(scheduleRefresh).catch(() => {});
@@ -95,11 +99,13 @@ export function initReviewDisplay(): void {
 
   if (typeof MutationObserver !== 'undefined') {
     const observer = new MutationObserver((records) => {
-      if (records.some((record) => record.type === 'childList')) scheduleRefresh();
+      if (records.some((record) => record.type === 'childList' || record.type === 'attributes')) scheduleRefresh();
     });
     observer.observe(document.body, {
       childList: true,
       subtree: true,
+      attributes: true,
+      attributeFilter: ['src', 'srcset', 'sizes'],
     });
   }
 }
