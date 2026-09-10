@@ -1,5 +1,5 @@
 /* Shared poster policy: show the complete image at its natural proportions.
- * Different image/frame ratios leave space around the centered poster.
+ * A subdued blurred duplicate fills space around the centered poster.
  * Corner masks remain registered to the decorative artwork. */
 .now-poster img,
 .recent-card__poster img,
@@ -9,6 +9,34 @@
 .auditorium-related-poster-frame img {
   object-fit: contain;
   object-position: center;
+}
+
+/* Existing positioned frames and their masks clip both layers together. */
+.review-poster-soft {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.review-poster-soft::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  z-index: 0;
+  background: var(--review-poster-background) center / cover no-repeat;
+  filter: blur(12px) brightness(0.45) saturate(0.7);
+  pointer-events: none;
+}
+
+.review-poster-soft > img.review-poster-foreground {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+}
+
+/* Retain the archive's existing monochrome treatment in its backdrop too. */
+.previous-card.review-poster-soft::before {
+  filter: blur(12px) grayscale(1) sepia(0.72) brightness(0.45);
 }
 
 /*
