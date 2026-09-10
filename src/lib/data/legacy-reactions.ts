@@ -11,14 +11,18 @@ export async function importLegacyReactions(reviewId?: number): Promise<void> {
   // Local databases have no production binding. Do not mark them as imported.
   if (!source) return;
   const db = getContentDb();
-  const pending = await db.prepare(`
+  // A nullable-parameter OR prevents a primary-key lookup on per-review polls.
+  // Keep the catalogue-wide import available for the dashboard and Café.
+  const query = db.prepare(`
     SELECT r.id, COALESCE(json_extract(a.source_json, '$.s'), r.slug) AS source_slug
     FROM reviews r
     LEFT JOIN legacy_import_audit a ON a.review_id = r.id
     LEFT JOIN legacy_reaction_imports i ON i.review_id = r.id
     WHERE i.review_id IS NULL AND r.status = 'published'
-      AND (?1 IS NULL OR r.id = ?1)
-  `).bind(reviewId ?? null).run<{ id: number; source_slug: string }>();
+      ${reviewId === undefined ? '' : 'AND r.id = ?1'}
+  `);
+  const pending = await (reviewId === undefined ? query : query.bind(reviewId))
+    .run<{ id: number; source_slug: string }>();
 
   // Bound cold-store work on the first catalogue read; subsequent reads are D1-only.
   const queue = [...pending.results];

@@ -26,6 +26,16 @@ Verification:
 
 The file/reference audit did not establish that any remaining standalone file is safe to delete. All poster masks, geometry reference data, loading artwork, theatre scenery, migration/import scripts, public routes and deployed compatibility exports remain necessary. Their retention is deliberate. MY POV fitting and its approved panel geometry, artwork URLs, image palettes/transparency, APIs, database contents, authentication checks and mobile/desktop theatre styling remain intact. Production deployment is a separate step.
 
+## Production quota incident during cleanup validation
+
+At 2026-09-10 16:29 UTC, a temporary read-only diagnostic in [validation run 34502351118](https://github.com/poornachand-sekuri/movie-review-by-poorna/actions/runs/34502351118) returned Cloudflare D1 error 7500: the account exceeded its free daily row-read allowance. Production still ran main commit `80af0a6`; PR #87 had not been merged or deployed. Application validation and approved artwork verification passed, but the existing required live-content audit failed because the catalogue API returned HTTP 500.
+
+[Cloudflare documents](https://developers.cloudflare.com/d1/platform/pricing/) a free allowance of five million rows read per day, counted by rows scanned, and a reset at 00:00 UTC. Site requests, dashboard polling and read-only live validation consume the same account allowance. Preview shares the production database. The exact contribution of each workload has not been measured, so this incident is not attributed to one of them.
+
+A targeted follow-up removes the nullable-parameter OR from the per-review legacy-reaction import lookup. On an isolated SQLite fixture of 137 published reviews, `EXPLAIN QUERY PLAN` changes from a search of the published-status index to `SEARCH r USING INTEGER PRIMARY KEY (rowid=?)`. The catalogue-wide path remains available. Two regression tests cover the indexed lookup, original-slug/vote preservation, completed imports, draft/missing reviews and full-catalogue imports. All 54 tests and `npm run validate` pass locally, as does the production build. These are local query-plan results, not a measurement of total production usage or a guarantee that the free allowance is sufficient.
+
+The temporary diagnostic is removed after recording its result. Required validation and deployment gates remain unchanged. Existing quota exhaustion requires the UTC reset or a user-authorized Workers plan upgrade; query improvements cannot restore consumed quota. Avoid repeated live audit attempts while the account remains over quota. Once access resumes, rerun required validation, merge normally, and verify the resulting production deployment and D1 usage.
+
 ## Earlier architecture refactor
 
 Baseline: main commit `65edf623e0034cd61c5b7c657fb4fba2d8af1df8`. Work is isolated on `site-refactor-performance`.
