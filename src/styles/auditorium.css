@@ -325,16 +325,17 @@
   top: 76.2962962963%;
   height: 17.366255144%;
   box-sizing: border-box;
-  padding: 0.4cqw 1.2cqw 0.5cqw;
+  padding: clamp(6px, 1cqw, 16px) 1.2cqw 0.6cqw;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #b72c28 transparent;
+  scrollbar-gutter: stable;
   overscroll-behavior: contain;
   pointer-events: auto;
   color: #ffe2b6;
   font-family: "Aptos Narrow", "Arial Narrow", "Roboto Condensed", "Segoe UI", Arial, sans-serif;
-  font-size: clamp(10px, 2.18cqw, 18px);
+  font-size: clamp(20px, 4cqw, 48px);
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: 0.004em;
@@ -626,8 +627,7 @@
   .auditorium-credit-value { font-size: clamp(7px, 1.8cqw, 10px); }
 
   .auditorium-my-pov {
-    padding: 0.24cqw 1cqw 0.3cqw;
-    font-size: clamp(9.5px, 2.55cqw, 12.5px);
+    padding-inline: 1cqw;
     letter-spacing: 0;
   }
 

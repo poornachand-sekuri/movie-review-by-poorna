@@ -155,7 +155,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
             </div>
           )}
 
-          <div class="auditorium-my-pov" tabindex="0" role="region" aria-label="My POV — scroll to read">
+          <div class="auditorium-my-pov" data-pov-fit tabindex="0" role="region" aria-label="My POV">
             <p>{review.verdict ?? review.excerpt ?? '—'}</p>
           </div>
         </div>
@@ -371,6 +371,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
     import { initAuditoriumSharing } from '../../lib/auditorium-sharing';
     import { initAuditoriumFocus } from '../../lib/auditorium-focus';
     import { initAuditoriumReactions } from '../../lib/auditorium-reactions';
+    import { initPovFit } from '../../lib/pov-fit';
     import { prepareCinemaPage } from '../../lib/lounge-loading';
 
     const page = document.querySelector<HTMLElement>('[data-cinema-page]');
@@ -379,5 +380,6 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
     initAuditoriumSharing();
     initAuditoriumFocus();
     initAuditoriumReactions();
+    initPovFit();
   </script>
 </SiteFrame>

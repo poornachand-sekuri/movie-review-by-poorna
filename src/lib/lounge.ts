@@ -1,7 +1,9 @@
 import { prepareLounge } from './lounge-loading';
 import { initComments } from './comments-client';
+import { initPovFit } from './pov-fit';
 
 initComments();
+initPovFit();
 
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 const animations = new Map<HTMLElement, Animation>();

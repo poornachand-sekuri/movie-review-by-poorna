@@ -236,8 +236,12 @@
   top: 67.4%;
   width: 89%;
   height: 22%;
-  overflow: hidden;
-  padding: 0.25cqw 0.9cqw 0.35cqw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  padding: clamp(6px, 1cqw, 12px) 0.9cqw 0.6cqw;
   border: 0;
   background: transparent;
 }
@@ -247,19 +251,16 @@
 }
 
 .now-pov p {
-  display: -webkit-box;
   margin: 0;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   color: #f7f2ea;
   font-family: "Avenir Next", Avenir, "Segoe UI", Arial, sans-serif;
-  font-size: 3.1cqw;
+  font-size: clamp(20px, 5cqw, 40px);
   font-style: normal;
   font-weight: 500;
-  line-height: 1.25;
+  line-height: 1.35;
   letter-spacing: 0.01em;
   text-shadow: 0 0.04em 0.08em rgba(0, 0, 0, 0.7);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
 }
 
 .now-read-hit,
