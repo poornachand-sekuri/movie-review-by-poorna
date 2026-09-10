@@ -154,7 +154,7 @@ const musicDirectors = review.credits.filter((credit) => credit.role === 'music_
             </div>
           )}
 
-          <div class="auditorium-my-pov">
+          <div class="auditorium-my-pov" tabindex="0" role="region" aria-label="My POV — scroll to read">
             <p>{review.verdict ?? review.excerpt ?? '—'}</p>
           </div>
         </div>
