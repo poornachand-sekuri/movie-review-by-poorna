@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import { createClock } from './helpers/clock.mjs';
 
 function setup() {
   const nodes = new Map();
@@ -22,17 +23,19 @@ function setup() {
   };
   const calls = [];
   const locations = [];
+  const clock = createClock();
+  const document = Object.assign(new EventTarget(), { querySelector: node, querySelectorAll: () => [], visibilityState: 'visible' });
+  const window = Object.assign(new EventTarget(), { scrollTo() {} });
   const context = {
-    document: { querySelector: node, querySelectorAll: () => [], addEventListener() {} },
-    window: { addEventListener() {}, scrollTo() {} },
+    document, window,
     location: { replace: path => locations.push(path) },
     fetch: (path, options) => new Promise((resolve, reject) => calls.push({ path, options, resolve, reject })),
-    FormData, URL, setTimeout: () => 1, clearTimeout() {}, setInterval: () => 1,
+    FormData, URL, ...clock,
   };
   runInNewContext(readFileSync('public/admin/admin.js', 'utf8'), context);
   // Leave session boot pending: these tests exercise the authenticated document's controls.
-  calls.shift();
-  return { node, calls, locations };
+  const boot = calls.shift();
+  return { node, calls, locations, boot, clock, document, window };
 }
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
@@ -80,4 +83,38 @@ test('saving uses the returned canonical record and next save updates its ID wit
   h.node('#reviewForm').emit('submit');
   assert.equal(h.calls[2].path, '/api/admin/reviews/42');
   assert.equal(h.calls[2].options.method, 'PUT');
+});
+
+test('dashboard has no idle polling, coalesces return events and fetches the latest selected range', async () => {
+  const h = setup();
+  h.node('#analyticsDays').value = '7';
+  h.boot.resolve(Response.json({ authenticated: true }));
+  await tick();
+  assert.equal(h.calls.length, 1);
+  h.calls[0].resolve(Response.json({ views: 10 })); await tick();
+  h.clock.advance(3600000);
+  assert.equal(h.calls.length, 1);
+  h.window.dispatchEvent(new Event('focus'));
+  h.document.dispatchEvent(new Event('visibilitychange'));
+  h.clock.advance(50);
+  assert.equal(h.calls.length, 2);
+  h.node('#analyticsDays').value = '30';
+  h.node('#analyticsDays').emit('change');
+  h.node('#analyticsDays').value = '90';
+  h.node('#analyticsDays').emit('change');
+  assert.equal(h.calls.length, 2, 'range changes do not start overlapping requests');
+  h.calls[1].resolve(Response.json({ views: 20 })); await tick();
+  assert.equal(h.node('#metricViews').textContent, '10', 'old range cannot replace the displayed metrics');
+  assert.equal(h.calls.length, 3);
+  assert.equal(h.calls[2].path, '/api/admin/analytics?days=90');
+  h.calls[2].resolve(Response.json({ views: 90 })); await tick();
+  assert.equal(h.node('#metricViews').textContent, '90');
+  h.document.visibilityState = 'hidden';
+  const event = new Event('storage'); event.key = 'mrp:reaction-change';
+  h.window.dispatchEvent(event);h.clock.advance(3600000);
+  assert.equal(h.calls.length, 3);
+  h.document.visibilityState = 'visible';
+  h.document.dispatchEvent(new Event('visibilitychange'));h.window.dispatchEvent(new Event('focus'));
+  h.clock.advance(50);
+  assert.equal(h.calls.length, 4);
 });

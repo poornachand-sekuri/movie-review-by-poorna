@@ -73,15 +73,23 @@
         if (panel === 'reviews' && !state.reviews.length)
             await loadReviews();
     }
+    let dashboardRefreshTimer;
+    let analyticsRefreshQueued = false;
+    const dashboardVisible = () => !el.admin.classList.contains('hidden') && state.panel === 'dashboard' && document.visibilityState !== 'hidden';
     async function loadAnalytics() {
-        if (el.refreshAnalytics.disabled) return;
+        clearTimeout(dashboardRefreshTimer);
+        dashboardRefreshTimer = undefined;
+        if (el.refreshAnalytics.disabled) { analyticsRefreshQueued = true; return; }
         el.refreshAnalytics.disabled = true;
         el.syncReactions.disabled = true;
+        const days = el.days.value;
         try {
-            const data = await api(`/api/admin/analytics?days=${encodeURIComponent(el.days.value)}`);
-            renderAnalytics(data);
-            updateCommentBadges(data.commentCounts || {});
-            el.reactionSyncStatus.textContent = `Live D1 reaction totals across ${data.reviewCount || 0} reviews.`;
+            const data = await api(`/api/admin/analytics?days=${encodeURIComponent(days)}`);
+            if (days === el.days.value) {
+                renderAnalytics(data);
+                updateCommentBadges(data.commentCounts || {});
+                el.reactionSyncStatus.textContent = `D1 reaction totals across ${data.reviewCount || 0} reviews.`;
+            }
         }
         catch (err) {
             toast(err.message, true);
@@ -89,16 +97,24 @@
         finally {
             el.refreshAnalytics.disabled = false;
             el.syncReactions.disabled = false;
+            if (analyticsRefreshQueued) {
+                analyticsRefreshQueued = false;
+                if (dashboardVisible()) void loadAnalytics();
+            }
         }
     }
     const refreshDashboard = () => {
-        if (!el.admin.classList.contains('hidden') && state.panel === 'dashboard' && document.visibilityState !== 'hidden') void loadAnalytics();
+        if (!dashboardVisible() || dashboardRefreshTimer !== undefined) return;
+        dashboardRefreshTimer = setTimeout(() => {
+            dashboardRefreshTimer = undefined;
+            if (dashboardVisible()) void loadAnalytics();
+        }, 50);
     };
     window.addEventListener('focus', refreshDashboard);
     document.addEventListener('visibilitychange', refreshDashboard);
     window.addEventListener('storage', event => { if (event.key === 'mrp:reaction-change') refreshDashboard(); });
     window.addEventListener('pageshow', event => { if (event.persisted) refreshDashboard(); });
-    setInterval(refreshDashboard, 15000);
+    window.addEventListener('pagehide', () => { clearTimeout(dashboardRefreshTimer); dashboardRefreshTimer = undefined; });
     el.refreshAnalytics.addEventListener('click', () => loadAnalytics());
     el.days.addEventListener('change', () => loadAnalytics());
     el.syncReactions.addEventListener('click', () => loadAnalytics());

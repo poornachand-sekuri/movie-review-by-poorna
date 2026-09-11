@@ -1,5 +1,7 @@
 # Read-efficiency rollout
 
+This records the original September 11 rollout. For subsequent deployments, the event-driven refresh update replaces routine live probes/audits with a two-request service/database check. The original probes, vote smoke tests and full audit below now require the manual `extended_checks` option, default false. Migration safety checks remain. See `CLOUDFLARE-DEPLOYMENT.md` for the current workflow.
+
 The user authorized merging this branch and deploying after the daily quota resets, then checking whether reads decrease. Stay on the Free plan and preserve all review, vote, comment and view data. The deleted earlier branches must not be revived.
 
 ## Order and gates

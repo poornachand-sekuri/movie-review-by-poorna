@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createD1 } from './helpers/d1.mjs';
 import { measureReads } from '../scripts/check-d1-reads.mjs';
 import { migrationConfig, totalsMismatchSql } from '../scripts/apply-read-efficiency.mjs';
+import { checkDeployment } from '../scripts/check-deployment.mjs';
 
 test('deployment probes preserve sampled results, use read-only SQL and measure returned D1 metadata', async () => {
   const db = createD1();
@@ -40,5 +41,58 @@ test('migration preparation retains the selected database and standard migration
     assert.equal(config.d1_databases[0].database_id, binding.database_id);
     assert.equal(config.d1_databases[0].migrations_dir, 'migrations');
     assert.equal(config.d1_databases[0].migrations_table, binding.migrations_table);
+  }
+});
+
+test('routine deployment verification makes only two GETs and never writes votes or retries errors', async () => {
+  for (const target of ['production', 'preview']) {
+    const requests = [];
+    const fetch = async (url, options) => {
+      requests.push(url.pathname + url.search);
+      assert.equal(options.method, 'GET');
+      assert.equal(options.redirect, 'error');
+      assert(options.signal instanceof AbortSignal);
+      return Response.json(url.pathname === '/api/health'
+        ? { status: 'ok', service: 'movie-review-by-poorna', environment: target }
+        : { items: [{ slug: 'one-review' }] });
+    };
+    assert.equal((await checkDeployment('https://example.com', target, fetch)).status, 'passed');
+    assert.deepEqual(requests, ['/api/health', '/api/reviews?limit=1']);
+  }
+  let requests = 0;
+  await assert.rejects(checkDeployment('https://example.com', 'production', async () => {
+    requests++; return new Response('', { status: 503 });
+  }), /503/);
+  assert.equal(requests, 1, 'an outage does not cause repeated live requests');
+  requests = 0;
+  await assert.rejects(checkDeployment('https://example.com', 'production', async () => {
+    requests++;
+    return requests === 1 ? Response.json({ status: 'ok', service: 'movie-review-by-poorna', environment: 'production' })
+      : new Response('', { status: 500 });
+  }), /500/);
+  assert.equal(requests, 2, 'D1 failure stops after one database-backed request');
+});
+
+test('deployment verification rejects a wrong environment and missing catalogue', async () => {
+  await assert.rejects(checkDeployment('https://example.com', 'production', async () => Response.json({
+    status: 'ok', service: 'movie-review-by-poorna', environment: 'preview',
+  })), /Wrong deployment environment/);
+  await assert.rejects(checkDeployment('https://example.com', 'production', async url => Response.json(
+    url.pathname === '/api/health' ? { status: 'ok', service: 'movie-review-by-poorna', environment: 'production' }
+      : { items: [] },
+  )), /Expected one published review/);
+});
+
+test('expensive production and shared-preview diagnostics require an explicit manual opt-in', () => {
+  for (const target of ['production', 'preview']) {
+    const workflow = readFileSync(`.github/workflows/deploy-${target}.yml`, 'utf8');
+    assert.match(workflow, /extended_checks:[\s\S]*?default: false/);
+    const steps = workflow.split(/\n      - name:/).slice(1);
+    assert(steps.some(step => step.includes('scripts/check-deployment.mjs') && !step.includes('if:')));
+    for (const step of steps.filter(step => /scripts\/check-d1-reads|npm run smoke|scripts\/audit-content|wrangler d1 execute/.test(step))) {
+      assert.match(step, /if: .*inputs\.extended_checks == true/, 'live diagnostics must be opt-in');
+      if (target === 'production') assert.match(step, /github\.event_name == 'workflow_dispatch'/);
+    }
+    assert(steps.some(step => step.includes(`scripts/cloudflare.mjs ${target} deploy`)), 'migration/deployment target checks remain');
   }
 });
