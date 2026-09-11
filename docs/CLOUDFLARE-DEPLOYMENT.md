@@ -4,7 +4,7 @@
 
 | Target | Source configuration | Worker | Public URL |
 | --- | --- | --- | --- |
-| Production | `wrangler.jsonc` | `movie-review-by-poorna` | https://www.moviereviewbypoorna.com |
+| Production | `wrangler.jsonc` | `movie-review-by-poorna` | https://moviereviewbypoorna.com |
 | Preview | `wrangler.preview.jsonc` | `movie-review-by-poorna-preview` | https://movie-review-by-poorna-preview.poornarocks.workers.dev |
 
 Both targets use the custom `src/worker.ts` entry, the `CONTENT_DB` binding to `movie-review-by-poorna-content`, and the `REVIEW_ASSETS` binding to `movie-review-assets`. Preview is code isolation; edits, reactions, comments and uploads use shared stores.
