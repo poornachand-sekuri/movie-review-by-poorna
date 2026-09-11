@@ -1,0 +1,52 @@
+/* Live clapboard value typography.
+   Keep the approved artwork/label geometry untouched; this layer only improves
+   the runtime values so they visually belong with the baked-in labels. */
+
+.auditorium-clap-value {
+  color: #fff0df;
+  font-family: "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(13px, 2.75cqw, 22px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 96%),
+    0 0 5px rgb(179 72 27 / 18%);
+}
+
+.auditorium-stars {
+  color: #efbc62;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.14em;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 95%),
+    0 0 5px rgb(226 175 86 / 18%);
+}
+
+.auditorium-credit-value {
+  color: #fff0df;
+  font-family: "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(11px, 2.2cqw, 17px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.012em;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 96%),
+    0 0 4px rgb(179 72 27 / 14%);
+}
+
+@media (max-width: 520px) {
+  .auditorium-clap-value {
+    font-size: clamp(13px, 3.2cqw, 15px);
+  }
+
+  .auditorium-credit-value {
+    font-size: clamp(11px, 2.75cqw, 12.5px);
+  }
+
+  .auditorium-stars {
+    font-size: 1.16em;
+  }
+}
