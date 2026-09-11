@@ -1,3 +1,5 @@
+@import './auditorium-clapboard-typography.css';
+
 /* Auditorium navigation hit areas.
    Coordinates are tied to the approved 2048x682 top/bottom artwork canvases.
    Links remain visually transparent so the baked artwork stays untouched. */
