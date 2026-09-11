@@ -15,7 +15,7 @@ The Astro adapter receives `configPath` explicitly from `MRP_DEPLOY_TARGET`. The
 
 1. `validate.yml`: on pull requests/main or manual invocation, run guardrails, behavioral tests and Astro checks; build and dry-run production and preview; verify all migrations and the fixture/legacy catalogue import.
 2. `deploy-preview.yml`: manual on the chosen branch; validate, build preview, deploy preview, then smoke-test all four pages and APIs. The job summary includes direct test links.
-3. `deploy-production.yml`: after successful main validation, deploy the exact validated commit. Manual execution always checks out main and validates before building. Production deployments are serialized.
+3. `deploy-production.yml`: after successful main validation, measure the original query baseline, prepare migration 0008, deploy the exact validated commit, compare optimized D1 reads and run smoke/content checks. Manual execution always checks out main and validates before building. Production deployments are serialized.
 
 Required GitHub secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The Projector Room uses Worker secrets `ADMIN_PASSWORD` and optionally `ADMIN_SESSION_SECRET` on each target. No secret values belong in Git.
 
@@ -31,12 +31,14 @@ node scripts/cloudflare.mjs preview dry-run
 
 For an authorized deployment, use `npm run deploy:preview` or `npm run deploy:production`; each validates and builds first. `npm run preview` serves the most recently compiled app locally and does not publish it.
 
-The workflows call the same scripts. There are no trigger files, one-off patch workflows or automatic preview pushes. A successful merge into main starts validation and subsequently production deployment.
+The deployment workflows call the same scripts. There are no trigger files, one-off patch workflows or automatic preview pushes. A successful merge into main starts validation and subsequently production deployment. The separately maintained `ops/free-quota-monitor` branch is used by the existing analytics report and must be retained.
 
 ## Storage and media
 
 D1 is authoritative for review content, reactions, comments and page-view analytics. R2 stores media and approved UI artwork at existing custom-domain URLs. Keep versioned immutable artwork paths and original image quality/transparency. No lossy conversion or image resizing is performed by this refactor.
 
-Migrations are not automatically applied on deployment. Preserve migration history and use the documented data migration procedure for separately authorized schema changes. Retain the old Durable Object class exports for namespace/deployment compatibility. The read-only `LEGACY_REACTIONS` binding copies preserved votes once into D1; it must point at the original production ReactionStore namespace (preview uses `script_name`). Reaction schema initialization creates the import marker table safely on first use. New votes continue to use D1 only.
+`scripts/cloudflare.mjs` now prepares the explicitly authorized migration `0008_read_efficiency.sql` before either target is deployed. Preparation verifies the expected database and prerequisite tables, captures a Time Travel restore bookmark, applies only that migration with Wrangler's standard migration tracking, and checks totals against canonical votes. It never replays historical migrations or applies future migrations automatically. A preparation failure stops Worker deployment. Existing migration history remains intact; subsequent deployments recognize the recorded migration and skip backfill. See `READ-EFFICIENCY-ROLLOUT.md` for details.
+
+Retain the old Durable Object class exports for namespace/deployment compatibility. The read-only `LEGACY_REACTIONS` binding copies preserved votes once into D1; it must point at the original production ReactionStore namespace (preview uses `script_name`). Reaction schema initialization creates the import marker table safely on first use. New votes continue to use D1 only.
 
 Preview pages carry `noindex,nofollow`; production public pages remain indexable. Admin documents and responses remain private/no-store.

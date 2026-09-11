@@ -5,6 +5,15 @@ import { getAdminCommentCounts } from './admin-comments';
 import { ensureAnalyticsSchema } from './analytics-schema';
 
 interface CountRow { count: number | null }
+interface AnalyticsSnapshot {
+  version: number;
+  days: number;
+  computedAt: number;
+  expiresAt: number;
+  value: Record<string, unknown>;
+}
+// One recent dashboard range per binding. Every reuse checks D1's transactional revision.
+const analyticsCache = new WeakMap<D1Database, AnalyticsSnapshot>();
 
 export async function recordPageView(input: {
   visitorKey: string;
@@ -26,55 +35,60 @@ export async function recordPageView(input: {
 }
 
 export async function getAdminAnalytics(days = 30): Promise<Record<string, unknown>> {
-  await ensureAllReactionImports();
   await ensureAnalyticsSchema();
   const safeDays = Math.max(1, Math.min(365, Math.trunc(Number(days) || 30)));
-  const window = `-${safeDays} days`;
   const db = getContentDb();
+  const revision = await db.prepare('SELECT version FROM analytics_revision WHERE id = 1').first<{ version: number }>();
+  if (!revision) throw new Error('Apply database migration 0008 before using dashboard analytics.');
+  const now = Date.now();
+  const cutoff = new Date(now - safeDays * 86400000).toISOString().slice(0, 19).replace('T', ' ');
+  const since = cutoff.slice(0, 10);
+  const cached = analyticsCache.get(db);
+  if (cached?.version === revision.version && cached.days === safeDays && now >= cached.computedAt && now < cached.expiresAt) {
+    return { ...cached.value, since };
+  }
+  await ensureAllReactionImports();
 
-  const [trafficRow, reviewRow, byTypeResult, dailyResult, topPagesResult, reactionResult, commentCounts] = await Promise.all([
-    db.prepare(`SELECT COUNT(*) AS views, COUNT(DISTINCT visitor_key) AS visitors
-      FROM page_views WHERE created_at >= datetime('now', ?1)`).bind(window).first<{ views: number; visitors: number }>(),
-    db.prepare(`SELECT COUNT(*) AS count FROM reviews WHERE status = 'published'`).first<CountRow>(),
+  const [trafficRow, byTypeResult, dailyResult, topPagesResult, reactionResult, commentCounts] = await Promise.all([
+    db.prepare(`SELECT COUNT(*) AS views, COUNT(DISTINCT visitor_key) AS visitors,
+        unixepoch(MIN(created_at)) AS oldest_view
+      FROM page_views WHERE created_at >= ?1`).bind(cutoff).first<{ views: number; visitors: number; oldest_view: number | null }>(),
     db.prepare(`
       SELECT page_type, COUNT(*) AS views
       FROM page_views
-      WHERE created_at >= datetime('now', ?1)
+      WHERE created_at >= ?1
       GROUP BY page_type
       ORDER BY views DESC, page_type
-    `).bind(window).run<{ page_type: string; views: number }>(),
+    `).bind(cutoff).run<{ page_type: string; views: number }>(),
     db.prepare(`
       SELECT date(created_at) AS day, COUNT(*) AS views
       FROM page_views
-      WHERE created_at >= datetime('now', ?1)
+      WHERE created_at >= ?1
       GROUP BY date(created_at)
       ORDER BY day ASC
-    `).bind(window).run<{ day: string; views: number }>(),
+    `).bind(cutoff).run<{ day: string; views: number }>(),
     db.prepare(`
-      SELECT
-        pv.page_key,
-        pv.page_type,
-        pv.review_slug,
-        COUNT(*) AS views,
-        COUNT(DISTINCT pv.visitor_key) AS visitors,
-        MAX(r.title) AS title
-      FROM page_views pv
-      LEFT JOIN reviews r ON r.slug COLLATE NOCASE = pv.review_slug
-      WHERE pv.created_at >= datetime('now', ?1)
-      GROUP BY pv.page_key, pv.page_type, pv.review_slug
-      ORDER BY views DESC, visitors DESC, pv.page_key
-      LIMIT 30
-    `).bind(window).run<{ page_key: string; page_type: string; review_slug: string | null; views: number; visitors: number; title: string | null }>(),
+      WITH top_pages AS (
+        SELECT page_key, page_type, review_slug, COUNT(*) AS views,
+          COUNT(DISTINCT visitor_key) AS visitors
+        FROM page_views WHERE created_at >= ?1
+        GROUP BY page_key, page_type, review_slug
+        ORDER BY views DESC, visitors DESC, page_key
+        LIMIT 30
+      )
+      SELECT p.*, r.title
+      FROM top_pages p LEFT JOIN reviews r ON r.slug COLLATE NOCASE = p.review_slug
+      ORDER BY p.views DESC, p.visitors DESC, p.page_key
+    `).bind(cutoff).run<{ page_key: string; page_type: string; review_slug: string | null; views: number; visitors: number; title: string | null }>(),
     db.prepare(`
       SELECT
         r.slug,
         r.title,
-        COALESCE(SUM(CASE WHEN v.reaction = 'like' THEN 1 ELSE 0 END), 0) AS likes,
-        COALESCE(SUM(CASE WHEN v.reaction = 'dislike' THEN 1 ELSE 0 END), 0) AS dislikes
+        COALESCE(t.likes, 0) AS likes,
+        COALESCE(t.dislikes, 0) AS dislikes
       FROM reviews r
-      LEFT JOIN review_reaction_votes v ON v.review_id = r.id
+      LEFT JOIN review_reaction_totals t ON t.review_id = r.id
       WHERE r.status = 'published'
-      GROUP BY r.id, r.slug, r.title
       ORDER BY (likes + dislikes) DESC, likes DESC, r.reviewed_date DESC, r.id DESC
     `).run<{ slug: string; title: string; likes: number; dislikes: number }>(),
     getAdminCommentCounts(),
@@ -91,13 +105,12 @@ export async function getAdminAnalytics(days = 30): Promise<Record<string, unkno
     dislike: totals.dislike + row.dislike,
   }), { like: 0, dislike: 0 });
 
-  const since = new Date(Date.now() - safeDays * 86400000).toISOString().slice(0, 10);
-  return {
+  const value = {
     days: safeDays,
     since,
     views: Number(trafficRow?.views ?? 0),
     uniqueVisitors: Number(trafficRow?.visitors ?? 0),
-    reviewCount: Number(reviewRow?.count ?? 0),
+    reviewCount: reactions.length,
     commentCounts,
     reactionTotals,
     byType: byTypeResult.results.map((row) => ({ pageType: row.page_type, views: Number(row.views ?? 0) })),
@@ -112,6 +125,15 @@ export async function getAdminAnalytics(days = 30): Promise<Record<string, unkno
     })),
     reactions,
   };
+  // Avoid caching a mixed snapshot if another request wrote during these reads.
+  const after = await db.prepare('SELECT version FROM analytics_revision WHERE id = 1').first<{ version: number }>();
+  const oldestExpiry = trafficRow?.oldest_view == null ? Infinity
+    : (Number(trafficRow.oldest_view) + safeDays * 86400 + 1) * 1000;
+  const expiresAt = Math.min(now + 60000, oldestExpiry);
+  if (after?.version === revision.version && expiresAt > Date.now()) {
+    analyticsCache.set(db, { version: revision.version, days: safeDays, computedAt: now, expiresAt, value });
+  }
+  return value;
 }
 
 export async function adminReactionSyncWindow(cursor = 0, limit = 20): Promise<Record<string, number | boolean>> {

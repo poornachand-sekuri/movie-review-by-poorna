@@ -4,7 +4,7 @@ import SiteFrame from '../layouts/SiteFrame.astro';
 import { ciniCafeRuntimeAsset } from '../lib/cini-cafe-assets';
 import { listCiniCafeReviews } from '../lib/data/cini-cafe';
 import '../styles/cini-cafe.css';
-import { createCafeFilter } from '../lib/cini-cafe-filter';
+import { CAFE_PAGE_SIZE, createCafeFilter } from '../lib/cini-cafe-filter';
 import { renderCafeCard } from '../lib/cini-cafe-card';
 
 export const prerender = false;
@@ -13,7 +13,7 @@ Astro.response.headers.set('cache-control', 'no-store');
 const catalogue = await listCiniCafeReviews();
 const query = Astro.url.searchParams.get('q') ?? '';
 const initialResults = createCafeFilter(catalogue)({ query, language: '', year: '', sort: 'latest' });
-const initialCards = initialResults.slice(0, 6).map(renderCafeCard).join('');
+const initialCards = initialResults.slice(0, CAFE_PAGE_SIZE).map(renderCafeCard).join('');
 const catalogueJson = JSON.stringify(catalogue)
   .replaceAll('&', '\\u0026')
   .replaceAll('<', '\\u003c')

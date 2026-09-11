@@ -1,9 +1,8 @@
 import { getContentDb } from '../cloudflare/content-db';
 
 export type CommentTargetType = 'lounge' | 'review';
-export type CommentStatus = 'pending' | 'approved' | 'rejected';
 
-export interface PublicComment {
+interface PublicComment {
   id: number;
   targetType: CommentTargetType;
   targetId: string;
@@ -30,10 +29,8 @@ interface CommentRow {
   target_id: string;
   author_name: string;
   body: string;
-  status?: string;
   created_at: string;
   approved_at: string | null;
-  review_title?: string | null;
 }
 
 interface CountRow {
@@ -167,20 +164,20 @@ export async function listApprovedComments(
       `SELECT
          id,
          target_type,
-         ?2 AS target_id,
+         ?1 AS target_id,
          author_name,
          body,
          created_at,
          approved_at
        FROM comments
-       WHERE target_type = ?1
-         AND ((?1 = 'review' AND review_id = ?4)
-           OR (?1 = 'lounge' AND target_id COLLATE NOCASE = ?2))
+       WHERE ${target.targetType === 'review'
+         ? "target_type = 'review' AND review_id = ?3"
+         : "target_type = 'lounge' AND target_id COLLATE NOCASE = ?3"}
          AND status = 'approved'
        ORDER BY COALESCE(approved_at, created_at) DESC, id DESC
-       LIMIT ?3`,
+       LIMIT ?2`,
     )
-    .bind(target.targetType, target.targetId, safeLimit, target.reviewId)
+    .bind(target.targetId, safeLimit, target.reviewId ?? target.targetId)
     .run<CommentRow>();
 
   return result.results.map(mapPublicComment);

@@ -29,9 +29,6 @@
   display: block !important;
   pointer-events: none;
   background-color: #000;
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-size: 100% auto;
   transform: translateZ(0);
 }
 
@@ -49,7 +46,6 @@
 .lounge-stage {
   position: relative;
   z-index: 2;
-  width: min(92vw, 470px);
   margin-inline: auto;
   padding: clamp(92px, 13vh, 128px) 0 clamp(58px, 8vh, 96px);
   display: grid;
@@ -180,10 +176,6 @@
   object-fit: contain;
 }
 
-.now-poster img {
-  filter: drop-shadow(0 0.9cqw 1.6cqw rgba(0, 0, 0, 0.8));
-}
-
 .poster-fallback {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
@@ -196,10 +188,6 @@
   min-width: 0;
   color: #f5f2ea;
   text-shadow: 0 1px 2px #000, 0 0 8px rgba(0, 0, 0, 0.8);
-}
-
-.now-title {
-  font-size: 4.15cqw;
 }
 
 .now-meta {
@@ -220,14 +208,6 @@
   line-height: 1.05;
   letter-spacing: 0.065em;
   text-transform: uppercase;
-}
-
-.now-meta dd {
-  font-size: 2.35cqw;
-}
-
-.now-meta__rating dd {
-  font-size: 2.55cqw;
 }
 
 .now-pov {
@@ -308,16 +288,6 @@
   -webkit-user-select: none;
 }
 
-.recent-overlay {
-  left: 7.35%;
-  right: 7.35%;
-}
-
-.previous-overlay {
-  left: 8.8%;
-  right: 8.4%;
-}
-
 .review-carousel__viewport {
   width: 100%;
   height: 100%;
@@ -362,11 +332,6 @@
 .previous-card:focus-visible {
   filter: brightness(1.1);
   transform: none;
-}
-
-.recent-card {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto;
 }
 
 .recent-card__poster img,
@@ -642,7 +607,6 @@ html.lounge-focus-open body {
   padding: max(58px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom));
   overflow: auto;
   background: rgba(0, 0, 0, 0.86);
-  backdrop-filter: blur(9px) saturate(0.85);
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
@@ -662,7 +626,6 @@ html.lounge-focus-open body {
 .lounge-panel.is-lounge-focused {
   width: 100%;
   cursor: default;
-  filter: drop-shadow(0 24px 55px rgba(0, 0, 0, 0.88));
 }
 
 .lounge-focus-close {
@@ -674,10 +637,7 @@ html.lounge-focus-open body {
   width: 42px;
   height: 42px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.66);
   border-radius: 50%;
-  background: rgba(8, 8, 8, 0.9);
-  box-shadow: 0 0 18px rgba(255, 32, 27, 0.22);
   font-size: 1.15rem;
   cursor: pointer;
 }
@@ -716,13 +676,8 @@ html.lounge-focus-open body {
 
 @media (max-width: 390px) {
   .lounge-stage {
-    width: min(94vw, 470px);
     padding-top: clamp(84px, 11vh, 104px);
     gap: 6px;
-  }
-
-  .lounge-backdrop {
-    background-size: 100% auto;
   }
 
   .review-carousel__control {
@@ -986,13 +941,7 @@ html.lounge-focus-open body {
 .lounge-panel--opinion.is-lounge-focused > .lounge-focus-close {
   position: absolute;
   z-index: 20;
-  top: 0;
-  right: 0;
   display: block;
-  width: 21%;
-  height: 13%;
-  min-width: 0;
-  min-height: 0;
   padding: 0;
   margin: 0;
   border: 0;

@@ -41,6 +41,11 @@ assert(!Object.hasOwn(list.items[0], 'bodyHtml'), 'Compact list must exclude ful
 assert.equal(detail.review?.slug, 'dc');
 assert(typeof detail.review.bodyHtml === 'string' && detail.review.bodyHtml.length > 0);
 assert(Array.isArray(detail.review.credits));
+const countResponse = await request(`/api/reaction-counts?${new URLSearchParams(list.items.map(item => ['slug', item.slug]))}`);
+assert.equal(countResponse.headers.get('cache-control'), 'no-store');
+const counts = (await countResponse.json()).counts;
+assert.equal(counts?.length, list.items.length, 'Visible-page reaction counts must include each requested review.');
+assert(counts.every(row => Number.isInteger(row.likes) && Number.isInteger(row.dislikes) && !Object.hasOwn(row, 'viewerReaction')));
 assert(search.items?.some((item) => item.slug === 'kantara-chapter-1'), 'Full-text search must find Kantara.');
 
 const count = (html, token) => html.split(token).length - 1;

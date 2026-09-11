@@ -37,7 +37,7 @@ export interface AdminReviewInput {
   cast_crew?: unknown;
 }
 
-export interface AdminReviewRecord {
+interface AdminReviewRecord {
   i: number;
   t: string;
   s: string;

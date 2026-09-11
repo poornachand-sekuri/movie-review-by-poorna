@@ -214,7 +214,8 @@ export async function listRelatedReviewsByCredits(
          r.poster_url,
          cm.match_rank
        FROM candidate_matches cm
-       JOIN reviews r ON r.id = cm.candidate_review_id
+       -- Keep the small candidate set first, then look up each review by primary key.
+       CROSS JOIN reviews r ON r.id = cm.candidate_review_id
        WHERE r.status = 'published'
        ORDER BY cm.match_rank ASC, r.reviewed_date DESC, r.id DESC
        LIMIT ?2`,
@@ -225,7 +226,24 @@ export async function listRelatedReviewsByCredits(
   return result.results.map(mapSummary);
 }
 
-export async function getReviewBySlug(slug: string): Promise<ReviewDetail | null> {
+/** A bounded recency fallback, excluding the active review and already selected cards. */
+export async function listRelatedReviewFallback(
+  excludedIds: readonly number[], limit: number, language?: string | null,
+): Promise<readonly ReviewSummary[]> {
+  const ids = [...new Set(excludedIds)].filter(id => Number.isInteger(id) && id > 0).slice(0, 5);
+  const normalizedLanguage = language?.trim().slice(0, 80) || null;
+  const result = await getContentDb().prepare(`SELECT ${SUMMARY_COLUMNS} FROM reviews
+    WHERE status = 'published' AND id NOT IN (SELECT value FROM json_each(?1))
+      ${normalizedLanguage ? 'AND language COLLATE NOCASE = ?3' : ''}
+    ORDER BY reviewed_date DESC, id DESC LIMIT ?2`)
+    .bind(JSON.stringify(ids), clampInteger(limit, 4, 1, 4), ...(normalizedLanguage ? [normalizedLanguage] : []))
+    .run<ReviewSummaryRow>();
+  return result.results.map(mapSummary);
+}
+
+export async function getReviewBySlug(
+  slug: string, options: { includeGallery?: boolean } = {},
+): Promise<ReviewDetail | null> {
   const normalizedSlug = slug.trim().slice(0, 180);
   if (!normalizedSlug) return null;
 
@@ -263,7 +281,7 @@ export async function getReviewBySlug(slug: string): Promise<ReviewDetail | null
          ORDER BY rc.role, rc.position, p.name`,
       )
       .bind(normalizedSlug),
-    db
+    ...(options.includeGallery === false ? [] : [db
       .prepare(
         `SELECT
            g.id,
@@ -276,7 +294,7 @@ export async function getReviewBySlug(slug: string): Promise<ReviewDetail | null
            AND r.slug COLLATE NOCASE = ?1
          ORDER BY g.position, g.id`,
       )
-      .bind(normalizedSlug),
+      .bind(normalizedSlug)]),
   ]);
 
   const row = reviewResult?.results[0] as ReviewDetailRow | undefined;

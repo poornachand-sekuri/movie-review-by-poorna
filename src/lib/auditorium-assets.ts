@@ -1,7 +1,7 @@
 const AUDITORIUM_RUNTIME_BASE = 'https://assets.moviereviewbypoorna.com/ui/pages/content/v4/res%70onsive';
 const AUDITORIUM_ARTWORK_VERSION = '20260908-native';
 
-export type AuditoriumRuntimeAsset = {
+type AuditoriumRuntimeAsset = {
   src: string;
   width: number;
   height: number;

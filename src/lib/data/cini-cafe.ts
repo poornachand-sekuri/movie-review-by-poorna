@@ -45,11 +45,10 @@ export async function listCiniCafeReviews(): Promise<readonly CiniCafeReview[]> 
         r.reviewed_date,
         r.rating,
         r.poster_url,
-        COALESCE(SUM(CASE WHEN votes.reaction = 'like' THEN 1 ELSE 0 END), 0) AS likes
+        COALESCE(totals.likes, 0) AS likes
       FROM reviews r
-      LEFT JOIN review_reaction_votes votes ON votes.review_id = r.id
+      LEFT JOIN review_reaction_totals totals ON totals.review_id = r.id
       WHERE r.status = 'published'
-      GROUP BY r.id
       ORDER BY r.reviewed_date DESC, r.id DESC
     `),
     db.prepare(`

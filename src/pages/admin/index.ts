@@ -79,27 +79,9 @@ function loginDocument(): string {
 </html>`;
 }
 
-function authenticatedDocument(): string {
-  const logoutGuard = `<script>
-    document.addEventListener('click', (event) => {
-      const target = event.target instanceof Element ? event.target.closest('#logoutBtn') : null;
-      if (!target) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      fetch('/api/admin/logout', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'content-type': 'application/json' },
-        body: '{}',
-      }).finally(() => location.replace('/admin/'));
-    }, true);
-  </script>`;
-  return projectorRoomHtml.replace('</body>', `${logoutGuard}\n</body>`);
-}
-
 export const GET: APIRoute = async ({ request }) => {
   const authenticated = await isAdminAuthenticated(request);
-  return new Response(authenticated ? authenticatedDocument() : loginDocument(), {
+  return new Response(authenticated ? projectorRoomHtml : loginDocument(), {
     status: 200,
     headers: securityHeaders(),
   });
