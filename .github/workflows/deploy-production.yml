@@ -9,6 +9,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      extended_checks:
+        description: 'Run full live diagnostics (uses D1 quota and temporary test votes)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -52,18 +57,25 @@ jobs:
         run: npm run build
 
       - name: Measure original D1 query baseline (read-only)
+        if: github.event_name == 'workflow_dispatch' && inputs.extended_checks == true
         run: node scripts/check-d1-reads.mjs before
 
       - name: Deploy production Worker
         run: node scripts/cloudflare.mjs production deploy
 
+      - name: Check service health and one compact review
+        run: node scripts/check-deployment.mjs "$PRODUCTION_URL" production
+
       - name: Compare sampled D1 reads after the change (read-only)
+        if: github.event_name == 'workflow_dispatch' && inputs.extended_checks == true
         run: node scripts/check-d1-reads.mjs after
 
       - name: Smoke-test all four pages and APIs
+        if: github.event_name == 'workflow_dispatch' && inputs.extended_checks == true
         run: npm run smoke -- "$PRODUCTION_URL" production
 
       - name: Verify preserved reaction import and aggregate totals
+        if: github.event_name == 'workflow_dispatch' && inputs.extended_checks == true
         run: >-
           npx wrangler d1 execute CONTENT_DB --remote --config wrangler.jsonc
           --command "SELECT COUNT(*) AS published_reviews,
@@ -79,4 +91,5 @@ jobs:
           WHERE r.slug = 'dc' GROUP BY r.id;"
 
       - name: Audit all deployed content pages (read-only)
+        if: github.event_name == 'workflow_dispatch' && inputs.extended_checks == true
         run: node scripts/audit-content.mjs https://moviereviewbypoorna.com

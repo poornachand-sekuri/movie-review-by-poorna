@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { installBindings } from './helpers/d1.mjs';
+import { createClock } from './helpers/clock.mjs';
 installBindings({});
 const { initAuditoriumReactions } = await import('../src/lib/auditorium-reactions.ts');
 
@@ -32,11 +33,12 @@ function setup() {
   root.querySelector = (selector) => nodes.get(selector);
   root.querySelectorAll = () => buttons;
   globalThis.document = Object.assign(new EventTarget(), { querySelector: () => root, visibilityState: 'visible' });
-  globalThis.window = Object.assign(new EventTarget(), { setInterval: () => 1, clearInterval() {} });
+  const clock = createClock();
+  globalThis.window = Object.assign(new EventTarget(), clock);
   const calls = [];
   globalThis.fetch = (url, options) => new Promise((resolve) => calls.push({ url, ...options, resolve }));
   initAuditoriumReactions();
-  return { root, nodes, calls, restorePage() {
+  return { root, nodes, calls, clock, restorePage() {
     const event = new Event('pageshow'); event.persisted = true; window.dispatchEvent(event);
   } };
 }
@@ -46,6 +48,7 @@ test('server-rendered reactions need no duplicate request; restored pages refres
   const h = setup();
   assert.equal(h.calls.length, 0);
   h.restorePage();
+  h.clock.advance(50);
   assert.equal(h.calls[0].method, 'GET');
   reply(h.calls[0], 4);
   await tick();
@@ -55,6 +58,7 @@ test('server-rendered reactions need no duplicate request; restored pages refres
 test('an older refresh cannot overwrite a completed vote', async () => {
   const h = setup();
   h.restorePage();
+  h.clock.advance(50);
   const button = h.nodes.get('[data-reaction-action="like"]');
   button.dispatchEvent(new Event('click'));
   assert.equal(h.calls[1].method, 'POST');
@@ -72,6 +76,7 @@ test('cross-tab updates refresh counts and rapid repeated clicks send one explic
   const h=setup();
   const event=new Event('storage');event.key='mrp:reaction-change';event.newValue=JSON.stringify({slug:'test'});
   window.dispatchEvent(event);
+  h.clock.advance(50);
   reply(h.calls[0],1,'like');await tick();
   const button=h.nodes.get('[data-reaction-action="like"]');
   button.dispatchEvent(new Event('click'));button.dispatchEvent(new Event('click'));
@@ -82,8 +87,36 @@ test('cross-tab updates refresh counts and rapid repeated clicks send one explic
   assert.equal(button.attributes.get('aria-pressed'),'false');
 });
 
-test('out-of-order refreshes do not replace newer totals', async () => {
-  const h=setup();h.restorePage();h.restorePage();
-  reply(h.calls[1],7);await tick();reply(h.calls[0],2);await tick();
+test('idle pages make no requests and return events coalesce without overlapping refreshes', async () => {
+  const h=setup();
+  h.clock.advance(3600000);
+  assert.equal(h.calls.length, 0);
+  window.dispatchEvent(new Event('focus'));
+  document.dispatchEvent(new Event('visibilitychange'));
+  h.restorePage();
+  h.clock.advance(50);
+  assert.equal(h.calls.length, 1);
+  h.restorePage(); h.clock.advance(50);
+  h.restorePage(); h.clock.advance(50);
+  assert.equal(h.calls.length, 1, 'new triggers queue one follow-up instead of overlapping');
+  reply(h.calls[0],2);await tick();
+  assert.equal(h.calls.length, 2);
+  reply(h.calls[1],7);await tick();
   assert.equal(h.nodes.get('[data-reaction-count="like"]').textContent,'7');
+  h.clock.advance(3600000);
+  assert.equal(h.calls.length, 2);
+});
+
+test('hidden tabs defer storage updates and returning refreshes once', async () => {
+  const h=setup();
+  document.visibilityState='hidden';
+  const event=new Event('storage');event.key='mrp:reaction-change';event.newValue=JSON.stringify({slug:'test'});
+  window.dispatchEvent(event);h.clock.advance(3600000);
+  assert.equal(h.calls.length,0);
+  document.visibilityState='visible';
+  document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('focus'));
+  h.clock.advance(50);
+  assert.equal(h.calls.length,1);
+  reply(h.calls[0],8);await tick();
+  assert.equal(h.nodes.get('[data-reaction-count="like"]').textContent,'8');
 });

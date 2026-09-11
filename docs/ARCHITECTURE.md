@@ -47,9 +47,9 @@ API routes validate HTTP inputs, enforce authentication/origin boundaries and ca
 
 ## Deployment and validation
 
-The three workflows are documented in `CLOUDFLARE-DEPLOYMENT.md`. `scripts/cloudflare.mjs` chooses and verifies the Worker target; `smoke-site.mjs` shares live checks between preview and production. `check-importer.mjs` tests all migrations and retained import data without requiring a system SQLite installation.
+The three workflows are documented in `CLOUDFLARE-DEPLOYMENT.md`. `scripts/cloudflare.mjs` chooses and verifies the Worker target; `check-deployment.mjs` makes the bounded routine post-deploy check. `smoke-site.mjs` retains extended live checks for explicit manual diagnostics. `check-importer.mjs` tests all migrations and retained import data without requiring a system SQLite installation.
 
-Before publishing, run `npm run validate`, build/dry-run both configurations, and complete preview smoke tests. Production additionally requires visual checks at representative compact, medium and wide viewports. Avoid deleting migrations, compatibility exports or external API routes based only on an absence of current internal imports.
+Before publishing, run `npm run validate` and build/dry-run both configurations. Deployment workflows verify service health and one compact review afterward. Extended live smoke tests are opt-in because preview shares production data/quota. Production additionally requires visual checks at representative compact, medium and wide viewports. Avoid deleting migrations, compatibility exports or external API routes based only on an absence of current internal imports.
 
 ## Preserved reactions
 
@@ -59,22 +59,30 @@ The original production `ReactionStore` namespace is read through the `LEGACY_RE
 
 The Auditorium imports its review before reading or writing; Café and dashboard reads finish any remaining published-review imports first. Preview reads the production namespace by explicit `script_name`, and continues using the shared D1 store. No new active reaction store is introduced. Both `mrp_voter` (old) and `mrp_reaction_voter` (current) cookies are recognized; where both identify the same returning browser, its newer D1 choice takes precedence.
 
-Production smoke checks exercise Like, idempotent retry, reload, independent visitor totals, switching, isolation, removal, and SSR/Café parity with a temporary random voter that is removed in `finally`. The deployment summary query reports only aggregate migration/count data, never voter identifiers.
+Optional extended smoke checks exercise Like, idempotent retry, reload, independent visitor totals, switching, isolation, removal, and SSR/Café parity with a temporary random voter that is removed in `finally`. The optional deployment summary query reports only aggregate migration/count data, never voter identifiers.
 
 ## Query and cleanup audit, September 10, 2026
 
 The fresh `refactor/architecture-cost-audit` branch starts at main `80af0a6`. Single-review legacy import checks now use a direct primary-key predicate; catalogue imports still cover all outstanding published reviews. Voting reuses the prepared reaction read after its write instead of checking the migration marker twice. Related-review lookup keeps the credit candidate set before primary-key review lookups, preserving role ranking and published-only filtering. No database migration is required for these changes.
 
-The cleanup also removes 27 superseded Lounge declarations, an unused comment-status type and write-only admin analytics state. File-local types are no longer unnecessarily exported. Existing artwork, loading timings, POV fitting, API shapes, polling intervals, historical votes and release gates remain unchanged. No complete asset, migration or compatibility file was proven unused.
+That cleanup removed 27 superseded Lounge declarations, an unused comment-status type and write-only admin analytics state. File-local types were no longer unnecessarily exported. It preserved artwork, loading timings, POV fitting, API shapes, historical votes and then-current refresh/deployment behavior. The later event-driven changes are described below. No complete asset, migration or compatibility file was proven unused.
 
 The subsequent read-efficiency changes require migration `0008_read_efficiency.sql` before the Worker is deployed:
 
 - Votes remain canonical in `review_reaction_votes`. Three transactional triggers maintain one totals record per review when votes are inserted, switched, moved or removed. The migration backfills existing votes without deleting them. Snapshot, Cafe catalogue and dashboard reads use those totals instead of recounting voter rows.
-- `/api/reaction-counts` accepts at most six explicit slugs. Its JSON request list drives indexed slug/ID lookups; it must not scan the published catalogue. The Cafe uses one request per visible-page refresh (three warm SQL statements instead of eighteen for six cards). Existing 15-second timing, hidden-tab behavior, identity reconciliation and stale-response protection remain.
+- `/api/reaction-counts` accepts at most six explicit slugs. Its JSON request list drives indexed slug/ID lookups; it must not scan the published catalogue. The Cafe uses one request per visible-page refresh (three warm SQL statements instead of eighteen for six cards). Identity reconciliation and stale-response protection remain.
 - Public comments use separate review-ID and Lounge-target queries with matching partial ordered indexes. Related-review fallback queries request only the missing slots. Auditorium HTML skips the unused gallery query; the detail API still includes galleries.
 - Each dashboard source write increments one D1 revision row inside the transaction. A warm Worker can reuse the last dashboard result after reading that revision. Reuse expires after at most 60 seconds, or sooner when a view leaves the rolling window. New writes and range changes cause a recount. Exact distinct visitors and existing date-window semantics remain. Cold Workers and active traffic can still require full aggregation; this is not a guaranteed one-read cost for every dashboard visit.
-- PR/main validation no longer crawls the old production catalogue. Migration/import fixtures, builds and dry-runs still run, and the full deployed-content audit remains after production deployment.
+- PR/main validation no longer crawls the old production catalogue. Migration/import fixtures, builds and dry-runs still run. The full deployed-content audit remains available through explicit manual diagnostics.
 
 Tradeoff: totals, revision triggers and indexes add writes/storage to save repeated reads. Vote writes update a totals row (two updates on a switch) and the revision; view/comment/review changes also update the revision. Index maintenance adds further billed writes. Measure both quotas, especially with heavy traffic. No paid plan, additional service or approximate analytics is introduced.
 
 Preview currently shares production D1/R2 and the preserved reaction namespace, so use isolated local fixtures for development. Do not use the shared preview for disposable editorial changes. See `READ-EFFICIENCY-ROLLOUT.md` for deployment order, measurement scope and the existing quota report.
+
+## Event-driven refresh and routine deployment cost, September 11, 2026
+
+Auditorium, Cafe and Projector Room no longer register recurring refresh timers. Server-rendered public counts need no duplicate initial request; own votes render the confirmed POST response immediately. Returning to a visible tab, restoring a cached page and relevant cross-tab vote changes refresh counts. Focus/visibility events coalesce for 50 ms, hidden tabs defer refreshes, and in-flight requests queue at most one follow-up. Counts from other visitors on an otherwise idle page become visible on return/reload rather than every 15 seconds.
+
+Cafe filtering still updates the displayed cards locally as the user types. Count requests wait for a 300 ms typing pause and only run when the visible review selection changes. They remain batched to six visible reviews. Projector Room also refreshes when opened, its date range changes or its existing refresh control is used; superseded date-range responses cannot replace the selected range.
+
+Routine deployment checks use two GET requests, without retry loops or test votes. Full live diagnostics require the manual workflow checkbox. See `CLOUDFLARE-DEPLOYMENT.md` for the exact scope and the remaining migration checks.

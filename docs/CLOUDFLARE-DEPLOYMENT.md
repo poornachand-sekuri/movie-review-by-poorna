@@ -14,8 +14,12 @@ The Astro adapter receives `configPath` explicitly from `MRP_DEPLOY_TARGET`. The
 ## Workflows
 
 1. `validate.yml`: on pull requests/main or manual invocation, run guardrails, behavioral tests and Astro checks; build and dry-run production and preview; verify all migrations and the fixture/legacy catalogue import.
-2. `deploy-preview.yml`: manual on the chosen branch; validate, build preview, deploy preview, then smoke-test all four pages and APIs. The job summary includes direct test links.
-3. `deploy-production.yml`: after successful main validation, measure the original query baseline, prepare migration 0008, deploy the exact validated commit, compare optimized D1 reads and run smoke/content checks. Manual execution always checks out main and validates before building. Production deployments are serialized.
+2. `deploy-preview.yml`: manual on the chosen branch; validate, build preview, deploy preview, then run the bounded deployment check. Preview shares production D1 quota.
+3. `deploy-production.yml`: after successful main validation, prepare migration 0008, deploy the exact validated commit, then run the bounded deployment check. Manual execution always checks out main and validates before building. Production deployments are serialized.
+
+The routine post-deploy check (`check-deployment.mjs`) makes two GET requests: `/api/health` (no D1 query) and `/api/reviews?limit=1` (one compact list query). It verifies the service/environment and basic database access. It does not retry failures, write test votes, open all pages, or verify every interaction. Migration preparation still performs its small prerequisite/history checks; a newly applied migration also performs its required backfill and integrity verification. Therefore the complete deployment is not a zero-read operation.
+
+Both workflows expose an **extended_checks** manual checkbox, default **false**. Selecting it runs the full live smoke checks, including temporary reaction writes. Production also runs the original/optimized SQL probes, aggregate verification and all-content audit. These diagnostics use the shared live quota and are for deliberate investigations; they do not run on automatic main deployments. Local behavioral tests, type checks, builds, migration/import verification and dry-runs remain in normal validation. Visual release checks remain required.
 
 Required GitHub secrets: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The Projector Room uses Worker secrets `ADMIN_PASSWORD` and optionally `ADMIN_SESSION_SECRET` on each target. No secret values belong in Git.
 

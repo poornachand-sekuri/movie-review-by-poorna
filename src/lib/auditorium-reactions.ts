@@ -61,8 +61,12 @@ export function initAuditoriumReactions(): void {
   const endpoint = `/api/reviews/${encodeURIComponent(slug)}/reactions`;
 
   let revision = 0;
+  let refreshing = false;
+  let refreshQueued = false;
   const loadLatest = async () => {
     if (root.classList.contains('is-updating')) return;
+    if (refreshing) { refreshQueued = true; return; }
+    refreshing = true;
     const requestedRevision = ++revision;
     try {
       const response = await fetch(endpoint, {
@@ -77,6 +81,12 @@ export function initAuditoriumReactions(): void {
       if (requestedRevision === revision && isReactionPayload(payload)) applySnapshot(root, payload);
     } catch {
       // Server-rendered counts remain visible when a refresh request is unavailable.
+    } finally {
+      refreshing = false;
+      if (refreshQueued) {
+        refreshQueued = false;
+        if (document.visibilityState !== 'hidden') void loadLatest();
+      }
     }
   };
 
@@ -130,8 +140,8 @@ export function initAuditoriumReactions(): void {
     });
   }
 
-  // Own votes render from the confirmed write. Other tabs refresh immediately;
-  // visible pages also pick up other visitors' votes without a manual reload.
+  // Own votes render from the confirmed write. Other tabs and returning visitors
+  // refresh on events; an idle page does not repeatedly query the database.
   watchReactionChanges((changedSlug) => {
     if (!changedSlug || changedSlug === slug) void loadLatest();
   });

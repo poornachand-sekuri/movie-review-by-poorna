@@ -2,6 +2,11 @@ name: Deploy Preview
 
 on:
   workflow_dispatch:
+    inputs:
+      extended_checks:
+        description: 'Run full live diagnostics (shared production D1 quota and test votes)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -40,5 +45,9 @@ jobs:
       - name: Deploy preview Worker
         run: node scripts/cloudflare.mjs preview deploy
 
+      - name: Check service health and one compact review
+        run: node scripts/check-deployment.mjs https://movie-review-by-poorna-preview.poornarocks.workers.dev preview
+
       - name: Smoke-test all four pages and APIs
+        if: inputs.extended_checks == true
         run: npm run smoke -- https://movie-review-by-poorna-preview.poornarocks.workers.dev preview

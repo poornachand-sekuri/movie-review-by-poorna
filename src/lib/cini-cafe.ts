@@ -162,13 +162,18 @@ export function initCiniCafe(): void {
     pagination.appendChild(next);
   }
 
-  function render(updateCards = true): void {
+  let visibleSelection = '';
+  let likesTimer: number | undefined;
+  function render(updateCards = true, debounceLikes = false): void {
     const filtered = filteredReviews(state);
     const totalPages = Math.max(1, Math.ceil(filtered.length / CAFE_PAGE_SIZE));
     if (state.page > totalPages) state.page = totalPages;
 
     const start = (state.page - 1) * CAFE_PAGE_SIZE;
     const visible = filtered.slice(start, start + CAFE_PAGE_SIZE);
+    const selection = JSON.stringify(visible.map(review => review.slug).sort());
+    const selectionChanged = selection !== visibleSelection;
+    visibleSelection = selection;
     if (updateCards) resultsLayer.innerHTML = visible.map(renderCafeCard).join('');
 
     const first = filtered.length ? start + 1 : 0;
@@ -180,13 +185,27 @@ export function initCiniCafe(): void {
     renderPagination(totalPages);
     syncLabels();
     stage.setAttribute('aria-busy', 'false');
-    if (updateCards) void refreshVisibleLikes();
+    if (updateCards && (selectionChanged || likesTimer !== undefined)) {
+      window.clearTimeout(likesTimer);
+      likesTimer = undefined;
+      if (debounceLikes) {
+        likesTimer = window.setTimeout(() => { likesTimer = undefined; void refreshVisibleLikes(); }, 300);
+      } else void refreshVisibleLikes();
+    }
   }
 
   const reactionRevisions = new Map<string, number>();
+  let refreshingLikes = false;
+  let likesQueued = false;
   async function refreshVisibleLikes(changedSlug?: string): Promise<void> {
+    if (document.visibilityState === 'hidden') return;
     const cards = Array.from(resultsLayer.querySelectorAll<HTMLElement>('[data-review-slug]'));
-    const slugs = changedSlug ? [changedSlug] : cards.map((card) => card.dataset.reviewSlug).filter((slug): slug is string => !!slug);
+    const visibleSlugs = cards.map((card) => card.dataset.reviewSlug).filter((slug): slug is string => !!slug);
+    const slugs = changedSlug ? visibleSlugs.filter(slug => slug === changedSlug) : visibleSlugs;
+    if (!slugs.length) return;
+    window.clearTimeout(likesTimer);
+    likesTimer = undefined;
+    if (refreshingLikes) { likesQueued = true; return; }
     const revisions = new Map<string, number>();
     for (const slug of slugs) {
       if (!state.catalogue.some(review => review.slug === slug)) continue;
@@ -195,6 +214,7 @@ export function initCiniCafe(): void {
       revisions.set(slug, revision);
     }
     if (revisions.size === 0) return;
+    refreshingLikes = true;
     const query = new URLSearchParams();
     for (const slug of revisions.keys()) query.append('slug', slug);
     try {
@@ -224,6 +244,9 @@ export function initCiniCafe(): void {
       }
     } catch {
       // Preserve the last confirmed counts; a later visible refresh can retry.
+    } finally {
+      refreshingLikes = false;
+      if (likesQueued) { likesQueued = false; void refreshVisibleLikes(); }
     }
   }
 
@@ -231,7 +254,7 @@ export function initCiniCafe(): void {
   searchInput.addEventListener('input', () => {
     state.query = searchInput.value;
     state.page = 1;
-    render();
+    render(true, true);
   });
   languageSelect.addEventListener('change', () => {
     state.language = languageSelect.value;
@@ -263,6 +286,7 @@ export function initCiniCafe(): void {
   });
 
   watchReactionChanges((slug) => { void refreshVisibleLikes(slug); });
+  window.addEventListener('pagehide', () => { window.clearTimeout(likesTimer); likesTimer = undefined; });
 
   render(false);
 }
