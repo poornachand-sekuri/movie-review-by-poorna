@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/mobile-readability.css';
 import { loungeCriticalImages } from '../lib/lounge-assets';
 import { loungeRuntimeAssets } from '../lib/lounge-assets';
 
@@ -56,13 +57,13 @@ const websiteStructuredData = {
   potentialAction: {
     '@type': 'SearchAction',
     target: `${PRODUCTION_ORIGIN}/search?q={search_term_string}`,
-    'query-input': 'required name=search_term_string',
+    'query-input': 'required name=query-input',
   },
 } as const;
 const extraStructuredData = structuredData
   ? (Array.isArray(structuredData) ? structuredData : [structuredData])
   : [];
-const structuredJson = JSON.stringify([websiteStructuredData, ...extraStructuredData]).replaceAll('<', '\\u003c');
+const structuredJson = JSON.stringify([websiteStructuredData, ...extraStructuredData]).replaceAll('<', '\u003c');
 ---
 
 <!doctype html>
