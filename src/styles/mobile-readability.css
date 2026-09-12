@@ -82,7 +82,8 @@
   }
 
   .cini-cafe-review-stars {
-    font-size: clamp(10.5px, 2.65cqw, 12px) !important;
+    /* Five stars must fit the narrow right-hand ticket column at 360-390px. */
+    font-size: clamp(8.5px, 2.3cqw, 10px) !important;
     letter-spacing: 0 !important;
   }
 
