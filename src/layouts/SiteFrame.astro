@@ -44,9 +44,23 @@ const robots = isPreviewHost
   : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 const canonicalUrl = new URL(canonicalPath || '/', PRODUCTION_ORIGIN).toString();
 const socialImageUrl = socialImage ? new URL(socialImage, PRODUCTION_ORIGIN).toString() : null;
-const structuredJson = structuredData
-  ? JSON.stringify(structuredData).replaceAll('<', '\\u003c')
-  : null;
+const websiteStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Movie Reviews By Poorna',
+  url: `${PRODUCTION_ORIGIN}/`,
+  description: 'Movie reviews, verdicts and cinema notes by Poorna.',
+  author: { '@type': 'Person', name: 'Poorna' },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${PRODUCTION_ORIGIN}/search?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+} as const;
+const extraStructuredData = structuredData
+  ? (Array.isArray(structuredData) ? structuredData : [structuredData])
+  : [];
+const structuredJson = JSON.stringify([websiteStructuredData, ...extraStructuredData]).replaceAll('<', '\\u003c');
 ---
 
 <!doctype html>
@@ -83,7 +97,7 @@ const structuredJson = structuredData
     {preloadImages.map((image) => (
       <link rel="preload" as="image" href={image.href} fetchpriority={image.fetchPriority ?? 'auto'} />
     ))}
-    {structuredJson && <script type="application/ld+json" set:html={structuredJson}></script>}
+    <script type="application/ld+json" set:html={structuredJson}></script>
     <title>{title}</title>
   </head>
   <body>
