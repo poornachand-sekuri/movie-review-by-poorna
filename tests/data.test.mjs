@@ -3,7 +3,18 @@ import test from 'node:test';
 import { createD1, installBindings } from './helpers/d1.mjs';
 
 const db = createD1();
-installBindings({ CONTENT_DB: db, ADMIN_PASSWORD: 'test-only-password', ADMIN_SESSION_SECRET: 'test-only-secret' });
+const adminRateLimitKeys = [];
+installBindings({
+  CONTENT_DB: db,
+  ADMIN_PASSWORD: 'test-only-password',
+  ADMIN_SESSION_SECRET: 'test-only-secret',
+  ADMIN_LOGIN_RATE_LIMITER: {
+    async limit({ key }) {
+      adminRateLimitKeys.push(key);
+      return { success: key !== 'admin-login:203.0.113.99' };
+    },
+  },
+});
 const reviews = await import('../src/lib/data/admin-reviews.ts');
 const comments = await import('../src/lib/data/comments.ts');
 const moderation = await import('../src/lib/data/admin-comments.ts');
@@ -87,6 +98,20 @@ test('admin authentication accepts signed sessions and fails closed for malforme
   for (const cookie of ['mrp_admin=%E0%A4%A', 'mrp_admin=1.nonce.invalid', 'mrp_admin=invalid']) {
     assert.equal(await auth.isAdminAuthenticated(new Request('https://example.com/admin', { headers: { cookie } })), false);
   }
+});
+
+test('admin login rate limiter rejects blocked clients before password verification', async () => {
+  const response = await auth.loginAdmin(new Request('https://example.com/api/admin/login', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'cf-connecting-ip': '203.0.113.99',
+    },
+    body: JSON.stringify({ password: 'test-only-password' }),
+  }));
+  assert.equal(response.status, 429);
+  assert.equal(response.headers.get('retry-after'), '60');
+  assert(adminRateLimitKeys.includes('admin-login:203.0.113.99'));
 });
 
 test('Lounge keeps new additions ahead of imported reviews, with stable dates, language and paging', async () => {
