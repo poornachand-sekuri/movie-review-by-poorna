@@ -1,0 +1,137 @@
+/*
+ * Mobile readability guardrails.
+ *
+ * The cinematic artwork remains the source of truth. These overrides only stop
+ * live text and the Lounge stack from shrinking below useful phone sizes.
+ * Tap/focus modes remain the richer second level; the default view must still
+ * be readable without pinch-to-zoom.
+ */
+
+/* Marquee tracks created by review-display.ts must be transformable elements. */
+[data-global-title-marquee] > [data-review-title-track],
+[data-title-marquee] > [data-review-title-track] {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  will-change: transform;
+}
+
+@media (max-width: 600px) {
+  /* ---------------- Lounge ---------------- */
+  .lounge-stage {
+    width: min(94vw, 470px) !important;
+  }
+
+  .now-title {
+    font-size: clamp(16px, 4.6cqw, 22px) !important;
+    letter-spacing: 0.045em !important;
+  }
+
+  .now-meta dd {
+    font-size: clamp(11px, 2.85cqw, 13px) !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .now-meta__rating dd {
+    font-size: clamp(13px, 3.3cqw, 16px) !important;
+    letter-spacing: 0.035em !important;
+  }
+
+  .recent-card__title {
+    font-size: clamp(12px, 3.15cqw, 14px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0.01em !important;
+  }
+
+  .recent-card__stars {
+    font-size: clamp(11px, 2.95cqw, 13px) !important;
+    letter-spacing: 0 !important;
+  }
+
+  .comments-window {
+    font-size: clamp(14px, 3.8cqw, 18px) !important;
+  }
+
+  .opinion-form input,
+  .opinion-form textarea,
+  .lounge-panel--opinion.is-lounge-focused .opinion-form input,
+  .lounge-panel--opinion.is-lounge-focused .opinion-form textarea {
+    font-size: 16px !important;
+  }
+
+  /* ---------------- Cini Cafe ---------------- */
+  .cini-cafe-search-input {
+    font-size: 16px !important;
+  }
+
+  .cini-cafe-review-title {
+    font-size: clamp(11px, 2.85cqw, 13px) !important;
+    line-height: 1.08 !important;
+    text-shadow: 0 1px 2px #000, 0 0 5px rgb(0 0 0 / 78%) !important;
+  }
+
+  .cini-cafe-review-title[data-global-title-marquee] {
+    display: block !important;
+    white-space: nowrap;
+    -webkit-line-clamp: unset;
+  }
+
+  .cini-cafe-review-meta {
+    font-size: clamp(9px, 2.2cqw, 10.5px) !important;
+    opacity: 0.9 !important;
+  }
+
+  .cini-cafe-review-stars {
+    font-size: clamp(10.5px, 2.65cqw, 12px) !important;
+    letter-spacing: 0 !important;
+  }
+
+  .cini-cafe-review-likes {
+    font-size: clamp(9.5px, 2.3cqw, 11px) !important;
+  }
+
+  .cini-cafe-serving {
+    font-size: clamp(9.5px, 2.4cqw, 11px) !important;
+  }
+
+  .cini-cafe-page-button,
+  .cini-cafe-page-slot {
+    font-size: clamp(11px, 3cqw, 14px) !important;
+  }
+
+  /* ---------------- Auditorium ---------------- */
+  .auditorium-clap-value {
+    font-size: clamp(12px, 3.05cqw, 15px) !important;
+  }
+
+  .auditorium-credit-value {
+    font-size: clamp(11px, 2.8cqw, 13px) !important;
+    font-weight: 600 !important;
+  }
+
+  .auditorium-review-scroll {
+    font-size: clamp(13px, 3.25cqw, 15px) !important;
+    line-height: 1.5 !important;
+  }
+
+  .auditorium-related-title {
+    min-height: 30% !important;
+    font-size: clamp(10.5px, 2.65cqw, 12px) !important;
+    line-height: 1.08 !important;
+    background: rgb(0 0 0 / 84%) !important;
+  }
+
+  .auditorium-related-title[data-global-title-marquee] {
+    justify-content: flex-start !important;
+    white-space: nowrap;
+    text-wrap: nowrap;
+  }
+
+  .auditorium-stars,
+  .now-meta__rating dd,
+  .recent-card__stars,
+  .cini-cafe-review-stars {
+    font-variant-ligatures: none;
+    text-rendering: geometricPrecision;
+  }
+}
