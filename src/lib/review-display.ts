@@ -7,12 +7,50 @@ const marqueeTargetSelector = [
   '.auditorium-related-title',
 ].join(', ');
 
+const ratingTargetSelector = [
+  '.cini-cafe-review-stars[aria-label$="out of 5 stars"]',
+  '.recent-card__stars[aria-label$="out of 5 stars"]',
+  '.now-meta__rating dd[aria-label$="out of 5 stars"]',
+  '.auditorium-clap-value--rating[aria-label$="out of 5 stars"]',
+].join(', ');
+
 const marqueeSelector = '[data-global-title-marquee], [data-title-marquee]';
 const marqueeAnimations = new Map<HTMLElement, { animation: Animation; track: HTMLElement; overflow: number }>();
 const observedTitles = new Set<HTMLElement>();
 let titleObserver: ResizeObserver | undefined;
 let initialized = false;
 let refreshFrame = 0;
+
+function prepareRatingStars(target: HTMLElement): void {
+  const visual = target.querySelector<HTMLElement>(':scope > .auditorium-stars') ?? target;
+  if (visual.dataset.ratingStarsReady === 'true') return;
+
+  const stars = visual.textContent?.replace(/\s+/g, '') ?? '';
+  if (!stars || !/^[★☆]+$/.test(stars)) return;
+
+  const filledCount = [...stars].filter((star) => star === '★').length;
+  const emptyCount = [...stars].filter((star) => star === '☆').length;
+  if (filledCount + emptyCount !== 5) return;
+
+  const parts: HTMLSpanElement[] = [];
+  if (filledCount > 0) {
+    const filled = document.createElement('span');
+    filled.className = 'rating-star rating-star--filled';
+    filled.setAttribute('aria-hidden', 'true');
+    filled.textContent = '★'.repeat(filledCount);
+    parts.push(filled);
+  }
+  if (emptyCount > 0) {
+    const empty = document.createElement('span');
+    empty.className = 'rating-star rating-star--empty';
+    empty.setAttribute('aria-hidden', 'true');
+    empty.textContent = '☆'.repeat(emptyCount);
+    parts.push(empty);
+  }
+
+  visual.replaceChildren(...parts);
+  visual.dataset.ratingStarsReady = 'true';
+}
 
 function prepareMarquee(element: HTMLElement): void {
   // Keep Lounge's existing CSS selectors and geometry while sharing its controller.
@@ -89,6 +127,8 @@ function fitMarquee(element: HTMLElement, reduceMotion: boolean): void {
 function refreshReviewDisplay(): void {
   refreshPosterBackgrounds();
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>(ratingTargetSelector).forEach(prepareRatingStars);
 
   for (const title of observedTitles) {
     if (!title.isConnected) {
