@@ -19,6 +19,16 @@
       "bucket_name": "movie-review-assets"
     }
   ],
+  "ratelimits": [
+    {
+      "name": "ADMIN_LOGIN_RATE_LIMITER",
+      "namespace_id": "2026091202",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {
