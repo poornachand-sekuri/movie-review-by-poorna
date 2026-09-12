@@ -51,6 +51,26 @@ p {
   margin-block-start: 0;
 }
 
+.rating-star {
+  display: inline;
+  font-family: Arial, 'Helvetica Neue', sans-serif;
+  font-weight: 700;
+  font-variant-ligatures: none;
+}
+
+.rating-star--filled {
+  color: var(--rating-star-filled);
+  opacity: 1;
+  text-shadow: var(--rating-star-filled-shadow);
+}
+
+.rating-star--empty {
+  color: var(--rating-star-empty);
+  opacity: var(--rating-star-empty-opacity);
+  text-shadow: none;
+  filter: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent-temp);
   outline-offset: 4px;
