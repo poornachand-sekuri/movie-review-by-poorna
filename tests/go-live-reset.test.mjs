@@ -27,9 +27,12 @@ test('go-live migration clears engagement without deleting review content', () =
   assert.equal(db.sqlite.prepare('SELECT COUNT(*) AS count FROM comments').get().count, 0);
   assert.equal(db.sqlite.prepare('SELECT COUNT(*) AS count FROM legacy_comment_imports').get().count, 0);
   assert.equal(db.sqlite.prepare('SELECT COUNT(*) AS count FROM review_reaction_votes').get().count, 0);
-  assert.deepEqual(db.sqlite.prepare('SELECT likes,dislikes FROM review_reaction_totals WHERE review_id=1').get(), { likes: 0, dislikes: 0 });
+  const totals = db.sqlite.prepare('SELECT likes,dislikes FROM review_reaction_totals WHERE review_id=1').get();
+  assert.equal(totals.likes, 0);
+  assert.equal(totals.dislikes, 0);
 
-  const markers = db.sqlite.prepare('SELECT review_id,source_slug,source_votes FROM legacy_reaction_imports ORDER BY review_id').all();
+  const markers = db.sqlite.prepare('SELECT review_id,source_slug,source_votes FROM legacy_reaction_imports ORDER BY review_id').all()
+    .map(row => ({ ...row }));
   assert.deepEqual(markers, [
     { review_id: 1, source_slug: 'legacy-dc', source_votes: 0 },
     { review_id: 2, source_slug: 'draft-review', source_votes: 0 },
