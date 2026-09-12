@@ -56,6 +56,12 @@ jobs:
       - name: Build validated production commit
         run: npm run build
 
+      - name: Reset go-live engagement data
+        if: >-
+          github.event_name == 'workflow_run' &&
+          contains(github.event.workflow_run.head_commit.message, '[go-live-reset]')
+        run: node scripts/apply-go-live-reset.mjs production
+
       - name: Measure original D1 query baseline (read-only)
         if: github.event_name == 'workflow_dispatch' && inputs.extended_checks == true
         run: node scripts/check-d1-reads.mjs before
