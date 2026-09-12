@@ -2,10 +2,16 @@ import { env } from 'cloudflare:workers';
 
 const SESSION_COOKIE = 'mrp_admin';
 const SESSION_TTL_SECONDS = 60 * 60 * 12;
+const LOGIN_RATE_LIMIT_SECONDS = 60;
+
+interface RateLimitBinding {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+}
 
 interface AdminBindings {
   ADMIN_PASSWORD?: string;
   ADMIN_SESSION_SECRET?: string;
+  ADMIN_LOGIN_RATE_LIMITER?: RateLimitBinding;
 }
 
 function bindings(): AdminBindings {
@@ -29,6 +35,14 @@ function cookieValue(request: Request, name: string): string | null {
     }
   }
   return null;
+}
+
+function loginRateLimitKey(request: Request): string {
+  const cloudflareIp = request.headers.get('cf-connecting-ip')?.trim();
+  if (cloudflareIp) return `admin-login:${cloudflareIp}`;
+
+  const forwardedIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return `admin-login:${forwardedIp || 'unknown-client'}`;
 }
 
 async function secureEqual(a: string, b: string): Promise<boolean> {
@@ -92,6 +106,23 @@ export async function loginAdmin(request: Request): Promise<Response> {
       { error: 'Admin security is not configured. Add ADMIN_PASSWORD as a Worker secret.' },
       { status: 503, headers: { 'cache-control': 'no-store' } },
     );
+  }
+
+  const limiter = config.ADMIN_LOGIN_RATE_LIMITER;
+  if (limiter) {
+    const { success } = await limiter.limit({ key: loginRateLimitKey(request) });
+    if (!success) {
+      return Response.json(
+        { error: 'Too many sign-in attempts. Please try again in a minute.' },
+        {
+          status: 429,
+          headers: {
+            'cache-control': 'no-store',
+            'retry-after': String(LOGIN_RATE_LIMIT_SECONDS),
+          },
+        },
+      );
+    }
   }
 
   const body = await request.json().catch(() => null) as { password?: unknown } | null;
