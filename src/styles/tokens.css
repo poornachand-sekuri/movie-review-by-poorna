@@ -4,8 +4,10 @@
   --surface-page: #0b0a09;
   --text-primary: #f4efe7;
   --accent-temp: #d7aa62;
-  --rating-star-filled: #c9ced6;
-  --rating-star-empty: #686d74;
-  --rating-star-empty-opacity: 1;
-  --rating-star-filled-shadow: none;
+  --rating-star-filled: #ff3b30;
+  --rating-star-empty: #f7f7f7;
+  --rating-star-empty-opacity: 0.96;
+  --rating-star-filled-shadow:
+    0 1px 1px rgb(0 0 0 / 92%),
+    0 0 0.22em rgb(255 59 48 / 38%);
 }
