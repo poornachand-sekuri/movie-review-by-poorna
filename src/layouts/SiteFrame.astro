@@ -43,7 +43,8 @@ const robots = isPreviewHost
   ? 'noindex,nofollow'
   : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 const canonicalUrl = new URL(canonicalPath || '/', PRODUCTION_ORIGIN).toString();
-const socialImageUrl = socialImage ? new URL(socialImage, PRODUCTION_ORIGIN).toString() : null;
+const resolvedSocialImage = socialImage?.trim() || loungeRuntimeAssets.topBanner;
+const socialImageUrl = new URL(resolvedSocialImage, PRODUCTION_ORIGIN).toString();
 const websiteStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -84,15 +85,15 @@ const structuredJson = JSON.stringify([websiteStructuredData, ...extraStructured
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
-    {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
-    {socialImageUrl && <meta property="og:image:alt" content={socialImageAlt} />}
+    <meta property="og:image" content={socialImageUrl} />
+    <meta property="og:image:alt" content={socialImageAlt} />
     {ogType === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
-    <meta name="twitter:card" content={socialImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
-    {socialImageUrl && <meta name="twitter:image:alt" content={socialImageAlt} />}
+    <meta name="twitter:image" content={socialImageUrl} />
+    <meta name="twitter:image:alt" content={socialImageAlt} />
 
     {preloadImages.map((image) => (
       <link rel="preload" as="image" href={image.href} fetchpriority={image.fetchPriority ?? 'auto'} />
