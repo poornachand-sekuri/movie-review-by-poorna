@@ -4,10 +4,26 @@ import { isAdminAuthenticated } from '../../lib/admin/auth';
 
 export const prerender = false;
 
+const ADMIN_CSP = [
+  "default-src 'self'",
+  "base-uri 'none'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' https: data: blob:",
+  "connect-src 'self'",
+].join('; ');
+
 function securityHeaders(): HeadersInit {
   return {
     'cache-control': 'no-store, private, max-age=0',
+    'content-security-policy': ADMIN_CSP,
     'content-type': 'text/html; charset=utf-8',
+    'cross-origin-opener-policy': 'same-origin',
+    'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
     'referrer-policy': 'no-referrer',
     'x-content-type-options': 'nosniff',
     'x-frame-options': 'DENY',
