@@ -63,7 +63,7 @@ const websiteStructuredData = {
 const extraStructuredData = structuredData
   ? (Array.isArray(structuredData) ? structuredData : [structuredData])
   : [];
-const structuredJson = JSON.stringify([websiteStructuredData, ...extraStructuredData]).replaceAll('<', '\u003c');
+const structuredJson = JSON.stringify([websiteStructuredData, ...extraStructuredData]).replaceAll('<', '\\u003c');
 ---
 
 <!doctype html>
