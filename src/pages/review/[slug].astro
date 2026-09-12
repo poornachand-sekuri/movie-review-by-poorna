@@ -57,11 +57,46 @@ const actors = review.credits.filter((credit) => credit.role === 'actor');
 const actresses = review.credits.filter((credit) => credit.role === 'actress');
 const directors = review.credits.filter((credit) => credit.role === 'director');
 const musicDirectors = review.credits.filter((credit) => credit.role === 'music_director');
+const reviewPageTitle = `${review.title} — The Auditorium | Movie Reviews By Poorna`;
+const reviewDescription = review.excerpt ?? `Read Poorna's review of ${review.title} in The Auditorium.`;
+const canonicalPath = `/review/${encodeURIComponent(review.slug)}`;
+const reviewStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Review',
+  name: `${review.title} Review`,
+  url: `https://moviereviewbypoorna.com${canonicalPath}`,
+  datePublished: review.reviewedDate,
+  author: { '@type': 'Person', name: 'Poorna' },
+  reviewBody: review.excerpt ?? review.verdict ?? undefined,
+  ...(review.rating === null ? {} : {
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: review.rating,
+      bestRating: 5,
+      worstRating: 0,
+    },
+  }),
+  itemReviewed: {
+    '@type': 'Movie',
+    name: review.title,
+    image: review.posterUrl ?? undefined,
+    datePublished: review.releaseDate ?? undefined,
+    inLanguage: review.language ?? undefined,
+    director: directors.map((credit) => ({ '@type': 'Person', name: credit.name })),
+    actor: [...actors, ...actresses].map((credit) => ({ '@type': 'Person', name: credit.name })),
+    musicBy: musicDirectors.map((credit) => ({ '@type': 'Person', name: credit.name })),
+  },
+};
 ---
 
 <SiteFrame
-  title={`${review.title} — The Auditorium | Movie Reviews By Poorna`}
-  description={review.excerpt ?? `Read Poorna's review of ${review.title} in The Auditorium.`}
+  title={reviewPageTitle}
+  description={reviewDescription}
+  canonicalPath={canonicalPath}
+  socialImage={review.posterUrl}
+  socialImageAlt={`${review.title} poster`}
+  ogType="article"
+  structuredData={reviewStructuredData}
 >
   <LoungeLoading theme="auditorium" />
 
