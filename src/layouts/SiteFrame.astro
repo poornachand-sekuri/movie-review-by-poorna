@@ -57,7 +57,7 @@ const websiteStructuredData = {
   potentialAction: {
     '@type': 'SearchAction',
     target: `${PRODUCTION_ORIGIN}/search?q={search_term_string}`,
-    'query-input': 'required name=query-input',
+    'query-input': 'required name=search_term_string',
   },
 } as const;
 const extraStructuredData = structuredData
