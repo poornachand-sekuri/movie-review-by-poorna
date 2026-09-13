@@ -8,6 +8,7 @@ on:
       - 'scripts/generate-instagram-archive-v2.mjs'
       - 'scripts/generate-instagram-archive-v3.mjs'
       - 'scripts/generate-instagram-archive-v4.mjs'
+      - 'scripts/generate-instagram-archive-v5.mjs'
       - '.github/workflows/generate-instagram-archive.yml'
   workflow_dispatch:
 
@@ -41,7 +42,7 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Generate all 140 Instagram carousels
-        run: node scripts/generate-instagram-archive-v4.mjs
+        run: node scripts/generate-instagram-archive-v5.mjs
 
       - name: Package images
         shell: bash
