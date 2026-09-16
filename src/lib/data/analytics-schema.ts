@@ -69,6 +69,12 @@ export async function ensureAnalyticsSchema(): Promise<void> {
         db.prepare(`CREATE INDEX IF NOT EXISTS idx_analytics_events_created ON analytics_events(created_at DESC, id DESC)`),
         db.prepare(`CREATE INDEX IF NOT EXISTS idx_analytics_events_type_platform_created ON analytics_events(event_type, platform, created_at DESC)`),
         db.prepare(`CREATE INDEX IF NOT EXISTS idx_analytics_events_visitor_created ON analytics_events(visitor_key, created_at DESC)`),
+        db.prepare(`
+          CREATE TRIGGER IF NOT EXISTS analytics_events_insert
+          AFTER INSERT ON analytics_events BEGIN
+            UPDATE analytics_revision SET version = version + 1 WHERE id = 1;
+          END
+        `),
       ]);
     })().catch((error) => {
       ready = null;
