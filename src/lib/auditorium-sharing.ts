@@ -1,3 +1,5 @@
+import { recordCinemaEvent } from './analytics-client';
+
 const SHARE_SELECTOR = '.auditorium-section--share';
 const PRODUCTION_ORIGIN = 'https://moviereviewbypoorna.com';
 
@@ -14,7 +16,24 @@ function reviewTitle(): string {
   return raw.replace(/\s+—\s+The Auditorium(?:\s*\|.*)?$/u, '').trim() || 'Movie Review By Poorna';
 }
 
-function shareMessages(title: string, url: string) {
+function reviewSlug(): string {
+  return decodeURIComponent(window.location.pathname.match(/^\/review\/([^/]+)/)?.[1] ?? 'review').slice(0, 100);
+}
+
+function productionReviewUrl(): string {
+  return `${PRODUCTION_ORIGIN}${window.location.pathname}`;
+}
+
+function taggedReviewUrl(source: string, medium = 'share'): string {
+  const url = new URL(productionReviewUrl());
+  url.searchParams.set('utm_source', source);
+  url.searchParams.set('utm_medium', medium);
+  url.searchParams.set('utm_campaign', reviewSlug());
+  return url.toString();
+}
+
+function shareMessages(title: string, source: string) {
+  const url = taggedReviewUrl(source);
   return {
     plain: `🎬 ${title}\n\nFound this take quite interesting.\n\nCheck out Poorna’s POV 👇\n${url}`,
     whatsapp: `🎬 *${title}*\n\nFound this take quite interesting.\n\nCheck out *Poorna’s POV* 👇\n${url}\n\n🍿 Follow Movie Review By Poorna on WhatsApp:\n${SOCIAL_LINKS.whatsapp}`,
@@ -96,10 +115,10 @@ export function initAuditoriumSharing(): void {
 
     const kind = target.dataset.auditoriumShare;
     if (!kind) return;
+    recordCinemaEvent('review_share_click', kind);
 
-    const url = `${PRODUCTION_ORIGIN}${window.location.pathname}`;
     const title = reviewTitle();
-    const messages = shareMessages(title, url);
+    const messages = shareMessages(title, kind === 'more' ? 'shared' : kind);
 
     try {
       if (kind === 'whatsapp') {
@@ -113,7 +132,7 @@ export function initAuditoriumSharing(): void {
       }
 
       if (kind === 'copy') {
-        await copyText(url);
+        await copyText(productionReviewUrl());
         announce(root, 'Review link copied');
         return;
       }
