@@ -1,4 +1,12 @@
 const SHARE_SELECTOR = '.auditorium-section--share';
+const PRODUCTION_ORIGIN = 'https://moviereviewbypoorna.com';
+
+const SOCIAL_LINKS = {
+  instagram: 'https://www.instagram.com/moviereviewbypoorna/',
+  facebook: 'https://www.facebook.com/moviereviewbypoorna',
+  x: 'https://x.com/reviewbypoorna',
+  whatsapp: 'https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546',
+} as const;
 
 function reviewTitle(): string {
   const heading = document.querySelector<HTMLElement>('.auditorium-page > h1.visually-hidden');
@@ -9,7 +17,9 @@ function reviewTitle(): string {
 function shareMessages(title: string, url: string) {
   return {
     plain: `🎬 ${title}\n\nFound this take quite interesting.\n\nCheck out Poorna’s POV 👇\n${url}`,
-    whatsapp: `🎬 *${title}*\n\nFound this take quite interesting.\n\nCheck out *Poorna’s POV* 👇\n${url}`,
+    whatsapp: `🎬 *${title}*\n\nFound this take quite interesting.\n\nCheck out *Poorna’s POV* 👇\n${url}\n\n🍿 Follow Movie Review By Poorna on WhatsApp:\n${SOCIAL_LINKS.whatsapp}`,
+    x: `🎬 ${title}\n\nPoorna’s POV 👇\n${url}\n\nFollow @ReviewByPoorna\n${SOCIAL_LINKS.x}`,
+    instagram: `🎬 ${title}\n\nFound this take quite interesting.\n\nCheck out Poorna’s POV 👇\n${url}\n\nFollow Movie Review By Poorna on Instagram:\n${SOCIAL_LINKS.instagram}`,
   };
 }
 
@@ -87,7 +97,7 @@ export function initAuditoriumSharing(): void {
     const kind = target.dataset.auditoriumShare;
     if (!kind) return;
 
-    const url = window.location.href;
+    const url = `${PRODUCTION_ORIGIN}${window.location.pathname}`;
     const title = reviewTitle();
     const messages = shareMessages(title, url);
 
@@ -98,7 +108,7 @@ export function initAuditoriumSharing(): void {
       }
 
       if (kind === 'x') {
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(messages.plain)}`, '_blank', 'noopener,noreferrer');
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(messages.x)}`, '_blank', 'noopener,noreferrer');
         return;
       }
 
@@ -109,9 +119,10 @@ export function initAuditoriumSharing(): void {
       }
 
       if (kind === 'instagram') {
-        if (!(await nativeShare(messages.plain))) {
-          await copyText(messages.plain);
-          announce(root, 'Share text copied for Instagram');
+        if (!(await nativeShare(messages.instagram))) {
+          await copyText(messages.instagram);
+          announce(root, 'Review text copied — paste it into Instagram');
+          window.open(SOCIAL_LINKS.instagram, '_blank', 'noopener,noreferrer');
         }
         return;
       }

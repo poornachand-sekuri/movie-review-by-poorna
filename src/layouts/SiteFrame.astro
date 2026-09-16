@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/mobile-readability.css';
+import StayConnected from '../components/StayConnected.astro';
 import { loungeCriticalImages } from '../lib/lounge-assets';
 import { loungeRuntimeAssets } from '../lib/lounge-assets';
 
@@ -105,6 +106,7 @@ const structuredJson = JSON.stringify([websiteStructuredData, ...extraStructured
   </head>
   <body>
     <slot />
+    <StayConnected />
     <script>
       import { recordCinemaPageView } from '../lib/analytics-client';
       import { initReviewDisplay } from '../lib/review-display';
