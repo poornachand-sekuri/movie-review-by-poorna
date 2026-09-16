@@ -95,9 +95,16 @@ function loginDocument(): string {
 </html>`;
 }
 
+function projectorRoomDocument(): string {
+  return projectorRoomHtml.replace(
+    '<script src="/admin/admin.js?v=20260910-cleanup-1" defer></script>',
+    '<script src="/admin/admin-traffic.js?v=20260916-attribution-1" defer></script>\n  <script src="/admin/admin.js?v=20260910-cleanup-1" defer></script>',
+  );
+}
+
 export const GET: APIRoute = async ({ request }) => {
   const authenticated = await isAdminAuthenticated(request);
-  return new Response(authenticated ? projectorRoomHtml : loginDocument(), {
+  return new Response(authenticated ? projectorRoomDocument() : loginDocument(), {
     status: 200,
     headers: securityHeaders(),
   });
