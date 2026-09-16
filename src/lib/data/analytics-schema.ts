@@ -3,7 +3,7 @@ import { getContentDb } from '../cloudflare/content-db';
 let ready: Promise<void> | null = null;
 
 async function ensurePageViewColumns(db: D1Database): Promise<void> {
-  const info = await db.prepare('PRAGMA table_info(page_views)').all<{ name: string }>();
+  const info = await db.prepare('PRAGMA table_info(page_views)').run<{ name: string }>();
   const columns = new Set(info.results.map((row) => row.name));
   const additions: Array<[string, string]> = [
     ['traffic_source', `ALTER TABLE page_views ADD COLUMN traffic_source TEXT NOT NULL DEFAULT 'unknown'`],
