@@ -1,0 +1,6 @@
+/* Keep the Cini Cafe page height tied to its fixed-aspect artwork.
+   The Stay Connected footer is rendered immediately after the page; a 100vh
+   minimum on short mobile artwork created an artificial black spacer before it. */
+.cini-cafe-page {
+  min-height: auto;
+}
