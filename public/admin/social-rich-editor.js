@@ -1,0 +1,244 @@
+(() => {
+  'use strict';
+  // A small plain-text rich editor. Formatting is stored as ranges in the
+  // promotional draft, never as untrusted HTML or in the saved movie review.
+  const FIELDS=['title','pov'];
+  const editors=Object.fromEntries(FIELDS.map(k=>[k,document.querySelector('[data-rich-editor="'+k+'"]')]));
+  const toolbars=Object.fromEntries(FIELDS.map(k=>[k,document.querySelector('[data-rich-toolbar="'+k+'"]')]));
+  if (!editors.title || !editors.pov) return;
+  const savedSelection={title:null,pov:null};
+  let syncing=false;
+  const bridge=()=>window.SocialStudioRichBridge;
+  const colorPattern=/^#[0-9A-Fa-f]{6}$/;
+  function styleAt(ranges,start,end) {
+    let result=null;
+    for(const range of ranges||[]) {
+      if(range.start<end && range.end>start) result={...result,...range};
+    }
+    if(!result)return null;
+    const {start:s,end:e,...style}=result;
+    return style;
+  }
+  function compactRanges(ranges){
+    const sorted=ranges.filter(r=>r.end>r.start).sort((a,b)=>a.start-b.start);
+    const out=[];
+    for(const r of sorted){
+      const prev=out[out.length-1];
+      if(prev && prev.end===r.start && JSON.stringify({...prev,start:0,end:0})===JSON.stringify({...r,start:0,end:0}))prev.end=r.end;
+      else out.push({...r});
+    }
+    return out;
+  }
+  function mutateRanges(text,ranges,start,end,patch,clear){
+    const positions=new Set([0,text.length,start,end]);
+    for(const r of ranges||[]){positions.add(Math.max(0,Math.min(text.length,r.start)));positions.add(Math.max(0,Math.min(text.length,r.end)));}
+    const boundaries=[...positions].sort((a,b)=>a-b),result=[];
+    for(let i=1;i<boundaries.length;i++){
+      const a=boundaries[i-1],b=boundaries[i];
+      if(b<=a)continue;
+      let style=styleAt(ranges,a,b);
+      if(a>=start && b<=end)style=clear?null:{...style,...patch};
+      if(style && Object.keys(style).length)result.push({start:a,end:b,...style});
+    }
+    return compactRanges(result);
+  }
+  function drawEditor(field){
+    const editor=editors[field],draft=bridge()?.getDraft();
+    if(!draft)return;
+    syncing=true;
+    const text=String(draft[field]||''),ranges=draft.styles?.[field]||[];
+    const boundaries=new Set([0,text.length]);
+    for(const r of ranges){boundaries.add(Math.max(0,Math.min(text.length,r.start)));boundaries.add(Math.max(0,Math.min(text.length,r.end)));}
+    const bounds=[...boundaries].sort((a,b)=>a-b);
+    const fragment=document.createDocumentFragment();
+    for(let i=1;i<bounds.length;i++){
+      const a=bounds[i-1],b=bounds[i],part=text.slice(a,b);
+      if(!part)continue;
+      const style=styleAt(ranges,a,b);
+      if(!style){fragment.appendChild(document.createTextNode(part));continue;}
+      const span=document.createElement('span');
+      span.dataset.socialStyle=JSON.stringify(style);
+      if(style.color && colorPattern.test(style.color))span.style.color=style.color;
+      if(style.font)span.style.fontFamily='"'+style.font.replace(/[^a-zA-Z0-9 ]/g,'')+'"';
+      if(Number.isFinite(Number(style.size)))span.style.fontSize=Math.max(18,Math.min(100,Number(style.size)))+'px';
+      if(style.weight)span.style.fontWeight=String(style.weight);
+      if(style.italic)span.style.fontStyle='italic';
+      if(style.underline)span.style.textDecoration='underline';
+      if(style.effect==='glow'){span.style.textShadow='0 0 7px currentColor';}
+      if(style.effect==='shadow'){span.style.textShadow='2px 2px 4px #000';}
+      if(style.effect==='outline'){span.style.webkitTextStroke='.6px #f1f1f1';}
+      span.textContent=part;
+      fragment.appendChild(span);
+    }
+    editor.replaceChildren(fragment);
+    const base=draft[field+'Style'];
+    editor.style.fontFamily='"'+base.family+'"';
+    editor.style.fontSize=Math.min(Number(base.size),field==='title'?42:30)+'px';
+    editor.style.fontWeight=base.weight;
+    editor.style.lineHeight=String(base.line);
+    editor.style.textAlign=base.align;
+    syncing=false;
+  }
+  function scanEditor(field){
+    const editor=editors[field],segments=[];
+    function walk(node,inherited,root){
+      if(node.nodeType===Node.TEXT_NODE){
+        if(node.nodeValue)segments.push({text:node.nodeValue,style:inherited});
+        return;
+      }
+      if(node.nodeType!==Node.ELEMENT_NODE)return;
+      if(node.tagName==='BR'){segments.push({text:'\n',style:inherited});return;}
+      let style=inherited;
+      if(node.dataset?.socialStyle) {
+        try{style={...inherited,...JSON.parse(node.dataset.socialStyle)};}catch{/* plain text only */}
+      }
+      if(!root && (node.tagName==='DIV'||node.tagName==='P') && segments.length && !segments[segments.length-1].text.endsWith('\n'))segments.push({text:'\n',style:null});
+      for(const child of node.childNodes)walk(child,style,false);
+    }
+    walk(editor,null,true);
+    let text='',ranges=[];
+    for(const piece of segments){
+      const start=text.length;text+=piece.text.replace(/\u00a0/g,' ');
+      if(piece.style)ranges.push({start,end:text.length,...piece.style});
+    }
+    return {text,ranges:compactRanges(ranges)};
+  }
+  function syncFromEditor(field){
+    if(syncing)return;
+    const draft=bridge()?.getDraft();
+    if(!draft)return;
+    const data=scanEditor(field);
+    draft[field]=data.text;
+    draft.styles[field]=data.ranges;
+    bridge()?.setText(field,data.text);
+  }
+  function selectionOffsets(field){
+    const sel=window.getSelection?.(),editor=editors[field];
+    if(!sel || !sel.rangeCount || !editor)return null;
+    const range=sel.getRangeAt(0);
+    if(!(editor===range.startContainer || editor.contains(range.startContainer)))return null;
+    if(!(editor===range.endContainer || editor.contains(range.endContainer)))return null;
+    const prefix=document.createRange();
+    prefix.selectNodeContents(editor);
+    prefix.setEnd(range.startContainer,range.startOffset);
+    const before=prefix.toString().length;
+    const len=range.toString().length;
+    return {start:before,end:before+len};
+  }
+  function saveSelection(field){
+    const result=selectionOffsets(field);
+    if(result)savedSelection[field]=result;
+  }
+  function selectText(field,start,end){
+    const editor=editors[field],selection=window.getSelection();
+    const range=document.createRange();
+    const cursor=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT);
+    let node,at=0,startPoint=null,endPoint=null;
+    while((node=cursor.nextNode())){
+      const next=at+node.nodeValue.length;
+      if(!startPoint && start<=next)startPoint=[node,Math.min(node.nodeValue.length,start-at)];
+      if(!endPoint && end<=next){endPoint=[node,Math.min(node.nodeValue.length,end-at)];break;}
+      at=next;
+    }
+    if(!startPoint || !endPoint)return;
+    range.setStart(...startPoint);range.setEnd(...endPoint);
+    selection.removeAllRanges();selection.addRange(range);
+    savedSelection[field]={start,end};
+  }
+  function applyStyle(field,patch,clear){
+    const draft=bridge()?.getDraft();
+    if(!draft)return;
+    const sel=savedSelection[field] || selectionOffsets(field);
+    if(!sel || sel.end<=sel.start){
+      setHint(field,'Highlight one or more words first, then use the toolbar.');
+      editors[field].focus();return;
+    }
+    draft.styles[field]=mutateRanges(draft[field]||'',draft.styles[field]||[],sel.start,sel.end,patch,clear);
+    drawEditor(field);
+    editors[field].focus();
+    selectText(field,sel.start,sel.end);
+    setHint(field,'Applied to selected text in '+bridge().format().toUpperCase()+' only.');
+    bridge()?.refresh();
+  }
+  function setHint(field,message) {
+    const hint=toolbars[field].closest('.social-rich-shell').querySelector('.social-rich-hint');
+    if(hint)hint.textContent=message;
+  }
+  function action(field,command,value){
+    if(command==='clear')return applyStyle(field,null,true);
+    if(command==='font')return applyStyle(field,{font:value},false);
+    if(command==='size')return applyStyle(field,{size:Math.max(18,Math.min(100,Number(value)||42))},false);
+    if(command==='color' && colorPattern.test(value))return applyStyle(field,{color:value},false);
+    if(command==='effect')return applyStyle(field,{effect:value},false);
+    const draft=bridge()?.getDraft(),sel=savedSelection[field];
+    if(!draft || !sel || sel.end<=sel.start)return applyStyle(field,{},false);
+    const existing=styleAt(draft.styles[field]||[],sel.start,Math.min(sel.start+1,sel.end))||{};
+    if(command==='bold')return applyStyle(field,{weight:existing.weight==='700'?'400':'700'},false);
+    if(command==='italic')return applyStyle(field,{italic:!existing.italic},false);
+    if(command==='underline')return applyStyle(field,{underline:!existing.underline},false);
+  }
+  function plainInsert(text){
+    const sel=window.getSelection();
+    if(!sel?.rangeCount)return;
+    const range=sel.getRangeAt(0);
+    range.deleteContents();
+    const item=document.createTextNode(text);
+    range.insertNode(item);
+    range.setStartAfter(item);range.collapse(true);
+    sel.removeAllRanges();sel.addRange(range);
+  }
+  FIELDS.forEach(field=>{
+    const editor=editors[field],toolbar=toolbars[field];
+    editor.addEventListener('input',()=>syncFromEditor(field));
+    editor.addEventListener('focus',()=>saveSelection(field));
+    editor.addEventListener('keyup',()=>saveSelection(field));
+    editor.addEventListener('mouseup',()=>saveSelection(field));
+    editor.addEventListener('keydown',e=>{
+      if((e.ctrlKey||e.metaKey)&&!e.altKey){
+        const cmd={b:'bold',i:'italic',u:'underline'}[e.key.toLowerCase()];
+        if(cmd){e.preventDefault();saveSelection(field);action(field,cmd);return;}
+      }
+      if(e.key==='Enter'){
+        e.preventDefault();plainInsert('\n');
+        editor.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+    });
+    editor.addEventListener('paste',e=>{
+      e.preventDefault();
+      plainInsert(e.clipboardData?.getData('text/plain')||'');
+      editor.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    toolbar.addEventListener('pointerdown',()=>{
+      const active=selectionOffsets(field);
+      if(active)savedSelection[field]=active;
+    },true);
+    toolbar.addEventListener('click',event=>{
+      const target=event.target.closest('button');
+      if(!target)return;
+      const cmd=target.dataset.richAction;
+      if(cmd)action(field,cmd);
+      if(target.dataset.richColor){
+        toolbar.querySelector('[data-rich-action="color"]').value=target.dataset.richColor;
+        action(field,'color',target.dataset.richColor);
+      }
+    });
+    toolbar.addEventListener('change',event=>{
+      const control=event.target;
+      const cmd=control.dataset.richAction;
+      if(['font','size','color','effect'].includes(cmd))action(field,cmd,control.value);
+    });
+    const hint=document.createElement('p');
+    hint.className='social-rich-hint';
+    hint.textContent='Select text and format it here. Your image preview updates automatically.';
+    toolbar.parentElement.appendChild(hint);
+  });
+  document.addEventListener('selectionchange',()=>{
+    for(const field of FIELDS)saveSelection(field);
+  });
+  window.SocialStudioRich={
+    sync(){
+      if(!bridge()?.getDraft())return;
+      FIELDS.forEach(field=>{drawEditor(field);savedSelection[field]=null;});
+    }
+  };
+})();
