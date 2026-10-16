@@ -682,3 +682,5 @@
   -webkit-mask: url("/images/poster-masks/related-4.svg") 0 0 / 100% 100% no-repeat;
   mask: url("/images/poster-masks/related-4.svg") 0 0 / 100% 100% no-repeat;
 }
+
+.auditorium-stars .fractional-stars{filter:drop-shadow(0 1px 1px #060505)}
