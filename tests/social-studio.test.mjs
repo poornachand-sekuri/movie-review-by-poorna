@@ -192,10 +192,10 @@ test('Metadata headers and silver value typography are rendered inside the frame
   }
   assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Cinzel') && d.y===439));
   assert.ok(h.styledDraws.some(d=>d.text==='26 Aug 2026' && d.font.includes('Cinzel') && d.y===700));
-  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Cinzel') && d.y===554));
-  assert.ok(h.styledDraws.some(d=>d.text==='26 Aug 2026' && d.font.includes('Cinzel') && d.y===846));
+  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Cinzel') && d.y===650));
+  assert.ok(h.styledDraws.some(d=>d.text==='26 Aug 2026' && d.font.includes('Cinzel') && d.y===978));
   assert.ok(h.styledDraws.some(d=>d.text==='WATCHED IN' && d.y===382));
-  assert.ok(h.styledDraws.some(d=>d.text==='WATCHED IN' && d.y===489));
+  assert.ok(h.styledDraws.some(d=>d.text==='WATCHED IN' && d.y===575));
   assert.ok(!h.drawnText.some(d=>/2\.25\/5/.test(d)),'No numeric rating may be added');
 });
 
@@ -207,4 +207,32 @@ test('Rich edits support color, font, size, glow, italic and underline on export
   assert.match(RICH_JS,/style\.underline/);
   assert.match(STUDIO_JS,/st\?\.italic/);
   assert.match(STUDIO_JS,/piece\.style\?\.underline/);
+});
+
+
+test('Story metadata rows respect the approved master divider coordinates',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  // Silver master row edges: [538,705], [705,866], [866,1039].
+  // Headings must sit at least 20px within the rows, and values at least 25px.
+  const drawn=(text,y)=>h.styledDraws.some(d=>d.text===text && d.y===y);
+  assert.ok(drawn('WATCHED IN',575));
+  assert.ok(drawn('Telugu',650));
+  assert.ok(drawn("POORNA'S RATING",737));
+  assert.ok(drawn('RELEASE DATE',902));
+  assert.ok(drawn('26 Aug 2026',978));
+  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e' && r.y===792);
+  assert.ok(stars.length>=2,'Story rating must be red stars centered inside row 2');
+  const rows=[[538,705],[705,866],[866,1039]];
+  for(const [i,ys] of [[0,[575,650]],[1,[737,813]],[2,[902,978]]]){
+    assert.ok(ys.every(y=>y>rows[i][0]+20 && y<rows[i][1]-25),'Story row '+i+' must have padding');
+  }
+  assert.ok(!h.drawnText.some(t=>/2\.25\/5/.test(t)));
+});
+
+test('Post MY POV has inset space below the header and remains inside its panel',()=>{
+  assert.match(STUDIO_JS,/pov: \[92,824,897,181\]/);
+  const [top,height]=[824,181];
+  assert.ok(top>=820,'Post MY POV content must start beneath the red tab');
+  assert.ok(top+height<1017,'Post MY POV must remain inside the original bottom border');
 });
