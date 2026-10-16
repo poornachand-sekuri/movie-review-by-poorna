@@ -189,7 +189,10 @@
     if(!draft)return;
     const start=sel && sel.end>sel.start?sel.start:0;
     const existing=styleAt(draft.styles[field]||[],start,start+1)||{};
-    if(command==='bold')return applyStyle(field,{weight:existing.weight==='700'?'400':'700'},false);
+    if(command==='bold') {
+      const currentWeight=existing.weight||draft[field+'Style'].weight;
+      return applyStyle(field,{weight:currentWeight==='700'?'400':'700'},false);
+    }
     if(command==='italic')return applyStyle(field,{italic:!existing.italic},false);
     if(command==='underline')return applyStyle(field,{underline:!existing.underline},false);
   }
