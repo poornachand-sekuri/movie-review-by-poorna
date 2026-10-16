@@ -73,7 +73,7 @@
     editor.replaceChildren(fragment);
     const base=draft[field+'Style'];
     editor.style.fontFamily='"'+base.family+'"';
-    editor.style.fontSize=Math.min(Number(base.size),field==='title'?42:30)+'px';
+    editor.style.fontSize=Number(base.size)+'px';
     editor.style.fontWeight=base.weight;
     editor.style.lineHeight=String(base.line);
     editor.style.textAlign=base.align;
@@ -125,9 +125,23 @@
     const len=range.toString().length;
     return {start:before,end:before+len};
   }
+  function updateToolbar(field){
+    const toolbar=toolbars[field],draft=bridge()?.getDraft();
+    if(!toolbar||!draft)return;
+    const selection=savedSelection[field];
+    const at=selection?.start??0;
+    const range=styleAt(draft.styles?.[field]||[],at,at+1)||{};
+    const base=draft[field+'Style'];
+    const values={font:range.font||base.family,size:range.size||base.size,
+      color:range.color||'#f1f1f1',effect:range.effect||'none'};
+    for(const [action,value] of Object.entries(values)){
+      const control=toolbar.querySelector('[data-rich-action="'+action+'"]');
+      if(control)control.value=String(value);
+    }
+  }
   function saveSelection(field){
     const result=selectionOffsets(field);
-    if(result)savedSelection[field]=result;
+    if(result){savedSelection[field]=result;updateToolbar(field);}
   }
   function selectText(field,start,end){
     const editor=editors[field],selection=window.getSelection();
@@ -148,16 +162,17 @@
   function applyStyle(field,patch,clear){
     const draft=bridge()?.getDraft();
     if(!draft)return;
-    const sel=savedSelection[field] || selectionOffsets(field);
-    if(!sel || sel.end<=sel.start){
-      setHint(field,'Highlight one or more words first, then use the toolbar.');
-      editors[field].focus();return;
-    }
-    draft.styles[field]=mutateRanges(draft[field]||'',draft.styles[field]||[],sel.start,sel.end,patch,clear);
+    const selected=savedSelection[field] || selectionOffsets(field);
+    const fullText=String(draft[field]||'');
+    if(!fullText.length){setHint(field,'Enter some text to format.');return;}
+    // No highlighted text means the entire Title or MY POV, not a silent no-op.
+    const sel=selected && selected.end>selected.start
+      ? selected : {start:0,end:fullText.length};
+    draft.styles[field]=mutateRanges(fullText,draft.styles[field]||[],sel.start,sel.end,patch,clear);
     drawEditor(field);
     editors[field].focus();
     selectText(field,sel.start,sel.end);
-    setHint(field,'Applied to selected text in '+bridge().format().toUpperCase()+' only.');
+    setHint(field,'Formatting applied to '+(selected && selected.end>selected.start?'selected words':'the entire text')+' in '+bridge().format().toUpperCase()+'.');
     bridge()?.refresh();
   }
   function setHint(field,message) {
@@ -171,8 +186,9 @@
     if(command==='color' && colorPattern.test(value))return applyStyle(field,{color:value},false);
     if(command==='effect')return applyStyle(field,{effect:value},false);
     const draft=bridge()?.getDraft(),sel=savedSelection[field];
-    if(!draft || !sel || sel.end<=sel.start)return applyStyle(field,{},false);
-    const existing=styleAt(draft.styles[field]||[],sel.start,Math.min(sel.start+1,sel.end))||{};
+    if(!draft)return;
+    const start=sel && sel.end>sel.start?sel.start:0;
+    const existing=styleAt(draft.styles[field]||[],start,start+1)||{};
     if(command==='bold')return applyStyle(field,{weight:existing.weight==='700'?'400':'700'},false);
     if(command==='italic')return applyStyle(field,{italic:!existing.italic},false);
     if(command==='underline')return applyStyle(field,{underline:!existing.underline},false);
@@ -229,7 +245,7 @@
     });
     const hint=document.createElement('p');
     hint.className='social-rich-hint';
-    hint.textContent='Select text and format it here. Your image preview updates automatically.';
+    hint.textContent='Select words to format them, or leave text unselected to format the entire box.';
     toolbar.parentElement.appendChild(hint);
   });
   document.addEventListener('selectionchange',()=>{
@@ -238,7 +254,16 @@
   window.SocialStudioRich={
     sync(){
       if(!bridge()?.getDraft())return;
-      FIELDS.forEach(field=>{drawEditor(field);savedSelection[field]=null;});
+      FIELDS.forEach(field=>{drawEditor(field);savedSelection[field]=null;updateToolbar(field);});
+    },
+    refreshLayout(){
+      if(!bridge()?.getDraft())return;
+      // Update base alignment/line spacing in-place to preserve the current selection.
+      for(const field of FIELDS){
+        const base=bridge().getDraft()[field+'Style'];
+        editors[field].style.lineHeight=String(base.line);
+        editors[field].style.textAlign=base.align;
+      }
     }
   };
 })();
