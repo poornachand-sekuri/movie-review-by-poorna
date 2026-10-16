@@ -8,11 +8,9 @@
 .social-group .field span {font-size:12px;color:#d0baa0}
 .social-group input:not([type=checkbox]):not([type=file]),.social-group select,.social-group textarea {width:100%;min-width:0;background:#080808;border:1px solid #59472f;color:#f1f1f1;border-radius:7px;padding:9px 10px}
 .social-group textarea {resize:vertical;line-height:1.4}
-.social-group input[type=range] {padding:0;accent-color:#f7010e}
 .social-group input[type=file]{font-size:12px;padding:8px 0;color:#cbbba9}
-.social-group output{float:right;color:#f1f1f1}
 .social-grid2{display:grid;grid-template-columns:1fr 1fr;column-gap:12px}
-.social-check{display:flex;gap:10px;align-items:center;margin:0 0 14px;color:#f1f1f1;font-size:13px}
+.social-check{display:flex;gap:10px;align-items:center;margin:8px 0 14px;color:#f1f1f1;font-size:13px}
 .social-check input{accent-color:#f7010e}
 .social-help{color:#bba993;font:400 12px/1.55 "Inter",sans-serif;margin:9px 0 12px}
 .social-preview-area{position:sticky;top:93px;display:flex;flex-direction:column;align-items:stretch;min-height:520px}
@@ -37,8 +35,6 @@
 .social-mode-bar span{color:#f1f1f1;font-weight:700;font-size:13px}
 .social-mode-bar small{color:#ad9b8a;font-size:11px;width:100%}
 .social-group .field small{font-size:11px;color:#bcae9c}
-.social-word-controls .social-selection{border:1px solid #654531;border-radius:7px;background:#070606;color:#f1f1f1;padding:9px;font-size:12px;min-height:37px;overflow-wrap:anywhere}
-.social-word-controls input[type=color]{min-height:42px;cursor:pointer;padding:4px!important}
 .social-caption-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px}
 .social-caption-actions button{font-size:11px;padding:9px 11px;white-space:normal;min-height:36px}
 .social-captions textarea{min-height:155px}
