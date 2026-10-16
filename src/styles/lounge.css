@@ -1215,3 +1215,6 @@ html.lounge-focus-open body {
 html body .lounge-panel--bottom .lounge-banner-crop {
   background-image: url("https://assets.moviereviewbypoorna.com/ui/pages/home/v4/res%70onsive/07_Lounge_Cini_Cafe_Banner_runtime_q99.webp?v=exact-palette-20260906-1519") !important;
 }
+
+/* Shared five-star SVG owns the color; room typography retains its existing geometry. */
+.lounge-page .fractional-stars{filter:drop-shadow(0 1px 1px #060505);letter-spacing:normal}
