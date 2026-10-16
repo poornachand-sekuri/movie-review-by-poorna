@@ -12,6 +12,7 @@ function harness() {
   const elementMap = new Map();
   const callbacks = new Map();
   const drawnText = [];
+  const filledRects = [];
   function element(id) {
     if(!elementMap.has(id))elementMap.set(id,{
       id, value:'', checked:false, textContent:'', className:'', disabled:false, files:[],
@@ -26,7 +27,7 @@ function harness() {
   function makeContext(){
     return {
       font:'600 24px "Inter"',
-      fillRect(){},drawImage(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
+      fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
       fillText(str){drawnText.push(String(str));},
       measureText(str){
         const size=Number(this.font.match(/(\d+)px/)?.[1]||24);
@@ -74,7 +75,7 @@ function harness() {
     Intl,Date,Number,String,Array,Math,Promise,console,
   };
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText};
+  return {element,callbacks,document,drawnText,filledRects};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
@@ -102,7 +103,8 @@ test('Social Studio initializes, previews movie data, and retains the original v
   assert.equal(h.element('socialDownloadPost').disabled,false);
   assert.equal(h.element('socialDownloadStory').disabled,false);
   assert.ok(h.drawnText.some(t=>t.includes('JOKER')));
-  assert.ok(h.drawnText.some(t=>t.includes('2.25/5')));
+  assert.ok(!h.drawnText.some(t=>/2\.25\/5/.test(t)));
+  assert.ok(h.filledRects.some(r=>r.fillStyle==='#f7010e' && Math.abs(r.width - 10.5) < 0.01), 'Quarter-star red fill drawn correctly');
 });
 
 test('MY POV overflow blocks PNG exports instead of silently truncating', async()=>{
@@ -120,6 +122,7 @@ test('MY POV overflow blocks PNG exports instead of silently truncating', async(
 test('Post and Story use only two approved template dimensions',()=>{
   assert.match(STUDIO_JS,/post:\s*\{\s*size: \[1080,1080\]/);
   assert.match(STUDIO_JS,/story:\s*\{\s*size: \[1080,1920\]/);
-  assert.match(STUDIO_JS,/for\(let i=0;i<5;i\+\+\)/);
+  assert.match(STUDIO_JS,/for\s*\(let i = 0; i < 5; i\+\+\)/);
+  assert.doesNotMatch(STUDIO_JS,/numericX|value\.toFixed\(2\).*\/5/);
   assert.doesNotMatch(STUDIO_JS,/\.slice\(0,\s*\d+\)\s*\+\s*['"]\.\.\./);
 });
