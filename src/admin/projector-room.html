@@ -209,11 +209,17 @@
         <div class="social-workspace">
           <section class="social-controls" aria-label="Social Studio controls">
             <div class="social-group"><h2>Movie</h2>
+              <div class="social-mode-bar"><strong>EDITING</strong><span id="socialEditingMode">POST IMAGE</span><small>Each format retains its own text and formatting.</small></div>
               <label class="field"><span>Select saved review</span><select id="socialMovie"><option value="">Choose a movie…</option></select></label>
               <p class="social-help" id="socialMovieStatus">Select a published review to begin.</p>
               <label class="field"><span>Promotional movie title</span><textarea rows="2" id="socialTitle" spellcheck="false"></textarea></label>
               <label class="field"><span>Promotional MY POV (exact text by default)</span><textarea rows="5" id="socialPov"></textarea></label>
-              <p class="social-help">Edits here affect exports only, never your saved review.</p>
+              <div class="social-grid2">
+                <label class="field"><span>WATCHED IN (this format)</span><input id="socialLanguage" maxlength="60"></label>
+                <label class="field"><span>RELEASE DATE (this format)</span><input id="socialReleaseDate" type="date"></label>
+              </div>
+              <label class="field"><span>POORNA'S RATING (stars only)</span><input id="socialRating" type="number" min="0" max="5" step="0.25"><small>Five stars with 0.25 fractional fill. No numeric rating on the image.</small></label>
+              <p class="social-help">Post and Story data, fonts and MY POV edits are independent. Edits here affect promotional images only and never change saved reviews.</p>
             </div>
             <div class="social-group"><h2>Title Typography</h2>
               <label class="social-check"><input type="checkbox" id="socialTitleAuto" checked> Auto-fit to title frame</label>
@@ -224,6 +230,30 @@
                 <label class="field"><span>Alignment</span><select id="socialTitleAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
                 <label class="field"><span>Letter case</span><select id="socialTitleCase"><option value="uppercase">UPPERCASE</option><option value="original">Original</option></select></label>
               </div>
+            </div>
+            <div class="social-group social-word-controls"><h2>Style Selected Words</h2>
+              <p class="social-help">Highlight a word or phrase inside Movie Title or MY POV, then apply formatting. Each Post/Story image preserves its own word-level formatting.</p>
+              <p class="social-selection" id="socialSelectedText">Select text in either editor above.</p>
+              <div class="social-grid2">
+                <label class="field"><span>Selected text font</span><select id="socialWordFont">
+                  <option value="Inter">Inter</option><option value="Oswald">Oswald</option><option value="Cinzel">Cinzel</option><option value="Source Serif 4">Source Serif 4</option></select></label>
+                <label class="field"><span>Selected text size</span><input id="socialWordSize" type="number" min="18" max="100" value="42"></label>
+                <label class="field"><span>Any font color</span><input id="socialWordColor" type="color" value="#f1f1f1"></label>
+                <label class="field"><span>Effect</span><select id="socialWordEffect">
+                  <option value="none">None</option><option value="glow">Neon Glow</option><option value="outline">Silver Outline</option><option value="shadow">Cinematic Shadow</option>
+                </select></label>
+                <label class="field"><span>Weight</span><select id="socialWordWeight">
+                  <option value="700">Bold</option><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="800">Extra Bold</option></select></label>
+                <label class="field"><span>Quick futuristic colors</span><select id="socialWordPalette">
+                  <option value="">Custom picker above</option><option value="#F7010E">Cinema Red</option><option value="#F1F1F1">Silver White</option>
+                  <option value="#19F9FF">Cyber Cyan</option><option value="#F7D154">Neon Gold</option>
+                  <option value="#C770FF">Violet Neon</option><option value="#29FF98">Neon Mint</option>
+                </select></label>
+              </div>
+              <div class="social-caption-actions">
+                <button type="button" class="ghost" id="socialApplyWordStyle">APPLY TO SELECTION</button>
+                <button type="button" class="ghost" id="socialClearWordStyle">CLEAR SELECTION STYLE</button>
+              </div><p id="socialWordStatus" class="social-help">Preview updates on the right. Unselected words stay unchanged.</p>
             </div>
             <div class="social-group"><h2>MY POV Typography</h2>
               <label class="social-check"><input type="checkbox" id="socialPovAuto" checked> Auto-fit without truncation</label>
@@ -242,6 +272,25 @@
               <button class="ghost" type="button" id="socialSaveTemplates">SAVE APPROVED MASTERS TO R2</button>
               <div class="social-help" id="socialAssetsStatus"></div>
             </div>
+            <div class="social-group social-captions"><h2>Platform Captions & Links</h2>
+              <p class="social-help">Seven editable messages with the correct tracked review URL. Links are kept in messages or native Story stickers, never printed on an image.</p>
+              <label class="field"><span>Platform</span><select id="socialCaptionPlatform">
+                <option value="instagram-post">Instagram Post</option>
+                <option value="instagram-story">Instagram Story</option>
+                <option value="facebook-post">Facebook Post</option>
+                <option value="facebook-story">Facebook Story</option>
+                <option value="x-post">X Post</option>
+                <option value="whatsapp-channel">WhatsApp Channel Post</option>
+                <option value="whatsapp-status">WhatsApp Story / Status</option>
+              </select></label>
+              <label class="field"><span>Editable message</span><textarea id="socialCaptionText" rows="8" placeholder="Select a movie to generate captions."></textarea></label>
+              <label class="field"><span>Tracked review URL for this platform</span><input id="socialTrackedUrl" readonly></label>
+              <div class="social-caption-actions">
+                <button id="socialCopyCaption" class="ghost" type="button">COPY MESSAGE</button>
+                <button id="socialCopyLink" class="ghost" type="button">COPY LINK</button>
+                <button id="socialDownloadCaptions" class="ghost" type="button">DOWNLOAD ALL 7 CAPTIONS</button>
+              </div><small class="social-help" id="socialCaptionStatus">No movie selected.</small>
+            </div>
           </section>
           <section class="social-preview-area" aria-label="Generated image preview">
             <div class="social-preview-head"><h2>Live Preview</h2>
@@ -258,8 +307,8 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=1">
+  <link rel="stylesheet" href="/admin/social-studio.css?v=2">
   <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
-  <script src="/admin/social-studio.js?v=1" defer></script>
+  <script src="/admin/social-studio.js?v=2" defer></script>
 </body>
 </html>

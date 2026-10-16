@@ -13,12 +13,14 @@ function harness() {
   const callbacks = new Map();
   const drawnText = [];
   const filledRects = [];
+  const styledDraws = [];
+  const buttons = Object.fromEntries(['post','story'].map(kind=>[kind,{dataset:{socialFormat:kind},listeners:{},classList:{toggle(){}},addEventListener(type,cb){this.listeners[type]=cb;}}]));
   function element(id) {
     if(!elementMap.has(id))elementMap.set(id,{
       id, value:'', checked:false, textContent:'', className:'', disabled:false, files:[],
       listeners:{},
       classList:{toggle(){}, add(){},remove(){}},
-      appendChild(){}, addEventListener(type,callback){this.listeners[type]=callback;},
+      appendChild(){}, setCustomValidity(message){this.validationMessage=message;}, addEventListener(type,callback){this.listeners[type]=callback;},
       getContext(){return makeContext()},
       toBlob(callback){callback({size:123,type:'image/png'});},
     });
@@ -28,7 +30,7 @@ function harness() {
     return {
       font:'600 24px "Inter"',
       fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
-      fillText(str){drawnText.push(String(str));},
+      fillText(str){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle});},strokeText(){},
       measureText(str){
         const size=Number(this.font.match(/(\d+)px/)?.[1]||24);
         return {width:Array.from(String(str)).length*size*0.53};
@@ -37,7 +39,8 @@ function harness() {
   }
   const defaults={
     socialTitleAuto:true,socialTitleSize:'58',socialTitleFont:'Oswald',socialTitleWeight:'700',socialTitleAlign:'left',socialTitleCase:'uppercase',
-    socialPovAuto:true,socialPovSize:'42',socialPovFont:'Inter',socialPovWeight:'600',socialPovAlign:'left',socialPovLine:'1.28'
+    socialPovAuto:true,socialPovSize:'42',socialPovFont:'Inter',socialPovWeight:'600',socialPovAlign:'left',socialPovLine:'1.28',
+    socialCaptionPlatform:'instagram-post',socialWordFont:'Inter',socialWordWeight:'700',socialWordSize:'42',socialWordColor:'#F1F1F1',socialWordEffect:'none'
   };
   for(const [id,value] of Object.entries(defaults)){
     if(typeof value==='boolean') element(id).checked=value;
@@ -45,7 +48,7 @@ function harness() {
   }
   const document={
     getElementById:element,
-    querySelectorAll:()=>[],
+    querySelectorAll:selector=>selector==='[data-social-format]'?Object.values(buttons):[],
     fonts:{ready:Promise.resolve(),load:()=>Promise.resolve([])},
     createElement(tag){ if(tag==='option')return {value:'',textContent:''};
       if(tag==='canvas')return {width:1080,height:1080,getContext:()=>makeContext(),toBlob(callback){callback({size:100,type:'image/png'});}};
@@ -75,7 +78,7 @@ function harness() {
     Intl,Date,Number,String,Array,Math,Promise,console,
   };
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText,filledRects};
+  return {element,callbacks,document,drawnText,filledRects,buttons,styledDraws};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
@@ -115,7 +118,7 @@ test('MY POV overflow blocks PNG exports instead of silently truncating', async(
   h.element('socialPov').listeners.input();
   await settle();
   assert.equal(h.element('socialDownloadPost').disabled,true);
-  assert.equal(h.element('socialDownloadStory').disabled,true);
+  assert.equal(h.element('socialDownloadStory').disabled,false,'Story remains valid when only Post text overflows');
   assert.match(h.element('socialWarnings').textContent,/cannot fit without clipping/);
 });
 
@@ -125,4 +128,49 @@ test('Post and Story use only two approved template dimensions',()=>{
   assert.match(STUDIO_JS,/for\s*\(let i = 0; i < 5; i\+\+\)/);
   assert.doesNotMatch(STUDIO_JS,/numericX|value\.toFixed\(2\).*\/5/);
   assert.doesNotMatch(STUDIO_JS,/\.slice\(0,\s*\d+\)\s*\+\s*['"]\.\.\./);
+});
+
+
+test('Post and Story captions use separate tracked links and can be independently edited', async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  assert.match(h.element('socialCaptionText').value,/utm_source=instagram/);
+  assert.match(h.element('socialTrackedUrl').value,/utm_campaign=toxic-a-fairy-tale-for-grown-ups/);
+  h.element('socialCaptionText').value='MY CUSTOM IG MESSAGE';
+  h.element('socialCaptionText').listeners.input();
+  h.element('socialCaptionPlatform').value='facebook-post';
+  h.element('socialCaptionPlatform').listeners.change();
+  assert.match(h.element('socialCaptionText').value,/Now reviewed:/);
+  assert.match(h.element('socialTrackedUrl').value,/utm_source=facebook/);
+  h.element('socialCaptionPlatform').value='instagram-post';
+  h.element('socialCaptionPlatform').listeners.change();
+  assert.equal(h.element('socialCaptionText').value,'MY CUSTOM IG MESSAGE');
+});
+test('Separate Post/Story drafts preserve title, MY POV, metadata and font size',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  h.element('socialTitle').value='CUSTOM POST TITLE';h.element('socialTitle').listeners.input();
+  h.element('socialLanguage').value='Tamil';h.element('socialLanguage').listeners.input();
+  h.element('socialPovSize').value='30';h.element('socialPovSize').listeners.input();
+  h.buttons.story.listeners.click();
+  assert.equal(h.element('socialTitle').value,'TOXIC: A FAIRY TALE FOR GROWN-UPS');
+  assert.equal(h.element('socialLanguage').value,'Telugu');
+  assert.equal(h.element('socialPovSize').value,'42');
+  h.element('socialPov').value='STORY ONLY VERDICT';h.element('socialPov').listeners.input();
+  h.buttons.post.listeners.click();
+  assert.equal(h.element('socialTitle').value,'CUSTOM POST TITLE');
+  assert.equal(h.element('socialPovSize').value,'30');
+  assert.equal(h.element('socialLanguage').value,'Tamil');
+  h.buttons.story.listeners.click();
+  assert.equal(h.element('socialPov').value,'STORY ONLY VERDICT');
+});
+test('Word-level styling applies selected color to one word only',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  h.element('socialPov').selectionStart=0;h.element('socialPov').selectionEnd=5;
+  h.element('socialPov').listeners.focus();
+  h.element('socialWordColor').value='#19F9FF';
+  h.element('socialApplyWordStyle').listeners.click();await settle();
+  assert.ok(h.styledDraws.some(d=>d.color==='#19F9FF'),'Styled token drawn with custom color');
+  assert.equal(h.element('socialDownloadPost').disabled,false);
 });

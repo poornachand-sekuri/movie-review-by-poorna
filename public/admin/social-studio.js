@@ -9,29 +9,33 @@
     povFont: $('socialPovFont'), povWeight: $('socialPovWeight'), povAlign: $('socialPovAlign'), povLine: $('socialPovLine'),
     postFile: $('socialPostFile'), storyFile: $('socialStoryFile'), save: $('socialSaveTemplates'),
     assetsStatus: $('socialAssetsStatus'), canvas: $('socialCanvas'), warnings: $('socialWarnings'),
-    dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory')
+    dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
+    editingMode: $('socialEditingMode'), language: $('socialLanguage'), releaseDate: $('socialReleaseDate'), rating: $('socialRating'),
+    captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
+    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
+    wordFont:$('socialWordFont'),wordSize:$('socialWordSize'),wordColor:$('socialWordColor'),wordEffect:$('socialWordEffect'),
+    wordWeight:$('socialWordWeight'),wordPalette:$('socialWordPalette'),applyWord:$('socialApplyWordStyle'),
+    clearWord:$('socialClearWordStyle'),selectedText:$('socialSelectedText'),wordStatus:$('socialWordStatus')
   };
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { post: null, story: null }, renders: {}, errors: {},
-    seq: 0, saved: {}, templateUploads: 0
+    seq: 0, saved: {}, templateUploads: 0, drafts: { post:null, story:null }, captions:{}, activeText:'pov'
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const geometry = {
     post: {
       size: [1080,1080],
-      poster: [163,206,308,462],
-      title: [558,207,445,119],
-      pov: [126,752,829,132],
-      footer: [221,929,782,83],
+      poster: [158,215,310,505],
+      title: [572,221,423,95],
+      pov: [92,807,897,198],
     },
     story: {
       size: [1080,1920],
-      poster: [349,244,463,617],
-      title: [192,909,796,128],
-      pov: [166,1291,781,165],
-      footer: [204,1515,801,78],
+      poster: [155,330,314,675],
+      title: [588,343,400,126],
+      pov: [123,1139,837,267],
     }
   };
   function errorMessage(error) { return error instanceof Error ? error.message : String(error); }
@@ -93,15 +97,18 @@
     const sequence = ++state.seq;
     state.review = null;
     state.poster = null;
-    inputs.title.value = ''; inputs.pov.value = '';
-    if (!id) { await refreshAll(); return; }
+    inputs.title.value = ''; inputs.pov.value = ''; state.drafts={ post:null,story:null }; state.captions={};
+    if (!id) { updateCaptionEditor(); await refreshAll(); return; }
     inputs.status.textContent = 'Loading selected review and original poster…';
     try {
       const review = await jsonApi('/api/admin/reviews/' + encodeURIComponent(id));
       if (sequence !== state.seq) return;
       state.review = review;
-      inputs.title.value = review.t || '';
-      inputs.pov.value = review.v || '';
+      state.drafts.post=defaultDraft(review);
+      state.drafts.story=defaultDraft(review);
+      state.format='post'; applyDraft('post');
+      state.captions=makeCaptions(review);
+      updateCaptionEditor();
       try { const original = await loadPoster(review.m || ''); if (sequence !== state.seq) return; state.poster = original; }
       catch (err) { if (sequence !== state.seq) return; inputs.status.textContent = errorMessage(err); }
       if (sequence !== state.seq) return;
@@ -113,6 +120,240 @@
       await refreshAll();
     }
   }
+
+  const platforms = {
+    'instagram-post':'instagram', 'instagram-story':'instagram',
+    'facebook-post':'facebook','facebook-story':'facebook',
+    'x-post':'x','whatsapp-channel':'whatsapp','whatsapp-status':'whatsapp'
+  };
+  function trackedUrl(platform) {
+    if (!state.review) return '';
+    const slug = safeSlug(state.review.s);
+    const u = new URL('https://moviereviewbypoorna.com/review/' + slug);
+    u.searchParams.set('utm_source', platforms[platform] || 'social');
+    u.searchParams.set('utm_medium', platform.endsWith('story') || platform.endsWith('status') ? 'story' : 'social');
+    u.searchParams.set('utm_campaign', slug);
+    return u.toString();
+  }
+  function makeCaptions(review) {
+    const title=review.t || '';
+    const pov=review.v || '';
+    const link=(k)=> {
+      const slug=safeSlug(review.s);
+      const url=new URL('https://moviereviewbypoorna.com/review/'+slug);
+      url.searchParams.set('utm_source',platforms[k]);
+      url.searchParams.set('utm_medium',k.endsWith('story') || k.endsWith('status') ? 'story' : 'social');
+      url.searchParams.set('utm_campaign',slug);
+      return url.toString();
+    };
+    return {
+      'instagram-post': title + '\n\n' + pov + '\n\nFull review in the Auditorium. Link also available via Story or profile.\n' + link('instagram-post') + '\n\n#MovieReviewsByPoorna #MovieReview',
+      'instagram-story': title + '\n\n' + pov + '\n\nTap the link sticker to read the full review.\n' + link('instagram-story'),
+      'facebook-post': 'Now reviewed: ' + title + '\n\n' + pov + '\n\nRead the full review:\n' + link('facebook-post'),
+      'facebook-story': title + '\n\n' + pov + '\n\nFull review via link sticker:\n' + link('facebook-story'),
+      'x-post': (title + '\n\n' + pov + '\n\nFull review: ' + link('x-post')),
+      'whatsapp-channel': '🎬 ' + title + '\n\nMY POV: ' + pov + '\n\nRead the full review:\n' + link('whatsapp-channel'),
+      'whatsapp-status': '🎬 ' + title + '\n\n' + pov + '\n\nFull review:\n' + link('whatsapp-status')
+    };
+  }
+  function updateCaptionEditor() {
+    const key=inputs.captionPlatform.value;
+    inputs.captionText.value=state.captions[key] || '';
+    inputs.trackedUrl.value=trackedUrl(key);
+    inputs.captionStatus.textContent=state.review?'Edit and copy the caption for '+inputs.captionPlatform.selectedOptions?.[0]?.textContent+'.':'Select a saved review.';
+  }
+  async function copyText(value,message) {
+    if(!value) {inputs.captionStatus.textContent='Nothing to copy yet.';return;}
+    try {
+      await navigator.clipboard.writeText(value);
+      inputs.captionStatus.textContent=message;
+    } catch {
+      inputs.captionStatus.textContent='Clipboard permission denied. Select and copy the text above.';
+    }
+  }
+  function downloadCaptions() {
+    if(!state.review)return;
+    const labels={
+      'instagram-post':'Instagram Post','instagram-story':'Instagram Story',
+      'facebook-post':'Facebook Post','facebook-story':'Facebook Story',
+      'x-post':'X Post','whatsapp-channel':'WhatsApp Channel',
+      'whatsapp-status':'WhatsApp Status'
+    };
+    const text=Object.entries(labels).map(([k,label])=>'=== '+label+' ===\n'+(state.captions[k]||'')+'\n').join('\n');
+    const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+    const link=document.createElement('a');
+    link.href=URL.createObjectURL(blob);
+    link.download=safeSlug(state.review.s)+'_social_captions.txt';
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+  }
+
+  function adjustStyleRanges(oldText,newText,ranges) {
+    if(!ranges?.length)return [];
+    let prefix=0;
+    while(prefix<oldText.length&&prefix<newText.length&&oldText[prefix]===newText[prefix])prefix++;
+    let suffix=0;
+    while(suffix<oldText.length-prefix&&suffix<newText.length-prefix&&oldText[oldText.length-1-suffix]===newText[newText.length-1-suffix])suffix++;
+    const delta=newText.length-oldText.length;
+    return ranges.flatMap(r=>{
+      if(r.end<=prefix)return [r];
+      if(r.start>=oldText.length-suffix)return [{...r,start:r.start+delta,end:r.end+delta}];
+      return [];
+    });
+  }
+  function updateSelection() {
+    const field=state.activeText;
+    const el=inputs[field];
+    if(!el || typeof el.selectionStart!=='number')return;
+    const selected=el.value.slice(el.selectionStart,el.selectionEnd);
+    inputs.selectedText.textContent=selected
+      ? field.toUpperCase() + ': "'+ selected.slice(0,65) +(selected.length>65?'…':'')+'"'
+      : 'Select a word or phrase in Movie Title or MY POV.';
+  }
+  function applyWordStyle(clear=false) {
+    persistDraft();
+    const draft=state.drafts[state.format];
+    const field=state.activeText,el=inputs[field];
+    if(!draft || !el || !Number.isInteger(el.selectionStart) || el.selectionEnd<=el.selectionStart) {
+      inputs.wordStatus.textContent='Select one or more words in the Title or MY POV editor first.';
+      return;
+    }
+    const start=el.selectionStart,end=el.selectionEnd;
+    // Newer ranges take precedence. Clear only removes formatting in the selected interval.
+    draft.styles[field]=draft.styles[field].flatMap(r=>{
+      if(r.end<=start||r.start>=end)return [r];
+      const remaining=[];
+      if(r.start<start)remaining.push({...r,end:start});
+      if(r.end>end)remaining.push({...r,start:end});
+      return remaining;
+    });
+    if(!clear)draft.styles[field].push({
+      start,end,
+      font:inputs.wordFont.value,
+      size:Math.min(100,Math.max(18,Number(inputs.wordSize.value)||42)),
+      color:inputs.wordColor.value,
+      effect:inputs.wordEffect.value,
+      weight:inputs.wordWeight.value
+    });
+    inputs.wordStatus.textContent=(clear?'Cleared':'Applied')+' formatting to selected '+field+' text in '+state.format.toUpperCase()+' only.';
+    requestRefresh();
+  }
+  function getWordStyle(ranges,start,end){
+    let chosen=null;
+    for(const r of ranges)if(r.start<end && r.end>start)chosen=r;
+    return chosen;
+  }
+  function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[]) {
+    if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum);
+    const [x,y,width,height]=box;
+    const raw=String(text);
+    const tokens=Array.from(raw.matchAll(/\S+|[^\S\n]+|\n/g),m=>({
+      text:m[0], start:m.index, end:m.index+m[0].length, newline:m[0]==='\n'
+    }));
+    let layout=null;
+    for(let base=options.size;base>= (options.auto?minimum:options.size);base--){
+      const scale=base/options.size, lines=[], maxW=width-5;
+      let row={pieces:[],width:0,height:base*options.line};
+      let failed=false;
+      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*options.line};};
+      for(const token of tokens){
+        if(token.newline){flush();continue;}
+        const st=getWordStyle(ranges,token.start,token.end);
+        const size=(st?.size||options.size)*scale;
+        const family=st?.font||options.family,weight=st?.weight||options.weight;
+        const font=weight+' '+size+'px "'+family+'"';
+        ctx.font=font;
+        const tokenW=ctx.measureText(token.text).width;
+        if(row.width+tokenW>maxW && row.pieces.length && token.text.trim())flush();
+        if(!row.pieces.length&&!token.text.trim())continue;
+        if(tokenW>maxW){failed=true;break;}
+        row.pieces.push({text:token.text,font,style:st,width:tokenW,size});
+        row.width+=tokenW;
+        row.height=Math.max(row.height,size*options.line);
+      }
+      if(!failed && row.pieces.length)flush();
+      const h=lines.reduce((n,r)=>n+r.height,0);
+      if(!failed && lines.length<=maxLines && h<=height){layout={lines,height:h};break;}
+    }
+    if(!layout)return {ok:false,message:'Selected-word formatting cannot fit in the approved panel. Reduce font sizes or change formatting.'};
+    let py=y+(height-layout.height)/2;
+    for(const row of layout.lines){
+      let px=x+2+(options.align==='center'?(width-row.width)/2-2:0);
+      for(const piece of row.pieces){
+        ctx.save();
+        ctx.font=piece.font;
+        ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillStyle=piece.style?.color||'#f1f1f1';
+        if(piece.style?.effect==='glow'){
+          ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=Math.max(5,piece.size*0.3);
+        }else if(piece.style?.effect==='shadow'){
+          ctx.shadowColor='#000000';ctx.shadowBlur=8;ctx.shadowOffsetX=3;ctx.shadowOffsetY=3;
+        }else if(piece.style?.effect==='outline'){
+          ctx.strokeStyle='#f1f1f1';ctx.lineWidth=1.8;
+          ctx.strokeText(piece.text,px,py+row.height/2);
+        }
+        ctx.fillText(piece.text,px,py+row.height/2);
+        ctx.restore();
+        px+=piece.width;
+      }
+      py+=row.height;
+    }
+    return {ok:true};
+  }
+
+  function defaultDraft(review) {
+    return {
+      title:review.t || '',pov:review.v || '',styles:{title:[],pov:[]},language:review.l || '',
+      releaseDate:review.rd || '', rating:review.r == null?'':String(review.r),
+      titleCase:'uppercase',
+      titleStyle:{ family:'Oswald', weight:'700', align:'left',size:58,auto:true,line:1.11 },
+      povStyle:{ family:'Inter',weight:'600',align:'left',size:42,auto:true,line:1.28 }
+    };
+  }
+  function persistDraft(){
+    const draft=state.drafts[state.format];
+    if(!draft)return;
+    for(const field of ['title','pov']) {
+      if(draft[field]!==inputs[field].value) {
+        draft.styles[field]=adjustStyleRanges(draft[field],inputs[field].value,draft.styles[field]);
+        draft[field]=inputs[field].value;
+      }
+    }
+    draft.language=inputs.language.value;draft.releaseDate=inputs.releaseDate.value;
+    const r=inputs.rating.value;
+    if(r!=='' && (!Number.isFinite(Number(r)) || Number(r)<0 || Number(r)>5 || !Number.isInteger(Number(r)*4))) {
+      inputs.rating.setCustomValidity('Use a rating from 0 to 5 in 0.25 increments.');
+    } else inputs.rating.setCustomValidity('');
+    draft.rating=r;
+    draft.titleCase=inputs.titleCase.value;
+    draft.titleStyle={family:inputs.titleFont.value,weight:inputs.titleWeight.value,
+      align:inputs.titleAlign.value,size:Number(inputs.titleSize.value),auto:inputs.titleAuto.checked,line:1.11};
+    draft.povStyle={family:inputs.povFont.value,weight:inputs.povWeight.value,align:inputs.povAlign.value,
+      size:Number(inputs.povSize.value),auto:inputs.povAuto.checked,line:Number(inputs.povLine.value)};
+  }
+  function applyDraft(kind){
+    const draft=state.drafts[kind];if(!draft)return;
+    inputs.title.value=draft.title;inputs.pov.value=draft.pov;
+    inputs.language.value=draft.language;inputs.releaseDate.value=draft.releaseDate;
+    inputs.rating.value=draft.rating;
+    inputs.rating.setCustomValidity('');
+    inputs.titleCase.value=draft.titleCase;
+    for(const prefix of ['title','pov']){
+      const style=draft[prefix+'Style'];
+      inputs[prefix+'Font'].value=style.family;
+      inputs[prefix+'Weight'].value=style.weight;
+      inputs[prefix+'Align'].value=style.align;
+      inputs[prefix+'Size'].value=String(style.size);
+      inputs[prefix+'Auto'].checked=style.auto;
+    }
+    inputs.povLine.value=String(draft.povStyle.line);
+    inputs.titleSizeOut.textContent=String(draft.titleStyle.size)+'px';
+    inputs.povSizeOut.textContent=String(draft.povStyle.size)+'px';
+    inputs.editingMode.textContent=kind==='post'?'POST IMAGE':'STORY IMAGE';
+    updateSelection();
+    document.querySelectorAll('[data-social-format]').forEach(button=>button.classList.toggle('active',button.dataset.socialFormat===kind));
+  }
+
   function dateShort(text) {
     if (!/^\d{4}-\d\d-\d\d$/.test(String(text || ''))) return 'Not set';
     const parts = text.split('-').map(Number);
@@ -145,15 +386,10 @@
     }
     return lines;
   }
-  function textOptions(prefix) {
-    const title = prefix === 'title';
-    return {
-      family: inputs[title ? 'titleFont' : 'povFont'].value,
-      weight: inputs[title ? 'titleWeight' : 'povWeight'].value,
-      align: inputs[title ? 'titleAlign' : 'povAlign'].value,
-      size: Number(inputs[title ? 'titleSize' : 'povSize'].value),
-      auto: inputs[title ? 'titleAuto' : 'povAuto'].checked,
-      line: title ? 1.11 : Number(inputs.povLine.value),
+  function textOptions(prefix,kind) {
+    const draft=state.drafts[kind];
+    return draft ? draft[prefix+'Style'] : {
+      family:'Inter',weight:'600',align:'left',size:42,auto:true,line:1.2
     };
   }
   function drawFitted(ctx, value, box, options, maxLines, minimum) {
@@ -226,21 +462,23 @@
     while(pointSize>17){ctx.font='600 '+pointSize+'px "Inter"';if(ctx.measureText(txt).width<=width)break;pointSize--;}
     ctx.fillStyle='#f1f1f1';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(txt,x,y);
   }
-  function drawPostMeta(ctx,review) {
-    label(ctx,'WATCHED IN',589,363,26);
-    value(ctx,review.l || 'Not set',590,408,34,415);
-    label(ctx,"POORNA'S RATING",588,477,24);
-    drawRating(ctx,review.r,612,521,21,58);
-    label(ctx,'RELEASE DATE',588,594,24);
-    value(ctx,dateShort(review.rd),589,641,32,430);
+  function drawPostMeta(ctx,kind) {
+    const d=state.drafts[kind];
+    label(ctx,'WATCHED IN',589,377,25);
+    value(ctx,d.language || 'Not set',588,432,31,397);
+    label(ctx,"POORNA'S RATING",589,503,24);
+    drawRating(ctx,d.rating,605,558,22,62);
+    label(ctx,'RELEASE DATE',588,634,24);
+    value(ctx,dateShort(d.releaseDate),588,691,30,397);
   }
-  function drawStoryMeta(ctx,review) {
-    label(ctx,'WATCHED IN',166,1090,24);
-    value(ctx,review.l || 'Not set',166,1141,29,238);
-    label(ctx,"POORNA'S RATING",426,1090,23);
-    drawRating(ctx,review.r,451,1140,17,44);
-    label(ctx,'RELEASE DATE',805,1090,24);
-    value(ctx,dateShort(review.rd),803,1145,23,230);
+  function drawStoryMeta(ctx,kind) {
+    const d=state.drafts[kind];
+    label(ctx,'WATCHED IN',598,560,25);
+    value(ctx,d.language || 'Not set',599,641,29,374);
+    label(ctx,"POORNA'S RATING",599,728,24);
+    drawRating(ctx,d.rating,628,803,21,63);
+    label(ctx,'RELEASE DATE',599,889,24);
+    value(ctx,dateShort(d.releaseDate),599,959,28,374);
   }
   function makeImageCanvas(kind) {
     const canvas=document.createElement('canvas');
@@ -259,31 +497,23 @@
     if(!review){errors.push('Select a saved movie.');return {canvas,errors};}
     if (!state.poster) errors.push('Original R2 movie poster could not be loaded.');
     else drawContain(ctx,state.poster,geometry[kind].poster);
-    const title = inputs.title.value;
-    const pov = inputs.pov.value;
+    const draft=state.drafts[kind];
+    const title=draft?.title || '';
+    const pov=draft?.pov || '';
     if(!title.trim()) errors.push('Movie Title is empty.');
     else {
-      const titleOptions=textOptions('title');
-      const normalized=inputs.titleCase.value==='uppercase'?title.toUpperCase():title;
-      const fit=drawFitted(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30);
+      const titleOptions=textOptions('title',kind);
+      const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
+      const fit=drawStyled(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30,draft.styles.title);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
     }
-    if (kind==='post') drawPostMeta(ctx,review);
-    else drawStoryMeta(ctx,review);
+    if (kind==='post') drawPostMeta(ctx,kind);
+    else drawStoryMeta(ctx,kind);
+    if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const fit=drawFitted(ctx,pov,geometry[kind].pov,textOptions('pov'),kind==='post'?5:6,kind==='post'?22:24);
+      const fit=drawStyled(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24,draft.styles.pov);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
-    }
-    // Footer is a distinct dynamic text layer. The approved artwork is never modified.
-    const url = siteUrl(review);
-    if(kind==='post'){
-      const fit=drawFitted(ctx,'FULL REVIEW IN THE AUDITORIUM',[230,931,746,34],{family:'Oswald',weight:'700',align:'center',size:27,auto:true,line:1.05},1,20);
-      const link=drawFitted(ctx,url,[228,973,750,28],{family:'Inter',weight:'500',align:'center',size:20,auto:true,line:1.04},1,14);
-      if(!fit.ok||!link.ok)errors.push('Review URL does not fit in the footer.');
-    } else {
-      const link=drawFitted(ctx,url,[210,1544,780,39],{family:'Inter',weight:'600',align:'center',size:24,auto:true,line:1.02},1,15);
-      if(!link.ok)errors.push('Review URL does not fit in the Story footer.');
     }
     return {canvas,errors};
   }
@@ -311,7 +541,9 @@
     inputs.dlStory.disabled=!state.renders.story || state.renders.story.errors.length>0;
   }
   function switchFormat(kind){
+    persistDraft();
     state.format=kind;
+    applyDraft(kind);
     document.querySelectorAll('[data-social-format]').forEach(button=>{
       button.classList.toggle('active',button.dataset.socialFormat===kind);
     });
@@ -352,19 +584,31 @@
       setTimeout(()=>URL.revokeObjectURL(link.href),1000);
     },'image/png');
   }
+  for(const field of ['title','pov']){
+    inputs[field].addEventListener('focus',()=>{state.activeText=field;updateSelection();});
+    for(const name of ['select','mouseup','keyup'])inputs[field].addEventListener(name,updateSelection);
+  }
+  inputs.wordPalette.addEventListener('change',()=>{if(inputs.wordPalette.value)inputs.wordColor.value=inputs.wordPalette.value;});
+  inputs.applyWord.addEventListener('click',()=>applyWordStyle(false));
+  inputs.clearWord.addEventListener('click',()=>applyWordStyle(true));
   inputs.movie.addEventListener('change',chooseMovie);
+  inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
+  inputs.captionText.addEventListener('input',()=>{if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;});
+  inputs.copyCaption.addEventListener('click',()=>copyText(inputs.captionText.value,'Caption copied.'));
+  inputs.copyLink.addEventListener('click',()=>copyText(inputs.trackedUrl.value,'Tracked URL copied.'));
+  inputs.downloadCaptions.addEventListener('click',downloadCaptions);
   inputs.save.addEventListener('click',uploadMasters);
   inputs.dlPost.addEventListener('click',()=>downloadImage('post'));
   inputs.dlStory.addEventListener('click',()=>downloadImage('story'));
   document.querySelectorAll('[data-social-format]').forEach(button=>button.addEventListener('click',()=>switchFormat(button.dataset.socialFormat)));
-  for(const name of ['title','pov','titleSize','titleFont','titleWeight','titleAlign','titleCase','titleAuto','povSize','povFont','povWeight','povAlign','povLine','povAuto']) {
+  for(const name of ['title','pov','language','releaseDate','rating','titleSize','titleFont','titleWeight','titleAlign','titleCase','titleAuto','povSize','povFont','povWeight','povAlign','povLine','povAuto']) {
     const input=inputs[name];
     input.addEventListener('input',()=>{
       inputs.titleSizeOut.textContent=inputs.titleSize.value+'px';
       inputs.povSizeOut.textContent=inputs.povSize.value+'px';
-      requestRefresh();
+      persistDraft(); requestRefresh();
     });
-    input.addEventListener('change',requestRefresh);
+    input.addEventListener('change',()=>{persistDraft();requestRefresh();});
   }
   window.addEventListener('social-studio:open',initialize);
 })();

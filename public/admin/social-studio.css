@@ -31,3 +31,17 @@
 .social-export-actions button:disabled {opacity:.45;cursor:not-allowed}
 @media(max-width:1100px){.social-workspace{grid-template-columns:1fr}.social-preview-area{position:static}.social-controls{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
 @media(max-width:670px){.social-panel{padding:12px}.social-controls{grid-template-columns:1fr}.social-group,.social-preview-area{padding:14px}.social-grid2{gap:8px}.social-workspace{gap:13px}.social-export-actions button{min-width:100%}}
+
+.social-mode-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0 16px;padding:10px 12px;border:1px solid #664535;border-radius:8px;background:#1b1010}
+.social-mode-bar strong{font:600 11px "Oswald",sans-serif;color:#c1b1a0;letter-spacing:.06em}
+.social-mode-bar span{color:#f1f1f1;font-weight:700;font-size:13px}
+.social-mode-bar small{color:#ad9b8a;font-size:11px;width:100%}
+.social-group .field small{font-size:11px;color:#bcae9c}
+.social-word-controls .social-selection{border:1px solid #654531;border-radius:7px;background:#070606;color:#f1f1f1;padding:9px;font-size:12px;min-height:37px;overflow-wrap:anywhere}
+.social-word-controls input[type=color]{min-height:42px;cursor:pointer;padding:4px!important}
+.social-caption-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px}
+.social-caption-actions button{font-size:11px;padding:9px 11px;white-space:normal;min-height:36px}
+.social-captions textarea{min-height:155px}
+.social-captions input[readonly]{cursor:text;color:#d0d0d0;background:#100f10!important}
+.social-group .field input[type=number]{appearance:textfield}
+.social-preview-area .social-switch button:focus-visible,.social-caption-actions button:focus-visible{outline:2px solid #f7010e;outline-offset:2px}
