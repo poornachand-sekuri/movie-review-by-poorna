@@ -1,3 +1,4 @@
+import { renderRatingStars, ratingLabel } from '../../lib/rating-stars';
 ---
 import LoungeLoading from '../../components/lounge/LoungeLoading.astro';
 import SiteFrame from '../../layouts/SiteFrame.astro';
@@ -45,12 +46,7 @@ function formatDate(value: string | null): string {
   return Number.isNaN(date.getTime()) ? value : dateFormatter.format(date);
 }
 
-function ratingText(value: number | null): string {
-  if (value === null || !Number.isFinite(Number(value))) return '—';
-  const rating = Math.max(0, Math.min(5, Number(value)));
-  const rounded = Math.round(rating);
-  return `${'★'.repeat(rounded)}${'☆'.repeat(5 - rounded)}`;
-}
+
 
 const watchedIn = review.language?.trim() || '—';
 const actors = review.credits.filter((credit) => credit.role === 'actor');
@@ -166,8 +162,8 @@ const reviewStructuredData = {
 
           <div class="auditorium-clap-value auditorium-clap-value--watched">{watchedIn}</div>
           <div class="auditorium-clap-value auditorium-clap-value--release">{formatDate(review.releaseDate)}</div>
-          <div class="auditorium-clap-value auditorium-clap-value--rating" aria-label={`${review.rating ?? 'No'} out of 5 stars`}>
-            <span class="auditorium-stars">{ratingText(review.rating)}</span>
+          <div class="auditorium-clap-value auditorium-clap-value--rating" aria-label={ratingLabel(review.rating)}>
+            <span class="auditorium-stars"><span set:html={renderRatingStars(review.rating)} /></span>
           </div>
 
           {actors.length > 0 && (
