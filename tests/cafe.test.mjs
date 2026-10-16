@@ -61,5 +61,7 @@ test('shared server/browser cards escape content and keep accessible links', asy
   assert(html.includes('href="/review/a%2Fb"'));
   assert(html.includes('a&quot; onerror=&quot;bad()'));
   assert(html.includes('loading="eager"'));
-  assert(html.includes('★★★★☆'));
+  assert(html.includes('aria-label="4 out of 5 stars"'));
+  assert.equal((html.match(/<g transform=/g) || []).length, 5);
+  assert(html.includes('width="20"'));
 });
