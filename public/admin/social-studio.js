@@ -23,14 +23,14 @@
       size: [1080,1080],
       poster: [163,206,308,462],
       title: [558,207,445,119],
-      pov: [159,762,783,107],
+      pov: [126,752,829,132],
       footer: [221,929,782,83],
     },
     story: {
       size: [1080,1920],
       poster: [349,244,463,617],
       title: [192,909,796,128],
-      pov: [171,1307,771,144],
+      pov: [166,1291,781,165],
       footer: [204,1515,801,78],
     }
   };
@@ -211,8 +211,8 @@
       ctx.fillRect(cx-r,y-r,2*r*Math.max(0,Math.min(1,value-i)),2*r);
       ctx.restore();
     }
-    ctx.font='600 24px "Inter"';ctx.fillStyle='#f1f1f1';ctx.textAlign='left';ctx.textBaseline='middle';
-    ctx.fillText(value.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+'/5',numericX,y+41);
+    ctx.font='600 22px "Inter"';ctx.fillStyle='#f1f1f1';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(value.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+'/5',numericX,y);
   }
   function label(ctx,txt,x,y,size) {
     ctx.fillStyle='#c6c6c6';ctx.font='500 '+size+'px "Oswald"';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(txt,x,y);
@@ -226,7 +226,7 @@
     label(ctx,'WATCHED IN',589,363,26);
     value(ctx,review.l || 'Not set',590,408,34,415);
     label(ctx,"POORNA'S RATING",588,477,24);
-    drawRating(ctx,review.r,612,521,21,58,615);
+    drawRating(ctx,review.r,612,521,21,58,901);
     label(ctx,'RELEASE DATE',588,594,24);
     value(ctx,dateShort(review.rd),589,641,32,430);
   }
@@ -234,7 +234,7 @@
     label(ctx,'WATCHED IN',166,1090,24);
     value(ctx,review.l || 'Not set',166,1141,29,238);
     label(ctx,"POORNA'S RATING",426,1090,23);
-    drawRating(ctx,review.r,451,1140,17,44,445);
+    drawRating(ctx,review.r,451,1140,17,44,667);
     label(ctx,'RELEASE DATE',805,1090,24);
     value(ctx,dateShort(review.rd),803,1145,23,230);
   }
@@ -285,7 +285,7 @@
   }
   let drawQueued=false;
   async function refreshAll(){
-    await document.fonts.ready;
+    await Promise.all([document.fonts.load('700 60px "Oswald"'), document.fonts.load('600 48px "Inter"'),document.fonts.load('600 48px "Source Serif 4"'),document.fonts.load('700 60px "Cinzel"')]);
     state.renders.post=renderFrame('post');
     state.renders.story=renderFrame('story');
     displayCurrent();
