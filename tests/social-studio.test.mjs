@@ -39,9 +39,9 @@ function harness() {
     };
   }
   const defaults={
-    socialTitleAuto:true,socialTitleSize:'58',socialTitleFont:'Oswald',socialTitleWeight:'700',socialTitleAlign:'left',socialTitleCase:'uppercase',
-    socialPovAuto:true,socialPovSize:'42',socialPovFont:'Inter',socialPovWeight:'600',socialPovAlign:'left',socialPovLine:'1.28',
-    socialCaptionPlatform:'instagram-post',socialWordFont:'Inter',socialWordWeight:'700',socialWordSize:'42',socialWordColor:'#F1F1F1',socialWordEffect:'none'
+    socialTitleAuto:true,socialTitleAlign:'left',socialTitleCase:'uppercase',
+    socialPovAuto:true,socialPovAlign:'left',socialPovLine:'1.28',
+    socialCaptionPlatform:'instagram-post'
   };
   for(const [id,value] of Object.entries(defaults)){
     if(typeof value==='boolean') element(id).checked=value;
@@ -79,7 +79,7 @@ function harness() {
     Intl,Date,Number,String,Array,Math,Promise,console,
   };
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText,filledRects,buttons,styledDraws};
+  return {element,callbacks,document,drawnText,filledRects,buttons,styledDraws,window:win};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
@@ -141,26 +141,26 @@ test('Post and Story captions use separate tracked links and can be independentl
   h.element('socialCaptionText').listeners.input();
   h.element('socialCaptionPlatform').value='facebook-post';
   h.element('socialCaptionPlatform').listeners.change();
-  assert.match(h.element('socialCaptionText').value,/Now reviewed:/);
+  assert.match(h.element('socialCaptionText').value,/NOW REVIEWED/);
   assert.match(h.element('socialTrackedUrl').value,/utm_source=facebook/);
   h.element('socialCaptionPlatform').value='instagram-post';
   h.element('socialCaptionPlatform').listeners.change();
   assert.equal(h.element('socialCaptionText').value,'MY CUSTOM IG MESSAGE');
 });
-test('Separate Post/Story drafts preserve title, MY POV, metadata and font size',async()=>{
+test('Separate Post/Story drafts preserve title, MY POV, metadata and layout controls',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   h.element('socialTitle').value='CUSTOM POST TITLE';h.element('socialTitle').listeners.input();
   h.element('socialLanguage').value='Tamil';h.element('socialLanguage').listeners.input();
-  h.element('socialPovSize').value='30';h.element('socialPovSize').listeners.input();
+  h.element('socialPovAlign').value='center';h.element('socialPovAlign').listeners.input();
   h.buttons.story.listeners.click();
   assert.equal(h.element('socialTitle').value,'TOXIC: A FAIRY TALE FOR GROWN-UPS');
   assert.equal(h.element('socialLanguage').value,'Telugu');
-  assert.equal(h.element('socialPovSize').value,'42');
+  assert.equal(h.element('socialPovAlign').value,'left');
   h.element('socialPov').value='STORY ONLY VERDICT';h.element('socialPov').listeners.input();
   h.buttons.post.listeners.click();
   assert.equal(h.element('socialTitle').value,'CUSTOM POST TITLE');
-  assert.equal(h.element('socialPovSize').value,'30');
+  assert.equal(h.element('socialPovAlign').value,'center');
   assert.equal(h.element('socialLanguage').value,'Tamil');
   h.buttons.story.listeners.click();
   assert.equal(h.element('socialPov').value,'STORY ONLY VERDICT');
@@ -235,4 +235,51 @@ test('Post MY POV has inset space below the header and remains inside its panel'
   const [top,height]=[824,181];
   assert.ok(top>=820,'Post MY POV content must start beneath the red tab');
   assert.ok(top+height<1017,'Post MY POV must remain inside the original bottom border');
+});
+
+
+test('Partial-word selection renders only selected letters in the chosen color and font',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  const draft=h.window.SocialStudioRichBridge.getDraft();
+  draft.styles.pov=[{start:0,end:3,color:'#19f9ff',font:'Cinzel',size:50,effect:'glow'}];
+  h.window.SocialStudioRichBridge.refresh();await settle();
+  assert.ok(h.styledDraws.some(d=>d.text==='Gee'&&d.color==='#19f9ff'&&d.font.includes('Cinzel')),
+    'Only first three letters of Geetu should get the custom style');
+  assert.ok(h.styledDraws.some(d=>d.text==='tu'&&d.color==='#f1f1f1'),
+    'Remaining letters in the same word must retain silver/white');
+  assert.ok(!h.drawnText.some(d=>d==='2.25/5'),'Stars must stay numeric-free');
+});
+
+test('No duplicate typography sliders and obsolete detached word controls remain',()=>{
+  assert.match(ADMIN_HTML,/Layout & Text Fit/);
+  assert.doesNotMatch(ADMIN_HTML,/<h2>Title Typography<\/h2>/);
+  assert.doesNotMatch(ADMIN_HTML,/<h2>MY POV Typography<\/h2>/);
+  assert.doesNotMatch(ADMIN_HTML,/id="socialTitleSize"/);
+  assert.doesNotMatch(ADMIN_HTML,/id="socialWordFont"/);
+  assert.doesNotMatch(STUDIO_JS,/inputs\.titleSizeOut|inputs\.povSizeOut|activeText:'pov'/);
+  assert.match(RICH_JS,/the entire text/);
+  assert.match(RICH_JS,/refreshLayout/);
+  assert.match(RICH_JS,/editor\.style\.fontSize=Number\(base\.size\)/);
+});
+
+test('All seven generated captions have cinema-themed calls to action and accurate tracked URLs',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  const platforms=['instagram-post','instagram-story','facebook-post','facebook-story','x-post','whatsapp-channel','whatsapp-status'];
+  for(const platform of platforms){
+    h.element('socialCaptionPlatform').value=platform;
+    h.element('socialCaptionPlatform').listeners.change();
+    const caption=h.element('socialCaptionText').value;
+    assert.match(caption,/🎬/u,platform+' should have cinema icon');
+    assert.match(caption,/🎟️/u,platform+' should have review CTA icon');
+    assert.ok(caption.includes('utm_source='),platform+' must contain tracked URL');
+  }
+  h.element('socialCaptionPlatform').value='x-post';
+  h.element('socialCaptionPlatform').listeners.change();
+  assert.ok(h.element('socialCaptionText').value.length<=280,'X caption fits within 280 characters');
+  h.element('socialCaptionPlatform').value='whatsapp-channel';
+  h.element('socialCaptionPlatform').listeners.change();
+  assert.match(h.element('socialCaptionText').value,/\*MY POV\*/);
+  assert.match(h.element('socialCaptionText').value,/Geetu aimed for a Joker-like/);
 });
