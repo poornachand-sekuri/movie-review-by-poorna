@@ -38,6 +38,7 @@
         <button class="nav-tab active" data-panel="dashboard">DASHBOARD</button>
         <button class="nav-tab" data-panel="comments">COMMENTS <b id="pendingNavBadge"></b></button>
         <button class="nav-tab" data-panel="reviews">REVIEWS</button>
+        <button class="nav-tab" data-panel="social">SOCIAL STUDIO</button>
       </nav>
       <div class="top-actions">
         <a class="ghost" href="/" target="_blank" rel="noopener">VIEW SITE ↗</a>
@@ -200,10 +201,65 @@
           </section>
         </div>
       </section>
+
+      <section id="socialPanel" class="admin-panel hidden social-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">PROMOTIONAL CREATIVE GENERATOR</p><h1>Social Media Studio</h1><p class="panel-copy">Two locked visual templates. Movie data and posters load from your saved reviews. Adjust typography without altering the original review.</p></div>
+        </div>
+        <div class="social-workspace">
+          <section class="social-controls" aria-label="Social Studio controls">
+            <div class="social-group"><h2>Movie</h2>
+              <label class="field"><span>Select saved review</span><select id="socialMovie"><option value="">Choose a movie…</option></select></label>
+              <p class="social-help" id="socialMovieStatus">Select a published review to begin.</p>
+              <label class="field"><span>Promotional movie title</span><textarea rows="2" id="socialTitle" spellcheck="false"></textarea></label>
+              <label class="field"><span>Promotional MY POV (exact text by default)</span><textarea rows="5" id="socialPov"></textarea></label>
+              <p class="social-help">Edits here affect exports only, never your saved review.</p>
+            </div>
+            <div class="social-group"><h2>Title Typography</h2>
+              <label class="social-check"><input type="checkbox" id="socialTitleAuto" checked> Auto-fit to title frame</label>
+              <label class="field"><span>Preferred font size <output id="socialTitleSizeOut">58px</output></span><input type="range" id="socialTitleSize" min="22" max="90" value="58"></label>
+              <div class="social-grid2">
+                <label class="field"><span>Font</span><select id="socialTitleFont"><option value="Oswald">Oswald</option><option value="Inter">Inter</option><option value="Cinzel">Cinzel</option><option value="Source Serif 4">Source Serif 4</option></select></label>
+                <label class="field"><span>Weight</span><select id="socialTitleWeight"><option value="700">Bold</option><option value="600">Semibold</option><option value="500">Medium</option><option value="800">Extra Bold</option></select></label>
+                <label class="field"><span>Alignment</span><select id="socialTitleAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
+                <label class="field"><span>Letter case</span><select id="socialTitleCase"><option value="uppercase">UPPERCASE</option><option value="original">Original</option></select></label>
+              </div>
+            </div>
+            <div class="social-group"><h2>MY POV Typography</h2>
+              <label class="social-check"><input type="checkbox" id="socialPovAuto" checked> Auto-fit without truncation</label>
+              <label class="field"><span>Preferred font size <output id="socialPovSizeOut">42px</output></span><input type="range" id="socialPovSize" min="20" max="72" value="42"></label>
+              <div class="social-grid2">
+                <label class="field"><span>Font</span><select id="socialPovFont"><option value="Inter">Inter</option><option value="Source Serif 4">Source Serif 4</option><option value="Oswald">Oswald</option><option value="Cinzel">Cinzel</option></select></label>
+                <label class="field"><span>Weight</span><select id="socialPovWeight"><option value="600">Semibold</option><option value="500">Medium</option><option value="700">Bold</option><option value="400">Regular</option></select></label>
+                <label class="field"><span>Alignment</span><select id="socialPovAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
+                <label class="field"><span>Line spacing</span><select id="socialPovLine"><option value="1.15">Compact</option><option value="1.28" selected>Normal</option><option value="1.4">Relaxed</option></select></label>
+              </div>
+            </div>
+            <div class="social-group"><h2>Approved Master Backgrounds</h2>
+              <p class="social-help">Upload the exact approved Post and Story PNG/WebP files once. They are saved privately to Cloudflare R2, not into review records.</p>
+              <label class="field"><span>Post master (1080 × 1080)</span><input id="socialPostFile" type="file" accept="image/png,image/webp"></label>
+              <label class="field"><span>Story master (1080 × 1920)</span><input id="socialStoryFile" type="file" accept="image/png,image/webp"></label>
+              <button class="ghost" type="button" id="socialSaveTemplates">SAVE APPROVED MASTERS TO R2</button>
+              <div class="social-help" id="socialAssetsStatus"></div>
+            </div>
+          </section>
+          <section class="social-preview-area" aria-label="Generated image preview">
+            <div class="social-preview-head"><h2>Live Preview</h2>
+              <div class="social-switch"><button class="active" type="button" data-social-format="post">POST</button><button type="button" data-social-format="story">STORY</button></div>
+            </div>
+            <div class="social-canvas-wrap"><canvas id="socialCanvas" width="1080" height="1080" aria-label="Rendered promotional image"></canvas></div>
+            <p class="social-warning" id="socialWarnings" role="status" aria-live="polite">Select a movie and load the approved master backgrounds.</p>
+            <div class="social-export-actions"><button type="button" class="primary" id="socialDownloadPost" disabled>DOWNLOAD POST PNG</button><button type="button" class="primary" id="socialDownloadStory" disabled>DOWNLOAD STORY PNG</button></div>
+            <p class="social-help">Post (1080 × 1080): Instagram, Facebook, X, WhatsApp Channel. Story (1080 × 1920): Instagram, Facebook, WhatsApp Status. Story link-sticker space stays empty below the arrows.</p>
+          </section>
+        </div>
+      </section>
     </main>
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
+  <link rel="stylesheet" href="/admin/social-studio.css?v=1">
   <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
+  <script src="/admin/social-studio.js?v=1" defer></script>
 </body>
 </html>
