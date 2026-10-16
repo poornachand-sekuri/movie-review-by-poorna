@@ -254,7 +254,7 @@
       }
       if(!failed && (row.pieces.length||!lines.length))flush();
       const totalHeight=lines.reduce((sum,line)=>sum+line.height,0);
-      if(!failed&&lines.length<=maxLines&&totalHeight<=height){layout={lines,height:totalHeight};break;}
+      if(!failed&&lines.length<=maxLines&&totalHeight<=height){layout={lines,height:totalHeight,scale};break;}
     }
     if(!layout)return {ok:false,message:'Selected text formatting cannot fit inside the panel. Reduce the font size or enable auto-fit.'};
     let py=y+(height-layout.height)/2;
@@ -282,7 +282,7 @@
       }
       py+=row.height;
     }
-    return {ok:true};
+    return {ok:true,scale:layout.scale};
   }
 
   function defaultDraft(review) {
@@ -507,13 +507,13 @@
   }
   function renderFrame(kind) {
     const canvas=makeImageCanvas(kind), ctx=canvas.getContext('2d');
-    const errors=[];
+    const errors=[],notes=[];
     ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
     const bg=state.masters[kind];
     if (bg) ctx.drawImage(bg,0,0,canvas.width,canvas.height);
     else errors.push('Approved '+kind+' master background is not yet uploaded.');
     const review=state.review;
-    if(!review){errors.push('Select a saved movie.');return {canvas,errors};}
+    if(!review){errors.push('Select a saved movie.');return {canvas,errors,notes};}
     if (!state.poster) errors.push('Original R2 movie poster could not be loaded.');
     else drawContain(ctx,state.poster,geometry[kind].poster);
     const draft=state.drafts[kind];
@@ -525,6 +525,10 @@
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
       const fit=drawStyled(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30,draft.styles.title);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
+      else if(titleOptions.auto) {
+        const ratio=fit.scale??((fit.size||titleOptions.size)/titleOptions.size);
+        if(ratio<.98)notes.push('Title auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
+      }
     }
     if (kind==='post') drawPostMeta(ctx,kind);
     else drawStoryMeta(ctx,kind);
@@ -533,8 +537,12 @@
     else {
       const fit=drawStyled(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24,draft.styles.pov);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
+      else if(draft.povStyle.auto) {
+        const ratio=fit.scale??((fit.size||draft.povStyle.size)/draft.povStyle.size);
+        if(ratio<.98)notes.push('MY POV auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
+      }
     }
-    return {canvas,errors};
+    return {canvas,errors,notes};
   }
   let drawQueued=false;
   async function refreshAll(){
@@ -555,7 +563,8 @@
     c.getContext('2d').drawImage(result.canvas,0,0);
     const errors=result.errors;
     inputs.warnings.className='social-warning '+(errors.length?'error':'success');
-    inputs.warnings.textContent=errors.length?errors.join('\n'):'Preview ready. Original review data remains unchanged.';
+    inputs.warnings.textContent=errors.length?errors.join('\n'):
+      'Preview ready. Original review data remains unchanged.'+(result.notes?.length?'\n'+result.notes.join('\n'):'');
     inputs.dlPost.disabled=!state.renders.post || state.renders.post.errors.length>0;
     inputs.dlStory.disabled=!state.renders.story || state.renders.story.errors.length>0;
   }
