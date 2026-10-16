@@ -266,7 +266,7 @@
         const whole = Number(button.dataset.rating);
         const bounds = button.getBoundingClientRect();
         const offset = Math.max(0, Math.min(0.9999, (event.clientX - bounds.left) / Math.max(1, bounds.width)));
-        chooseRating(whole - 1 + (Math.floor(offset * 4) + 1) / 4);
+        chooseRating(event.detail === 0 ? whole : whole - 1 + (Math.floor(offset * 4) + 1) / 4);
     }));
     function updateStars() {
         const n = el.rating.value === '' ? null : Number(el.rating.value);
