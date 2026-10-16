@@ -1,3 +1,4 @@
+import { renderRatingStars, ratingLabel } from '../lib/rating-stars';
 ---
 import SiteFrame from '../layouts/SiteFrame.astro';
 import LoungeLoading from '../components/lounge/LoungeLoading.astro';
@@ -39,10 +40,7 @@ function formatDate(value: string | null): string {
   return `${String(day).padStart(2, '0')} ${month}`;
 }
 
-function starText(rating: number | null): string {
-  const filled = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
-  return `${'★'.repeat(filled)}${'☆'.repeat(5 - filled)}`;
-}
+
 
 function reviewTarget(slug: string): string {
   return `/review/${encodeURIComponent(slug)}`;
@@ -102,8 +100,8 @@ const featuredPov = featured?.verdict?.trim() || '';
                 </div>
                 <div class="now-meta__rating">
                   <dt>Rating</dt>
-                  <dd aria-label={`${Math.round(Number(featured.rating) || 0)} out of 5 stars`}>
-                    {starText(featured.rating)}
+                  <dd aria-label={ratingLabel(featured.rating)}>
+                    <span set:html={renderRatingStars(featured.rating)} />
                   </dd>
                 </div>
               </dl>
@@ -162,9 +160,9 @@ const featuredPov = featured?.verdict?.trim() || '';
                           </span>
                           <span
                             class="recent-card__stars"
-                            aria-label={`${Math.round(Number(review.rating) || 0)} out of 5 stars`}
+                            aria-label={ratingLabel(review.rating)}
                           >
-                            {starText(review.rating)}
+                            <span set:html={renderRatingStars(review.rating)} />
                           </span>
                         </a>
                       ))}
