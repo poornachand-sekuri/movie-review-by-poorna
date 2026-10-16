@@ -9,29 +9,30 @@
     povFont: $('socialPovFont'), povWeight: $('socialPovWeight'), povAlign: $('socialPovAlign'), povLine: $('socialPovLine'),
     postFile: $('socialPostFile'), storyFile: $('socialStoryFile'), save: $('socialSaveTemplates'),
     assetsStatus: $('socialAssetsStatus'), canvas: $('socialCanvas'), warnings: $('socialWarnings'),
-    dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory')
+    dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
+    editingMode: $('socialEditingMode'), language: $('socialLanguage'), releaseDate: $('socialReleaseDate'), rating: $('socialRating'),
+    captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
+    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus')
   };
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { post: null, story: null }, renders: {}, errors: {},
-    seq: 0, saved: {}, templateUploads: 0
+    seq: 0, saved: {}, templateUploads: 0, drafts: { post:null, story:null }, captions:{}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const geometry = {
     post: {
       size: [1080,1080],
-      poster: [163,206,308,462],
-      title: [558,207,445,119],
-      pov: [126,752,829,132],
-      footer: [221,929,782,83],
+      poster: [158,215,310,505],
+      title: [572,221,423,95],
+      pov: [92,807,897,198],
     },
     story: {
       size: [1080,1920],
-      poster: [349,244,463,617],
-      title: [192,909,796,128],
-      pov: [166,1291,781,165],
-      footer: [204,1515,801,78],
+      poster: [155,330,314,675],
+      title: [588,343,400,126],
+      pov: [123,1139,837,267],
     }
   };
   function errorMessage(error) { return error instanceof Error ? error.message : String(error); }
@@ -93,15 +94,18 @@
     const sequence = ++state.seq;
     state.review = null;
     state.poster = null;
-    inputs.title.value = ''; inputs.pov.value = '';
-    if (!id) { await refreshAll(); return; }
+    inputs.title.value = ''; inputs.pov.value = ''; state.drafts={ post:null,story:null }; state.captions={};
+    if (!id) { updateCaptionEditor(); await refreshAll(); return; }
     inputs.status.textContent = 'Loading selected review and original poster…';
     try {
       const review = await jsonApi('/api/admin/reviews/' + encodeURIComponent(id));
       if (sequence !== state.seq) return;
       state.review = review;
-      inputs.title.value = review.t || '';
-      inputs.pov.value = review.v || '';
+      state.drafts.post=defaultDraft(review);
+      state.drafts.story=defaultDraft(review);
+      state.format='post'; applyDraft('post');
+      state.captions=makeCaptions(review);
+      updateCaptionEditor();
       try { const original = await loadPoster(review.m || ''); if (sequence !== state.seq) return; state.poster = original; }
       catch (err) { if (sequence !== state.seq) return; inputs.status.textContent = errorMessage(err); }
       if (sequence !== state.seq) return;
@@ -145,15 +149,10 @@
     }
     return lines;
   }
-  function textOptions(prefix) {
-    const title = prefix === 'title';
-    return {
-      family: inputs[title ? 'titleFont' : 'povFont'].value,
-      weight: inputs[title ? 'titleWeight' : 'povWeight'].value,
-      align: inputs[title ? 'titleAlign' : 'povAlign'].value,
-      size: Number(inputs[title ? 'titleSize' : 'povSize'].value),
-      auto: inputs[title ? 'titleAuto' : 'povAuto'].checked,
-      line: title ? 1.11 : Number(inputs.povLine.value),
+  function textOptions(prefix,kind) {
+    const draft=state.drafts[kind];
+    return draft ? draft[prefix+'Style'] : {
+      family:'Inter',weight:'600',align:'left',size:42,auto:true,line:1.2
     };
   }
   function drawFitted(ctx, value, box, options, maxLines, minimum) {
@@ -259,12 +258,13 @@
     if(!review){errors.push('Select a saved movie.');return {canvas,errors};}
     if (!state.poster) errors.push('Original R2 movie poster could not be loaded.');
     else drawContain(ctx,state.poster,geometry[kind].poster);
-    const title = inputs.title.value;
-    const pov = inputs.pov.value;
+    const draft=state.drafts[kind];
+    const title=draft?.title || '';
+    const pov=draft?.pov || '';
     if(!title.trim()) errors.push('Movie Title is empty.');
     else {
-      const titleOptions=textOptions('title');
-      const normalized=inputs.titleCase.value==='uppercase'?title.toUpperCase():title;
+      const titleOptions=textOptions('title',kind);
+      const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
       const fit=drawFitted(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
     }
@@ -272,18 +272,8 @@
     else drawStoryMeta(ctx,review);
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const fit=drawFitted(ctx,pov,geometry[kind].pov,textOptions('pov'),kind==='post'?5:6,kind==='post'?22:24);
+      const fit=drawFitted(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
-    }
-    // Footer is a distinct dynamic text layer. The approved artwork is never modified.
-    const url = siteUrl(review);
-    if(kind==='post'){
-      const fit=drawFitted(ctx,'FULL REVIEW IN THE AUDITORIUM',[230,931,746,34],{family:'Oswald',weight:'700',align:'center',size:27,auto:true,line:1.05},1,20);
-      const link=drawFitted(ctx,url,[228,973,750,28],{family:'Inter',weight:'500',align:'center',size:20,auto:true,line:1.04},1,14);
-      if(!fit.ok||!link.ok)errors.push('Review URL does not fit in the footer.');
-    } else {
-      const link=drawFitted(ctx,url,[210,1544,780,39],{family:'Inter',weight:'600',align:'center',size:24,auto:true,line:1.02},1,15);
-      if(!link.ok)errors.push('Review URL does not fit in the Story footer.');
     }
     return {canvas,errors};
   }
@@ -311,7 +301,9 @@
     inputs.dlStory.disabled=!state.renders.story || state.renders.story.errors.length>0;
   }
   function switchFormat(kind){
+    persistDraft();
     state.format=kind;
+    applyDraft(kind);
     document.querySelectorAll('[data-social-format]').forEach(button=>{
       button.classList.toggle('active',button.dataset.socialFormat===kind);
     });
@@ -353,18 +345,23 @@
     },'image/png');
   }
   inputs.movie.addEventListener('change',chooseMovie);
+  inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
+  inputs.captionText.addEventListener('input',()=>{if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;});
+  inputs.copyCaption.addEventListener('click',()=>copyText(inputs.captionText.value,'Caption copied.'));
+  inputs.copyLink.addEventListener('click',()=>copyText(inputs.trackedUrl.value,'Tracked URL copied.'));
+  inputs.downloadCaptions.addEventListener('click',downloadCaptions);
   inputs.save.addEventListener('click',uploadMasters);
   inputs.dlPost.addEventListener('click',()=>downloadImage('post'));
   inputs.dlStory.addEventListener('click',()=>downloadImage('story'));
   document.querySelectorAll('[data-social-format]').forEach(button=>button.addEventListener('click',()=>switchFormat(button.dataset.socialFormat)));
-  for(const name of ['title','pov','titleSize','titleFont','titleWeight','titleAlign','titleCase','titleAuto','povSize','povFont','povWeight','povAlign','povLine','povAuto']) {
+  for(const name of ['title','pov','language','releaseDate','rating','titleSize','titleFont','titleWeight','titleAlign','titleCase','titleAuto','povSize','povFont','povWeight','povAlign','povLine','povAuto']) {
     const input=inputs[name];
     input.addEventListener('input',()=>{
       inputs.titleSizeOut.textContent=inputs.titleSize.value+'px';
       inputs.povSizeOut.textContent=inputs.povSize.value+'px';
-      requestRefresh();
+      persistDraft(); requestRefresh();
     });
-    input.addEventListener('change',requestRefresh);
+    input.addEventListener('change',()=>{persistDraft();requestRefresh();});
   }
   window.addEventListener('social-studio:open',initialize);
 })();
