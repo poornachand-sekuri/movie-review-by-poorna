@@ -6,6 +6,7 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 const STUDIO_JS = fs.readFileSync(path.join(ROOT, 'public/admin/social-studio.js'), 'utf8');
+const RICH_JS = fs.readFileSync(path.join(ROOT, 'public/admin/social-rich-editor.js'), 'utf8');
 const ADMIN_HTML = fs.readFileSync(path.join(ROOT, 'src/admin/projector-room.html'), 'utf8');
 const ADMIN_API = fs.readFileSync(path.join(ROOT, 'src/pages/api/admin/[...path].ts'), 'utf8');
 function harness() {
@@ -30,7 +31,7 @@ function harness() {
     return {
       font:'600 24px "Inter"',
       fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
-      fillText(str){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle});},strokeText(){},
+      fillText(str,x,y){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle,font:this.font,x,y});},strokeText(){},
       measureText(str){
         const size=Number(this.font.match(/(\d+)px/)?.[1]||24);
         return {width:Array.from(String(str)).length*size*0.53};
@@ -164,13 +165,46 @@ test('Separate Post/Story drafts preserve title, MY POV, metadata and font size'
   h.buttons.story.listeners.click();
   assert.equal(h.element('socialPov').value,'STORY ONLY VERDICT');
 });
-test('Word-level styling applies selected color to one word only',async()=>{
+
+test('Inline rich-text toolbars replace detached per-word editor controls',()=>{
+  assert.match(ADMIN_HTML,/data-rich-toolbar="title"/);
+  assert.match(ADMIN_HTML,/data-rich-toolbar="pov"/);
+  assert.match(ADMIN_HTML,/data-rich-editor="title"/);
+  assert.match(ADMIN_HTML,/data-rich-editor="pov"/);
+  assert.match(ADMIN_HTML,/social-rich-editor\.js/);
+  assert.doesNotMatch(ADMIN_HTML,/id="socialApplyWordStyle"/);
+  assert.match(RICH_JS,/window\.SocialStudioRich\s*=/);
+  assert.match(RICH_JS,/selectionOffsets/);
+  assert.match(RICH_JS,/mutateRanges/);
+  assert.match(RICH_JS,/plainInsert/);
+  assert.match(RICH_JS,/clipboardData\?\.getData\('text\/plain'\)/);
+  assert.match(RICH_JS,/socialStyle/);
+  assert.match(STUDIO_JS,/window\.SocialStudioRichBridge/);
+  assert.match(STUDIO_JS,/window\.SocialStudioRich\?\.sync\(\)/);
+  assert.doesNotThrow(()=>new vm.Script(RICH_JS));
+});
+
+test('Metadata headers and silver value typography are rendered inside the frames',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  h.element('socialPov').selectionStart=0;h.element('socialPov').selectionEnd=5;
-  h.element('socialPov').listeners.focus();
-  h.element('socialWordColor').value='#19F9FF';
-  h.element('socialApplyWordStyle').listeners.click();await settle();
-  assert.ok(h.styledDraws.some(d=>d.color==='#19F9FF'),'Styled token drawn with custom color');
-  assert.equal(h.element('socialDownloadPost').disabled,false);
+  for(const text of ['WATCHED IN',"POORNA'S RATING",'RELEASE DATE','Telugu','26 Aug 2026']) {
+    assert.ok(h.drawnText.includes(text),'Expected text drawn: '+text);
+  }
+  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Cinzel') && d.y===439));
+  assert.ok(h.styledDraws.some(d=>d.text==='26 Aug 2026' && d.font.includes('Cinzel') && d.y===700));
+  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Cinzel') && d.y===554));
+  assert.ok(h.styledDraws.some(d=>d.text==='26 Aug 2026' && d.font.includes('Cinzel') && d.y===846));
+  assert.ok(h.styledDraws.some(d=>d.text==='WATCHED IN' && d.y===382));
+  assert.ok(h.styledDraws.some(d=>d.text==='WATCHED IN' && d.y===489));
+  assert.ok(!h.drawnText.some(d=>/2\.25\/5/.test(d)),'No numeric rating may be added');
+});
+
+test('Rich edits support color, font, size, glow, italic and underline on exports',()=>{
+  assert.match(ADMIN_HTML,/data-rich-action="color"/);
+  assert.match(RICH_JS,/style\.color/);
+  assert.match(RICH_JS,/style\.font/);
+  assert.match(RICH_JS,/style\.italic/);
+  assert.match(RICH_JS,/style\.underline/);
+  assert.match(STUDIO_JS,/st\?\.italic/);
+  assert.match(STUDIO_JS,/piece\.style\?\.underline/);
 });
