@@ -3,10 +3,8 @@
   const $ = id => document.getElementById(id);
   const inputs = {
     movie: $('socialMovie'), status: $('socialMovieStatus'), title: $('socialTitle'), pov: $('socialPov'),
-    titleAuto: $('socialTitleAuto'), titleSize: $('socialTitleSize'), titleSizeOut: $('socialTitleSizeOut'),
-    titleFont: $('socialTitleFont'), titleWeight: $('socialTitleWeight'), titleAlign: $('socialTitleAlign'), titleCase: $('socialTitleCase'),
-    povAuto: $('socialPovAuto'), povSize: $('socialPovSize'), povSizeOut: $('socialPovSizeOut'),
-    povFont: $('socialPovFont'), povWeight: $('socialPovWeight'), povAlign: $('socialPovAlign'), povLine: $('socialPovLine'),
+    titleAuto: $('socialTitleAuto'), titleAlign: $('socialTitleAlign'), titleCase: $('socialTitleCase'),
+    povAuto: $('socialPovAuto'), povAlign: $('socialPovAlign'), povLine: $('socialPovLine'),
     postFile: $('socialPostFile'), storyFile: $('socialStoryFile'), save: $('socialSaveTemplates'),
     assetsStatus: $('socialAssetsStatus'), canvas: $('socialCanvas'), warnings: $('socialWarnings'),
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
@@ -17,8 +15,8 @@
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
-    masters: { post: null, story: null }, renders: {}, errors: {},
-    seq: 0, saved: {}, templateUploads: 0, drafts: { post:null, story:null }, captions:{}, activeText:'pov'
+    masters: { post: null, story: null }, renders: {},
+    seq: 0, drafts: { post:null, story:null }, captions:{}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const geometry = {
@@ -38,7 +36,6 @@
   };
   function errorMessage(error) { return error instanceof Error ? error.message : String(error); }
   function safeSlug(value) { return String(value || 'movie').replace(/[^a-z0-9-]/gi, '-').slice(0,100); }
-  function siteUrl(review) { return 'moviereviewbypoorna.com/review/' + safeSlug(review.s || ''); }
   function apiImage(src) {
     return new Promise((resolve, reject) => {
       const image = new Image();
@@ -124,34 +121,44 @@
     'facebook-post':'facebook','facebook-story':'facebook',
     'x-post':'x','whatsapp-channel':'whatsapp','whatsapp-status':'whatsapp'
   };
+  function trackedUrlFor(review,platform) {
+    const slug=safeSlug(review.s);
+    const url=new URL('https://moviereviewbypoorna.com/review/'+slug);
+    url.searchParams.set('utm_source',platforms[platform]||'social');
+    url.searchParams.set('utm_medium',platform.endsWith('story')||platform.endsWith('status')?'story':'social');
+    url.searchParams.set('utm_campaign',slug);
+    return url.toString();
+  }
   function trackedUrl(platform) {
-    if (!state.review) return '';
-    const slug = safeSlug(state.review.s);
-    const u = new URL('https://moviereviewbypoorna.com/review/' + slug);
-    u.searchParams.set('utm_source', platforms[platform] || 'social');
-    u.searchParams.set('utm_medium', platform.endsWith('story') || platform.endsWith('status') ? 'story' : 'social');
-    u.searchParams.set('utm_campaign', slug);
-    return u.toString();
+    return state.review?trackedUrlFor(state.review,platform):'';
   }
   function makeCaptions(review) {
-    const title=review.t || '';
-    const pov=review.v || '';
-    const link=(k)=> {
-      const slug=safeSlug(review.s);
-      const url=new URL('https://moviereviewbypoorna.com/review/'+slug);
-      url.searchParams.set('utm_source',platforms[k]);
-      url.searchParams.set('utm_medium',k.endsWith('story') || k.endsWith('status') ? 'story' : 'social');
-      url.searchParams.set('utm_campaign',slug);
-      return url.toString();
-    };
+    const title=String(review.t||'').trim(),pov=String(review.v||'').trim();
+    const link=k=>trackedUrlFor(review,k);
+    // Plain-text captions support Unicode emoji, not embedded images. The PNG
+    // exports supply the visual content; these messages remain user-editable.
+    const intro='🎬 NOW REVIEWED | '+title;
+    const verdict='🍿 MY POV\n'+pov;
+    const tags='#MovieReviewsByPoorna #MovieReview';
+    const xLink=link('x-post');
+    const xBase='🎬 '+title+'\n🍿 New review in the Auditorium!\n🎟️ '+xLink;
+    const xCaption=xBase.length+1+tags.length<=280?xBase+'\n'+tags:xBase;
     return {
-      'instagram-post': title + '\n\n' + pov + '\n\nFull review in the Auditorium. Link also available via Story or profile.\n' + link('instagram-post') + '\n\n#MovieReviewsByPoorna #MovieReview',
-      'instagram-story': title + '\n\n' + pov + '\n\nTap the link sticker to read the full review.\n' + link('instagram-story'),
-      'facebook-post': 'Now reviewed: ' + title + '\n\n' + pov + '\n\nRead the full review:\n' + link('facebook-post'),
-      'facebook-story': title + '\n\n' + pov + '\n\nFull review via link sticker:\n' + link('facebook-story'),
-      'x-post': (title + '\n\n' + pov + '\n\nFull review: ' + link('x-post')),
-      'whatsapp-channel': '🎬 ' + title + '\n\nMY POV: ' + pov + '\n\nRead the full review:\n' + link('whatsapp-channel'),
-      'whatsapp-status': '🎬 ' + title + '\n\n' + pov + '\n\nFull review:\n' + link('whatsapp-status')
+      'instagram-post':intro+'\n\n'+verdict+
+        '\n\n🎟️ Read the full review in the Auditorium.\n🔗 Open via the profile or Story link sticker (caption URLs are not clickable):\n'+
+        link('instagram-post')+'\n\n'+tags,
+      'instagram-story':'🎬 '+title+'\n\n🍿 '+pov+
+        '\n\n👇 🎟️ TAP THE LINK STICKER FOR THE FULL REVIEW\n🔗 '+link('instagram-story'),
+      'facebook-post':intro+'\n\n'+verdict+
+        '\n\n🎟️ ENTER THE AUDITORIUM\n🔗 '+link('facebook-post')+
+        '\n\n'+tags,
+      'facebook-story':'🎬 '+title+'\n🍿 '+pov+
+        '\n\n👇 🎟️ FULL REVIEW VIA LINK STICKER\n🔗 '+link('facebook-story'),
+      'x-post':xCaption,
+      'whatsapp-channel':'🎬 *MOVIE REVIEWS BY POORNA*\n\n🎞️ *'+title+'*\n\n🍿 *MY POV*\n'+pov+
+        '\n\n🎟️ *Read the full review in the Auditorium*\n🔗 '+link('whatsapp-channel'),
+      'whatsapp-status':'🎬 '+title+'\n\n🍿 '+pov+
+        '\n\n🎟️ Full review:\n🔗 '+link('whatsapp-status')
     };
   }
   function updateCaptionEditor() {
@@ -199,71 +206,83 @@
       return [];
     });
   }
-  function getWordStyle(ranges,start,end){
-    let chosen=null;
-    for(const r of ranges)if(r.start<end && r.end>start)chosen=r;
-    return chosen;
-  }
   function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[]) {
     if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum);
-    const [x,y,width,height]=box;
-    const raw=String(text);
-    const tokens=Array.from(raw.matchAll(/\S+|[^\S\n]+|\n/g),m=>({
-      text:m[0], start:m.index, end:m.index+m[0].length, newline:m[0]==='\n'
-    }));
-    let layout=null;
-    for(let base=options.size;base>= (options.auto?minimum:options.size);base--){
-      const scale=base/options.size, lines=[], maxW=width-5;
-      let row={pieces:[],width:0,height:base*options.line};
-      let failed=false;
-      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*options.line};};
-      for(const token of tokens){
-        if(token.newline){flush();continue;}
-        const st=getWordStyle(ranges,token.start,token.end);
-        const size=(st?.size||options.size)*scale;
-        const family=st?.font||options.family,weight=st?.weight||options.weight;
-        const font=(st?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
-        ctx.font=font;
-        const tokenW=ctx.measureText(token.text).width;
-        if(row.width+tokenW>maxW && row.pieces.length && token.text.trim())flush();
-        if(!row.pieces.length&&!token.text.trim())continue;
-        if(tokenW>maxW){failed=true;break;}
-        row.pieces.push({text:token.text,font,style:st,width:tokenW,size});
-        row.width+=tokenW;
-        row.height=Math.max(row.height,size*options.line);
+    const [x,y,width,height]=box,raw=String(text),maxW=width-6;
+    // Split each word at its formatting boundaries. Previously a selection
+    // touching one letter styled the *whole* word in the PNG export.
+    const splitToken=(token,start,scale)=>{
+      const end=start+token.length;
+      const boundaries=new Set([start,end]);
+      for(const r of ranges){
+        if(r.start>start&&r.start<end)boundaries.add(r.start);
+        if(r.end>start&&r.end<end)boundaries.add(r.end);
       }
-      if(!failed && row.pieces.length)flush();
-      const h=lines.reduce((n,r)=>n+r.height,0);
-      if(!failed && lines.length<=maxLines && h<=height){layout={lines,height:h};break;}
+      const positions=[...boundaries].sort((a,b)=>a-b),parts=[];
+      for(let i=1;i<positions.length;i++){
+        const at=positions[i-1],stop=positions[i];
+        let style=null;
+        for(const range of ranges)if(range.start<=at&&range.end>=stop)style=range;
+        const size=Math.max(18,(style?.size||options.size)*scale);
+        const family=style?.font||options.family,weight=style?.weight||options.weight;
+        const font=(style?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
+        const segment=raw.slice(at,stop);
+        ctx.font=font;
+        parts.push({text:segment,font,style,width:ctx.measureText(segment).width,size});
+      }
+      return parts;
+    };
+    const tokens=[...raw.matchAll(/\S+|[^\S\n]+|\n/g)];
+    let layout=null;
+    for(let base=options.size;base>=(options.auto?minimum:options.size);base--){
+      const scale=base/options.size,lines=[];
+      let row={pieces:[],width:0,height:base*options.line},failed=false;
+      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*options.line};};
+      for(const match of tokens){
+        const token=match[0];
+        if(token==='\n'){flush();continue;}
+        if(!token.trim() && !row.pieces.length)continue;
+        const parts=splitToken(token,match.index,scale);
+        const groupWidth=parts.reduce((sum,p)=>sum+p.width,0);
+        if(token.trim() && row.pieces.length && row.width+groupWidth>maxW)flush();
+        if(!token.trim() && !row.pieces.length)continue;
+        if(groupWidth>maxW || row.width+groupWidth>maxW){failed=true;break;}
+        for(const piece of parts){
+          row.pieces.push(piece);row.width+=piece.width;
+          row.height=Math.max(row.height,piece.size*options.line);
+        }
+      }
+      if(!failed && (row.pieces.length||!lines.length))flush();
+      const totalHeight=lines.reduce((sum,line)=>sum+line.height,0);
+      if(!failed&&lines.length<=maxLines&&totalHeight<=height){layout={lines,height:totalHeight,scale};break;}
     }
-    if(!layout)return {ok:false,message:'Selected-word formatting cannot fit in the approved panel. Reduce font sizes or change formatting.'};
+    if(!layout)return {ok:false,message:'Selected text formatting cannot fit inside the panel. Reduce the font size or enable auto-fit.'};
     let py=y+(height-layout.height)/2;
     for(const row of layout.lines){
-      let px=x+2+(options.align==='center'?(width-row.width)/2-2:0);
+      let px=x+3+(options.align==='center'?(maxW-row.width)/2:0);
       for(const piece of row.pieces){
         ctx.save();
         ctx.font=piece.font;
         ctx.textAlign='left';ctx.textBaseline='middle';
         ctx.fillStyle=piece.style?.color||'#f1f1f1';
         if(piece.style?.effect==='glow'){
-          ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=Math.max(5,piece.size*0.3);
+          ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=Math.max(5,piece.size*.3);
         }else if(piece.style?.effect==='shadow'){
           ctx.shadowColor='#000000';ctx.shadowBlur=8;ctx.shadowOffsetX=3;ctx.shadowOffsetY=3;
         }else if(piece.style?.effect==='outline'){
-          ctx.strokeStyle='#f1f1f1';ctx.lineWidth=1.8;
+          ctx.strokeStyle='#f1f1f1';ctx.lineWidth=1.5;
           ctx.strokeText(piece.text,px,py+row.height/2);
         }
         ctx.fillText(piece.text,px,py+row.height/2);
         if(piece.style?.underline){
           ctx.shadowBlur=0;
-          ctx.fillRect(px,py+row.height/2+piece.size*0.31,piece.width,Math.max(1,piece.size*0.05));
+          ctx.fillRect(px,py+row.height/2+piece.size*.31,piece.width,Math.max(1,piece.size*.05));
         }
-        ctx.restore();
-        px+=piece.width;
+        ctx.restore();px+=piece.width;
       }
       py+=row.height;
     }
-    return {ok:true};
+    return {ok:true,scale:layout.scale};
   }
 
   function defaultDraft(review) {
@@ -291,10 +310,13 @@
     } else inputs.rating.setCustomValidity('');
     draft.rating=r;
     draft.titleCase=inputs.titleCase.value;
-    draft.titleStyle={family:inputs.titleFont.value,weight:inputs.titleWeight.value,
-      align:inputs.titleAlign.value,size:Number(inputs.titleSize.value),auto:inputs.titleAuto.checked,line:1.11};
-    draft.povStyle={family:inputs.povFont.value,weight:inputs.povWeight.value,align:inputs.povAlign.value,
-      size:Number(inputs.povSize.value),auto:inputs.povAuto.checked,line:Number(inputs.povLine.value)};
+    // Font, size, color and emphasis are controlled by each inline toolbar.
+    // Preserve those span styles; layout controls only affect alignment and fit.
+    draft.titleStyle.align=inputs.titleAlign.value;
+    draft.titleStyle.auto=inputs.titleAuto.checked;
+    draft.povStyle.align=inputs.povAlign.value;
+    draft.povStyle.auto=inputs.povAuto.checked;
+    draft.povStyle.line=Number(inputs.povLine.value);
   }
   function applyDraft(kind){
     const draft=state.drafts[kind];if(!draft)return;
@@ -305,15 +327,10 @@
     inputs.titleCase.value=draft.titleCase;
     for(const prefix of ['title','pov']){
       const style=draft[prefix+'Style'];
-      inputs[prefix+'Font'].value=style.family;
-      inputs[prefix+'Weight'].value=style.weight;
       inputs[prefix+'Align'].value=style.align;
-      inputs[prefix+'Size'].value=String(style.size);
       inputs[prefix+'Auto'].checked=style.auto;
     }
     inputs.povLine.value=String(draft.povStyle.line);
-    inputs.titleSizeOut.textContent=String(draft.titleStyle.size)+'px';
-    inputs.povSizeOut.textContent=String(draft.povStyle.size)+'px';
     inputs.editingMode.textContent=kind==='post'?'POST IMAGE':'STORY IMAGE';
     window.SocialStudioRich?.sync();
     document.querySelectorAll('[data-social-format]').forEach(button=>button.classList.toggle('active',button.dataset.socialFormat===kind));
@@ -490,13 +507,13 @@
   }
   function renderFrame(kind) {
     const canvas=makeImageCanvas(kind), ctx=canvas.getContext('2d');
-    const errors=[];
+    const errors=[],notes=[];
     ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
     const bg=state.masters[kind];
     if (bg) ctx.drawImage(bg,0,0,canvas.width,canvas.height);
     else errors.push('Approved '+kind+' master background is not yet uploaded.');
     const review=state.review;
-    if(!review){errors.push('Select a saved movie.');return {canvas,errors};}
+    if(!review){errors.push('Select a saved movie.');return {canvas,errors,notes};}
     if (!state.poster) errors.push('Original R2 movie poster could not be loaded.');
     else drawContain(ctx,state.poster,geometry[kind].poster);
     const draft=state.drafts[kind];
@@ -508,6 +525,10 @@
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
       const fit=drawStyled(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30,draft.styles.title);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
+      else if(titleOptions.auto) {
+        const ratio=fit.scale??((fit.size||titleOptions.size)/titleOptions.size);
+        if(ratio<.98)notes.push('Title auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
+      }
     }
     if (kind==='post') drawPostMeta(ctx,kind);
     else drawStoryMeta(ctx,kind);
@@ -516,8 +537,12 @@
     else {
       const fit=drawStyled(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24,draft.styles.pov);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
+      else if(draft.povStyle.auto) {
+        const ratio=fit.scale??((fit.size||draft.povStyle.size)/draft.povStyle.size);
+        if(ratio<.98)notes.push('MY POV auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
+      }
     }
-    return {canvas,errors};
+    return {canvas,errors,notes};
   }
   let drawQueued=false;
   async function refreshAll(){
@@ -538,7 +563,8 @@
     c.getContext('2d').drawImage(result.canvas,0,0);
     const errors=result.errors;
     inputs.warnings.className='social-warning '+(errors.length?'error':'success');
-    inputs.warnings.textContent=errors.length?errors.join('\n'):'Preview ready. Original review data remains unchanged.';
+    inputs.warnings.textContent=errors.length?errors.join('\n'):
+      'Preview ready. Original review data remains unchanged.'+(result.notes?.length?'\n'+result.notes.join('\n'):'');
     inputs.dlPost.disabled=!state.renders.post || state.renders.post.errors.length>0;
     inputs.dlStory.disabled=!state.renders.story || state.renders.story.errors.length>0;
   }
@@ -608,14 +634,14 @@
   inputs.dlPost.addEventListener('click',()=>downloadImage('post'));
   inputs.dlStory.addEventListener('click',()=>downloadImage('story'));
   document.querySelectorAll('[data-social-format]').forEach(button=>button.addEventListener('click',()=>switchFormat(button.dataset.socialFormat)));
-  for(const name of ['title','pov','language','releaseDate','rating','titleSize','titleFont','titleWeight','titleAlign','titleCase','titleAuto','povSize','povFont','povWeight','povAlign','povLine','povAuto']) {
+  for(const name of ['title','pov','language','releaseDate','rating','titleAlign','titleCase','titleAuto','povAlign','povLine','povAuto']) {
     const input=inputs[name];
     input.addEventListener('input',()=>{
-      inputs.titleSizeOut.textContent=inputs.titleSize.value+'px';
-      inputs.povSizeOut.textContent=inputs.povSize.value+'px';
-      persistDraft(); requestRefresh();
+      persistDraft();
+      window.SocialStudioRich?.refreshLayout?.();
+      requestRefresh();
     });
-    input.addEventListener('change',()=>{persistDraft();requestRefresh();});
+    input.addEventListener('change',()=>{persistDraft();window.SocialStudioRich?.refreshLayout?.();requestRefresh();});
   }
   window.addEventListener('social-studio:open',initialize);
 })();
