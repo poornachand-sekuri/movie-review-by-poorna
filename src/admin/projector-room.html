@@ -212,8 +212,50 @@
               <div class="social-mode-bar"><strong>EDITING</strong><span id="socialEditingMode">POST IMAGE</span><small>Each format retains its own text and formatting.</small></div>
               <label class="field"><span>Select saved review</span><select id="socialMovie"><option value="">Choose a movie…</option></select></label>
               <p class="social-help" id="socialMovieStatus">Select a published review to begin.</p>
-              <label class="field"><span>Promotional movie title</span><textarea rows="2" id="socialTitle" spellcheck="false"></textarea></label>
-              <label class="field"><span>Promotional MY POV (exact text by default)</span><textarea rows="5" id="socialPov"></textarea></label>
+              <div class="field social-rich-field">
+                <span>Promotional Movie Title</span>
+                <div class="social-rich-shell">
+                  <div class="social-rich-toolbar" data-rich-toolbar="title" role="toolbar" aria-label="Movie title text formatting">
+                    <select data-rich-action="font" aria-label="Font family"><option value="Inter">Inter</option><option value="Oswald">Oswald</option><option value="Cinzel">Cinzel</option><option value="Source Serif 4">Serif</option></select>
+                    <input data-rich-action="size" type="number" min="18" max="100" value="42" aria-label="Font size in pixels" title="Font size (px)">
+                    <button type="button" data-rich-action="bold" title="Bold (Ctrl+B)" aria-label="Bold"><strong>B</strong></button>
+                    <button type="button" data-rich-action="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
+                    <button type="button" data-rich-action="underline" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>
+                    <input data-rich-action="color" type="color" value="#f1f1f1" title="Choose any font color" aria-label="Font color">
+                    <button type="button" data-rich-color="#F7010E" class="social-swatch red" title="Cinema red" aria-label="Cinema red"></button>
+                    <button type="button" data-rich-color="#F1F1F1" class="social-swatch silver" title="Silver" aria-label="Silver"></button>
+                    <button type="button" data-rich-color="#19F9FF" class="social-swatch cyan" title="Neon cyan" aria-label="Neon cyan"></button>
+                    <button type="button" data-rich-color="#F7D154" class="social-swatch gold" title="Neon gold" aria-label="Neon gold"></button>
+                    <button type="button" data-rich-color="#C770FF" class="social-swatch purple" title="Neon violet" aria-label="Neon violet"></button>
+                    <select data-rich-action="effect" aria-label="Text effect" title="Text effect"><option value="none">Normal</option><option value="glow">Glow</option><option value="outline">Outline</option><option value="shadow">Shadow</option></select>
+                    <button type="button" data-rich-action="clear" title="Clear selected text styling" aria-label="Clear styling">Clear</button>
+                  </div>
+                  <div id="socialTitleRich" data-rich-editor="title" contenteditable="true" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Promotional movie title" data-placeholder="Movie title…"></div>
+                </div>
+                <textarea id="socialTitle" rows="2" class="social-hidden-model" aria-hidden="true" tabindex="-1"></textarea>
+              </div>
+              <div class="field social-rich-field">
+                <span>Promotional MY POV (original wording preserved)</span>
+                <div class="social-rich-shell">
+                  <div class="social-rich-toolbar" data-rich-toolbar="pov" role="toolbar" aria-label="MY POV text formatting">
+                    <select data-rich-action="font" aria-label="Font family"><option value="Inter">Inter</option><option value="Oswald">Oswald</option><option value="Cinzel">Cinzel</option><option value="Source Serif 4">Serif</option></select>
+                    <input data-rich-action="size" type="number" min="18" max="100" value="42" aria-label="Font size in pixels" title="Font size (px)">
+                    <button type="button" data-rich-action="bold" title="Bold (Ctrl+B)" aria-label="Bold"><strong>B</strong></button>
+                    <button type="button" data-rich-action="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
+                    <button type="button" data-rich-action="underline" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>
+                    <input data-rich-action="color" type="color" value="#f1f1f1" title="Choose any font color" aria-label="Font color">
+                    <button type="button" data-rich-color="#F7010E" class="social-swatch red" title="Cinema red" aria-label="Cinema red"></button>
+                    <button type="button" data-rich-color="#F1F1F1" class="social-swatch silver" title="Silver" aria-label="Silver"></button>
+                    <button type="button" data-rich-color="#19F9FF" class="social-swatch cyan" title="Neon cyan" aria-label="Neon cyan"></button>
+                    <button type="button" data-rich-color="#F7D154" class="social-swatch gold" title="Neon gold" aria-label="Neon gold"></button>
+                    <button type="button" data-rich-color="#C770FF" class="social-swatch purple" title="Neon violet" aria-label="Neon violet"></button>
+                    <select data-rich-action="effect" aria-label="Text effect" title="Text effect"><option value="none">Normal</option><option value="glow">Glow</option><option value="outline">Outline</option><option value="shadow">Shadow</option></select>
+                    <button type="button" data-rich-action="clear" title="Clear selected text styling" aria-label="Clear styling">Clear</button>
+                  </div>
+                  <div id="socialPovRich" data-rich-editor="pov" contenteditable="true" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Promotional MY POV" data-placeholder="Your MY POV…"></div>
+                </div>
+                <textarea id="socialPov" rows="5" class="social-hidden-model" aria-hidden="true" tabindex="-1"></textarea>
+              </div>
               <div class="social-grid2">
                 <label class="field"><span>WATCHED IN (this format)</span><input id="socialLanguage" maxlength="60"></label>
                 <label class="field"><span>RELEASE DATE (this format)</span><input id="socialReleaseDate" type="date"></label>
@@ -230,30 +272,6 @@
                 <label class="field"><span>Alignment</span><select id="socialTitleAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
                 <label class="field"><span>Letter case</span><select id="socialTitleCase"><option value="uppercase">UPPERCASE</option><option value="original">Original</option></select></label>
               </div>
-            </div>
-            <div class="social-group social-word-controls"><h2>Style Selected Words</h2>
-              <p class="social-help">Highlight a word or phrase inside Movie Title or MY POV, then apply formatting. Each Post/Story image preserves its own word-level formatting.</p>
-              <p class="social-selection" id="socialSelectedText">Select text in either editor above.</p>
-              <div class="social-grid2">
-                <label class="field"><span>Selected text font</span><select id="socialWordFont">
-                  <option value="Inter">Inter</option><option value="Oswald">Oswald</option><option value="Cinzel">Cinzel</option><option value="Source Serif 4">Source Serif 4</option></select></label>
-                <label class="field"><span>Selected text size</span><input id="socialWordSize" type="number" min="18" max="100" value="42"></label>
-                <label class="field"><span>Any font color</span><input id="socialWordColor" type="color" value="#f1f1f1"></label>
-                <label class="field"><span>Effect</span><select id="socialWordEffect">
-                  <option value="none">None</option><option value="glow">Neon Glow</option><option value="outline">Silver Outline</option><option value="shadow">Cinematic Shadow</option>
-                </select></label>
-                <label class="field"><span>Weight</span><select id="socialWordWeight">
-                  <option value="700">Bold</option><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="800">Extra Bold</option></select></label>
-                <label class="field"><span>Quick futuristic colors</span><select id="socialWordPalette">
-                  <option value="">Custom picker above</option><option value="#F7010E">Cinema Red</option><option value="#F1F1F1">Silver White</option>
-                  <option value="#19F9FF">Cyber Cyan</option><option value="#F7D154">Neon Gold</option>
-                  <option value="#C770FF">Violet Neon</option><option value="#29FF98">Neon Mint</option>
-                </select></label>
-              </div>
-              <div class="social-caption-actions">
-                <button type="button" class="ghost" id="socialApplyWordStyle">APPLY TO SELECTION</button>
-                <button type="button" class="ghost" id="socialClearWordStyle">CLEAR SELECTION STYLE</button>
-              </div><p id="socialWordStatus" class="social-help">Preview updates on the right. Unselected words stay unchanged.</p>
             </div>
             <div class="social-group"><h2>MY POV Typography</h2>
               <label class="social-check"><input type="checkbox" id="socialPovAuto" checked> Auto-fit without truncation</label>
@@ -307,8 +325,9 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=2">
+  <link rel="stylesheet" href="/admin/social-studio.css?v=3">
   <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
-  <script src="/admin/social-studio.js?v=2" defer></script>
+  <script src="/admin/social-studio.js?v=3" defer></script>
+  <script src="/admin/social-rich-editor.js?v=1" defer></script>
 </body>
 </html>
