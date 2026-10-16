@@ -121,34 +121,44 @@
     'facebook-post':'facebook','facebook-story':'facebook',
     'x-post':'x','whatsapp-channel':'whatsapp','whatsapp-status':'whatsapp'
   };
+  function trackedUrlFor(review,platform) {
+    const slug=safeSlug(review.s);
+    const url=new URL('https://moviereviewbypoorna.com/review/'+slug);
+    url.searchParams.set('utm_source',platforms[platform]||'social');
+    url.searchParams.set('utm_medium',platform.endsWith('story')||platform.endsWith('status')?'story':'social');
+    url.searchParams.set('utm_campaign',slug);
+    return url.toString();
+  }
   function trackedUrl(platform) {
-    if (!state.review) return '';
-    const slug = safeSlug(state.review.s);
-    const u = new URL('https://moviereviewbypoorna.com/review/' + slug);
-    u.searchParams.set('utm_source', platforms[platform] || 'social');
-    u.searchParams.set('utm_medium', platform.endsWith('story') || platform.endsWith('status') ? 'story' : 'social');
-    u.searchParams.set('utm_campaign', slug);
-    return u.toString();
+    return state.review?trackedUrlFor(state.review,platform):'';
   }
   function makeCaptions(review) {
-    const title=review.t || '';
-    const pov=review.v || '';
-    const link=(k)=> {
-      const slug=safeSlug(review.s);
-      const url=new URL('https://moviereviewbypoorna.com/review/'+slug);
-      url.searchParams.set('utm_source',platforms[k]);
-      url.searchParams.set('utm_medium',k.endsWith('story') || k.endsWith('status') ? 'story' : 'social');
-      url.searchParams.set('utm_campaign',slug);
-      return url.toString();
-    };
+    const title=String(review.t||'').trim(),pov=String(review.v||'').trim();
+    const link=k=>trackedUrlFor(review,k);
+    // Plain-text captions support Unicode emoji, not embedded images. The PNG
+    // exports supply the visual content; these messages remain user-editable.
+    const intro='🎬 NOW REVIEWED | '+title;
+    const verdict='🍿 MY POV\n'+pov;
+    const tags='#MovieReviewsByPoorna #MovieReview';
+    const xLink=link('x-post');
+    const xBase='🎬 '+title+'\n🍿 New review in the Auditorium!\n🎟️ '+xLink;
+    const xCaption=xBase.length+1+tags.length<=280?xBase+'\n'+tags:xBase;
     return {
-      'instagram-post': title + '\n\n' + pov + '\n\nFull review in the Auditorium. Link also available via Story or profile.\n' + link('instagram-post') + '\n\n#MovieReviewsByPoorna #MovieReview',
-      'instagram-story': title + '\n\n' + pov + '\n\nTap the link sticker to read the full review.\n' + link('instagram-story'),
-      'facebook-post': 'Now reviewed: ' + title + '\n\n' + pov + '\n\nRead the full review:\n' + link('facebook-post'),
-      'facebook-story': title + '\n\n' + pov + '\n\nFull review via link sticker:\n' + link('facebook-story'),
-      'x-post': (title + '\n\n' + pov + '\n\nFull review: ' + link('x-post')),
-      'whatsapp-channel': '🎬 ' + title + '\n\nMY POV: ' + pov + '\n\nRead the full review:\n' + link('whatsapp-channel'),
-      'whatsapp-status': '🎬 ' + title + '\n\n' + pov + '\n\nFull review:\n' + link('whatsapp-status')
+      'instagram-post':intro+'\n\n'+verdict+
+        '\n\n🎟️ Read the full review in the Auditorium.\n🔗 Open via the profile or Story link sticker (caption URLs are not clickable):\n'+
+        link('instagram-post')+'\n\n'+tags,
+      'instagram-story':'🎬 '+title+'\n\n🍿 '+pov+
+        '\n\n👇 TAP THE LINK STICKER FOR THE FULL REVIEW\n🔗 '+link('instagram-story'),
+      'facebook-post':intro+'\n\n'+verdict+
+        '\n\n🎟️ ENTER THE AUDITORIUM\n🔗 '+link('facebook-post')+
+        '\n\n'+tags,
+      'facebook-story':'🎬 '+title+'\n🍿 '+pov+
+        '\n\n👇 FULL REVIEW VIA LINK STICKER\n🔗 '+link('facebook-story'),
+      'x-post':xCaption,
+      'whatsapp-channel':'🎬 *MOVIE REVIEWS BY POORNA*\n\n🎞️ *'+title+'*\n\n🍿 *MY POV*\n'+pov+
+        '\n\n🎟️ *Read the full review in the Auditorium*\n🔗 '+link('whatsapp-channel'),
+      'whatsapp-status':'🎬 '+title+'\n\n🍿 '+pov+
+        '\n\n🎟️ Full review:\n🔗 '+link('whatsapp-status')
     };
   }
   function updateCaptionEditor() {
