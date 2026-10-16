@@ -196,23 +196,27 @@
     }
     ctx.closePath();
   }
-  function drawRating(ctx, rating, x,y,r, gap, numericX) {
+  // Render exactly five stars. The stored quarter-star value controls the red
+  // fractional fill; no numeric rating is displayed on promotional artwork.
+  function drawRating(ctx, rating, x, y, r, gap) {
     const valid = rating !== null && rating !== undefined && rating !== '' && Number.isFinite(Number(rating));
-    if (!valid) {
-      ctx.font='600 27px "Inter"';ctx.fillStyle='#f1f1f1';ctx.fillText('Unrated',x,y);return;
+    const value = valid ? Math.max(0, Math.min(5, Number(rating))) : 0;
+    for (let i = 0; i < 5; i++) {
+      const cx = x + i * gap;
+      starPath(ctx, cx, y, r);
+      ctx.strokeStyle = '#f1f1f1';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+      const filledFraction = Math.max(0, Math.min(1, value - i));
+      if (filledFraction > 0) {
+        ctx.save();
+        starPath(ctx, cx, y, r);
+        ctx.clip();
+        ctx.fillStyle = '#f7010e';
+        ctx.fillRect(cx - r, y - r, 2 * r * filledFraction, 2 * r);
+        ctx.restore();
+      }
     }
-    const value = Math.max(0,Math.min(5,Number(rating)));
-    for(let i=0;i<5;i++) {
-      const cx=x+i*gap;
-      starPath(ctx,cx,y,r);
-      ctx.strokeStyle='#f1f1f1';ctx.lineWidth=2.2;ctx.stroke();
-      ctx.save();starPath(ctx,cx,y,r);ctx.clip();
-      ctx.fillStyle='#f7010e';
-      ctx.fillRect(cx-r,y-r,2*r*Math.max(0,Math.min(1,value-i)),2*r);
-      ctx.restore();
-    }
-    ctx.font='600 22px "Inter"';ctx.fillStyle='#f1f1f1';ctx.textAlign='left';ctx.textBaseline='middle';
-    ctx.fillText(value.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+'/5',numericX,y);
   }
   function label(ctx,txt,x,y,size) {
     ctx.fillStyle='#c6c6c6';ctx.font='500 '+size+'px "Oswald"';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(txt,x,y);
@@ -226,7 +230,7 @@
     label(ctx,'WATCHED IN',589,363,26);
     value(ctx,review.l || 'Not set',590,408,34,415);
     label(ctx,"POORNA'S RATING",588,477,24);
-    drawRating(ctx,review.r,612,521,21,58,901);
+    drawRating(ctx,review.r,612,521,21,58);
     label(ctx,'RELEASE DATE',588,594,24);
     value(ctx,dateShort(review.rd),589,641,32,430);
   }
@@ -234,7 +238,7 @@
     label(ctx,'WATCHED IN',166,1090,24);
     value(ctx,review.l || 'Not set',166,1141,29,238);
     label(ctx,"POORNA'S RATING",426,1090,23);
-    drawRating(ctx,review.r,451,1140,17,44,667);
+    drawRating(ctx,review.r,451,1140,17,44);
     label(ctx,'RELEASE DATE',805,1090,24);
     value(ctx,dateShort(review.rd),803,1145,23,230);
   }
