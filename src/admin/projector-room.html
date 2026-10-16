@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/admin/admin.css?v=20260907-projector-room-1">
+  <link rel="stylesheet" href="/admin/admin.css?v=20261016-quarter-stars-1">
 </head>
 <body>
   <div id="toast" class="toast" aria-live="polite"></div>
@@ -146,7 +146,7 @@
                     <label class="field"><span>Review / Publish Date *</span><input id="publishDate" type="date" required></label>
                     <label class="field"><span>Release Date</span><input id="releaseDate" type="date"></label>
                     <label class="field"><span>Language</span><input id="language" list="languageOptions" placeholder="Telugu"><datalist id="languageOptions"><option>Telugu</option><option>Hindi</option><option>Tamil</option><option>Malayalam</option><option>Kannada</option><option>English</option></datalist></label>
-                    <div class="field"><span>Rating</span><div id="starPicker" class="star-picker" role="radiogroup" aria-label="Movie rating"><button type="button" data-rating="1">☆</button><button type="button" data-rating="2">☆</button><button type="button" data-rating="3">☆</button><button type="button" data-rating="4">☆</button><button type="button" data-rating="5">☆</button><button type="button" class="clear-rating" data-rating="">CLEAR</button></div><input id="rating" type="hidden"></div>
+                    <div class="field"><span>Rating (0.25 increments)</span><div id="starPicker" class="star-picker" aria-label="Movie rating"><button type="button" data-rating="1" aria-label="Rate up to 1 star">☆</button><button type="button" data-rating="2" aria-label="Rate up to 2 stars">☆</button><button type="button" data-rating="3" aria-label="Rate up to 3 stars">☆</button><button type="button" data-rating="4" aria-label="Rate up to 4 stars">☆</button><button type="button" data-rating="5" aria-label="Rate up to 5 stars">☆</button><button type="button" class="clear-rating" data-rating="">CLEAR</button></div><div class="rating-precision"><button type="button" id="ratingMinus" aria-label="Decrease rating by 0.25">−</button><input id="ratingNumber" type="number" min="0" max="5" step="0.25" placeholder="Unrated" aria-label="Exact rating out of 5"><button type="button" id="ratingPlus" aria-label="Increase rating by 0.25">+</button><small>Use the stars or adjust by ¼ star.</small></div><input id="rating" type="hidden"></div>
                   </div>
                 </section>
 
@@ -204,6 +204,6 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <script src="/admin/admin.js?v=20260910-cleanup-1" defer></script>
+  <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
 </body>
 </html>

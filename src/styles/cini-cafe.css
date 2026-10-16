@@ -416,3 +416,5 @@
 @media (prefers-reduced-motion: reduce) {
   .cini-cafe-poster-zone img { transition: none; }
 }
+
+.cini-cafe-review-stars .fractional-stars{filter:drop-shadow(0 1px 1px #060505)}

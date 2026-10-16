@@ -244,12 +244,49 @@
     catch (err) {
         toast(err.message, true);
     } });
-    $$('#starPicker [data-rating]').forEach(button => button.addEventListener('click', () => { el.rating.value = button.dataset.rating; updateStars(); }));
-    function updateStars() { const n = Number(el.rating.value) || 0; $$('#starPicker button[data-rating]').forEach(button => { if (!button.classList.contains('clear-rating')) {
-        const x = Number(button.dataset.rating);
-        button.textContent = x <= n ? '★' : '☆';
-        button.classList.toggle('active', x <= n);
-    } }); }
+    const ratingNumber = $('#ratingNumber');
+    const ratingMinus = $('#ratingMinus');
+    const ratingPlus = $('#ratingPlus');
+    function chooseRating(value) {
+        if (value === '' || value == null) {
+            el.rating.value = '';
+        } else {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed) || parsed < 0 || parsed > 5 || !Number.isInteger(parsed * 4)) {
+                toast('Rating must be between 0 and 5 in increments of 0.25.', true);
+                ratingNumber.value = el.rating.value;
+                return;
+            }
+            el.rating.value = String(parsed);
+        }
+        updateStars();
+    }
+    $$('#starPicker [data-rating]').forEach(button => button.addEventListener('click', (event) => {
+        if (button.classList.contains('clear-rating')) return chooseRating('');
+        const whole = Number(button.dataset.rating);
+        const bounds = button.getBoundingClientRect();
+        const offset = Math.max(0, Math.min(0.9999, (event.clientX - bounds.left) / Math.max(1, bounds.width)));
+        chooseRating(event.detail === 0 ? whole : whole - 1 + (Math.floor(offset * 4) + 1) / 4);
+    }));
+    function updateStars() {
+        const n = el.rating.value === '' ? null : Number(el.rating.value);
+        ratingNumber.value = n === null ? '' : String(n);
+        $$('#starPicker button[data-rating]').forEach(button => {
+            if (button.classList.contains('clear-rating')) return;
+            const x = Number(button.dataset.rating);
+            const fraction = n === null ? 0 : Math.max(0, Math.min(1, n - (x - 1)));
+            button.textContent = '★';
+            button.style.backgroundImage = `linear-gradient(to right, #F7010E ${fraction * 100}%, #F1F1F1 ${fraction * 100}%)`;
+            button.style.backgroundClip = 'text';
+            button.style.webkitBackgroundClip = 'text';
+            button.style.color = 'transparent';
+            button.classList.toggle('active', fraction > 0);
+            button.setAttribute('aria-label', `Set rating up to ${x} stars; current rating ${n === null ? 'unrated' : n}`);
+        });
+    }
+    ratingNumber.addEventListener('change', () => chooseRating(ratingNumber.value));
+    ratingMinus.addEventListener('click', () => chooseRating(Math.max(0, (Number(el.rating.value) || 0) - 0.25)));
+    ratingPlus.addEventListener('click', () => chooseRating(Math.min(5, (Number(el.rating.value) || 0) + 0.25)));
     el.verdict.addEventListener('input', updateCounts);
     el.excerpt.addEventListener('input', updateCounts);
     function updateCounts() { $('#verdictCount').textContent = el.verdict.value.length; $('#excerptCount').textContent = el.excerpt.value.length; }
