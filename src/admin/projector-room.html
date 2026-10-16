@@ -263,25 +263,17 @@
               <label class="field"><span>POORNA'S RATING (stars only)</span><input id="socialRating" type="number" min="0" max="5" step="0.25"><small>Five stars with 0.25 fractional fill. No numeric rating on the image.</small></label>
               <p class="social-help">Post and Story data, fonts and MY POV edits are independent. Edits here affect promotional images only and never change saved reviews.</p>
             </div>
-            <div class="social-group"><h2>Title Typography</h2>
-              <label class="social-check"><input type="checkbox" id="socialTitleAuto" checked> Auto-fit to title frame</label>
-              <label class="field"><span>Preferred font size <output id="socialTitleSizeOut">58px</output></span><input type="range" id="socialTitleSize" min="22" max="90" value="58"></label>
+            <div class="social-group social-fit-controls"><h2>Layout & Text Fit</h2>
+              <p class="social-help">Use the toolbar directly above each text box for font, size, color and effects. No text selected formats the whole box; selected text formats only those words.</p>
               <div class="social-grid2">
-                <label class="field"><span>Font</span><select id="socialTitleFont"><option value="Oswald">Oswald</option><option value="Inter">Inter</option><option value="Cinzel">Cinzel</option><option value="Source Serif 4">Source Serif 4</option></select></label>
-                <label class="field"><span>Weight</span><select id="socialTitleWeight"><option value="700">Bold</option><option value="600">Semibold</option><option value="500">Medium</option><option value="800">Extra Bold</option></select></label>
-                <label class="field"><span>Alignment</span><select id="socialTitleAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
-                <label class="field"><span>Letter case</span><select id="socialTitleCase"><option value="uppercase">UPPERCASE</option><option value="original">Original</option></select></label>
+                <label class="social-check"><input type="checkbox" id="socialTitleAuto" checked> Auto-fit title</label>
+                <label class="social-check"><input type="checkbox" id="socialPovAuto" checked> Auto-fit MY POV</label>
+                <label class="field"><span>Title alignment</span><select id="socialTitleAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
+                <label class="field"><span>MY POV alignment</span><select id="socialPovAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
+                <label class="field"><span>Title letter case</span><select id="socialTitleCase"><option value="uppercase">UPPERCASE</option><option value="original">Original</option></select></label>
+                <label class="field"><span>MY POV line spacing</span><select id="socialPovLine"><option value="1.15">Compact</option><option value="1.28" selected>Normal</option><option value="1.4">Relaxed</option></select></label>
               </div>
-            </div>
-            <div class="social-group"><h2>MY POV Typography</h2>
-              <label class="social-check"><input type="checkbox" id="socialPovAuto" checked> Auto-fit without truncation</label>
-              <label class="field"><span>Preferred font size <output id="socialPovSizeOut">42px</output></span><input type="range" id="socialPovSize" min="20" max="72" value="42"></label>
-              <div class="social-grid2">
-                <label class="field"><span>Font</span><select id="socialPovFont"><option value="Inter">Inter</option><option value="Source Serif 4">Source Serif 4</option><option value="Oswald">Oswald</option><option value="Cinzel">Cinzel</option></select></label>
-                <label class="field"><span>Weight</span><select id="socialPovWeight"><option value="600">Semibold</option><option value="500">Medium</option><option value="700">Bold</option><option value="400">Regular</option></select></label>
-                <label class="field"><span>Alignment</span><select id="socialPovAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
-                <label class="field"><span>Line spacing</span><select id="socialPovLine"><option value="1.15">Compact</option><option value="1.28" selected>Normal</option><option value="1.4">Relaxed</option></select></label>
-              </div>
+              <p class="social-help">If styling cannot fit the approved panel at a readable size, downloading is blocked rather than cutting off text.</p>
             </div>
             <div class="social-group"><h2>Approved Master Backgrounds</h2>
               <p class="social-help">Upload the exact approved Post and Story PNG/WebP files once. They are saved privately to Cloudflare R2, not into review records.</p>
@@ -291,7 +283,7 @@
               <div class="social-help" id="socialAssetsStatus"></div>
             </div>
             <div class="social-group social-captions"><h2>Platform Captions & Links</h2>
-              <p class="social-help">Seven editable messages with the correct tracked review URL. Links are kept in messages or native Story stickers, never printed on an image.</p>
+              <p class="social-help">Seven tailored, editable messages with cinema-themed emojis and tracked review links. Platform captions cannot contain embedded image files; use the separately exported Post/Story visuals.</p>
               <label class="field"><span>Platform</span><select id="socialCaptionPlatform">
                 <option value="instagram-post">Instagram Post</option>
                 <option value="instagram-story">Instagram Story</option>
@@ -325,9 +317,9 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=3">
+  <link rel="stylesheet" href="/admin/social-studio.css?v=4">
   <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
-  <script src="/admin/social-studio.js?v=3" defer></script>
-  <script src="/admin/social-rich-editor.js?v=1" defer></script>
+  <script src="/admin/social-studio.js?v=4" defer></script>
+  <script src="/admin/social-rich-editor.js?v=2" defer></script>
 </body>
 </html>
