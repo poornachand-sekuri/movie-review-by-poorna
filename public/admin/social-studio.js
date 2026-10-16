@@ -12,13 +12,16 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), releaseDate: $('socialReleaseDate'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus')
+    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
+    wordFont:$('socialWordFont'),wordSize:$('socialWordSize'),wordColor:$('socialWordColor'),wordEffect:$('socialWordEffect'),
+    wordWeight:$('socialWordWeight'),wordPalette:$('socialWordPalette'),applyWord:$('socialApplyWordStyle'),
+    clearWord:$('socialClearWordStyle'),selectedText:$('socialSelectedText'),wordStatus:$('socialWordStatus')
   };
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { post: null, story: null }, renders: {}, errors: {},
-    seq: 0, saved: {}, templateUploads: 0, drafts: { post:null, story:null }, captions:{}
+    seq: 0, saved: {}, templateUploads: 0, drafts: { post:null, story:null }, captions:{}, activeText:'pov'
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const geometry = {
@@ -184,9 +187,123 @@
     document.body.appendChild(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(link.href),1000);
   }
+
+  function adjustStyleRanges(oldText,newText,ranges) {
+    if(!ranges?.length)return [];
+    let prefix=0;
+    while(prefix<oldText.length&&prefix<newText.length&&oldText[prefix]===newText[prefix])prefix++;
+    let suffix=0;
+    while(suffix<oldText.length-prefix&&suffix<newText.length-prefix&&oldText[oldText.length-1-suffix]===newText[newText.length-1-suffix])suffix++;
+    const delta=newText.length-oldText.length;
+    return ranges.flatMap(r=>{
+      if(r.end<=prefix)return [r];
+      if(r.start>=oldText.length-suffix)return [{...r,start:r.start+delta,end:r.end+delta}];
+      return [];
+    });
+  }
+  function updateSelection() {
+    const field=state.activeText;
+    const el=inputs[field];
+    if(!el || typeof el.selectionStart!=='number')return;
+    const selected=el.value.slice(el.selectionStart,el.selectionEnd);
+    inputs.selectedText.textContent=selected
+      ? field.toUpperCase() + ': "'+ selected.slice(0,65) +(selected.length>65?'…':'')+'"'
+      : 'Select a word or phrase in Movie Title or MY POV.';
+  }
+  function applyWordStyle(clear=false) {
+    persistDraft();
+    const draft=state.drafts[state.format];
+    const field=state.activeText,el=inputs[field];
+    if(!draft || !el || !Number.isInteger(el.selectionStart) || el.selectionEnd<=el.selectionStart) {
+      inputs.wordStatus.textContent='Select one or more words in the Title or MY POV editor first.';
+      return;
+    }
+    const start=el.selectionStart,end=el.selectionEnd;
+    // Newer ranges take precedence. Clear only removes formatting in the selected interval.
+    draft.styles[field]=draft.styles[field].flatMap(r=>{
+      if(r.end<=start||r.start>=end)return [r];
+      const remaining=[];
+      if(r.start<start)remaining.push({...r,end:start});
+      if(r.end>end)remaining.push({...r,start:end});
+      return remaining;
+    });
+    if(!clear)draft.styles[field].push({
+      start,end,
+      font:inputs.wordFont.value,
+      size:Math.min(100,Math.max(18,Number(inputs.wordSize.value)||42)),
+      color:inputs.wordColor.value,
+      effect:inputs.wordEffect.value,
+      weight:inputs.wordWeight.value
+    });
+    inputs.wordStatus.textContent=(clear?'Cleared':'Applied')+' formatting to selected '+field+' text in '+state.format.toUpperCase()+' only.';
+    requestRefresh();
+  }
+  function getWordStyle(ranges,start,end){
+    let chosen=null;
+    for(const r of ranges)if(r.start<end && r.end>start)chosen=r;
+    return chosen;
+  }
+  function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[]) {
+    if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum);
+    const [x,y,width,height]=box;
+    const raw=String(text);
+    const tokens=Array.from(raw.matchAll(/\S+|[^\S\n]+|\n/g),m=>({
+      text:m[0], start:m.index, end:m.index+m[0].length, newline:m[0]==='\n'
+    }));
+    let layout=null;
+    for(let base=options.size;base>= (options.auto?minimum:options.size);base--){
+      const scale=base/options.size, lines=[], maxW=width-5;
+      let row={pieces:[],width:0,height:base*options.line};
+      let failed=false;
+      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*options.line};};
+      for(const token of tokens){
+        if(token.newline){flush();continue;}
+        const st=getWordStyle(ranges,token.start,token.end);
+        const size=(st?.size||options.size)*scale;
+        const family=st?.font||options.family,weight=st?.weight||options.weight;
+        const font=weight+' '+size+'px "'+family+'"';
+        ctx.font=font;
+        const tokenW=ctx.measureText(token.text).width;
+        if(row.width+tokenW>maxW && row.pieces.length && token.text.trim())flush();
+        if(!row.pieces.length&&!token.text.trim())continue;
+        if(tokenW>maxW){failed=true;break;}
+        row.pieces.push({text:token.text,font,style:st,width:tokenW,size});
+        row.width+=tokenW;
+        row.height=Math.max(row.height,size*options.line);
+      }
+      if(!failed && row.pieces.length)flush();
+      const h=lines.reduce((n,r)=>n+r.height,0);
+      if(!failed && lines.length<=maxLines && h<=height){layout={lines,height:h};break;}
+    }
+    if(!layout)return {ok:false,message:'Selected-word formatting cannot fit in the approved panel. Reduce font sizes or change formatting.'};
+    let py=y+(height-layout.height)/2;
+    for(const row of layout.lines){
+      let px=x+2+(options.align==='center'?(width-row.width)/2-2:0);
+      for(const piece of row.pieces){
+        ctx.save();
+        ctx.font=piece.font;
+        ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillStyle=piece.style?.color||'#f1f1f1';
+        if(piece.style?.effect==='glow'){
+          ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=Math.max(5,piece.size*0.3);
+        }else if(piece.style?.effect==='shadow'){
+          ctx.shadowColor='#000000';ctx.shadowBlur=8;ctx.shadowOffsetX=3;ctx.shadowOffsetY=3;
+        }else if(piece.style?.effect==='outline'){
+          ctx.strokeStyle='#f1f1f1';ctx.lineWidth=1.8;
+          ctx.strokeText(piece.text,px,py+row.height/2);
+        }
+        ctx.fillText(piece.text,px,py+row.height/2);
+        ctx.restore();
+        px+=piece.width;
+      }
+      py+=row.height;
+    }
+    return {ok:true};
+  }
+
   function defaultDraft(review) {
     return {
-      title:review.t || '',pov:review.v || '',language:review.l || '',
+      title:review.t || '',pov:review.v || '',styles:{title:[],pov:[]},language:review.l || '',
       releaseDate:review.rd || '', rating:review.r == null?'':String(review.r),
       titleCase:'uppercase',
       titleStyle:{ family:'Oswald', weight:'700', align:'left',size:58,auto:true,line:1.11 },
@@ -196,7 +313,12 @@
   function persistDraft(){
     const draft=state.drafts[state.format];
     if(!draft)return;
-    draft.title=inputs.title.value;draft.pov=inputs.pov.value;
+    for(const field of ['title','pov']) {
+      if(draft[field]!==inputs[field].value) {
+        draft.styles[field]=adjustStyleRanges(draft[field],inputs[field].value,draft.styles[field]);
+        draft[field]=inputs[field].value;
+      }
+    }
     draft.language=inputs.language.value;draft.releaseDate=inputs.releaseDate.value;
     const r=inputs.rating.value;
     if(r!=='' && (!Number.isFinite(Number(r)) || Number(r)<0 || Number(r)>5 || !Number.isInteger(Number(r)*4))) {
@@ -228,6 +350,7 @@
     inputs.titleSizeOut.textContent=String(draft.titleStyle.size)+'px';
     inputs.povSizeOut.textContent=String(draft.povStyle.size)+'px';
     inputs.editingMode.textContent=kind==='post'?'POST IMAGE':'STORY IMAGE';
+    updateSelection();
     document.querySelectorAll('[data-social-format]').forEach(button=>button.classList.toggle('active',button.dataset.socialFormat===kind));
   }
 
@@ -381,7 +504,7 @@
     else {
       const titleOptions=textOptions('title',kind);
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
-      const fit=drawFitted(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30);
+      const fit=drawStyled(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30,draft.styles.title);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
     }
     if (kind==='post') drawPostMeta(ctx,kind);
@@ -389,7 +512,7 @@
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const fit=drawFitted(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24);
+      const fit=drawStyled(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24,draft.styles.pov);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
     }
     return {canvas,errors};
@@ -461,6 +584,13 @@
       setTimeout(()=>URL.revokeObjectURL(link.href),1000);
     },'image/png');
   }
+  for(const field of ['title','pov']){
+    inputs[field].addEventListener('focus',()=>{state.activeText=field;updateSelection();});
+    for(const name of ['select','mouseup','keyup'])inputs[field].addEventListener(name,updateSelection);
+  }
+  inputs.wordPalette.addEventListener('change',()=>{if(inputs.wordPalette.value)inputs.wordColor.value=inputs.wordPalette.value;});
+  inputs.applyWord.addEventListener('click',()=>applyWordStyle(false));
+  inputs.clearWord.addEventListener('click',()=>applyWordStyle(true));
   inputs.movie.addEventListener('change',chooseMovie);
   inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
   inputs.captionText.addEventListener('input',()=>{if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;});
