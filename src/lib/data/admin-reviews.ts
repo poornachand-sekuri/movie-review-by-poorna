@@ -142,8 +142,8 @@ function validatedReview(input: AdminReviewInput): {
 
   const ratingRaw = input.r ?? input.rating;
   const rating = ratingRaw === '' || ratingRaw == null ? null : Number(ratingRaw);
-  if (rating != null && (!Number.isFinite(rating) || rating < 0 || rating > 5)) {
-    throw new Error('Rating must be between 0 and 5.');
+  if (rating != null && (!Number.isFinite(rating) || rating < 0 || rating > 5 || !Number.isInteger(rating * 4))) {
+    throw new Error('Rating must be between 0 and 5 in increments of 0.25.');
   }
 
   const bodyHtml = sanitizeHtml(input.body);
