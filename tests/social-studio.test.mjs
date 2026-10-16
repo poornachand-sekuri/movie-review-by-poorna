@@ -205,7 +205,7 @@ test('Rich edits support color, font, size, glow, italic and underline on export
   assert.match(RICH_JS,/style\.font/);
   assert.match(RICH_JS,/style\.italic/);
   assert.match(RICH_JS,/style\.underline/);
-  assert.match(STUDIO_JS,/st\?\.italic/);
+  assert.match(STUDIO_JS,/style\?\.italic/);
   assert.match(STUDIO_JS,/piece\.style\?\.underline/);
 });
 
