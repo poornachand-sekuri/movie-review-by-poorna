@@ -120,6 +120,53 @@ async function deleteMedia(request: Request): Promise<Response> {
   return json({ deleted: true, key });
 }
 
+
+const SOCIAL_MASTER_PREFIX = 'ui/social-studio/v1/';
+function socialMasterKey(kind: string | null): string | null {
+  return kind === 'post' || kind === 'story' ? SOCIAL_MASTER_PREFIX + kind + '-master' : null;
+}
+function assetResponse(asset: R2ObjectBody): Response {
+  const headers = new Headers();
+  headers.set('content-type', asset.httpMetadata?.contentType || 'application/octet-stream');
+  headers.set('cache-control', 'private, max-age=120');
+  headers.set('x-content-type-options', 'nosniff');
+  return new Response(asset.body, { headers });
+}
+async function getSocialMaster(kind: string | null): Promise<Response> {
+  const key = socialMasterKey(kind);
+  if (!key) return json({ error: 'Unknown social template.' }, 400);
+  const bucket = bindings().REVIEW_ASSETS;
+  if (!bucket) return json({ error: 'R2 image storage is not configured.' }, 503);
+  const asset = await bucket.get(key);
+  return asset ? assetResponse(asset) : json({ error: 'Approved master not uploaded yet.' }, 404);
+}
+async function uploadSocialMaster(request: Request): Promise<Response> {
+  const bucket = bindings().REVIEW_ASSETS;
+  if (!bucket) return json({ error: 'R2 image storage is not configured.' }, 503);
+  const form = await request.formData().catch(() => null);
+  const key = socialMasterKey(String(form?.get('kind') || ''));
+  const file = form?.get('file');
+  if (!key || !(file instanceof File)) return json({ error: 'Select post/story and a valid image.' }, 400);
+  if (!['image/png','image/webp'].includes(file.type) || file.size < 100 || file.size > 8 * 1024 * 1024) {
+    return json({ error: 'Master must be a PNG or WebP under 8 MB.' }, 400);
+  }
+  const bytes = await file.arrayBuffer();
+  const signature = new Uint8Array(bytes.slice(0, 12));
+  const png = file.type === 'image/png' && signature[0] === 137 && signature[1] === 80 && signature[2] === 78 && signature[3] === 71;
+  const webp = file.type === 'image/webp' && String.fromCharCode(...signature.slice(0, 4)) === 'RIFF' && String.fromCharCode(...signature.slice(8, 12)) === 'WEBP';
+  if (!png && !webp) return json({ error: 'Image contents do not match the file type.' }, 400);
+  await bucket.put(key, bytes, { httpMetadata: { contentType: file.type, cacheControl: 'private, max-age=120' }, customMetadata: { kind: String(form?.get('kind')), purpose: 'admin-social-master' } });
+  return json({ ok: true, kind: String(form?.get('kind')), bytes: file.size });
+}
+async function getSocialPoster(url: string | null): Promise<Response> {
+  const key = keyFromMediaInput({ url });
+  if (!key) return json({ error: 'Only original review posters from the configured R2 domain are supported.' }, 400);
+  const bucket = bindings().REVIEW_ASSETS;
+  if (!bucket) return json({ error: 'R2 image storage is not configured.' }, 503);
+  const asset = await bucket.get(key);
+  return asset ? assetResponse(asset) : json({ error: 'Original review poster not found in R2.' }, 404);
+}
+
 async function handle(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const pathname = url.pathname;
@@ -141,6 +188,15 @@ async function handle(request: Request): Promise<Response> {
   }
 
   try {
+    if (pathname === '/api/admin/social-master' && request.method === 'GET') {
+      return getSocialMaster(url.searchParams.get('kind'));
+    }
+    if (pathname === '/api/admin/social-master' && request.method === 'POST') {
+      return uploadSocialMaster(request);
+    }
+    if (pathname === '/api/admin/social-poster' && request.method === 'GET') {
+      return getSocialPoster(url.searchParams.get('url'));
+    }
     if (pathname === '/api/admin/analytics' && request.method === 'GET') {
       return json(await getAdminAnalytics(Number(url.searchParams.get('days') || 30)));
     }
