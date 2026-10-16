@@ -93,7 +93,7 @@ test('Social Studio initializes, previews movie data, and retains the original v
   h.callbacks.get('social-studio:open')();
   await settle();
   const movies=h.element('socialMovie');
-  assert.equal(movies.listeners.change instanceof Function,true);
+  assert.equal(typeof movies.listeners.change,'function');
   movies.value='7';
   await movies.listeners.change();
   await settle();
