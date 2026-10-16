@@ -4,7 +4,7 @@
     const state = { panel: 'dashboard', comments: [], commentStatus: 'pending', reviews: [], current: null, isNew: false, slugTouched: false, posterFile: null, galleryFiles: [], gallery: [] };
     const el = {
         login: $('#loginView'), admin: $('#adminView'), loginForm: $('#loginForm'), loginPassword: $('#loginPassword'), loginError: $('#loginError'), logout: $('#logoutBtn'), toast: $('#toast'),
-        dashboard: $('#dashboardPanel'), commentsPanel: $('#commentsPanel'), reviewsPanel: $('#reviewsPanel'), days: $('#analyticsDays'), refreshAnalytics: $('#refreshAnalytics'), syncReactions: $('#syncReactions'), reactionSyncStatus: $('#reactionSyncStatus'),
+        dashboard: $('#dashboardPanel'), commentsPanel: $('#commentsPanel'), reviewsPanel: $('#reviewsPanel'), socialPanel: $('#socialPanel'), days: $('#analyticsDays'), refreshAnalytics: $('#refreshAnalytics'), syncReactions: $('#syncReactions'), reactionSyncStatus: $('#reactionSyncStatus'),
         metricViews: $('#metricViews'), metricVisitors: $('#metricVisitors'), metricReviews: $('#metricReviews'), metricPending: $('#metricPending'), metricLikes: $('#metricLikes'), metricDislikes: $('#metricDislikes'), analyticsSince: $('#analyticsSince'), trafficBreakdown: $('#trafficBreakdown'), dailyViews: $('#dailyViews'), topPagesBody: $('#topPagesBody'), reactionBody: $('#reactionBody'), pendingNavBadge: $('#pendingNavBadge'),
         commentTabs: $('#commentTabs'), commentTarget: $('#commentTarget'), commentSearch: $('#commentSearch'), commentList: $('#commentList'), refreshComments: $('#refreshComments'),
         list: $('#reviewList'), count: $('#reviewCount'), search: $('#reviewSearch'), form: $('#reviewForm'), empty: $('#emptyState'), newBtn: $('#newReviewBtn'), title: $('#title'), slug: $('#slug'), publishDate: $('#publishDate'), releaseDate: $('#releaseDate'), language: $('#language'), rating: $('#rating'), posterUrl: $('#posterUrl'), posterFile: $('#posterFile'), posterPreview: $('#posterPreview'), clearPoster: $('#clearPosterBtn'), deletePosterR2: $('#deletePosterR2Btn'), verdict: $('#verdict'), excerpt: $('#excerpt'), reviewEditor: $('#reviewEditor'), actors: $('#actors'), actresses: $('#actresses'), directors: $('#directors'), musicDirectors: $('#musicDirectors'), galleryFiles: $('#galleryFiles'), galleryGrid: $('#galleryGrid'), sourceBadge: $('#sourceBadge'), reviewIdText: $('#reviewIdText'), editorTitle: $('#editorTitle'), preview: $('#previewLink'), deleteBtn: $('#deleteBtn'), mobileDelete: $('#mobileDeleteBtn'), confirm: $('#confirmDialog'), confirmTitle: $('#confirmTitle'), confirmText: $('#confirmText')
@@ -65,6 +65,7 @@
         el.dashboard.classList.toggle('hidden', panel !== 'dashboard');
         el.commentsPanel.classList.toggle('hidden', panel !== 'comments');
         el.reviewsPanel.classList.toggle('hidden', panel !== 'reviews');
+        el.socialPanel.classList.toggle('hidden', panel !== 'social');
         el.admin.classList.remove('editing');
         if (panel === 'dashboard')
             await loadAnalytics();
@@ -72,6 +73,7 @@
             await loadComments();
         if (panel === 'reviews' && !state.reviews.length)
             await loadReviews();
+        if (panel === 'social') window.dispatchEvent(new Event('social-studio:open'));
     }
     let dashboardRefreshTimer;
     let analyticsRefreshQueued = false;
