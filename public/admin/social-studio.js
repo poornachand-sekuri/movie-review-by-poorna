@@ -56,9 +56,9 @@
     catch { state.masters[kind] = null; }
   }
   async function loadPoster(url) {
-    if (!url) { state.poster = null; return; }
+    if (!url) return null;
     if (!url.startsWith(REPO_ASSET_ORIGIN)) throw new Error('Poster must use the configured R2 asset domain, not a replacement image.');
-    state.poster = await apiImage('/api/admin/social-poster?url=' + encodeURIComponent(url));
+    return apiImage('/api/admin/social-poster?url=' + encodeURIComponent(url));
   }
   async function initialize() {
     if (state.initialized) return;
@@ -102,8 +102,8 @@
       state.review = review;
       inputs.title.value = review.t || '';
       inputs.pov.value = review.v || '';
-      try { await loadPoster(review.m || ''); }
-      catch (err) { inputs.status.textContent = errorMessage(err); }
+      try { const original = await loadPoster(review.m || ''); if (sequence !== state.seq) return; state.poster = original; }
+      catch (err) { if (sequence !== state.seq) return; inputs.status.textContent = errorMessage(err); }
       if (sequence !== state.seq) return;
       if (state.poster) inputs.status.textContent = 'Loaded "' + review.t + '" and its original stored poster.';
       await refreshAll();
