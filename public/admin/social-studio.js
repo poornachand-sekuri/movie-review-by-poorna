@@ -26,7 +26,8 @@
       size: [1080,1080],
       poster: [158,215,310,505],
       title: [572,221,423,95],
-      pov: [92,807,897,198],
+      // Extra space beneath the MY POV tab, with the existing lower frame preserved.
+      pov: [92,824,897,181],
     },
     story: {
       size: [1080,1920],
@@ -472,12 +473,14 @@
   }
   function drawStoryMeta(ctx,kind) {
     const d=state.drafts[kind];
-    drawMetaHeader(ctx,'WATCHED IN',593,489,380);
-    drawMetaValue(ctx,d.language||'Not set',605,554,364,43);
-    drawMetaHeader(ctx,"POORNA'S RATING",593,637,380);
-    drawRating(ctx,d.rating,628,693,21,63);
-    drawMetaHeader(ctx,'RELEASE DATE',593,773,380);
-    drawMetaValue(ctx,dateShort(d.releaseDate),605,846,364,37);
+    // Approved Story master: metadata rows y=538–705, 705–866, 866–1039.
+    // Keep labels, values, and stars wholly inside their respective bands.
+    drawMetaHeader(ctx,'WATCHED IN',593,575,380);
+    drawMetaValue(ctx,d.language||'Not set',605,650,364,43);
+    drawMetaHeader(ctx,"POORNA'S RATING",593,737,380);
+    drawRating(ctx,d.rating,628,813,21,63);
+    drawMetaHeader(ctx,'RELEASE DATE',593,902,380);
+    drawMetaValue(ctx,dateShort(d.releaseDate),605,978,364,37);
   }
   function makeImageCanvas(kind) {
     const canvas=document.createElement('canvas');
