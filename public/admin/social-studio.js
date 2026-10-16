@@ -117,6 +117,120 @@
       await refreshAll();
     }
   }
+
+  const platforms = {
+    'instagram-post':'instagram', 'instagram-story':'instagram',
+    'facebook-post':'facebook','facebook-story':'facebook',
+    'x-post':'x','whatsapp-channel':'whatsapp','whatsapp-status':'whatsapp'
+  };
+  function trackedUrl(platform) {
+    if (!state.review) return '';
+    const slug = safeSlug(state.review.s);
+    const u = new URL('https://moviereviewbypoorna.com/review/' + slug);
+    u.searchParams.set('utm_source', platforms[platform] || 'social');
+    u.searchParams.set('utm_medium', platform.endsWith('story') || platform.endsWith('status') ? 'story' : 'social');
+    u.searchParams.set('utm_campaign', slug);
+    return u.toString();
+  }
+  function makeCaptions(review) {
+    const title=review.t || '';
+    const pov=review.v || '';
+    const link=(k)=> {
+      const slug=safeSlug(review.s);
+      const url=new URL('https://moviereviewbypoorna.com/review/'+slug);
+      url.searchParams.set('utm_source',platforms[k]);
+      url.searchParams.set('utm_medium',k.endsWith('story') || k.endsWith('status') ? 'story' : 'social');
+      url.searchParams.set('utm_campaign',slug);
+      return url.toString();
+    };
+    return {
+      'instagram-post': title + '\n\n' + pov + '\n\nFull review in the Auditorium. Link also available via Story or profile.\n' + link('instagram-post') + '\n\n#MovieReviewsByPoorna #MovieReview',
+      'instagram-story': title + '\n\n' + pov + '\n\nTap the link sticker to read the full review.\n' + link('instagram-story'),
+      'facebook-post': 'Now reviewed: ' + title + '\n\n' + pov + '\n\nRead the full review:\n' + link('facebook-post'),
+      'facebook-story': title + '\n\n' + pov + '\n\nFull review via link sticker:\n' + link('facebook-story'),
+      'x-post': (title + '\n\n' + pov + '\n\nFull review: ' + link('x-post')),
+      'whatsapp-channel': '🎬 ' + title + '\n\nMY POV: ' + pov + '\n\nRead the full review:\n' + link('whatsapp-channel'),
+      'whatsapp-status': '🎬 ' + title + '\n\n' + pov + '\n\nFull review:\n' + link('whatsapp-status')
+    };
+  }
+  function updateCaptionEditor() {
+    const key=inputs.captionPlatform.value;
+    inputs.captionText.value=state.captions[key] || '';
+    inputs.trackedUrl.value=trackedUrl(key);
+    inputs.captionStatus.textContent=state.review?'Edit and copy the caption for '+inputs.captionPlatform.selectedOptions?.[0]?.textContent+'.':'Select a saved review.';
+  }
+  async function copyText(value,message) {
+    if(!value) {inputs.captionStatus.textContent='Nothing to copy yet.';return;}
+    try {
+      await navigator.clipboard.writeText(value);
+      inputs.captionStatus.textContent=message;
+    } catch {
+      inputs.captionStatus.textContent='Clipboard permission denied. Select and copy the text above.';
+    }
+  }
+  function downloadCaptions() {
+    if(!state.review)return;
+    const labels={
+      'instagram-post':'Instagram Post','instagram-story':'Instagram Story',
+      'facebook-post':'Facebook Post','facebook-story':'Facebook Story',
+      'x-post':'X Post','whatsapp-channel':'WhatsApp Channel',
+      'whatsapp-status':'WhatsApp Status'
+    };
+    const text=Object.entries(labels).map(([k,label])=>'=== '+label+' ===\n'+(state.captions[k]||'')+'\n').join('\n');
+    const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+    const link=document.createElement('a');
+    link.href=URL.createObjectURL(blob);
+    link.download=safeSlug(state.review.s)+'_social_captions.txt';
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+  }
+  function defaultDraft(review) {
+    return {
+      title:review.t || '',pov:review.v || '',language:review.l || '',
+      releaseDate:review.rd || '', rating:review.r == null?'':String(review.r),
+      titleCase:'uppercase',
+      titleStyle:{ family:'Oswald', weight:'700', align:'left',size:58,auto:true,line:1.11 },
+      povStyle:{ family:'Inter',weight:'600',align:'left',size:42,auto:true,line:1.28 }
+    };
+  }
+  function persistDraft(){
+    const draft=state.drafts[state.format];
+    if(!draft)return;
+    draft.title=inputs.title.value;draft.pov=inputs.pov.value;
+    draft.language=inputs.language.value;draft.releaseDate=inputs.releaseDate.value;
+    const r=inputs.rating.value;
+    if(r!=='' && (!Number.isFinite(Number(r)) || Number(r)<0 || Number(r)>5 || !Number.isInteger(Number(r)*4))) {
+      inputs.rating.setCustomValidity('Use a rating from 0 to 5 in 0.25 increments.');
+    } else inputs.rating.setCustomValidity('');
+    draft.rating=r;
+    draft.titleCase=inputs.titleCase.value;
+    draft.titleStyle={family:inputs.titleFont.value,weight:inputs.titleWeight.value,
+      align:inputs.titleAlign.value,size:Number(inputs.titleSize.value),auto:inputs.titleAuto.checked,line:1.11};
+    draft.povStyle={family:inputs.povFont.value,weight:inputs.povWeight.value,align:inputs.povAlign.value,
+      size:Number(inputs.povSize.value),auto:inputs.povAuto.checked,line:Number(inputs.povLine.value)};
+  }
+  function applyDraft(kind){
+    const draft=state.drafts[kind];if(!draft)return;
+    inputs.title.value=draft.title;inputs.pov.value=draft.pov;
+    inputs.language.value=draft.language;inputs.releaseDate.value=draft.releaseDate;
+    inputs.rating.value=draft.rating;
+    inputs.rating.setCustomValidity('');
+    inputs.titleCase.value=draft.titleCase;
+    for(const prefix of ['title','pov']){
+      const style=draft[prefix+'Style'];
+      inputs[prefix+'Font'].value=style.family;
+      inputs[prefix+'Weight'].value=style.weight;
+      inputs[prefix+'Align'].value=style.align;
+      inputs[prefix+'Size'].value=String(style.size);
+      inputs[prefix+'Auto'].checked=style.auto;
+    }
+    inputs.povLine.value=String(draft.povStyle.line);
+    inputs.titleSizeOut.textContent=String(draft.titleStyle.size)+'px';
+    inputs.povSizeOut.textContent=String(draft.povStyle.size)+'px';
+    inputs.editingMode.textContent=kind==='post'?'POST IMAGE':'STORY IMAGE';
+    document.querySelectorAll('[data-social-format]').forEach(button=>button.classList.toggle('active',button.dataset.socialFormat===kind));
+  }
+
   function dateShort(text) {
     if (!/^\d{4}-\d\d-\d\d$/.test(String(text || ''))) return 'Not set';
     const parts = text.split('-').map(Number);
@@ -225,21 +339,23 @@
     while(pointSize>17){ctx.font='600 '+pointSize+'px "Inter"';if(ctx.measureText(txt).width<=width)break;pointSize--;}
     ctx.fillStyle='#f1f1f1';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(txt,x,y);
   }
-  function drawPostMeta(ctx,review) {
-    label(ctx,'WATCHED IN',589,363,26);
-    value(ctx,review.l || 'Not set',590,408,34,415);
-    label(ctx,"POORNA'S RATING",588,477,24);
-    drawRating(ctx,review.r,612,521,21,58);
-    label(ctx,'RELEASE DATE',588,594,24);
-    value(ctx,dateShort(review.rd),589,641,32,430);
+  function drawPostMeta(ctx,kind) {
+    const d=state.drafts[kind];
+    label(ctx,'WATCHED IN',589,377,25);
+    value(ctx,d.language || 'Not set',588,432,31,397);
+    label(ctx,"POORNA'S RATING",589,503,24);
+    drawRating(ctx,d.rating,605,558,22,62);
+    label(ctx,'RELEASE DATE',588,634,24);
+    value(ctx,dateShort(d.releaseDate),588,691,30,397);
   }
-  function drawStoryMeta(ctx,review) {
-    label(ctx,'WATCHED IN',166,1090,24);
-    value(ctx,review.l || 'Not set',166,1141,29,238);
-    label(ctx,"POORNA'S RATING",426,1090,23);
-    drawRating(ctx,review.r,451,1140,17,44);
-    label(ctx,'RELEASE DATE',805,1090,24);
-    value(ctx,dateShort(review.rd),803,1145,23,230);
+  function drawStoryMeta(ctx,kind) {
+    const d=state.drafts[kind];
+    label(ctx,'WATCHED IN',598,560,25);
+    value(ctx,d.language || 'Not set',599,641,29,374);
+    label(ctx,"POORNA'S RATING",599,728,24);
+    drawRating(ctx,d.rating,628,803,21,63);
+    label(ctx,'RELEASE DATE',599,889,24);
+    value(ctx,dateShort(d.releaseDate),599,959,28,374);
   }
   function makeImageCanvas(kind) {
     const canvas=document.createElement('canvas');
@@ -268,8 +384,9 @@
       const fit=drawFitted(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
     }
-    if (kind==='post') drawPostMeta(ctx,review);
-    else drawStoryMeta(ctx,review);
+    if (kind==='post') drawPostMeta(ctx,kind);
+    else drawStoryMeta(ctx,kind);
+    if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
       const fit=drawFitted(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24);
