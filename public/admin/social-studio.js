@@ -221,7 +221,7 @@
         const st=getWordStyle(ranges,token.start,token.end);
         const size=(st?.size||options.size)*scale;
         const family=st?.font||options.family,weight=st?.weight||options.weight;
-        const font=weight+' '+size+'px "'+family+'"';
+        const font=(st?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
         ctx.font=font;
         const tokenW=ctx.measureText(token.text).width;
         if(row.width+tokenW>maxW && row.pieces.length && token.text.trim())flush();
@@ -253,6 +253,10 @@
           ctx.strokeText(piece.text,px,py+row.height/2);
         }
         ctx.fillText(piece.text,px,py+row.height/2);
+        if(piece.style?.underline){
+          ctx.shadowBlur=0;
+          ctx.fillRect(px,py+row.height/2+piece.size*0.31,piece.width,Math.max(1,piece.size*0.05));
+        }
         ctx.restore();
         px+=piece.width;
       }
