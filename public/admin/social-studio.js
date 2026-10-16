@@ -12,10 +12,7 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), releaseDate: $('socialReleaseDate'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
-    wordFont:$('socialWordFont'),wordSize:$('socialWordSize'),wordColor:$('socialWordColor'),wordEffect:$('socialWordEffect'),
-    wordWeight:$('socialWordWeight'),wordPalette:$('socialWordPalette'),applyWord:$('socialApplyWordStyle'),
-    clearWord:$('socialClearWordStyle'),selectedText:$('socialSelectedText'),wordStatus:$('socialWordStatus')
+    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus')
   };
   if (!inputs.canvas) return;
   const state = {
@@ -201,43 +198,6 @@
       return [];
     });
   }
-  function updateSelection() {
-    const field=state.activeText;
-    const el=inputs[field];
-    if(!el || typeof el.selectionStart!=='number')return;
-    const selected=el.value.slice(el.selectionStart,el.selectionEnd);
-    inputs.selectedText.textContent=selected
-      ? field.toUpperCase() + ': "'+ selected.slice(0,65) +(selected.length>65?'…':'')+'"'
-      : 'Select a word or phrase in Movie Title or MY POV.';
-  }
-  function applyWordStyle(clear=false) {
-    persistDraft();
-    const draft=state.drafts[state.format];
-    const field=state.activeText,el=inputs[field];
-    if(!draft || !el || !Number.isInteger(el.selectionStart) || el.selectionEnd<=el.selectionStart) {
-      inputs.wordStatus.textContent='Select one or more words in the Title or MY POV editor first.';
-      return;
-    }
-    const start=el.selectionStart,end=el.selectionEnd;
-    // Newer ranges take precedence. Clear only removes formatting in the selected interval.
-    draft.styles[field]=draft.styles[field].flatMap(r=>{
-      if(r.end<=start||r.start>=end)return [r];
-      const remaining=[];
-      if(r.start<start)remaining.push({...r,end:start});
-      if(r.end>end)remaining.push({...r,start:end});
-      return remaining;
-    });
-    if(!clear)draft.styles[field].push({
-      start,end,
-      font:inputs.wordFont.value,
-      size:Math.min(100,Math.max(18,Number(inputs.wordSize.value)||42)),
-      color:inputs.wordColor.value,
-      effect:inputs.wordEffect.value,
-      weight:inputs.wordWeight.value
-    });
-    inputs.wordStatus.textContent=(clear?'Cleared':'Applied')+' formatting to selected '+field+' text in '+state.format.toUpperCase()+' only.';
-    requestRefresh();
-  }
   function getWordStyle(ranges,start,end){
     let chosen=null;
     for(const r of ranges)if(r.start<end && r.end>start)chosen=r;
@@ -350,7 +310,7 @@
     inputs.titleSizeOut.textContent=String(draft.titleStyle.size)+'px';
     inputs.povSizeOut.textContent=String(draft.povStyle.size)+'px';
     inputs.editingMode.textContent=kind==='post'?'POST IMAGE':'STORY IMAGE';
-    updateSelection();
+    window.SocialStudioRich?.sync();
     document.querySelectorAll('[data-social-format]').forEach(button=>button.classList.toggle('active',button.dataset.socialFormat===kind));
   }
 
@@ -454,31 +414,66 @@
       }
     }
   }
-  function label(ctx,txt,x,y,size) {
-    ctx.fillStyle='#c6c6c6';ctx.font='500 '+size+'px "Oswald"';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(txt,x,y);
+  function drawMetaHeader(ctx, text, x, y, roomWidth) {
+    ctx.save();
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.font='700 23px "Oswald"';
+    ctx.letterSpacing='1px';
+    ctx.fillStyle='#f1f1f1';
+    ctx.shadowColor='rgba(247,1,14,0.18)';ctx.shadowBlur=4;
+    ctx.fillText(text,x+14,y);
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#f7010e';
+    ctx.fillRect(x,y-10,4,20);
+    const headerWidth=ctx.measureText(text).width;
+    const remaining=Math.max(0,roomWidth-headerWidth-39);
+    if(remaining>15) {
+      ctx.fillStyle='rgba(247,1,14,0.65)';
+      ctx.fillRect(x+headerWidth+29,y,Math.min(remaining,145),2);
+    }
+    ctx.restore();
   }
-  function value(ctx,txt,x,y,size,width) {
-    let pointSize=size;
-    while(pointSize>17){ctx.font='600 '+pointSize+'px "Inter"';if(ctx.measureText(txt).width<=width)break;pointSize--;}
-    ctx.fillStyle='#f1f1f1';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(txt,x,y);
+  function drawMetaValue(ctx, text, x, y, maxWidth, preferredSize) {
+    ctx.save();
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.letterSpacing='0.5px';
+    const content=String(text||'Not set');
+    let size=preferredSize;
+    while(size>23) {
+      ctx.font='700 '+size+'px "Cinzel", "Source Serif 4", serif';
+      if(ctx.measureText(content).width<=maxWidth)break;
+      size--;
+    }
+    const gradient=ctx.createLinearGradient?.(0,y-size*0.65,0,y+size*0.55);
+    if(gradient) {
+      gradient.addColorStop(0,'#ffffff');
+      gradient.addColorStop(.38,'#f1f1f1');
+      gradient.addColorStop(1,'#bfc0c2');
+    }
+    ctx.fillStyle=gradient||'#f1f1f1';
+    ctx.shadowColor='rgba(247,1,14,0.32)';
+    ctx.shadowBlur=3;
+    ctx.fillText(content,x,y);
+    ctx.restore();
   }
   function drawPostMeta(ctx,kind) {
     const d=state.drafts[kind];
-    label(ctx,'WATCHED IN',589,377,25);
-    value(ctx,d.language || 'Not set',588,432,31,397);
-    label(ctx,"POORNA'S RATING",589,503,24);
-    drawRating(ctx,d.rating,605,558,22,62);
-    label(ctx,'RELEASE DATE',588,634,24);
-    value(ctx,dateShort(d.releaseDate),588,691,30,397);
+    // Keep every label safely within its original silver-bordered row.
+    drawMetaHeader(ctx,'WATCHED IN',587,382,396);
+    drawMetaValue(ctx,d.language||'Not set',600,439,381,40);
+    drawMetaHeader(ctx,"POORNA'S RATING",587,515,396);
+    drawRating(ctx,d.rating,605,565,22,62);
+    drawMetaHeader(ctx,'RELEASE DATE',587,650,396);
+    drawMetaValue(ctx,dateShort(d.releaseDate),600,700,381,37);
   }
   function drawStoryMeta(ctx,kind) {
     const d=state.drafts[kind];
-    label(ctx,'WATCHED IN',598,560,25);
-    value(ctx,d.language || 'Not set',599,641,29,374);
-    label(ctx,"POORNA'S RATING",599,728,24);
-    drawRating(ctx,d.rating,628,803,21,63);
-    label(ctx,'RELEASE DATE',599,889,24);
-    value(ctx,dateShort(d.releaseDate),599,959,28,374);
+    drawMetaHeader(ctx,'WATCHED IN',593,489,380);
+    drawMetaValue(ctx,d.language||'Not set',605,554,364,43);
+    drawMetaHeader(ctx,"POORNA'S RATING",593,637,380);
+    drawRating(ctx,d.rating,628,693,21,63);
+    drawMetaHeader(ctx,'RELEASE DATE',593,773,380);
+    drawMetaValue(ctx,dateShort(d.releaseDate),605,846,364,37);
   }
   function makeImageCanvas(kind) {
     const canvas=document.createElement('canvas');
@@ -584,13 +579,18 @@
       setTimeout(()=>URL.revokeObjectURL(link.href),1000);
     },'image/png');
   }
-  for(const field of ['title','pov']){
-    inputs[field].addEventListener('focus',()=>{state.activeText=field;updateSelection();});
-    for(const name of ['select','mouseup','keyup'])inputs[field].addEventListener(name,updateSelection);
-  }
-  inputs.wordPalette.addEventListener('change',()=>{if(inputs.wordPalette.value)inputs.wordColor.value=inputs.wordPalette.value;});
-  inputs.applyWord.addEventListener('click',()=>applyWordStyle(false));
-  inputs.clearWord.addEventListener('click',()=>applyWordStyle(true));
+  // The inline rich editors update these hidden model fields through a bridge.
+  window.SocialStudioRichBridge={
+    getDraft:()=>state.drafts[state.format],
+    format:()=>state.format,
+    setText:(field,text)=>{
+      if(field!=='title'&&field!=='pov')return;
+      inputs[field].value=text;
+      persistDraft();
+      requestRefresh();
+    },
+    refresh:requestRefresh,
+  };
   inputs.movie.addEventListener('change',chooseMovie);
   inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
   inputs.captionText.addEventListener('input',()=>{if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;});
