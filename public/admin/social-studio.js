@@ -148,12 +148,12 @@
         '\n\n🎟️ Read the full review in the Auditorium.\n🔗 Open via the profile or Story link sticker (caption URLs are not clickable):\n'+
         link('instagram-post')+'\n\n'+tags,
       'instagram-story':'🎬 '+title+'\n\n🍿 '+pov+
-        '\n\n👇 TAP THE LINK STICKER FOR THE FULL REVIEW\n🔗 '+link('instagram-story'),
+        '\n\n👇 🎟️ TAP THE LINK STICKER FOR THE FULL REVIEW\n🔗 '+link('instagram-story'),
       'facebook-post':intro+'\n\n'+verdict+
         '\n\n🎟️ ENTER THE AUDITORIUM\n🔗 '+link('facebook-post')+
         '\n\n'+tags,
       'facebook-story':'🎬 '+title+'\n🍿 '+pov+
-        '\n\n👇 FULL REVIEW VIA LINK STICKER\n🔗 '+link('facebook-story'),
+        '\n\n👇 🎟️ FULL REVIEW VIA LINK STICKER\n🔗 '+link('facebook-story'),
       'x-post':xCaption,
       'whatsapp-channel':'🎬 *MOVIE REVIEWS BY POORNA*\n\n🎞️ *'+title+'*\n\n🍿 *MY POV*\n'+pov+
         '\n\n🎟️ *Read the full review in the Auditorium*\n🔗 '+link('whatsapp-channel'),
