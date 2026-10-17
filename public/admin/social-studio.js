@@ -162,17 +162,17 @@
   const followEverywhere=()=>[
     '📣 FOLLOW MOVIE REVIEWS BY POORNA EVERYWHERE',
     '📸 Instagram: '+SOCIAL_ACCOUNTS.instagram,
-    '🔵 Facebook: '+SOCIAL_ACCOUNTS.facebook,
+    'ⓕ Facebook: '+SOCIAL_ACCOUNTS.facebook,
     '𝕏 X: '+SOCIAL_ACCOUNTS.x,
-    '🟢 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
+    '💬 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
   ];
   // The follow-up reply is deliberately compact enough for an individual X post.
   const xFollowUp=()=>spaced([
     '🎬 More movie talk, four ways to follow:',
-    'IG: '+SOCIAL_ACCOUNTS.instagram,
-    'FB: '+SOCIAL_ACCOUNTS.facebook,
-    'X: '+SOCIAL_ACCOUNTS.x,
-    'WA: '+SOCIAL_ACCOUNTS.whatsapp
+    '📸 Instagram: '+SOCIAL_ACCOUNTS.instagram,
+    'ⓕ Facebook: '+SOCIAL_ACCOUNTS.facebook,
+    '𝕏 X: '+SOCIAL_ACCOUNTS.x,
+    '💬 WhatsApp: '+SOCIAL_ACCOUNTS.whatsapp
   ]);
   function splitXThread(message){
     const index=message.indexOf(X_REPLY_SEPARATOR);
@@ -194,9 +194,11 @@
     return {
       'instagram-post':spaced([
         '🎬 '+title+' has reached the Auditorium!',
-        '🍿 Worth your popcorn? Read the full review to find out.',
-        '🎟️ FULL REVIEW LINK IN BIO (caption URLs are not tappable on Instagram).',
-        ...followEverywhere(),
+        '🍿 Worth your popcorn? My full review has the answer!',
+        '🎟️ FULL REVIEW LINK IN BIO',
+        '🎞️ THE MOVIE TALK DOESN\'T END HERE!',
+        ...followEverywhere().slice(1),
+        '🎥 ONE LOVE. MANY SCREENS.',
         '#MovieReviewsByPoorna #MovieReview'
       ]),
       'instagram-story':spaced([
