@@ -22,7 +22,7 @@
   // Pixel coordinates for the four October 17 approved ticket masters.
   const geometry = {
     post: {
-      size:[1080,1080],poster:[53,291,380,598],title:[504,335,490,85],pov:[484,754,523,120],
+      size:[1080,1080],poster:[53,291,380,598],title:[504,335,490,85],pov:[484,749,523,137],
       language:{cx:589,y:627,max:225},rating:{x:757,y:599,r:25,gap:59}
     },
     story: {
@@ -278,7 +278,7 @@
       rating:review.r == null?'':String(review.r),
       titleCase:'uppercase',
       titleStyle:{ family:'Oswald', weight:'700', align:'center',color:'#060505',size:59,auto:true,line:1.11 },
-      povStyle:{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:37,auto:true,line:1.22 }
+      povStyle:{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:48,auto:true,line:1.22 }
     };
   }
   function persistDraft(){
