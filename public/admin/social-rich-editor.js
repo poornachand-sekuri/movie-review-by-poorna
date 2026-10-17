@@ -10,6 +10,7 @@
   let syncing=false;
   const bridge=()=>window.SocialStudioRichBridge;
   const colorPattern=/^#[0-9A-Fa-f]{6}$/;
+  const supportedFonts=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','DM Sans'];
   function styleAt(ranges,start,end) {
     let result=null;
     for(const range of ranges||[]) {
@@ -75,6 +76,7 @@
     editor.style.fontFamily='"'+base.family+'"';
     editor.style.fontSize=Number(base.size)+'px';
     editor.style.fontWeight=base.weight;
+    editor.style.color=base.color||'#f1f1f1';
     editor.style.lineHeight=String(base.line);
     editor.style.textAlign=base.align;
     syncing=false;
@@ -133,11 +135,16 @@
     const range=styleAt(draft.styles?.[field]||[],at,at+1)||{};
     const base=draft[field+'Style'];
     const values={font:range.font||base.family,size:range.size||base.size,
-      color:range.color||'#f1f1f1',effect:range.effect||'none'};
+      color:range.color||base.color||'#f1f1f1',effect:range.effect||'none',
+      hex:(range.color||base.color||'#f1f1f1').toUpperCase()};
     for(const [action,value] of Object.entries(values)){
       const control=toolbar.querySelector('[data-rich-action="'+action+'"]');
       if(control)control.value=String(value);
     }
+    const activeColor=values.color.toLowerCase();
+    toolbar.querySelectorAll('[data-rich-color]').forEach(button=>{
+      button.setAttribute('aria-pressed',String(button.dataset.richColor.toLowerCase()===activeColor));
+    });
   }
   function saveSelection(field){
     const result=selectionOffsets(field);
@@ -181,9 +188,17 @@
   }
   function action(field,command,value){
     if(command==='clear')return applyStyle(field,null,true);
-    if(command==='font')return applyStyle(field,{font:value},false);
+    if(command==='font' && supportedFonts.includes(value))return applyStyle(field,{font:value},false);
     if(command==='size')return applyStyle(field,{size:Math.max(18,Math.min(100,Number(value)||42))},false);
-    if(command==='color' && colorPattern.test(value))return applyStyle(field,{color:value},false);
+    if(command==='color' && colorPattern.test(value))return applyStyle(field,{color:value.toUpperCase()},false);
+    if(command==='hex'){
+      const hex=String(value||'').trim();
+      if(!colorPattern.test(hex)){
+        setHint(field,'Use a six-digit color code such as #F7D154.');
+        return;
+      }
+      return applyStyle(field,{color:hex.toUpperCase()},false);
+    }
     if(command==='effect')return applyStyle(field,{effect:value},false);
     const draft=bridge()?.getDraft(),sel=savedSelection[field];
     if(!draft)return;
@@ -244,7 +259,7 @@
     toolbar.addEventListener('change',event=>{
       const control=event.target;
       const cmd=control.dataset.richAction;
-      if(['font','size','color','effect'].includes(cmd))action(field,cmd,control.value);
+      if(['font','size','color','hex','effect'].includes(cmd))action(field,cmd,control.value);
     });
     const hint=document.createElement('p');
     hint.className='social-rich-hint';
