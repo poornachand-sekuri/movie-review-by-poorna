@@ -519,8 +519,56 @@
     }
     ctx.closePath();
   }
-  // The five empty white outlines are baked into each approved master.
-  // Fill INSIDE those outlines to preserve source geometry, even at 0.25 steps.
+  // Locate the INSIDE of the baked white outline, rather than drawing a
+  // second star polygon over it. A one-pixel guard preserves antialiased edges.
+  function fillBakedStar(ctx,cx,cy,r,fraction) {
+    if(typeof ctx.getImageData!=='function'||typeof ctx.putImageData!=='function')return false;
+    const radius=Math.ceil(r+8),left=Math.round(cx-radius),top=Math.round(cy-radius);
+    const side=radius*2+1;
+    let pixels;
+    try{pixels=ctx.getImageData(left,top,side,side);}catch{return false;}
+    const {data,width,height}=pixels,N=width*height;
+    if(N!==side*side||!data||data.length!==N*4)return false;
+    const outline=new Uint8Array(N),blocked=new Uint8Array(N);
+    for(let p=0;p<N;p++){
+      const i=p*4;
+      outline[p]=data[i]>115&&data[i+1]>115&&data[i+2]>115 ? 1:0;
+    }
+    // Dilate the printed white outline by one pixel to protect its feathered edge.
+    for(let y=1;y<height-1;y++)for(let x=1;x<width-1;x++){
+      const p=y*width+x;
+      if(outline[p]){
+        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)
+          blocked[p+dy*width+dx]=1;
+      }
+    }
+    const seedX=Math.round(cx-left),seedY=Math.round(cy-top);
+    const seed=seedY*width+seedX;
+    if(seedX<1||seedX>=width-1||seedY<1||seedY>=height-1||blocked[seed])return false;
+    const queue=new Int32Array(N),visited=new Uint8Array(N);
+    let head=0,tail=1,touchesBoundary=false;
+    queue[0]=seed;visited[seed]=1;
+    while(head<tail){
+      const p=queue[head++],x=p%width,y=Math.floor(p/width);
+      if(!x||!y||x===width-1||y===height-1){touchesBoundary=true;break;}
+      for(const next of [p-1,p+1,p-width,p+width]){
+        if(!blocked[next]&&!visited[next]){visited[next]=1;queue[tail++]=next;}
+      }
+    }
+    // A broken or mismatched star outline should not flood the rating panel.
+    if(touchesBoundary||tail<70||tail>Math.floor(N*0.45))return false;
+    const maxX=cx-(r+4)+2*(r+4)*fraction;
+    for(let i=0;i<tail;i++){
+      const p=queue[i],x=left+(p%width);
+      if(x>=maxX)continue;
+      const index=p*4;
+      data[index]=247;data[index+1]=1;data[index+2]=14;
+    }
+    ctx.putImageData(pixels,left,top);
+    return true;
+  }
+  // Fallback only for legacy/unsupported Canvas contexts. The screenshot
+  // exports use the original white-outline-aware pixel fill above.
   function drawRating(ctx,rating,place) {
     const valid=rating!==null&&rating!==undefined&&rating!==''&&Number.isFinite(Number(rating));
     const value=valid?Math.max(0,Math.min(5,Number(rating))):0;
@@ -528,11 +576,12 @@
       const fraction=Math.max(0,Math.min(1,value-i));
       if(!fraction)continue;
       const cx=place.centers[i],cy=place.y,r=place.r;
+      if(fillBakedStar(ctx,cx,cy,r,fraction))continue;
       ctx.save();
-      starPath(ctx,cx,cy,r);
+      starPath(ctx,cx,cy,r-4);
       ctx.clip();
       ctx.fillStyle='#f7010e';
-      ctx.fillRect(cx-r,cy-r,2*r*fraction,2*r);
+      ctx.fillRect(cx-r+4,cy-r+4,2*(r-4)*fraction,2*(r-4));
       ctx.restore();
     }
   }
