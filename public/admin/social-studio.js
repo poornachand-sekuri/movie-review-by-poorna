@@ -10,7 +10,7 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus')
+    copyCaption: $('socialCopyCaption'),copyXReply: $('socialCopyXReply'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus')
   };
   if (!inputs.canvas) return;
   const state = {
@@ -23,24 +23,24 @@
   // Star outlines are PRINTED in the source PNG: we fill them, never draw duplicates.
   const geometry={
     post:{
-      size:[1080,1080],poster:[54,293,377,579],title:[505,333,477,90],
+      size:[1080,1080],poster:[54,298,384,587],title:[505,333,477,90],
       pov:[485,748,517,128],language:{cx:594,y:622,max:223},
       rating:{centers:[760.5,818.4,876.5,934,991.5],y:601.5,r:24}
     },
     story:{
-      size:[1080,1920],poster:[248,258,562,609],title:[162,926,756,103],
+      size:[1080,1920],poster:[261,243,567,645],title:[162,926,756,103],
       pov:[99,1388,870,197],language:{cx:251,y:1211,max:290},
       rating:{centers:[577.8,665,751,837.8,921.6],y:1215.8,r:33}
     }
   };
   const postOverrides={
     'facebook-x-post':{
-      poster:[53,296,377,578],title:[504,329,478,93],
+      poster:[42,292,387,597],title:[504,329,478,93],
       pov:[486,745,515,129],language:{cx:592,y:613,max:217},
       rating:{centers:[755.8,817.6,878.5,939.7,1000.5],y:580.5,r:22}
     },
     'whatsapp-channel':{
-      poster:[53,296,377,578],title:[503,335,480,90],
+      poster:[49,285,379,598],title:[503,335,480,90],
       pov:[485,750,518,127],language:{cx:585,y:627,max:214},
       rating:{centers:[732.5,796.4,861.8,926.7,991.1],y:600,r:26}
     }
@@ -146,23 +146,86 @@
   function trackedUrl(platform) {
     return state.review?trackedUrlFor(state.review,platform):'';
   }
+  // Canonical account links match the public Stay Connected section.
+  const SOCIAL_ACCOUNTS=Object.freeze({
+    instagram:'https://www.instagram.com/moviereviewbypoorna/',
+    facebook:'https://www.facebook.com/moviereviewbypoorna',
+    x:'https://x.com/reviewbypoorna',
+    whatsapp:'https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546'
+  });
+  const X_REPLY_SEPARATOR='=== X FOLLOW-UP REPLY (POST 2/2) ===';
+  // Extra blank line after EVERY copy line, including cross-platform links.
+  const spaced=lines=>lines.filter(Boolean).join('\n\n');
+  const followEverywhere=()=>[
+    '📣 FOLLOW MOVIE REVIEWS BY POORNA EVERYWHERE',
+    '📸 Instagram: '+SOCIAL_ACCOUNTS.instagram,
+    '👍 Facebook: '+SOCIAL_ACCOUNTS.facebook,
+    '𝕏 X: '+SOCIAL_ACCOUNTS.x,
+    '📲 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
+  ];
+  // The follow-up reply is deliberately compact enough for an individual X post.
+  const xFollowUp=()=>spaced([
+    '🎬 More movie talk, four ways to follow:',
+    'IG: '+SOCIAL_ACCOUNTS.instagram,
+    'FB: '+SOCIAL_ACCOUNTS.facebook,
+    'X: '+SOCIAL_ACCOUNTS.x,
+    'WA: '+SOCIAL_ACCOUNTS.whatsapp
+  ]);
+  function splitXThread(message){
+    const index=message.indexOf(X_REPLY_SEPARATOR);
+    return index<0?{main:message.trim(),reply:''}:{
+      main:message.slice(0,index).trim(),reply:message.slice(index+X_REPLY_SEPARATOR.length).trim()
+    };
+  }
   function makeCaptions(review) {
-    const title=String(review.t||'').trim(),link=key=>trackedUrlFor(review,key);
-    // Images contain rating, language and MY POV. Captions invite the next click.
-    // Story/Status entries are posting notes; no duplicate public Story caption needed.
-    const instagram='https://www.instagram.com/moviereviewbypoorna/';
-    const channel='https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546';
-    const tags='#MovieReviewsByPoorna #MovieReview';
-    const xBase='🎬 '+title+'\n🍿 My verdict is up. Agree or disagree?\n🎟️ '+link('x-post');
-    const xCaption=xBase.length+1+tags.length<=280?xBase+'\n'+tags:xBase;
+    const title=String(review.t||'').trim(),link=platform=>trackedUrlFor(review,platform);
+    // Images already contain rating/language/MY POV; these messages promote reviews and other channels.
+    // Instagram post URLs are plain text rather than tappable links; the clickable path remains bio.
+    const xUrl=link('x-post');
+    let xMain=spaced(['🎬 '+title,'🍿 My verdict is up. What do you think?','🎟️ Full review: '+xUrl]);
+    if(xMain.length>280){
+      const room=Math.max(0,280-spaced(['🎬 ','🍿 Verdict is up!','🎟️ '+xUrl]).length);
+      xMain=spaced(['🎬 '+title.slice(0,room),'🍿 Verdict is up!','🎟️ '+xUrl]);
+    }
+    const xReply=xFollowUp();
     return {
-      'instagram-post':'🎬 '+title+' has reached the Auditorium!\n🍿 Worth your popcorn? Find out in the full review.\n🎟️ Link in bio.\n📣 Join our WhatsApp Channel: '+channel+'\n'+tags,
-      'instagram-story':'🎬 STORY PUBLISHING NOTE (do not paste as a caption)\n🎟️ Place the native link sticker in the reserved zone: '+link('instagram-story'),
-      'facebook-post':'🎬 '+title+' has reached my Auditorium!\n🍿 Agree with my verdict?\n🎟️ Read the full review: '+link('facebook-post')+'\n📸 Follow on Instagram: '+instagram,
-      'facebook-story':'🎬 STORY PUBLISHING NOTE (no caption required)\n🎟️ Attach the review URL using the native story-link feature, where available: '+link('facebook-story'),
-      'x-post':xCaption,
-      'whatsapp-channel':'🎬 *'+title+'*\n🍿 My verdict is up. Have you watched it yet?\n🎟️ Full review: '+link('whatsapp-channel')+'\n📸 More reviews on Instagram: '+instagram,
-      'whatsapp-status':'🎬 STATUS PUBLISHING NOTE (no repeated MY POV)\n🎟️ Add the link where your Status editor supports it; otherwise publish a linked text Status: '+link('whatsapp-status')
+      'instagram-post':spaced([
+        '🎬 '+title+' has reached the Auditorium!',
+        '🍿 Worth your popcorn? Read the full review to find out.',
+        '🎟️ FULL REVIEW LINK IN BIO (caption URLs are not tappable on Instagram).',
+        ...followEverywhere(),
+        '#MovieReviewsByPoorna #MovieReview'
+      ]),
+      'instagram-story':spaced([
+        '🎬 INSTAGRAM STORY PUBLISHING NOTE (not a Story caption)',
+        '🎟️ Add a native Link sticker in the reserved safe area: '+link('instagram-story'),
+        '📣 Our other platforms:',
+        ...followEverywhere().slice(1)
+      ]),
+      'facebook-post':spaced([
+        '🎬 '+title+' has reached the Auditorium!',
+        '🍿 Have you watched it? Tell me what you think.',
+        '🎟️ FULL REVIEW: '+link('facebook-post'),
+        ...followEverywhere(),
+        '#MovieReviewsByPoorna #MovieReview'
+      ]),
+      'facebook-story':spaced([
+        '🎬 FACEBOOK STORY PUBLISHING NOTE (not a Story caption)',
+        '🎟️ Attach the full review URL using the available native Story link option: '+link('facebook-story'),
+        ...followEverywhere()
+      ]),
+      'x-post':spaced([xMain,X_REPLY_SEPARATOR,xReply]),
+      'whatsapp-channel':spaced([
+        '🎬 *'+title+'*',
+        '🍿 My verdict is up. What is yours?',
+        '🎟️ FULL REVIEW: '+link('whatsapp-channel'),
+        ...followEverywhere()
+      ]),
+      'whatsapp-status':spaced([
+        '🎬 WHATSAPP STATUS PUBLISHING NOTE (do not paste as Story text)',
+        '🎟️ Add the review link using the available Status link option, or a separate linked text Status: '+link('whatsapp-status'),
+        ...followEverywhere()
+      ])
     };
   }
   function updateCaptionEditor() {
@@ -170,7 +233,10 @@
     inputs.captionText.value=state.captions[key] || '';
     inputs.trackedUrl.value=trackedUrl(key);
     const isStory=key.endsWith('story')||key.endsWith('status');
-    inputs.captionStatus.textContent=state.review?(isStory?'Story/Status posting instructions (not a public caption). Copy the tracked link for the native link feature.':'Edit and copy the short promotional caption for '+inputs.captionPlatform.selectedOptions?.[0]?.textContent+'.'):'Select a saved review.';
+    const isX=key==='x-post';
+    inputs.copyCaption.textContent=isX?'COPY X POST 1/2':'COPY MESSAGE';
+    inputs.copyXReply.hidden=!isX;
+    inputs.captionStatus.textContent=state.review?(isX?'Two-post X thread: copy and publish Post 1, then copy the links reply as Post 2. Both stay within X limits.':isStory?'Story/Status publishing notes, not text to overlay on the image. Copy the native review link separately.':'Editable social caption with a blank line between every line and all four social account URLs.'):'Select a saved review.';
   }
   async function copyText(value,message) {
     if(!value) {inputs.captionStatus.textContent='Nothing to copy yet.';return;}
@@ -409,7 +475,7 @@
     ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
     const cover=Math.max(w/image.width,h/image.height);
     const iw=image.width*cover,ih=image.height*cover;
-    ctx.filter='blur(15px) brightness(.55)';
+    ctx.filter='blur(12px) brightness(.45) saturate(.7)';
     ctx.drawImage(image,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
     ctx.filter='none';
     const contain=Math.min(w/image.width,h/image.height);
@@ -594,7 +660,13 @@
   inputs.postPlatform.addEventListener('change',()=>{state.postPlatform=inputs.postPlatform.value;applyDraft(state.format);requestRefresh();});
   inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
   inputs.captionText.addEventListener('input',()=>{if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;});
-  inputs.copyCaption.addEventListener('click',()=>copyText(inputs.captionText.value,'Caption copied.'));
+  inputs.copyCaption.addEventListener('click',()=>{const copy=inputs.captionPlatform.value==='x-post'?splitXThread(inputs.captionText.value).main:inputs.captionText.value;if(inputs.captionPlatform.value==='x-post'&&copy.length>280){inputs.captionStatus.textContent='The edited X main post exceeds 280 characters. Shorten it before copying.';return;}copyText(copy,'Message copied.');});
+  inputs.copyXReply.addEventListener('click',()=>{
+    if(inputs.captionPlatform.value!=='x-post')return;
+    const reply=splitXThread(inputs.captionText.value).reply;
+    if(reply.length>280){inputs.captionStatus.textContent='The edited X reply exceeds 280 characters. Shorten it before copying.';return;}
+    copyText(reply,'X follow-up reply copied.');
+  });
   inputs.copyLink.addEventListener('click',()=>copyText(inputs.trackedUrl.value,'Tracked URL copied.'));
   inputs.downloadCaptions.addEventListener('click',downloadCaptions);
   inputs.save.addEventListener('click',uploadMasters);
