@@ -123,7 +123,9 @@ async function deleteMedia(request: Request): Promise<Response> {
 
 const SOCIAL_MASTER_PREFIX = 'ui/social-studio/v1/';
 function socialMasterKey(kind: string | null): string | null {
-  return kind === 'post' || kind === 'story' ? SOCIAL_MASTER_PREFIX + kind + '-master' : null;
+  // Keep legacy Post accessible while moving to platform-specific approved masters.
+  return ['post','instagram-post','facebook-x-post','whatsapp-channel','story'].includes(kind || '')
+    ? SOCIAL_MASTER_PREFIX + kind + '-master' : null;
 }
 function assetResponse(asset: R2ObjectBody): Response {
   const headers = new Headers();
@@ -146,7 +148,7 @@ async function uploadSocialMaster(request: Request): Promise<Response> {
   const form = await request.formData().catch(() => null);
   const key = socialMasterKey(String(form?.get('kind') || ''));
   const file = form?.get('file');
-  if (!key || !(file instanceof File)) return json({ error: 'Select post/story and a valid image.' }, 400);
+  if (!key || !(file instanceof File)) return json({ error: 'Select an approved social media platform and a valid image.' }, 400);
   if (!['image/png','image/webp'].includes(file.type) || file.size < 100 || file.size > 8 * 1024 * 1024) {
     return json({ error: 'Master must be a PNG or WebP under 8 MB.' }, 400);
   }
