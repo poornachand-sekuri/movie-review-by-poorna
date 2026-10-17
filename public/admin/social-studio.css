@@ -71,6 +71,17 @@
 .social-rich-toolbar .social-swatch.cyan {background:#19F9FF!important}
 .social-rich-toolbar .social-swatch.gold {background:#F7D154!important}
 .social-rich-toolbar .social-swatch.purple {background:#C770FF!important}
+.social-rich-toolbar button.social-swatch,
+.social-rich-toolbar button.social-swatch:hover,
+.social-rich-toolbar button.social-swatch:focus-visible {
+  background:var(--swatch,#F1F1F1)!important;
+}
+.social-rich-toolbar .social-swatch[aria-pressed="true"]{outline:2px solid #F1F1F1;outline-offset:2px;box-shadow:0 0 10px var(--swatch,#fff)}
+.social-rich-toolbar [data-rich-action=font]{flex:1 1 155px;max-width:245px;min-width:138px}
+.social-rich-toolbar [data-rich-action=hex]{width:86px!important;min-width:86px;text-transform:uppercase;letter-spacing:.04em}
+.social-rich-toolbar [data-rich-action=hex]:invalid{border-color:#f7010e!important}
+.social-rich-toolbar .social-swatch{flex:0 0 23px;width:23px!important;height:23px;min-height:23px}
+
 [data-rich-editor] {padding:14px 13px;outline:0;color:#f1f1f1;white-space:pre-wrap;overflow-wrap:anywhere;
   min-height:65px;max-height:360px;overflow-y:auto;cursor:text;caret-color:#f7010e;}
 [data-rich-editor="pov"]{min-height:145px}
