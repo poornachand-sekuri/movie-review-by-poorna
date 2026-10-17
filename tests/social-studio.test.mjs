@@ -193,7 +193,7 @@ test('Locked master icons and metadata headers are not redrawn over approved art
   assert.ok(!h.drawnText.includes('RELEASE DATE'),'No release date overlay');
   assert.ok(!h.drawnText.includes("POORNA'S RATING"),'Master already contains rating header');
   assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Oswald')));
-  assert.ok(!h.drawnText.some(d=>/2\\.25\\/5/.test(d)),'No numeric rating');
+  assert.ok(!h.drawnText.some(d=>d.includes('2.25/5')),'No numeric rating');
 });
 test('Rich edits support color, font, size, glow, italic and underline on exports',()=>{
   assert.match(ADMIN_HTML,/data-rich-action="color"/);
@@ -215,8 +215,8 @@ test('Story metadata uses two columns and retains an empty dynamic title ticket'
   assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
 });
 test('MY POV has top inset and stays inside the new approved red panel',()=>{
-  assert.match(STUDIO_JS,/pov:\\[484,754,523,120\\]/);
-  assert.match(STUDIO_JS,/pov:\\[93,1352,892,220\\]/);
+  assert.ok(STUDIO_JS.includes('pov:[484,754,523,120]'));
+  assert.ok(STUDIO_JS.includes('pov:[93,1352,892,220]'));
   assert.ok(754+120<891,'Post MY POV has interior bottom clearance');
   assert.ok(1352+220<1612,'Story MY POV has interior bottom clearance');
 });
