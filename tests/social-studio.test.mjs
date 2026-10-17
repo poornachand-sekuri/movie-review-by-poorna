@@ -385,7 +385,10 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
-  assert.ok(ADMIN_HTML.includes('social-studio.css?v=6'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=7'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=10'));
+  assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=3'));
+
 });
 test('All dynamic poster draws use inner rounded clipping and never paint over the approved borders',()=>{
   for(const needle of ['function posterOpeningPath(ctx,box)','ctx.quadraticCurveTo(','posterOpeningPath(ctx,box);','ctx.clip();','const bleed=16,cover=Math.max','const contain=Math.min',"ctx.filter='none'"]){
@@ -429,4 +432,63 @@ test('Poster rectangles have verified clearances from the four approved master b
     assert.ok(STUDIO_JS.includes('poster:['+[b.x,b.y,b.w,b.h].join(',')+']'),b.id+' measured aperture used');
   }
   assert.ok(STUDIO_JS.includes('y:575.8,r:24.5'),'Facebook rating centered on baked white stars');
+});
+
+test('Both promotional rich editors provide twelve fonts, fourteen colors and custom HEX',()=>{
+  const fonts=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton',
+    'Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','Merriweather'];
+  const palettes=['#060505','#F1F1F1','#FFF7E6','#F7010E','#F7D154','#FFBF47',
+    '#FF8F59','#19F9FF','#4F9FFF','#C770FF','#F578BA','#42D7A4','#B4D6FF','#AEB7C2'];
+  const blocks=['title','pov'].map(field=>{
+    const start=ADMIN_HTML.indexOf('data-rich-toolbar="'+field+'"');
+    const end=ADMIN_HTML.indexOf('data-rich-editor="'+field+'"',start);
+    assert.ok(start>=0&&end>start,field+' formatting toolbar exists');
+    return ADMIN_HTML.slice(start,end);
+  });
+  for(const block of blocks){
+    for(const font of fonts)assert.ok(block.includes('value="'+font+'"'),font+' font available in both editors');
+    for(const hex of palettes)assert.ok(block.includes('data-rich-color="'+hex+'"'),hex+' quick color available');
+    assert.ok(block.includes('data-rich-action="hex"'),'Custom HEX entry');
+    assert.ok(block.includes('data-rich-action="color"'),'Unrestricted color wheel');
+    assert.equal((block.match(/data-rich-color=/g)||[]).length,14);
+  }
+  assert.ok(STUDIO_JS.includes('SOCIAL_FONTS.includes(style?.font)'),'export renderer uses expanded fonts');
+  assert.ok(RICH_JS.includes("command==='hex'"),'Selected text can use a custom HEX');
+  assert.ok(RICH_JS.includes('editor.style.color=base.color'),'Preview respects base text color');
+  assert.ok(STUDIO_JS.includes('document.fonts.load(\'700 48px "')),
+    'Fonts load before measurement and image export');
+});
+test('WATCHED IN supports per-format font, font size, auto-fit and color without editing the movie record',async()=>{
+  for(const id of ['socialLanguageFont','socialLanguageSize','socialLanguageColor','socialLanguageAuto'])
+    assert.ok(ADMIN_HTML.includes('id="'+id+'"'),id+' must be editable');
+  const h=harness();
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.font.includes('Oswald')),'Default cinematic font');
+  const before=h.styledDraws.length;
+  h.element('socialLanguageFont').value='Montserrat';
+  h.element('socialLanguageFont').listeners.input();await settle();
+  h.element('socialLanguageSize').value='44';
+  h.element('socialLanguageSize').listeners.input();await settle();
+  h.element('socialLanguageColor').value='#f7d154';
+  h.element('socialLanguageColor').listeners.input();await settle();
+  assert.ok(h.styledDraws.slice(before).some(x=>x.text==='Telugu'&&x.font.includes('Montserrat')&&x.color==='#f7d154'));
+  assert.equal(h.element('socialLanguageFont').value,'Montserrat');
+  h.buttons.story.listeners.click();await settle();
+  assert.equal(h.element('socialLanguageFont').value,'Oswald','Story draft keeps its own typography');
+  h.buttons.post.listeners.click();await settle();
+  assert.equal(h.element('socialLanguageFont').value,'Montserrat','Post language styling is preserved');
+  assert.equal(h.element('socialLanguageColor').value,'#f7d154');
+});
+test('WATCHED IN long values auto-fit or warn before download, never cross section borders',async()=>{
+  const h=harness();
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  h.element('socialLanguage').value='Telugu / Hindi / Tamil / Kannada';
+  h.element('socialLanguage').listeners.input();await settle();
+  assert.match(h.element('socialWarnings').textContent,/WATCHED IN value is too long|Preview ready/);
+  h.element('socialLanguageAuto').checked=false;
+  h.element('socialLanguageAuto').listeners.change();await settle();
+  assert.match(h.element('socialWarnings').textContent,/WATCHED IN value is too long/);
+  assert.equal(h.element('socialDownloadPost').disabled,true);
 });
