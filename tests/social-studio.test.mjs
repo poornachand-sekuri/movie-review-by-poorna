@@ -108,7 +108,7 @@ test('Social Studio initializes, previews movie data, and retains the original v
   assert.equal(h.element('socialDownloadStory').disabled,false);
   assert.ok(h.drawnText.some(t=>t.includes('JOKER')));
   assert.ok(!h.drawnText.some(t=>/2\.25\/5/.test(t)));
-  assert.ok(h.filledRects.some(r=>r.fillStyle==='#f7010e' && Math.abs(r.width - 10.5) < 0.01), 'Quarter-star red fill drawn correctly');
+  assert.ok(h.filledRects.some(r=>r.fillStyle==='#f7010e' && Math.abs(r.width - 12.5) < 0.01), 'Quarter-star red fill drawn correctly');
 });
 
 test('MY POV overflow blocks PNG exports instead of silently truncating', async()=>{
@@ -123,9 +123,9 @@ test('MY POV overflow blocks PNG exports instead of silently truncating', async(
   assert.match(h.element('socialWarnings').textContent,/cannot fit without clipping/);
 });
 
-test('Post and Story use only two approved template dimensions',()=>{
-  assert.match(STUDIO_JS,/post:\s*\{\s*size: \[1080,1080\]/);
-  assert.match(STUDIO_JS,/story:\s*\{\s*size: \[1080,1920\]/);
+test('Four approved templates share two export dimensions',()=>{
+  assert.match(STUDIO_JS,/post:\s*\{\s*size:\s*\[1080,1080\]/);
+  assert.match(STUDIO_JS,/story:\s*\{\s*size:\s*\[1080,1920\]/);
   assert.match(STUDIO_JS,/for\s*\(let i = 0; i < 5; i\+\+\)/);
   assert.doesNotMatch(STUDIO_JS,/numericX|value\.toFixed\(2\).*\/5/);
   assert.doesNotMatch(STUDIO_JS,/\.slice\(0,\s*\d+\)\s*\+\s*['"]\.\.\./);
@@ -141,7 +141,7 @@ test('Post and Story captions use separate tracked links and can be independentl
   h.element('socialCaptionText').listeners.input();
   h.element('socialCaptionPlatform').value='facebook-post';
   h.element('socialCaptionPlatform').listeners.change();
-  assert.match(h.element('socialCaptionText').value,/NOW REVIEWED/);
+  assert.match(h.element('socialCaptionText').value,/Auditorium/);
   assert.match(h.element('socialTrackedUrl').value,/utm_source=facebook/);
   h.element('socialCaptionPlatform').value='instagram-post';
   h.element('socialCaptionPlatform').listeners.change();
@@ -184,21 +184,17 @@ test('Inline rich-text toolbars replace detached per-word editor controls',()=>{
   assert.doesNotThrow(()=>new vm.Script(RICH_JS));
 });
 
-test('Metadata headers and silver value typography are rendered inside the frames',async()=>{
+test('Locked master icons and metadata headers are not redrawn over approved art',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  for(const text of ['WATCHED IN',"POORNA'S RATING",'RELEASE DATE','Telugu','26 Aug 2026']) {
-    assert.ok(h.drawnText.includes(text),'Expected text drawn: '+text);
-  }
-  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Cinzel') && d.y===439));
-  assert.ok(h.styledDraws.some(d=>d.text==='26 Aug 2026' && d.font.includes('Cinzel') && d.y===700));
-  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Cinzel') && d.y===650));
-  assert.ok(h.styledDraws.some(d=>d.text==='26 Aug 2026' && d.font.includes('Cinzel') && d.y===978));
-  assert.ok(h.styledDraws.some(d=>d.text==='WATCHED IN' && d.y===382));
-  assert.ok(h.styledDraws.some(d=>d.text==='WATCHED IN' && d.y===575));
-  assert.ok(!h.drawnText.some(d=>/2\.25\/5/.test(d)),'No numeric rating may be added');
+  const drawn=(value,y)=>h.styledDraws.some(d=>d.text===value && d.y===y);
+  assert.ok(drawn('Telugu',627),'Post language is positioned in left metadata panel');
+  assert.ok(drawn('Telugu',1212),'Story language is positioned in left metadata panel');
+  assert.ok(!h.drawnText.includes('RELEASE DATE'),'No release date overlay');
+  assert.ok(!h.drawnText.includes("POORNA'S RATING"),'Master already contains rating header');
+  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Oswald')));
+  assert.ok(!h.drawnText.some(d=>/2\\.25\\/5/.test(d)),'No numeric rating');
 });
-
 test('Rich edits support color, font, size, glow, italic and underline on exports',()=>{
   assert.match(ADMIN_HTML,/data-rich-action="color"/);
   assert.match(RICH_JS,/style\.color/);
@@ -210,33 +206,20 @@ test('Rich edits support color, font, size, glow, italic and underline on export
 });
 
 
-test('Story metadata rows respect the approved master divider coordinates',async()=>{
+test('Story metadata uses two columns and retains an empty dynamic title ticket',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  // Silver master row edges: [538,705], [705,866], [866,1039].
-  // Headings must sit at least 20px within the rows, and values at least 25px.
-  const drawn=(text,y)=>h.styledDraws.some(d=>d.text===text && d.y===y);
-  assert.ok(drawn('WATCHED IN',575));
-  assert.ok(drawn('Telugu',650));
-  assert.ok(drawn("POORNA'S RATING",737));
-  assert.ok(drawn('RELEASE DATE',902));
-  assert.ok(drawn('26 Aug 2026',978));
-  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e' && r.y===792);
-  assert.ok(stars.length>=2,'Story rating must be red stars centered inside row 2');
-  const rows=[[538,705],[705,866],[866,1039]];
-  for(const [i,ys] of [[0,[575,650]],[1,[737,813]],[2,[902,978]]]){
-    assert.ok(ys.every(y=>y>rows[i][0]+20 && y<rows[i][1]-25),'Story row '+i+' must have padding');
-  }
-  assert.ok(!h.drawnText.some(t=>/2\.25\/5/.test(t)));
+  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1212));
+  assert.ok(!h.drawnText.some(x=>/RELEASE DATE|26 Aug 2026/.test(x)));
+  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&r.y===1165);
+  assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
 });
-
-test('Post MY POV has inset space below the header and remains inside its panel',()=>{
-  assert.match(STUDIO_JS,/pov: \[92,824,897,181\]/);
-  const [top,height]=[824,181];
-  assert.ok(top>=820,'Post MY POV content must start beneath the red tab');
-  assert.ok(top+height<1017,'Post MY POV must remain inside the original bottom border');
+test('MY POV has top inset and stays inside the new approved red panel',()=>{
+  assert.match(STUDIO_JS,/pov:\\[484,754,523,120\\]/);
+  assert.match(STUDIO_JS,/pov:\\[93,1352,892,220\\]/);
+  assert.ok(754+120<891,'Post MY POV has interior bottom clearance');
+  assert.ok(1352+220<1612,'Story MY POV has interior bottom clearance');
 });
-
 
 test('Partial-word selection renders only selected letters in the chosen color and font',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
@@ -263,23 +246,38 @@ test('No duplicate typography sliders and obsolete detached word controls remain
   assert.match(RICH_JS,/editor\.style\.fontSize=Number\(base\.size\)/);
 });
 
-test('All seven generated captions have cinema-themed calls to action and accurate tracked URLs',async()=>{
+test('Seven short captions promote clicks without duplicating MY POV text',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  const platforms=['instagram-post','instagram-story','facebook-post','facebook-story','x-post','whatsapp-channel','whatsapp-status'];
-  for(const platform of platforms){
+  for(const platform of ['instagram-post','instagram-story','facebook-post','facebook-story','x-post','whatsapp-channel','whatsapp-status']){
     h.element('socialCaptionPlatform').value=platform;
     h.element('socialCaptionPlatform').listeners.change();
     const caption=h.element('socialCaptionText').value;
-    assert.match(caption,/🎬/u,platform+' should have cinema icon');
-    assert.match(caption,/🎟️/u,platform+' should have review CTA icon');
-    assert.ok(caption.includes('utm_source='),platform+' must contain tracked URL');
+    assert.match(caption,/🎬/u,platform+' cinema icon');
+    assert.match(caption,/🎟️/u,platform+' CTA icon');
+    assert.doesNotMatch(caption,/Geetu aimed for a Joker-like/,platform+' must not repeat complete MY POV');
+    assert.match(h.element('socialTrackedUrl').value,/utm_source=/);
+    if(platform!=='instagram-post')assert.match(caption,/utm_source=/);
   }
   h.element('socialCaptionPlatform').value='x-post';
   h.element('socialCaptionPlatform').listeners.change();
-  assert.ok(h.element('socialCaptionText').value.length<=280,'X caption fits within 280 characters');
+  assert.ok(h.element('socialCaptionText').value.length<=280);
   h.element('socialCaptionPlatform').value='whatsapp-channel';
   h.element('socialCaptionPlatform').listeners.change();
-  assert.match(h.element('socialCaptionText').value,/\*MY POV\*/);
-  assert.match(h.element('socialCaptionText').value,/Geetu aimed for a Joker-like/);
+  assert.match(h.element('socialCaptionText').value,/instagram.com/);
+  assert.match(h.element('socialCaptionText').value,/whatsapp/);
+});
+
+test('Admin UI allows 4 approved masters and Post platform selection without editing review records',async()=>{
+  for(const id of ['socialInstagramFile','socialFacebookXFile','socialWhatsAppFile','socialStoryFile','socialPostPlatform'])
+    assert.ok(ADMIN_HTML.includes('id="'+id+'"'),id+' must exist');
+  assert.match(ADMIN_API,/facebook-x-post/);
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  const selected=h.element('socialPostPlatform');
+  selected.value='facebook-x-post';selected.listeners.change();await settle();
+  assert.match(h.element('socialEditingMode').textContent,/FACEBOOK X POST/);
+  selected.value='whatsapp-channel';selected.listeners.change();await settle();
+  assert.match(h.element('socialEditingMode').textContent,/WHATSAPP CHANNEL/);
+  assert.ok(!STUDIO_JS.includes('drawPostMeta('));
 });
