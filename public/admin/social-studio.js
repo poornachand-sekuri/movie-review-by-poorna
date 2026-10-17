@@ -5,6 +5,7 @@
     movie: $('socialMovie'), status: $('socialMovieStatus'), title: $('socialTitle'), pov: $('socialPov'),
     titleAuto: $('socialTitleAuto'), titleAlign: $('socialTitleAlign'), titleCase: $('socialTitleCase'),
     povAuto: $('socialPovAuto'), povAlign: $('socialPovAlign'), povLine: $('socialPovLine'),
+    languageFont: $('socialLanguageFont'), languageSize: $('socialLanguageSize'), languageColor: $('socialLanguageColor'), languageAuto: $('socialLanguageAuto'),
     instagramFile: $('socialInstagramFile'), facebookXFile: $('socialFacebookXFile'), whatsAppFile: $('socialWhatsAppFile'), storyFile: $('socialStoryFile'), postPlatform: $('socialPostPlatform'), save: $('socialSaveTemplates'),
     assetsStatus: $('socialAssetsStatus'), canvas: $('socialCanvas'), warnings: $('socialWarnings'),
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
@@ -19,6 +20,8 @@
     seq: 0, drafts: { post:null, story:null }, captions:{}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
+  const SOCIAL_FONTS=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','Merriweather'];
+  const COLOR_HEX=/^#[0-9a-f]{6}$/i;
   // Poster apertures are strictly inset inside the bright ornamental frame edges,
   // pixel-measured from the final 1080px masters. Never draw over master borders.
   // FB star centers measured from the five baked white outlines (y=575.8, not 580.5).
@@ -302,7 +305,7 @@
         let style=null;
         for(const range of ranges)if(range.start<=at&&range.end>=stop)style=range;
         const size=Math.max(17,Math.min(100,Number(style?.size)||options.size)*scale);
-        const family=['Inter','Oswald','Cinzel','Source Serif 4'].includes(style?.font)?style.font:options.family;
+        const family=SOCIAL_FONTS.includes(style?.font)?style.font:options.family;
         const weight=['400','600','700','800'].includes(String(style?.weight))?style.weight:options.weight;
         const font=(style?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
         const segment=raw.slice(at,stop);
@@ -374,7 +377,8 @@
       rating:review.r == null?'':String(review.r),
       titleCase:'uppercase',
       titleStyle:{ family:'Oswald', weight:'700', align:'center',color:'#060505',size:59,auto:true,line:1.11 },
-      povStyle:{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:48,auto:true,line:1.22 }
+      povStyle:{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:48,auto:true,line:1.22 },
+      languageStyle:{family:'Oswald',size:38,color:'#f1f1f1',auto:true}
     };
   }
   function persistDraft(){
@@ -387,6 +391,12 @@
       }
     }
     draft.language=inputs.language.value;
+    draft.languageStyle={
+      family:SOCIAL_FONTS.includes(inputs.languageFont.value)?inputs.languageFont.value:'Oswald',
+      size:Math.max(18,Math.min(52,Number(inputs.languageSize.value)||38)),
+      color:COLOR_HEX.test(inputs.languageColor.value)?inputs.languageColor.value:'#f1f1f1',
+      auto:inputs.languageAuto.checked
+    };
     const r=inputs.rating.value;
     if(r!=='' && (!Number.isFinite(Number(r)) || Number(r)<0 || Number(r)>5 || !Number.isInteger(Number(r)*4))) {
       inputs.rating.setCustomValidity('Use a rating from 0 to 5 in 0.25 increments.');
@@ -405,6 +415,11 @@
     const draft=state.drafts[kind];if(!draft)return;
     inputs.title.value=draft.title;inputs.pov.value=draft.pov;
     inputs.language.value=draft.language;
+    const languageStyle=draft.languageStyle||{family:'Oswald',size:38,color:'#f1f1f1',auto:true};
+    inputs.languageFont.value=languageStyle.family;
+    inputs.languageSize.value=String(languageStyle.size);
+    inputs.languageColor.value=languageStyle.color;
+    inputs.languageAuto.checked=languageStyle.auto;
     inputs.rating.value=draft.rating;
     inputs.rating.setCustomValidity('');
     inputs.titleCase.value=draft.titleCase;
@@ -585,27 +600,40 @@
       ctx.restore();
     }
   }
-  function drawLanguage(ctx,value,place) {
+  function drawLanguage(ctx,value,place,style) {
     const language=String(value||'').trim();
-    if(!language)return;
+    if(!language)return {ok:true};
+    const settings=style||{family:'Oswald',size:38,color:'#f1f1f1',auto:true};
+    const family=SOCIAL_FONTS.includes(settings.family)?settings.family:'Oswald';
+    const color=COLOR_HEX.test(settings.color||'')?settings.color:'#f1f1f1';
+    const preferred=Math.max(18,Math.min(52,Number(settings.size)||38));
     ctx.save();
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#f1f1f1';
-    ctx.shadowColor='rgba(247,1,14,.2)';ctx.shadowBlur=3;
-    let size=32;
-    while(size>18){
-      ctx.font='700 '+size+'px "Oswald"';
-      if(ctx.measureText(language).width<=place.max)break;
+    ctx.fillStyle=color;
+    // Restrained cinema-red glow: complements baked white labels rather than
+    // overpowering the stars or turning longer language names into a blur.
+    ctx.shadowColor='rgba(247,1,14,.17)';ctx.shadowBlur=2;
+    let size=preferred;
+    while(size>=18){
+      ctx.font='700 '+size+'px "'+family+'"';
+      if(ctx.measureText(language).width<=place.max-8)break;
+      if(!settings.auto)break;
       size--;
+    }
+    if(ctx.measureText(language).width>place.max-8){
+      ctx.restore();
+      return {ok:false,message:'WATCHED IN value is too long for this font and size. Enable auto-fit or choose a narrower font.'};
     }
     ctx.fillText(language,place.cx,place.y);
     ctx.restore();
+    return {ok:true,size};
   }
   function drawApprovedMeta(ctx,kind) {
     const draft=state.drafts[kind],g=layoutFor(kind);
-    // Section headers are baked into the master; only render dynamic values.
-    drawLanguage(ctx,draft.language,g.language);
+    // Headers and white outlines are baked into the approved master.
+    const languageResult=drawLanguage(ctx,draft.language,g.language,draft.languageStyle);
     drawRating(ctx,draft.rating,g.rating);
+    return languageResult;
   }
   function makeImageCanvas(kind) {
     const canvas=document.createElement('canvas');
@@ -639,7 +667,8 @@
         if(ratio<.98)notes.push('Title auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
       }
     }
-    drawApprovedMeta(ctx,kind);
+    const watchedFit=drawApprovedMeta(ctx,kind);
+    if(!watchedFit.ok)errors.push(watchedFit.message);
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
@@ -654,7 +683,18 @@
   }
   let drawQueued=false;
   async function refreshAll(){
-    await Promise.all([document.fonts.load('700 60px "Oswald"'), document.fonts.load('600 48px "Inter"'),document.fonts.load('600 48px "Source Serif 4"'),document.fonts.load('700 60px "Cinzel"')]);
+    // Wait for newly selected Google Fonts BEFORE measuring canvas text;
+    // otherwise the export may differ from the rich-text editor preview.
+    const fonts=new Set(['Oswald','Inter']);
+    for(const draft of Object.values(state.drafts)){
+      if(!draft)continue;
+      for(const field of ['title','pov']){
+        fonts.add(draft[field+'Style'].family);
+        for(const range of draft.styles?.[field]||[])if(SOCIAL_FONTS.includes(range.font))fonts.add(range.font);
+      }
+      if(SOCIAL_FONTS.includes(draft.languageStyle?.family))fonts.add(draft.languageStyle.family);
+    }
+    await Promise.all([...fonts].map(font=>document.fonts.load('700 48px "'+font+'"').catch(()=>[])));
     state.renders.post=renderFrame('post');
     state.renders.story=renderFrame('story');
     displayCurrent();
@@ -749,7 +789,7 @@
   inputs.dlPost.addEventListener('click',()=>downloadImage('post'));
   inputs.dlStory.addEventListener('click',()=>downloadImage('story'));
   document.querySelectorAll('[data-social-format]').forEach(button=>button.addEventListener('click',()=>switchFormat(button.dataset.socialFormat)));
-  for(const name of ['title','pov','language','rating','titleAlign','titleCase','titleAuto','povAlign','povLine','povAuto']) {
+  for(const name of ['title','pov','language','languageFont','languageSize','languageColor','languageAuto','rating','titleAlign','titleCase','titleAuto','povAlign','povLine','povAuto']) {
     const input=inputs[name];
     input.addEventListener('input',()=>{
       persistDraft();

@@ -73,6 +73,7 @@
     editor.replaceChildren(fragment);
     const base=draft[field+'Style'];
     editor.style.fontFamily='"'+base.family+'"';
+    editor.style.color=base.color||(field==='title'?'#060505':'#f1f1f1');
     editor.style.fontSize=Number(base.size)+'px';
     editor.style.fontWeight=base.weight;
     editor.style.lineHeight=String(base.line);
@@ -133,7 +134,8 @@
     const range=styleAt(draft.styles?.[field]||[],at,at+1)||{};
     const base=draft[field+'Style'];
     const values={font:range.font||base.family,size:range.size||base.size,
-      color:range.color||'#f1f1f1',effect:range.effect||'none'};
+      color:range.color||base.color||(field==='title'?'#060505':'#f1f1f1'),effect:range.effect||'none'};
+    values.hex=values.color.toUpperCase();
     for(const [action,value] of Object.entries(values)){
       const control=toolbar.querySelector('[data-rich-action="'+action+'"]');
       if(control)control.value=String(value);
@@ -181,9 +183,14 @@
   }
   function action(field,command,value){
     if(command==='clear')return applyStyle(field,null,true);
-    if(command==='font')return applyStyle(field,{font:value},false);
+    if(command==='font'){
+      const select=toolbars[field].querySelector('[data-rich-action="font"]');
+      if(![...select.options].some(option=>option.value===value))return;
+      return applyStyle(field,{font:value},false);
+    }
     if(command==='size')return applyStyle(field,{size:Math.max(18,Math.min(100,Number(value)||42))},false);
-    if(command==='color' && colorPattern.test(value))return applyStyle(field,{color:value},false);
+    if((command==='color'||command==='hex') && colorPattern.test(value))return applyStyle(field,{color:value.toUpperCase()},false);
+    if(command==='hex')setHint(field,'Enter a 6-digit hex color such as #F7010E.');
     if(command==='effect')return applyStyle(field,{effect:value},false);
     const draft=bridge()?.getDraft(),sel=savedSelection[field];
     if(!draft)return;
@@ -238,13 +245,14 @@
       if(cmd)action(field,cmd);
       if(target.dataset.richColor){
         toolbar.querySelector('[data-rich-action="color"]').value=target.dataset.richColor;
+        toolbar.querySelector('[data-rich-action="hex"]').value=target.dataset.richColor.toUpperCase();
         action(field,'color',target.dataset.richColor);
       }
     });
     toolbar.addEventListener('change',event=>{
       const control=event.target;
       const cmd=control.dataset.richAction;
-      if(['font','size','color','effect'].includes(cmd))action(field,cmd,control.value);
+      if(['font','size','color','hex','effect'].includes(cmd))action(field,cmd,control.value);
     });
     const hint=document.createElement('p');
     hint.className='social-rich-hint';
