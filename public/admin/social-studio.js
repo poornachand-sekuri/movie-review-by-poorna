@@ -5,35 +5,32 @@
     movie: $('socialMovie'), status: $('socialMovieStatus'), title: $('socialTitle'), pov: $('socialPov'),
     titleAuto: $('socialTitleAuto'), titleAlign: $('socialTitleAlign'), titleCase: $('socialTitleCase'),
     povAuto: $('socialPovAuto'), povAlign: $('socialPovAlign'), povLine: $('socialPovLine'),
-    postFile: $('socialPostFile'), storyFile: $('socialStoryFile'), save: $('socialSaveTemplates'),
+    instagramFile: $('socialInstagramFile'), facebookXFile: $('socialFacebookXFile'), whatsAppFile: $('socialWhatsAppFile'), storyFile: $('socialStoryFile'), postPlatform: $('socialPostPlatform'), save: $('socialSaveTemplates'),
     assetsStatus: $('socialAssetsStatus'), canvas: $('socialCanvas'), warnings: $('socialWarnings'),
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
-    editingMode: $('socialEditingMode'), language: $('socialLanguage'), releaseDate: $('socialReleaseDate'), rating: $('socialRating'),
+    editingMode: $('socialEditingMode'), language: $('socialLanguage'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
     copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus')
   };
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
-    masters: { post: null, story: null }, renders: {},
+    masters: { 'instagram-post':null, 'facebook-x-post':null, 'whatsapp-channel':null, story:null }, postPlatform:'instagram-post', renders: {},
     seq: 0, drafts: { post:null, story:null }, captions:{}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
+  // Pixel coordinates for the four October 17 approved ticket masters.
   const geometry = {
     post: {
-      size: [1080,1080],
-      poster: [158,215,310,505],
-      title: [572,221,423,95],
-      // Extra space beneath the MY POV tab, with the existing lower frame preserved.
-      pov: [92,824,897,181],
+      size:[1080,1080],poster:[53,291,380,598],title:[504,335,490,85],pov:[484,754,523,120],
+      language:{cx:589,y:627,max:225},rating:{x:757,y:599,r:25,gap:59}
     },
     story: {
-      size: [1080,1920],
-      poster: [155,330,314,675],
-      title: [588,343,400,126],
-      pov: [123,1139,837,267],
+      size:[1080,1920],poster:[246,254,568,624],title:[156,925,768,96],pov:[93,1352,892,220],
+      language:{cx:254,y:1212,max:310},rating:{x:569,y:1195,r:30,gap:79}
     }
   };
+  const POST_KINDS=['instagram-post','facebook-x-post','whatsapp-channel'];
   function errorMessage(error) { return error instanceof Error ? error.message : String(error); }
   function safeSlug(value) { return String(value || 'movie').replace(/[^a-z0-9-]/gi, '-').slice(0,100); }
   function apiImage(src) {
@@ -66,7 +63,7 @@
     try {
       const results = await Promise.all([
         jsonApi('/api/admin/reviews?compact=1'),
-        loadMaster('post'), loadMaster('story'),
+        ...POST_KINDS.map(loadMaster), loadMaster('story'),
         document.fonts.ready
       ]);
       for (const review of results[0]) {
@@ -84,8 +81,7 @@
     }
   }
   function updateAssetStatus() {
-    inputs.assetsStatus.textContent = 'Post: ' + (state.masters.post ? 'loaded' : 'not uploaded') +
-      ' · Story: ' + (state.masters.story ? 'loaded' : 'not uploaded') + '.';
+    inputs.assetsStatus.textContent = [...POST_KINDS,'story'].map(kind => kind+': '+(state.masters[kind]?'loaded':'not uploaded')).join(' · ')+'.';
   }
   async function chooseMovie() {
     const id = inputs.movie.value;
@@ -264,7 +260,7 @@
         ctx.save();
         ctx.font=piece.font;
         ctx.textAlign='left';ctx.textBaseline='middle';
-        ctx.fillStyle=piece.style?.color||'#f1f1f1';
+        ctx.fillStyle=piece.style?.color||options.color||'#f1f1f1';
         if(piece.style?.effect==='glow'){
           ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=Math.max(5,piece.size*.3);
         }else if(piece.style?.effect==='shadow'){
@@ -288,10 +284,10 @@
   function defaultDraft(review) {
     return {
       title:review.t || '',pov:review.v || '',styles:{title:[],pov:[]},language:review.l || '',
-      releaseDate:review.rd || '', rating:review.r == null?'':String(review.r),
+      rating:review.r == null?'':String(review.r),
       titleCase:'uppercase',
-      titleStyle:{ family:'Oswald', weight:'700', align:'left',size:58,auto:true,line:1.11 },
-      povStyle:{ family:'Inter',weight:'600',align:'left',size:42,auto:true,line:1.28 }
+      titleStyle:{ family:'Oswald', weight:'700', align:'center',color:'#060505',size:59,auto:true,line:1.11 },
+      povStyle:{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:37,auto:true,line:1.22 }
     };
   }
   function persistDraft(){
@@ -303,7 +299,7 @@
         draft[field]=inputs[field].value;
       }
     }
-    draft.language=inputs.language.value;draft.releaseDate=inputs.releaseDate.value;
+    draft.language=inputs.language.value;
     const r=inputs.rating.value;
     if(r!=='' && (!Number.isFinite(Number(r)) || Number(r)<0 || Number(r)>5 || !Number.isInteger(Number(r)*4))) {
       inputs.rating.setCustomValidity('Use a rating from 0 to 5 in 0.25 increments.');
@@ -321,7 +317,7 @@
   function applyDraft(kind){
     const draft=state.drafts[kind];if(!draft)return;
     inputs.title.value=draft.title;inputs.pov.value=draft.pov;
-    inputs.language.value=draft.language;inputs.releaseDate.value=draft.releaseDate;
+    inputs.language.value=draft.language;
     inputs.rating.value=draft.rating;
     inputs.rating.setCustomValidity('');
     inputs.titleCase.value=draft.titleCase;
@@ -331,17 +327,11 @@
       inputs[prefix+'Auto'].checked=style.auto;
     }
     inputs.povLine.value=String(draft.povStyle.line);
-    inputs.editingMode.textContent=kind==='post'?'POST IMAGE':'STORY IMAGE';
+    inputs.editingMode.textContent=kind==='post'?'POST IMAGE · '+state.postPlatform.toUpperCase().replaceAll('-',' '):'STORY IMAGE';
     window.SocialStudioRich?.sync();
     document.querySelectorAll('[data-social-format]').forEach(button=>button.classList.toggle('active',button.dataset.socialFormat===kind));
   }
 
-  function dateShort(text) {
-    if (!/^\d{4}-\d\d-\d\d$/.test(String(text || ''))) return 'Not set';
-    const parts = text.split('-').map(Number);
-    const date = new Date(Date.UTC(parts[0], parts[1]-1, parts[2]));
-    return new Intl.DateTimeFormat('en-GB', { day:'2-digit', month:'short', year:'numeric', timeZone:'UTC' }).format(date);
-  }
   function setFont(ctx, options, size) {
     ctx.font = options.weight + ' ' + size + 'px "' + options.family + '"';
   }
@@ -389,7 +379,7 @@
     setFont(ctx, options, layout.size);
     ctx.textAlign = options.align;
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f1f1f1';
+    ctx.fillStyle = options.color || '#f1f1f1';
     const px = options.align === 'center' ? x + width/2 : x + 2;
     const total = layout.lineH * layout.lines.length;
     const initial = y + Math.max(0, (height-total)/2) + layout.lineH/2;
@@ -436,68 +426,27 @@
       }
     }
   }
-  function drawMetaHeader(ctx, text, x, y, roomWidth) {
+  function drawLanguage(ctx,value,place) {
+    const language=String(value||'').trim();
+    if(!language)return;
     ctx.save();
-    ctx.textAlign='left';ctx.textBaseline='middle';
-    ctx.font='700 23px "Oswald"';
-    ctx.letterSpacing='1px';
+    ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#f1f1f1';
-    ctx.shadowColor='rgba(247,1,14,0.18)';ctx.shadowBlur=4;
-    ctx.fillText(text,x+14,y);
-    ctx.shadowBlur=0;
-    ctx.fillStyle='#f7010e';
-    ctx.fillRect(x,y-10,4,20);
-    const headerWidth=ctx.measureText(text).width;
-    const remaining=Math.max(0,roomWidth-headerWidth-39);
-    if(remaining>15) {
-      ctx.fillStyle='rgba(247,1,14,0.65)';
-      ctx.fillRect(x+headerWidth+29,y,Math.min(remaining,145),2);
-    }
-    ctx.restore();
-  }
-  function drawMetaValue(ctx, text, x, y, maxWidth, preferredSize) {
-    ctx.save();
-    ctx.textAlign='left';ctx.textBaseline='middle';
-    ctx.letterSpacing='0.5px';
-    const content=String(text||'Not set');
-    let size=preferredSize;
-    while(size>23) {
-      ctx.font='700 '+size+'px "Cinzel", "Source Serif 4", serif';
-      if(ctx.measureText(content).width<=maxWidth)break;
+    ctx.shadowColor='rgba(247,1,14,.2)';ctx.shadowBlur=3;
+    let size=32;
+    while(size>18){
+      ctx.font='700 '+size+'px "Oswald"';
+      if(ctx.measureText(language).width<=place.max)break;
       size--;
     }
-    const gradient=ctx.createLinearGradient?.(0,y-size*0.65,0,y+size*0.55);
-    if(gradient) {
-      gradient.addColorStop(0,'#ffffff');
-      gradient.addColorStop(.38,'#f1f1f1');
-      gradient.addColorStop(1,'#bfc0c2');
-    }
-    ctx.fillStyle=gradient||'#f1f1f1';
-    ctx.shadowColor='rgba(247,1,14,0.32)';
-    ctx.shadowBlur=3;
-    ctx.fillText(content,x,y);
+    ctx.fillText(language,place.cx,place.y);
     ctx.restore();
   }
-  function drawPostMeta(ctx,kind) {
-    const d=state.drafts[kind];
-    // Keep every label safely within its original silver-bordered row.
-    drawMetaHeader(ctx,'WATCHED IN',587,382,396);
-    drawMetaValue(ctx,d.language||'Not set',600,439,381,40);
-    drawMetaHeader(ctx,"POORNA'S RATING",587,515,396);
-    drawRating(ctx,d.rating,605,565,22,62);
-    drawMetaHeader(ctx,'RELEASE DATE',587,650,396);
-    drawMetaValue(ctx,dateShort(d.releaseDate),600,700,381,37);
-  }
-  function drawStoryMeta(ctx,kind) {
-    const d=state.drafts[kind];
-    // Approved Story master: metadata rows y=538–705, 705–866, 866–1039.
-    // Keep labels, values, and stars wholly inside their respective bands.
-    drawMetaHeader(ctx,'WATCHED IN',593,575,380);
-    drawMetaValue(ctx,d.language||'Not set',605,650,364,43);
-    drawMetaHeader(ctx,"POORNA'S RATING",593,737,380);
-    drawRating(ctx,d.rating,628,813,21,63);
-    drawMetaHeader(ctx,'RELEASE DATE',593,902,380);
-    drawMetaValue(ctx,dateShort(d.releaseDate),605,978,364,37);
+  function drawApprovedMeta(ctx,kind) {
+    const draft=state.drafts[kind],g=geometry[kind];
+    // Section headers are baked into the master; only render dynamic values.
+    drawLanguage(ctx,draft.language,g.language);
+    drawRating(ctx,draft.rating,g.rating.x,g.rating.y,g.rating.r,g.rating.gap);
   }
   function makeImageCanvas(kind) {
     const canvas=document.createElement('canvas');
@@ -509,9 +458,10 @@
     const canvas=makeImageCanvas(kind), ctx=canvas.getContext('2d');
     const errors=[],notes=[];
     ctx.fillStyle='#050505';ctx.fillRect(0,0,canvas.width,canvas.height);
-    const bg=state.masters[kind];
+    const masterKind=kind==='post'?state.postPlatform:'story';
+    const bg=state.masters[masterKind];
     if (bg) ctx.drawImage(bg,0,0,canvas.width,canvas.height);
-    else errors.push('Approved '+kind+' master background is not yet uploaded.');
+    else errors.push('Approved '+masterKind+' master background is not yet uploaded.');
     const review=state.review;
     if(!review){errors.push('Select a saved movie.');return {canvas,errors,notes};}
     if (!state.poster) errors.push('Original R2 movie poster could not be loaded.');
@@ -530,8 +480,7 @@
         if(ratio<.98)notes.push('Title auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
       }
     }
-    if (kind==='post') drawPostMeta(ctx,kind);
-    else drawStoryMeta(ctx,kind);
+    drawApprovedMeta(ctx,kind);
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
@@ -579,12 +528,12 @@
   }
   async function checkDimensions(file,kind) {
     const bitmap=await createImageBitmap(file);
-    const valid=bitmap.width===1080 && bitmap.height===(kind==='post'?1080:1920);
+    const valid=bitmap.width===1080 && bitmap.height===(kind==='story'?1920:1080);
     bitmap.close();
-    if(!valid) throw new Error('The '+kind+' master must be exactly 1080 × '+(kind==='post'?'1080':'1920')+' pixels.');
+    if(!valid) throw new Error('The '+kind+' master must be exactly 1080 × '+(kind==='story'?'1920':'1080')+' pixels.');
   }
   async function uploadMasters(){
-    const files=[['post',inputs.postFile.files[0]],['story',inputs.storyFile.files[0]]].filter(x=>x[1]);
+    const files=[['instagram-post',inputs.instagramFile.files[0]],['facebook-x-post',inputs.facebookXFile.files[0]],['whatsapp-channel',inputs.whatsAppFile.files[0]],['story',inputs.storyFile.files[0]]].filter(x=>x[1]);
     if(!files.length){inputs.assetsStatus.textContent='Select at least one master PNG/WebP file.';return;}
     inputs.save.disabled=true;
     try {
@@ -594,7 +543,7 @@
         await jsonApi('/api/admin/social-master',{method:'POST',body:form});
         await loadMaster(kind);
       }
-      inputs.postFile.value='';inputs.storyFile.value='';
+      inputs.instagramFile.value='';inputs.facebookXFile.value='';inputs.whatsAppFile.value='';inputs.storyFile.value='';
       updateAssetStatus();
       await refreshAll();
     } catch(err) {inputs.assetsStatus.textContent='Upload failed: '+errorMessage(err);}
@@ -607,7 +556,7 @@
       if(!blob){inputs.warnings.textContent='PNG export failed.';return;}
       const link=document.createElement('a');
       link.href=URL.createObjectURL(blob);
-      link.download=safeSlug(state.review.s)+'_'+kind+'_social.png';
+      link.download=safeSlug(state.review.s)+'_'+(kind==='post'?state.postPlatform:'story')+'_social.png';
       document.body.appendChild(link);link.click();link.remove();
       setTimeout(()=>URL.revokeObjectURL(link.href),1000);
     },'image/png');
@@ -625,6 +574,7 @@
     refresh:requestRefresh,
   };
   inputs.movie.addEventListener('change',chooseMovie);
+  inputs.postPlatform.addEventListener('change',()=>{state.postPlatform=inputs.postPlatform.value;applyDraft(state.format);requestRefresh();});
   inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
   inputs.captionText.addEventListener('input',()=>{if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;});
   inputs.copyCaption.addEventListener('click',()=>copyText(inputs.captionText.value,'Caption copied.'));
@@ -634,7 +584,7 @@
   inputs.dlPost.addEventListener('click',()=>downloadImage('post'));
   inputs.dlStory.addEventListener('click',()=>downloadImage('story'));
   document.querySelectorAll('[data-social-format]').forEach(button=>button.addEventListener('click',()=>switchFormat(button.dataset.socialFormat)));
-  for(const name of ['title','pov','language','releaseDate','rating','titleAlign','titleCase','titleAuto','povAlign','povLine','povAuto']) {
+  for(const name of ['title','pov','language','rating','titleAlign','titleCase','titleAuto','povAlign','povLine','povAuto']) {
     const input=inputs[name];
     input.addEventListener('input',()=>{
       persistDraft();
