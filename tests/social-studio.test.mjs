@@ -230,7 +230,7 @@ test('Story metadata uses two columns and retains an empty dynamic title ticket'
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1211));
   assert.ok(!h.drawnText.some(x=>/RELEASE DATE|26 Aug 2026/.test(x)));
-  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-1182.8)<.01);
+  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-1186.8)<.01);
   assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
 });
 test('MY POV has top inset and stays inside the new approved red panel',()=>{
