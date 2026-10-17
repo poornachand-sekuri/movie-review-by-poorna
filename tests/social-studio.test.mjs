@@ -211,7 +211,7 @@ test('Locked master icons and metadata headers are not redrawn over approved art
   assert.ok(drawn('Telugu',1211),'Story language is positioned in left metadata panel');
   assert.ok(!h.drawnText.includes('RELEASE DATE'),'No release date overlay');
   assert.ok(!h.drawnText.includes("POORNA'S RATING"),'Master already contains rating header');
-  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Barlow Condensed') && d.color==='#F7D154')));
+  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Barlow Condensed') && d.color==='#F7D154'));
   assert.ok(!h.drawnText.some(d=>d.includes('2.25/5')),'No numeric rating');
 });
 test('Rich edits support color, font, size, glow, italic and underline on exports',()=>{
