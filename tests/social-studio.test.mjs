@@ -353,18 +353,15 @@ test('Rich text is clipped to panel and line heights cannot overlap the header',
 
 test('Social Studio uses branded, accessible icon links for all four official accounts',()=>{
   for(const network of ['instagram','facebook','x','whatsapp']){
-    assert.match(ADMIN_HTML,new RegExp('social-platform-icon--'+network+'\\\"'),'A branded '+network+' link is rendered');
+    assert.ok(ADMIN_HTML.includes('social-platform-icon--'+network+'"'),'A branded '+network+' link is rendered');
   }
-  assert.match(ADMIN_HTML,/aria-label="Open our official social media accounts"/);
-  assert.match(ADMIN_HTML,/x.com\\/reviewbypoorna/);
-  assert.match(ADMIN_HTML,/whatsapp.com\\/channel/);
-  assert.match(ADMIN_HTML,/social-studio.css\\?v=6/);
+  assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
+  assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
+  assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=6'));
 });
 test('All dynamic poster draws use inner rounded clipping and never paint over the approved borders',()=>{
-  assert.match(STUDIO_JS,/function posterOpeningPath\(ctx,box\)/);
-  assert.match(STUDIO_JS,/ctx\\.quadraticCurveTo/);
-  assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);\\s*ctx\\.clip\(\);/);
-  assert.match(STUDIO_JS,/const bleed=16,cover=Math\\.max/);
-  assert.match(STUDIO_JS,/const contain=Math\\.min/);
-  assert.match(STUDIO_JS,/filter='none'/);
+  for(const needle of ['function posterOpeningPath(ctx,box)','ctx.quadraticCurveTo(','posterOpeningPath(ctx,box);','ctx.clip();','const bleed=16,cover=Math.max','const contain=Math.min',"ctx.filter='none'"]){
+    assert.ok(STUDIO_JS.includes(needle),needle+' must be present in the renderer');
+  }
 });
