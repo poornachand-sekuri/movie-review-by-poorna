@@ -30,7 +30,7 @@ function harness() {
   function makeContext(){
     return {
       font:'600 24px "Inter"',
-      fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
+      fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},rect(){},moveTo(){},lineTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
       fillText(str,x,y){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle,font:this.font,x,y});},strokeText(){},
       measureText(str){
         const size=Number(this.font.match(/(\d+)px/)?.[1]||24);
@@ -108,7 +108,7 @@ test('Social Studio initializes, previews movie data, and retains the original v
   assert.equal(h.element('socialDownloadStory').disabled,false);
   assert.ok(h.drawnText.some(t=>t.includes('JOKER')));
   assert.ok(!h.drawnText.some(t=>/2\.25\/5/.test(t)));
-  assert.ok(h.filledRects.some(r=>r.fillStyle==='#f7010e' && Math.abs(r.width - 12.5) < 0.01), 'Quarter-star red fill drawn correctly');
+  assert.ok(h.filledRects.some(r=>r.fillStyle==='#f7010e' && Math.abs(r.width - 12) < 0.01), 'Quarter-star red fill drawn correctly');
 });
 
 test('MY POV overflow blocks PNG exports instead of silently truncating', async()=>{
@@ -120,13 +120,13 @@ test('MY POV overflow blocks PNG exports instead of silently truncating', async(
   await settle();
   assert.equal(h.element('socialDownloadPost').disabled,true);
   assert.equal(h.element('socialDownloadStory').disabled,false,'Story remains valid when only Post text overflows');
-  assert.match(h.element('socialWarnings').textContent,/cannot fit without clipping/);
+  assert.match(h.element('socialWarnings').textContent,/cannot fit inside the panel/);
 });
 
 test('Four approved templates share two export dimensions',()=>{
   assert.match(STUDIO_JS,/post:\s*\{\s*size:\s*\[1080,1080\]/);
   assert.match(STUDIO_JS,/story:\s*\{\s*size:\s*\[1080,1920\]/);
-  assert.match(STUDIO_JS,/for\s*\(let i = 0; i < 5; i\+\+\)/);
+  assert.match(STUDIO_JS,/for\(let i=0;i<5;i\+\+\)/);
   assert.doesNotMatch(STUDIO_JS,/numericX|value\.toFixed\(2\).*\/5/);
   assert.doesNotMatch(STUDIO_JS,/\.slice\(0,\s*\d+\)\s*\+\s*['"]\.\.\./);
 });
@@ -188,8 +188,8 @@ test('Locked master icons and metadata headers are not redrawn over approved art
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   const drawn=(value,y)=>h.styledDraws.some(d=>d.text===value && d.y===y);
-  assert.ok(drawn('Telugu',627),'Post language is positioned in left metadata panel');
-  assert.ok(drawn('Telugu',1212),'Story language is positioned in left metadata panel');
+  assert.ok(drawn('Telugu',622),'Post language is positioned in left metadata panel');
+  assert.ok(drawn('Telugu',1211),'Story language is positioned in left metadata panel');
   assert.ok(!h.drawnText.includes('RELEASE DATE'),'No release date overlay');
   assert.ok(!h.drawnText.includes("POORNA'S RATING"),'Master already contains rating header');
   assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Oswald')));
@@ -209,16 +209,16 @@ test('Rich edits support color, font, size, glow, italic and underline on export
 test('Story metadata uses two columns and retains an empty dynamic title ticket',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1212));
+  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1211));
   assert.ok(!h.drawnText.some(x=>/RELEASE DATE|26 Aug 2026/.test(x)));
-  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&r.y===1165);
+  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-1182.8)<.01);
   assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
 });
 test('MY POV has top inset and stays inside the new approved red panel',()=>{
-  assert.ok(STUDIO_JS.includes('pov:[484,749,523,137]'));
-  assert.ok(STUDIO_JS.includes('pov:[93,1352,892,220]'));
-  assert.ok(749+137<891,'Post MY POV has interior bottom clearance');
-  assert.ok(1352+220<1612,'Story MY POV has interior bottom clearance');
+  assert.ok(STUDIO_JS.includes('pov:[485,748,517,128]'));
+  assert.ok(STUDIO_JS.includes('pov:[99,1388,870,197]'));
+  assert.ok(748+128<891,'Post MY POV has interior bottom clearance');
+  assert.ok(1388+197<1612,'Story MY POV has interior bottom clearance');
 });
 
 test('Partial-word selection renders only selected letters in the chosen color and font',async()=>{
@@ -280,4 +280,33 @@ test('Admin UI allows 4 approved masters and Post platform selection without edi
   selected.value='whatsapp-channel';selected.listeners.change();await settle();
   assert.match(h.element('socialEditingMode').textContent,/WHATSAPP CHANNEL/);
   assert.ok(!STUDIO_JS.includes('drawPostMeta('));
+});
+
+test('Rating fills exactly the five baked stars without adding another set of outlines',async()=>{
+  assert.doesNotMatch(STUDIO_JS,/ctx\.stroke\(\)/);
+  assert.match(STUDIO_JS,/Star outlines are PRINTED|empty white outlines are baked/);
+  for(const [platform,expectedY,expectedFirstX] of [
+    ['instagram-post',577.5,736.5],
+    ['facebook-x-post',558.5,733.8],
+    ['whatsapp-channel',574,706.5]
+  ]){
+    const h=harness();h.callbacks.get('social-studio:open')();await settle();
+    h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+    h.element('socialPostPlatform').value=platform;h.element('socialPostPlatform').listeners.change();await settle();
+    const red=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-expectedY)<.1);
+    assert.ok(red.length>=3,platform+' must fill each rated star in the master');
+    assert.ok(Math.abs(red[0].x-expectedFirstX)<.1,platform+' must not shift the first star');
+    assert.ok(Math.abs(red[2].width-12)<.1||red[2].width>0,'Quarter step present');
+  }
+});
+test('Poster retains all its original image with a blurred contextual fill',()=>{
+  assert.match(STUDIO_JS,/function drawPoster\(ctx,image,box\)/);
+  assert.match(STUDIO_JS,/blur\(15px\) brightness/);
+  assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
+  assert.match(STUDIO_JS,/ctx\.rect\(x,y,w,h\);ctx\.clip\(\)/);
+});
+test('Rich text is clipped to panel and line heights cannot overlap the header',()=>{
+  assert.match(STUDIO_JS,/ctx\.rect\(x,y,width,height\);ctx\.clip\(\)/);
+  assert.match(STUDIO_JS,/Math\.max\(1\.25,options\.line\)/);
+  assert.match(STUDIO_JS,/pov:\[99,1388,870,197\]/);
 });

@@ -19,18 +19,36 @@
     seq: 0, drafts: { post:null, story:null }, captions:{}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
-  // Pixel coordinates for the four October 17 approved ticket masters.
-  const geometry = {
-    post: {
-      size:[1080,1080],poster:[53,291,380,598],title:[504,335,490,85],pov:[484,749,523,137],
-      language:{cx:589,y:627,max:225},rating:{x:757,y:599,r:25,gap:59}
+  // Keep every element within the actual content apertures of each approved master.
+  // Star outlines are PRINTED in the source PNG: we fill them, never draw duplicates.
+  const geometry={
+    post:{
+      size:[1080,1080],poster:[54,293,377,579],title:[505,333,477,90],
+      pov:[485,748,517,128],language:{cx:594,y:622,max:223},
+      rating:{centers:[760.5,818.4,876.5,934,991.5],y:601.5,r:24}
     },
-    story: {
-      size:[1080,1920],poster:[246,254,568,624],title:[156,925,768,96],pov:[93,1352,892,220],
-      language:{cx:254,y:1212,max:310},rating:{x:569,y:1195,r:30,gap:79}
+    story:{
+      size:[1080,1920],poster:[248,258,562,609],title:[162,926,756,103],
+      pov:[99,1388,870,197],language:{cx:251,y:1211,max:290},
+      rating:{centers:[577.8,665,751,837.8,921.6],y:1215.8,r:33}
+    }
+  };
+  const postOverrides={
+    'facebook-x-post':{
+      poster:[53,296,377,578],title:[504,329,478,93],
+      pov:[486,745,515,129],language:{cx:592,y:613,max:217},
+      rating:{centers:[755.8,817.6,878.5,939.7,1000.5],y:580.5,r:22}
+    },
+    'whatsapp-channel':{
+      poster:[53,296,377,578],title:[503,335,480,90],
+      pov:[485,750,518,127],language:{cx:585,y:627,max:214},
+      rating:{centers:[732.5,796.4,861.8,926.7,991.1],y:600,r:26}
     }
   };
   const POST_KINDS=['instagram-post','facebook-x-post','whatsapp-channel'];
+  function layoutFor(kind){
+    return kind==='story'?geometry.story:{...geometry.post,...postOverrides[state.postPlatform]};
+  }
   function errorMessage(error) { return error instanceof Error ? error.message : String(error); }
   function safeSlug(value) { return String(value || 'movie').replace(/[^a-z0-9-]/gi, '-').slice(0,100); }
   function apiImage(src) {
@@ -195,7 +213,7 @@
   }
   function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[]) {
     if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum);
-    const [x,y,width,height]=box,raw=String(text),maxW=width-6;
+    const [x,y,width,height]=box,raw=String(text),maxW=width-10;
     // Split each word at its formatting boundaries. Previously a selection
     // touching one letter styled the *whole* word in the PNG export.
     const splitToken=(token,start,scale)=>{
@@ -210,12 +228,14 @@
         const at=positions[i-1],stop=positions[i];
         let style=null;
         for(const range of ranges)if(range.start<=at&&range.end>=stop)style=range;
-        const size=Math.max(18,(style?.size||options.size)*scale);
-        const family=style?.font||options.family,weight=style?.weight||options.weight;
+        const size=Math.max(17,Math.min(100,Number(style?.size)||options.size)*scale);
+        const family=['Inter','Oswald','Cinzel','Source Serif 4'].includes(style?.font)?style.font:options.family;
+        const weight=['400','600','700','800'].includes(String(style?.weight))?style.weight:options.weight;
         const font=(style?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
         const segment=raw.slice(at,stop);
         ctx.font=font;
-        parts.push({text:segment,font,style,width:ctx.measureText(segment).width,size});
+        const measured=ctx.measureText(segment).width;
+        parts.push({text:segment,font,style,width:measured,size});
       }
       return parts;
     };
@@ -223,20 +243,21 @@
     let layout=null;
     for(let base=options.size;base>=(options.auto?minimum:options.size);base--){
       const scale=base/options.size,lines=[];
-      let row={pieces:[],width:0,height:base*options.line},failed=false;
-      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*options.line};};
+      let row={pieces:[],width:0,height:base*Math.max(1.25,options.line)},failed=false;
+      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*Math.max(1.25,options.line)};};
       for(const match of tokens){
         const token=match[0];
         if(token==='\n'){flush();continue;}
         if(!token.trim() && !row.pieces.length)continue;
         const parts=splitToken(token,match.index,scale);
         const groupWidth=parts.reduce((sum,p)=>sum+p.width,0);
+        if(!Number.isFinite(groupWidth)||parts.some(p=>p.width<=0&&p.text.trim())){failed=true;break;}
         if(token.trim() && row.pieces.length && row.width+groupWidth>maxW)flush();
         if(!token.trim() && !row.pieces.length)continue;
         if(groupWidth>maxW || row.width+groupWidth>maxW){failed=true;break;}
         for(const piece of parts){
           row.pieces.push(piece);row.width+=piece.width;
-          row.height=Math.max(row.height,piece.size*options.line);
+          row.height=Math.max(row.height,piece.size*Math.max(1.25,options.line)+5);
         }
       }
       if(!failed && (row.pieces.length||!lines.length))flush();
@@ -244,6 +265,7 @@
       if(!failed&&lines.length<=maxLines&&totalHeight<=height){layout={lines,height:totalHeight,scale};break;}
     }
     if(!layout)return {ok:false,message:'Selected text formatting cannot fit inside the panel. Reduce the font size or enable auto-fit.'};
+    ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();
     let py=y+(height-layout.height)/2;
     for(const row of layout.lines){
       let px=x+3+(options.align==='center'?(maxW-row.width)/2:0);
@@ -258,9 +280,9 @@
           ctx.shadowColor='#000000';ctx.shadowBlur=8;ctx.shadowOffsetX=3;ctx.shadowOffsetY=3;
         }else if(piece.style?.effect==='outline'){
           ctx.strokeStyle='#f1f1f1';ctx.lineWidth=1.5;
-          ctx.strokeText(piece.text,px,py+row.height/2);
+          ctx.strokeText(piece.text,px,py+row.height/2,Math.max(1,piece.width));
         }
-        ctx.fillText(piece.text,px,py+row.height/2);
+        ctx.fillText(piece.text,px,py+row.height/2,Math.max(1,piece.width));
         if(piece.style?.underline){
           ctx.shadowBlur=0;
           ctx.fillRect(px,py+row.height/2+piece.size*.31,piece.width,Math.max(1,piece.size*.05));
@@ -269,6 +291,7 @@
       }
       py+=row.height;
     }
+    ctx.restore();
     return {ok:true,scale:layout.scale};
   }
 
@@ -355,36 +378,44 @@
       family:'Inter',weight:'600',align:'left',size:42,auto:true,line:1.2
     };
   }
-  function drawFitted(ctx, value, box, options, maxLines, minimum) {
-    const [x,y,width,height] = box;
-    const availableWidth = width - 4;
-    let layout = null;
-    const lowerBound = options.auto ? minimum : options.size;
-    for (let size = options.size; size >= lowerBound; size--) {
-      setFont(ctx, options, size);
-      const lines = wrapLines(ctx, value, availableWidth);
-      const lineH = size * options.line;
-      if (lines.length <= maxLines && lines.length * lineH <= height) { layout = {size,lines,lineH}; break; }
+  function drawFitted(ctx,value,box,options,maxLines,minimum){
+    const [x,y,width,height]=box,availableWidth=width-12;
+    let layout=null;
+    const lowerBound=options.auto?minimum:options.size;
+    for(let size=options.size;size>=lowerBound;size--){
+      setFont(ctx,options,size);
+      const lines=wrapLines(ctx,value,availableWidth);
+      const lineH=Math.max(size*1.25,size*options.line);
+      if(lines.length<=maxLines && lines.length*lineH<=height){
+        layout={size,lines,lineH};break;
+      }
     }
-    if (!layout) return { ok:false, message:'Text cannot fit without clipping in the approved panel. Lower the preferred font size or edit the promotional copy.' };
-    setFont(ctx, options, layout.size);
-    ctx.textAlign = options.align;
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = options.color || '#f1f1f1';
-    const px = options.align === 'center' ? x + width/2 : x + 2;
-    const total = layout.lineH * layout.lines.length;
-    const initial = y + Math.max(0, (height-total)/2) + layout.lineH/2;
-    layout.lines.forEach((line,idx) => ctx.fillText(line,px,initial+idx*layout.lineH));
-    return { ok:true,size:layout.size };
+    if(!layout)return {ok:false,message:'Text cannot fit inside the panel. Reduce the preferred font size or shorten the promotional copy.'};
+    ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();
+    setFont(ctx,options,layout.size);
+    ctx.textAlign=options.align;ctx.textBaseline='middle';
+    ctx.fillStyle=options.color||'#f1f1f1';
+    const px=options.align==='center'?x+width/2:x+6;
+    const initial=y+(height-layout.lineH*layout.lines.length)/2+layout.lineH/2;
+    layout.lines.forEach((line,i)=>ctx.fillText(line,px,initial+i*layout.lineH));
+    ctx.restore();
+    return {ok:true,size:layout.size};
   }
-  function drawContain(ctx,image,box) {
-    if (!image) return;
-    const [x,y,w,h] = box;
-    const ratio = Math.min(w/image.width, h/image.height);
-    const width = image.width*ratio, height = image.height*ratio;
-    ctx.fillStyle = '#050505';
-    ctx.fillRect(x,y,w,h);
-    ctx.drawImage(image, x+(w-width)/2, y+(h-height)/2, width, height);
+  // Fit the complete original poster without ugly black sidebars in the Story.
+  // A dimmed cropped copy fills the backdrop while the uncropped poster remains visible.
+  function drawPoster(ctx,image,box) {
+    if(!image)return;
+    const [x,y,w,h]=box;
+    ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+    const cover=Math.max(w/image.width,h/image.height);
+    const iw=image.width*cover,ih=image.height*cover;
+    ctx.filter='blur(15px) brightness(.55)';
+    ctx.drawImage(image,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
+    ctx.filter='none';
+    const contain=Math.min(w/image.width,h/image.height);
+    const fw=image.width*contain,fh=image.height*contain;
+    ctx.drawImage(image,x+(w-fw)/2,y+(h-fh)/2,fw,fh);
+    ctx.restore();
   }
   function starPath(ctx,cx,cy,r) {
     ctx.beginPath();
@@ -395,26 +426,21 @@
     }
     ctx.closePath();
   }
-  // Render exactly five stars. The stored quarter-star value controls the red
-  // fractional fill; no numeric rating is displayed on promotional artwork.
-  function drawRating(ctx, rating, x, y, r, gap) {
-    const valid = rating !== null && rating !== undefined && rating !== '' && Number.isFinite(Number(rating));
-    const value = valid ? Math.max(0, Math.min(5, Number(rating))) : 0;
-    for (let i = 0; i < 5; i++) {
-      const cx = x + i * gap;
-      starPath(ctx, cx, y, r);
-      ctx.strokeStyle = '#f1f1f1';
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
-      const filledFraction = Math.max(0, Math.min(1, value - i));
-      if (filledFraction > 0) {
-        ctx.save();
-        starPath(ctx, cx, y, r);
-        ctx.clip();
-        ctx.fillStyle = '#f7010e';
-        ctx.fillRect(cx - r, y - r, 2 * r * filledFraction, 2 * r);
-        ctx.restore();
-      }
+  // The five empty white outlines are baked into each approved master.
+  // Fill INSIDE those outlines to preserve source geometry, even at 0.25 steps.
+  function drawRating(ctx,rating,place) {
+    const valid=rating!==null&&rating!==undefined&&rating!==''&&Number.isFinite(Number(rating));
+    const value=valid?Math.max(0,Math.min(5,Number(rating))):0;
+    for(let i=0;i<5;i++){
+      const fraction=Math.max(0,Math.min(1,value-i));
+      if(!fraction)continue;
+      const cx=place.centers[i],cy=place.y,r=place.r;
+      ctx.save();
+      starPath(ctx,cx,cy,r);
+      ctx.clip();
+      ctx.fillStyle='#f7010e';
+      ctx.fillRect(cx-r,cy-r,2*r*fraction,2*r);
+      ctx.restore();
     }
   }
   function drawLanguage(ctx,value,place) {
@@ -434,10 +460,10 @@
     ctx.restore();
   }
   function drawApprovedMeta(ctx,kind) {
-    const draft=state.drafts[kind],g=geometry[kind];
+    const draft=state.drafts[kind],g=layoutFor(kind);
     // Section headers are baked into the master; only render dynamic values.
     drawLanguage(ctx,draft.language,g.language);
-    drawRating(ctx,draft.rating,g.rating.x,g.rating.y,g.rating.r,g.rating.gap);
+    drawRating(ctx,draft.rating,g.rating);
   }
   function makeImageCanvas(kind) {
     const canvas=document.createElement('canvas');
@@ -456,15 +482,15 @@
     const review=state.review;
     if(!review){errors.push('Select a saved movie.');return {canvas,errors,notes};}
     if (!state.poster) errors.push('Original R2 movie poster could not be loaded.');
-    else drawContain(ctx,state.poster,geometry[kind].poster);
-    const draft=state.drafts[kind];
+    else drawPoster(ctx,state.poster,layoutFor(kind).poster);
+    const draft=state.drafts[kind],g=layoutFor(kind);
     const title=draft?.title || '';
     const pov=draft?.pov || '';
     if(!title.trim()) errors.push('Movie Title is empty.');
     else {
       const titleOptions=textOptions('title',kind);
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
-      const fit=drawStyled(ctx,normalized,geometry[kind].title,titleOptions,3,kind==='post'?24:30,draft.styles.title);
+      const fit=drawStyled(ctx,normalized,g.title,titleOptions,3,kind==='post'?24:30,draft.styles.title);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
       else if(titleOptions.auto) {
         const ratio=fit.scale??((fit.size||titleOptions.size)/titleOptions.size);
@@ -475,7 +501,7 @@
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const fit=drawStyled(ctx,pov,geometry[kind].pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?22:24,draft.styles.pov);
+      const fit=drawStyled(ctx,pov,g.pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?18:20,draft.styles.pov);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
       else if(draft.povStyle.auto) {
         const ratio=fit.scale??((fit.size||draft.povStyle.size)/draft.povStyle.size);
