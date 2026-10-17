@@ -31,7 +31,7 @@ function harness() {
   function makeContext(){
     return {
       font:'600 24px "Inter"',
-      fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},rect(){},moveTo(){},lineTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
+      fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},rect(){},moveTo(){},lineTo(){},quadraticCurveTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
       fillText(str,x,y){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle,font:this.font,x,y});},strokeText(){},
       measureText(str){
         const size=Number(this.font.match(/(\d+)px/)?.[1]||24);
@@ -297,14 +297,14 @@ test('X captions are safely split into two copyable posts, including all four fo
   assert.equal(h.element('socialCopyCaption').textContent,'COPY MESSAGE');
 });
 test('Approved poster openings use the existing-site contain and softened full-frame technique',()=>{
-  assert.match(STUDIO_JS,/poster:\[54,298,384,587\]/);
-  assert.match(STUDIO_JS,/poster:\[42,292,387,597\]/);
-  assert.match(STUDIO_JS,/poster:\[49,285,379,598\]/);
-  assert.match(STUDIO_JS,/poster:\[261,243,567,645\]/);
+  assert.match(STUDIO_JS,/poster:\[52,291,388,599\]/);
+  assert.match(STUDIO_JS,/poster:\[41,283,389,611\]/);
+  assert.match(STUDIO_JS,/poster:\[49,283,380,603\]/);
+  assert.match(STUDIO_JS,/poster:\[251,261,577,630\]/);
   assert.match(STUDIO_JS,/Math\.max\(w\/image\.width,h\/image\.height\)/);
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
   assert.match(STUDIO_JS,/blur\(12px\) brightness\(\.45\) saturate\(\.7\)/);
-  assert.match(STUDIO_JS,/ctx\.rect\(x,y,w,h\);ctx\.clip\(\)/);
+  assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);/);
   assert.ok(!!ADMIN_HTML.match(/socialCopyXReply/),'X reply copy button is available');
 });
 
@@ -343,10 +343,28 @@ test('Poster retains all its original image with a blurred contextual fill',()=>
   assert.match(STUDIO_JS,/function drawPoster\(ctx,image,box\)/);
   assert.match(STUDIO_JS,/blur\(12px\) brightness\(\.45\) saturate\(\.7\)/);
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
-  assert.match(STUDIO_JS,/ctx\.rect\(x,y,w,h\);ctx\.clip\(\)/);
+  assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);/);
 });
 test('Rich text is clipped to panel and line heights cannot overlap the header',()=>{
   assert.match(STUDIO_JS,/ctx\.rect\(x,y,width,height\);ctx\.clip\(\)/);
   assert.match(STUDIO_JS,/Math\.max\(1\.25,options\.line\)/);
   assert.match(STUDIO_JS,/pov:\[99,1388,870,197\]/);
+});
+
+test('Social Studio uses branded, accessible icon links for all four official accounts',()=>{
+  for(const network of ['instagram','facebook','x','whatsapp']){
+    assert.match(ADMIN_HTML,new RegExp('social-platform-icon--'+network+'\\\"'),'A branded '+network+' link is rendered');
+  }
+  assert.match(ADMIN_HTML,/aria-label="Open our official social media accounts"/);
+  assert.match(ADMIN_HTML,/x.com\\/reviewbypoorna/);
+  assert.match(ADMIN_HTML,/whatsapp.com\\/channel/);
+  assert.match(ADMIN_HTML,/social-studio.css\\?v=6/);
+});
+test('All dynamic poster draws use inner rounded clipping and never paint over the approved borders',()=>{
+  assert.match(STUDIO_JS,/function posterOpeningPath\(ctx,box\)/);
+  assert.match(STUDIO_JS,/ctx\\.quadraticCurveTo/);
+  assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);\\s*ctx\\.clip\(\);/);
+  assert.match(STUDIO_JS,/const bleed=16,cover=Math\\.max/);
+  assert.match(STUDIO_JS,/const contain=Math\\.min/);
+  assert.match(STUDIO_JS,/filter='none'/);
 });
