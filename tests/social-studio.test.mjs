@@ -385,7 +385,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
-  assert.ok(ADMIN_HTML.includes('social-studio.css?v=6'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=7'));
 });
 test('All dynamic poster draws use inner rounded clipping and never paint over the approved borders',()=>{
   for(const needle of ['function posterOpeningPath(ctx,box)','ctx.quadraticCurveTo(','posterOpeningPath(ctx,box);','ctx.clip();','const bleed=16,cover=Math.max','const contain=Math.min',"ctx.filter='none'"]){
@@ -455,12 +455,15 @@ test('New fonts and colors are respected in drawn promotional image text',async(
   h.element('socialMovie').value='7';
   await h.element('socialMovie').listeners.change();await settle();
   const draft=h.window.SocialStudioRichBridge.getDraft();
-  draft.styles.title=[{start:0,end:5,font:'Bebas Neue',color:'#FF739F',weight:'700',size:52}];
-  draft.styles.pov=[{start:0,end:5,font:'Playfair Display',color:'#83F4AA',size:42}];
+  // Short content isolates font/color rendering from long-title auto-fit constraints.
+  draft.title='HELLO';
+  draft.pov='Great verdict';
+  draft.styles.title=[{start:0,end:5,font:'Bebas Neue',color:'#FF739F',weight:'700',size:45}];
+  draft.styles.pov=[{start:0,end:5,font:'Playfair Display',color:'#83F4AA',size:32}];
   h.window.SocialStudioRichBridge.refresh();await settle();
-  assert.ok(h.styledDraws.some(d=>d.text==='TOXIC'&&d.font.includes('Bebas Neue')&&d.color==='#FF739F'),
+  assert.ok(h.styledDraws.some(d=>d.text==='HELLO'&&d.font.includes('Bebas Neue')&&d.color==='#FF739F'),
     'Title image must render selected font and rose text color');
-  assert.ok(h.styledDraws.some(d=>d.text==='Geetu'&&d.font.includes('Playfair Display')&&d.color==='#83F4AA'),
+  assert.ok(h.styledDraws.some(d=>d.text==='Great'&&d.font.includes('Playfair Display')&&d.color==='#83F4AA'),
     'MY POV image must render selected font and mint text color');
 });
 test('Watched In value uses fitted and shadowed cinema-gold Barlow Condensed typography',async()=>{
