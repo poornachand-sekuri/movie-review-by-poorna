@@ -9,11 +9,12 @@ const STUDIO_JS = fs.readFileSync(path.join(ROOT, 'public/admin/social-studio.js
 const RICH_JS = fs.readFileSync(path.join(ROOT, 'public/admin/social-rich-editor.js'), 'utf8');
 const ADMIN_HTML = fs.readFileSync(path.join(ROOT, 'src/admin/projector-room.html'), 'utf8');
 const ADMIN_API = fs.readFileSync(path.join(ROOT, 'src/pages/api/admin/[...path].ts'), 'utf8');
-function harness() {
+function harness(options={}) {
   const elementMap = new Map();
   const callbacks = new Map();
   const drawnText = [];
   const filledRects = [];
+  const pixelFills=[];
   const styledDraws = [];
   const copied = [];
   const buttons = Object.fromEntries(['post','story'].map(kind=>[kind,{dataset:{socialFormat:kind},listeners:{},classList:{toggle(){}},addEventListener(type,cb){this.listeners[type]=cb;}}]));
@@ -29,7 +30,7 @@ function harness() {
     return elementMap.get(id);
   }
   function makeContext(){
-    return {
+    const ctx={
       font:'600 24px "Inter"',
       fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},rect(){},moveTo(){},lineTo(){},quadraticCurveTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
       fillText(str,x,y){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle,font:this.font,x,y});},strokeText(){},
@@ -38,6 +39,23 @@ function harness() {
         return {width:Array.from(String(str)).length*size*0.53};
       },
     };
+    if(options.pixelStars){
+      // Synthetic printed outline: a closed white ring with dark center.
+      // The renderer must recolor only enclosed pixels, never the white edge.
+      ctx.getImageData=(x,y,w,h)=>{
+        const data=new Uint8ClampedArray(w*h*4);
+        const cx=w/2,cy=h/2,outer=Math.min(w,h)*.32;
+        for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){
+          const q=(yy*w+xx)*4,d=Math.hypot(xx-cx,yy-cy);
+          const white=d>outer-2&&d<outer+1;
+          data[q]=data[q+1]=data[q+2]=white?241:0;
+          data[q+3]=255;
+        }
+        return {data,width:w,height:h};
+      };
+      ctx.putImageData=(imageData,x,y)=>pixelFills.push({imageData,x,y});
+    }
+    return ctx;
   }
   const defaults={
     socialTitleAuto:true,socialTitleAlign:'left',socialTitleCase:'uppercase',
@@ -80,7 +98,7 @@ function harness() {
     Intl,Date,Number,String,Array,Math,Promise,console,navigator:{clipboard:{writeText:async text=>{copied.push(text);}}},
   };
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText,filledRects,buttons,styledDraws,copied,window:win};
+  return {element,callbacks,document,drawnText,filledRects,pixelFills,buttons,styledDraws,copied,window:win};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
@@ -109,7 +127,7 @@ test('Social Studio initializes, previews movie data, and retains the original v
   assert.equal(h.element('socialDownloadStory').disabled,false);
   assert.ok(h.drawnText.some(t=>t.includes('JOKER')));
   assert.ok(!h.drawnText.some(t=>/2\.25\/5/.test(t)));
-  assert.ok(h.filledRects.some(r=>r.fillStyle==='#f7010e' && Math.abs(r.width - 12) < 0.01), 'Quarter-star red fill drawn correctly');
+  assert.ok(h.filledRects.some(r=>r.fillStyle==='#f7010e' && Math.abs(r.width - 10) < 0.01), 'Quarter-star red fill drawn correctly');
 });
 
 test('MY POV overflow blocks PNG exports instead of silently truncating', async()=>{
@@ -212,7 +230,7 @@ test('Story metadata uses two columns and retains an empty dynamic title ticket'
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1211));
   assert.ok(!h.drawnText.some(x=>/RELEASE DATE|26 Aug 2026/.test(x)));
-  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-1182.8)<.01);
+  const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-1186.8)<.01);
   assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
 });
 test('MY POV has top inset and stays inside the new approved red panel',()=>{
@@ -306,13 +324,13 @@ test('X captions are safely split into two copyable posts, including all four fo
   assert.equal(h.element('socialCopyCaption').textContent,'COPY MESSAGE');
 });
 test('Approved poster openings use the existing-site contain and softened full-frame technique',()=>{
-  assert.match(STUDIO_JS,/poster:\[52,291,388,599\]/);
-  assert.match(STUDIO_JS,/poster:\[41,283,389,611\]/);
-  assert.match(STUDIO_JS,/poster:\[49,283,380,603\]/);
-  assert.match(STUDIO_JS,/poster:\[251,261,577,630\]/);
+  assert.match(STUDIO_JS,/poster:\[59,299,375,580\]/);
+  assert.match(STUDIO_JS,/poster:\[48,293,378,592\]/);
+  assert.match(STUDIO_JS,/poster:\[56,283,365,594\]/);
+  assert.match(STUDIO_JS,/poster:\[259,276,562,602\]/);
   assert.ok(STUDIO_JS.includes('Math.max((w+2*bleed)/image.width,(h+2*bleed)/image.height)'));
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
-  assert.match(STUDIO_JS,/blur\(12px\) brightness\(\.45\) saturate\(\.7\)/);
+  assert.match(STUDIO_JS,/blur\(14px\) brightness\(\.33\) saturate\(\.75\)/);
   assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);/);
   assert.ok(!!ADMIN_HTML.match(/socialCopyXReply/),'X reply copy button is available');
 });
@@ -335,9 +353,9 @@ test('Rating fills exactly the five baked stars without adding another set of ou
   assert.doesNotMatch(STUDIO_JS,/ctx\.stroke\(\)/);
   assert.match(STUDIO_JS,/Star outlines are PRINTED|empty white outlines are baked/);
   for(const [platform,expectedY,expectedFirstX] of [
-    ['instagram-post',577.5,736.5],
-    ['facebook-x-post',558.5,733.8],
-    ['whatsapp-channel',574,706.5]
+    ['instagram-post',581.5,740.5],
+    ['facebook-x-post',555.3,735.4],
+    ['whatsapp-channel',578,710.5]
   ]){
     const h=harness();h.callbacks.get('social-studio:open')();await settle();
     h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
@@ -345,12 +363,12 @@ test('Rating fills exactly the five baked stars without adding another set of ou
     const red=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-expectedY)<.1);
     assert.ok(red.length>=3,platform+' must fill each rated star in the master');
     assert.ok(Math.abs(red[0].x-expectedFirstX)<.1,platform+' must not shift the first star');
-    assert.ok(Math.abs(red[2].width-12)<.1||red[2].width>0,'Quarter step present');
+    assert.ok(red[2].width>0,'Quarter step present');
   }
 });
 test('Poster retains all its original image with a blurred contextual fill',()=>{
   assert.match(STUDIO_JS,/function drawPoster\(ctx,image,box\)/);
-  assert.match(STUDIO_JS,/blur\(12px\) brightness\(\.45\) saturate\(\.7\)/);
+  assert.match(STUDIO_JS,/blur\(14px\) brightness\(\.33\) saturate\(\.75\)/);
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
   assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);/);
 });
@@ -373,4 +391,42 @@ test('All dynamic poster draws use inner rounded clipping and never paint over t
   for(const needle of ['function posterOpeningPath(ctx,box)','ctx.quadraticCurveTo(','posterOpeningPath(ctx,box);','ctx.clip();','const bleed=16,cover=Math.max','const contain=Math.min',"ctx.filter='none'"]){
     assert.ok(STUDIO_JS.includes(needle),needle+' must be present in the renderer');
   }
+});
+
+test('Pixels inside baked stars fill red while the original white outline stays intact',async()=>{
+  const h=harness({pixelStars:true});
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  assert.ok(h.pixelFills.length>=6,'Image-data star fills should run on Post and Story');
+  const pixels=h.pixelFills[0].imageData,bytes=pixels.data;
+  let red=0,white=0,brokenWhite=0;
+  const side=pixels.width, cx=side/2,cy=pixels.height/2,outer=side*.32;
+  for(let y=0;y<pixels.height;y++)for(let x=0;x<pixels.width;x++){
+    const k=(y*pixels.width+x)*4,d=Math.hypot(x-cx,y-cy);
+    const isRed=bytes[k]===247&&bytes[k+1]===1&&bytes[k+2]===14;
+    if(isRed)red++;
+    if(d>outer-2&&d<outer+1){
+      white++;
+      if(isRed)brokenWhite++;
+    }
+  }
+  assert.ok(red>70,'Interior is filled with the correct red');
+  assert.ok(white>80,'Synthetic white ring was supplied');
+  assert.equal(brokenWhite,0,'Printed star outlines must stay white');
+});
+test('Poster rectangles have verified clearances from the four approved master borders',()=>{
+  const boxes=[
+    {id:'Instagram',x:59,y:299,w:375,h:580,left:51,right:440,top:290,bottom:890},
+    {id:'Facebook/X',x:48,y:293,w:378,h:592,left:41,right:430,top:283,bottom:895},
+    {id:'WhatsApp Channel',x:56,y:283,w:365,h:594,left:50,right:428,top:273,bottom:887},
+    {id:'Story',x:259,y:276,w:562,h:602,left:250,right:829,top:263,bottom:890}
+  ];
+  for(const b of boxes){
+    assert.ok(b.x>=b.left+5,b.id+' left inner clearance');
+    assert.ok(b.x+b.w<=b.right-3,b.id+' right inner clearance');
+    assert.ok(b.y>=b.top+5,b.id+' top inner clearance');
+    assert.ok(b.y+b.h<=b.bottom-5,b.id+' bottom inner clearance');
+    assert.ok(STUDIO_JS.includes('poster:['+[b.x,b.y,b.w,b.h].join(',')+']'),b.id+' measured aperture used');
+  }
+  assert.ok(STUDIO_JS.includes('y:575.8,r:24.5'),'Facebook rating centered on baked white stars');
 });
