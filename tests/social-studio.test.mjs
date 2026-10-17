@@ -301,7 +301,7 @@ test('Approved poster openings use the existing-site contain and softened full-f
   assert.match(STUDIO_JS,/poster:\[41,283,389,611\]/);
   assert.match(STUDIO_JS,/poster:\[49,283,380,603\]/);
   assert.match(STUDIO_JS,/poster:\[251,261,577,630\]/);
-  assert.match(STUDIO_JS,/Math\.max\(w\/image\.width,h\/image\.height\)/);
+  assert.ok(STUDIO_JS.includes('Math.max((w+2*bleed)/image.width,(h+2*bleed)/image.height)'));
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
   assert.match(STUDIO_JS,/blur\(12px\) brightness\(\.45\) saturate\(\.7\)/);
   assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);/);
