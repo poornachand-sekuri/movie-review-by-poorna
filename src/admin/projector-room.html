@@ -285,7 +285,7 @@
               <div class="social-help" id="socialAssetsStatus"></div>
             </div>
             <div class="social-group social-captions"><h2>Platform Captions & Links</h2>
-              <p class="social-help">Short platform-specific Feed captions and Story/Status posting notes, with tracked review links and optional cross-platform promotion. The image already carries the movie details and MY POV.</p>
+              <p class="social-help">Every platform now includes Instagram, Facebook, X and WhatsApp Channel URLs, with a blank line after each line. X is a two-post thread with separate copy actions. Story/Status messages are publishing notes, not text to paste on the image. The image already carries the MY POV.</p>
               <label class="field"><span>Platform</span><select id="socialCaptionPlatform">
                 <option value="instagram-post">Instagram Post</option>
                 <option value="instagram-story">Instagram Story</option>
@@ -299,6 +299,7 @@
               <label class="field"><span>Tracked review URL for this platform</span><input id="socialTrackedUrl" readonly></label>
               <div class="social-caption-actions">
                 <button id="socialCopyCaption" class="ghost" type="button">COPY MESSAGE</button>
+                <button id="socialCopyXReply" class="ghost" type="button" hidden>COPY X FOLLOW-UP REPLY</button>
                 <button id="socialCopyLink" class="ghost" type="button">COPY LINK</button>
                 <button id="socialDownloadCaptions" class="ghost" type="button">DOWNLOAD 7 PLATFORM NOTES</button>
               </div><small class="social-help" id="socialCaptionStatus">No movie selected.</small>
@@ -326,7 +327,7 @@
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
   <link rel="stylesheet" href="/admin/social-studio.css?v=5">
   <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
-  <script src="/admin/social-studio.js?v=5" defer></script>
+  <script src="/admin/social-studio.js?v=6" defer></script>
   <script src="/admin/social-rich-editor.js?v=2" defer></script>
 </body>
 </html>
