@@ -266,8 +266,17 @@ test('All seven platform messages include the four canonical accounts with a bla
     assert.match(h.element('socialTrackedUrl').value,/utm_source=/);
     if(platform!=='instagram-post')assert.match(caption,/utm_source=/);
     for(const link of links)assert.ok(caption.includes(link),platform+' must promote '+link);
+    for(const symbol of ['📸 Instagram:','ⓕ Facebook:','𝕏 X:','💬 WhatsApp']){
+      assert.ok(caption.includes(symbol),platform+' needs the finalized '+symbol+' caption symbol');
+    }
+    assert.ok(!caption.includes('🔵 Facebook')&&!caption.includes('🟢 WhatsApp'),platform+' must not use generic colored dots');
     assert.doesNotMatch(caption,/(?<!\n)\n(?!\n)/u,platform+' must have one blank line between displayed lines');
   }
+  h.element('socialCaptionPlatform').value='instagram-post';
+  h.element('socialCaptionPlatform').listeners.change();
+  assert.match(h.element('socialCaptionText').value,/🎞️ THE MOVIE TALK DOESN'T END HERE!/);
+  assert.match(h.element('socialCaptionText').value,/🎥 ONE LOVE. MANY SCREENS./);
+  assert.doesNotMatch(h.element('socialCaptionText').value,/caption URLs are not tappable/i);
   h.element('socialCaptionPlatform').value='whatsapp-channel';
   h.element('socialCaptionPlatform').listeners.change();
   assert.match(h.element('socialCaptionText').value,/Instagram: /);
