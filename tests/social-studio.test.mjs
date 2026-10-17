@@ -455,8 +455,7 @@ test('Both promotional rich editors provide twelve fonts, fourteen colors and cu
   assert.ok(STUDIO_JS.includes('SOCIAL_FONTS.includes(style?.font)'),'export renderer uses expanded fonts');
   assert.ok(RICH_JS.includes("command==='hex'"),'Selected text can use a custom HEX');
   assert.ok(RICH_JS.includes('editor.style.color=base.color'),'Preview respects base text color');
-  assert.ok(STUDIO_JS.includes('document.fonts.load(\'700 48px "')),
-    'Fonts load before measurement and image export');
+  assert.ok(STUDIO_JS.includes("document.fonts.load('700 48px"),'Fonts load before measurement and image export');
 });
 test('WATCHED IN supports per-format font, font size, auto-fit and color without editing the movie record',async()=>{
   for(const id of ['socialLanguageFont','socialLanguageSize','socialLanguageColor','socialLanguageAuto'])
