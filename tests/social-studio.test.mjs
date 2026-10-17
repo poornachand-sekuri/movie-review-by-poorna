@@ -15,6 +15,7 @@ function harness() {
   const drawnText = [];
   const filledRects = [];
   const styledDraws = [];
+  const copied = [];
   const buttons = Object.fromEntries(['post','story'].map(kind=>[kind,{dataset:{socialFormat:kind},listeners:{},classList:{toggle(){}},addEventListener(type,cb){this.listeners[type]=cb;}}]));
   function element(id) {
     if(!elementMap.has(id))elementMap.set(id,{
@@ -76,10 +77,10 @@ function harness() {
     fetch:fetchMock,Event:class {constructor(type){this.type=type;}},
     requestAnimationFrame:cb=>setImmediate(cb),
     setTimeout,clearTimeout,URL,Blob,FormData,File:class{},
-    Intl,Date,Number,String,Array,Math,Promise,console,
+    Intl,Date,Number,String,Array,Math,Promise,console,navigator:{clipboard:{writeText:async text=>{copied.push(text);}}},
   };
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText,filledRects,buttons,styledDraws,window:win};
+  return {element,callbacks,document,drawnText,filledRects,buttons,styledDraws,copied,window:win};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
@@ -246,26 +247,65 @@ test('No duplicate typography sliders and obsolete detached word controls remain
   assert.match(RICH_JS,/editor\.style\.fontSize=Number\(base\.size\)/);
 });
 
-test('Seven short captions promote clicks without duplicating MY POV text',async()=>{
+test('All seven platform messages include the four canonical accounts with a blank line between every line',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  const links=[
+    'https://www.instagram.com/moviereviewbypoorna/',
+    'https://www.facebook.com/moviereviewbypoorna',
+    'https://x.com/reviewbypoorna',
+    'https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546'
+  ];
   for(const platform of ['instagram-post','instagram-story','facebook-post','facebook-story','x-post','whatsapp-channel','whatsapp-status']){
     h.element('socialCaptionPlatform').value=platform;
     h.element('socialCaptionPlatform').listeners.change();
     const caption=h.element('socialCaptionText').value;
     assert.match(caption,/🎬/u,platform+' cinema icon');
-    assert.match(caption,/🎟️/u,platform+' CTA icon');
-    assert.doesNotMatch(caption,/Geetu aimed for a Joker-like/,platform+' must not repeat complete MY POV');
+    assert.match(caption,/🎟️/u,platform+' review CTA icon');
+    assert.doesNotMatch(caption,/Geetu aimed for a Joker-like/,platform+' should not duplicate the full MY POV');
     assert.match(h.element('socialTrackedUrl').value,/utm_source=/);
     if(platform!=='instagram-post')assert.match(caption,/utm_source=/);
+    for(const link of links)assert.ok(caption.includes(link),platform+' must promote '+link);
+    assert.doesNotMatch(caption,/(?<!\n)\n(?!\n)/u,platform+' must have one blank line between displayed lines');
   }
-  h.element('socialCaptionPlatform').value='x-post';
-  h.element('socialCaptionPlatform').listeners.change();
-  assert.ok(h.element('socialCaptionText').value.length<=280);
   h.element('socialCaptionPlatform').value='whatsapp-channel';
   h.element('socialCaptionPlatform').listeners.change();
-  assert.match(h.element('socialCaptionText').value,/instagram.com/);
-  assert.match(h.element('socialCaptionText').value,/whatsapp/);
+  assert.match(h.element('socialCaptionText').value,/Instagram: /);
+  assert.match(h.element('socialCaptionText').value,/Facebook: /);
+  assert.match(h.element('socialCaptionText').value,/WhatsApp Channel:/);
+});
+test('X captions are safely split into two copyable posts, including all four follow links',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  h.element('socialCaptionPlatform').value='x-post';
+  h.element('socialCaptionPlatform').listeners.change();
+  const text=h.element('socialCaptionText').value;
+  const [main,reply]=text.split('=== X FOLLOW-UP REPLY (POST 2/2) ===').map(x=>x.trim());
+  assert.ok(main&&reply,'X uses separate main post and follow-up reply');
+  assert.ok(main.length<=280,'X main is too long: '+main.length);
+  assert.ok(reply.length<=280,'X follow-up is too long: '+reply.length);
+  assert.match(main,/utm_source=x/);
+  assert.match(reply,/x\.com\/reviewbypoorna/);
+  assert.equal(h.element('socialCopyCaption').textContent,'COPY X POST 1/2');
+  assert.equal(h.element('socialCopyXReply').hidden,false);
+  h.element('socialCopyCaption').listeners.click();await settle();
+  h.element('socialCopyXReply').listeners.click();await settle();
+  assert.deepEqual(h.copied,[main,reply]);
+  h.element('socialCaptionPlatform').value='facebook-post';
+  h.element('socialCaptionPlatform').listeners.change();
+  assert.equal(h.element('socialCopyXReply').hidden,true);
+  assert.equal(h.element('socialCopyCaption').textContent,'COPY MESSAGE');
+});
+test('Approved poster openings use the existing-site contain and softened full-frame technique',()=>{
+  assert.match(STUDIO_JS,/poster:\[54,298,384,587\]/);
+  assert.match(STUDIO_JS,/poster:\[42,292,387,597\]/);
+  assert.match(STUDIO_JS,/poster:\[49,285,379,598\]/);
+  assert.match(STUDIO_JS,/poster:\[261,243,567,645\]/);
+  assert.match(STUDIO_JS,/Math\.max\(w\/image\.width,h\/image\.height\)/);
+  assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
+  assert.match(STUDIO_JS,/blur\(12px\) brightness\(\.45\) saturate\(\.7\)/);
+  assert.match(STUDIO_JS,/ctx\.rect\(x,y,w,h\);ctx\.clip\(\)/);
+  assert.ok(!!ADMIN_HTML.match(/socialCopyXReply/),'X reply copy button is available');
 });
 
 test('Admin UI allows 4 approved masters and Post platform selection without editing review records',async()=>{
@@ -301,7 +341,7 @@ test('Rating fills exactly the five baked stars without adding another set of ou
 });
 test('Poster retains all its original image with a blurred contextual fill',()=>{
   assert.match(STUDIO_JS,/function drawPoster\(ctx,image,box\)/);
-  assert.match(STUDIO_JS,/blur\(15px\) brightness/);
+  assert.match(STUDIO_JS,/blur\(12px\) brightness\(\.45\) saturate\(\.7\)/);
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
   assert.match(STUDIO_JS,/ctx\.rect\(x,y,w,h\);ctx\.clip\(\)/);
 });
