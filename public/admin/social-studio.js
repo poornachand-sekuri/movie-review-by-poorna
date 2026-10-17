@@ -129,39 +129,30 @@
     return state.review?trackedUrlFor(state.review,platform):'';
   }
   function makeCaptions(review) {
-    const title=String(review.t||'').trim(),pov=String(review.v||'').trim();
-    const link=k=>trackedUrlFor(review,k);
-    // Plain-text captions support Unicode emoji, not embedded images. The PNG
-    // exports supply the visual content; these messages remain user-editable.
-    const intro='🎬 NOW REVIEWED | '+title;
-    const verdict='🍿 MY POV\n'+pov;
+    const title=String(review.t||'').trim(),link=key=>trackedUrlFor(review,key);
+    // Images contain rating, language and MY POV. Captions invite the next click.
+    // Story/Status entries are posting notes; no duplicate public Story caption needed.
+    const instagram='https://www.instagram.com/moviereviewbypoorna/';
+    const channel='https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546';
     const tags='#MovieReviewsByPoorna #MovieReview';
-    const xLink=link('x-post');
-    const xBase='🎬 '+title+'\n🍿 New review in the Auditorium!\n🎟️ '+xLink;
+    const xBase='🎬 '+title+'\n🍿 My verdict is up. Agree or disagree?\n🎟️ '+link('x-post');
     const xCaption=xBase.length+1+tags.length<=280?xBase+'\n'+tags:xBase;
     return {
-      'instagram-post':intro+'\n\n'+verdict+
-        '\n\n🎟️ Read the full review in the Auditorium.\n🔗 Open via the profile or Story link sticker (caption URLs are not clickable):\n'+
-        link('instagram-post')+'\n\n'+tags,
-      'instagram-story':'🎬 '+title+'\n\n🍿 '+pov+
-        '\n\n👇 🎟️ TAP THE LINK STICKER FOR THE FULL REVIEW\n🔗 '+link('instagram-story'),
-      'facebook-post':intro+'\n\n'+verdict+
-        '\n\n🎟️ ENTER THE AUDITORIUM\n🔗 '+link('facebook-post')+
-        '\n\n'+tags,
-      'facebook-story':'🎬 '+title+'\n🍿 '+pov+
-        '\n\n👇 🎟️ FULL REVIEW VIA LINK STICKER\n🔗 '+link('facebook-story'),
+      'instagram-post':'🎬 '+title+' is now screening in the Auditorium!\n🍿 Worth your popcorn? Find out in the full review.\n🎟️ Link in bio.\n📣 Join our WhatsApp Channel: '+channel+'\n'+tags,
+      'instagram-story':'🎬 STORY PUBLISHING NOTE (do not paste as a caption)\n🎟️ Place the native link sticker in the reserved zone: '+link('instagram-story'),
+      'facebook-post':'🎬 '+title+' is now screening in my Auditorium!\n🍿 Agree with my verdict?\n🎟️ Read the full review: '+link('facebook-post')+'\n📸 Follow on Instagram: '+instagram,
+      'facebook-story':'🎬 STORY PUBLISHING NOTE (no caption required)\n🎟️ Attach the review URL using the native story-link feature, where available: '+link('facebook-story'),
       'x-post':xCaption,
-      'whatsapp-channel':'🎬 *MOVIE REVIEWS BY POORNA*\n\n🎞️ *'+title+'*\n\n🍿 *MY POV*\n'+pov+
-        '\n\n🎟️ *Read the full review in the Auditorium*\n🔗 '+link('whatsapp-channel'),
-      'whatsapp-status':'🎬 '+title+'\n\n🍿 '+pov+
-        '\n\n🎟️ Full review:\n🔗 '+link('whatsapp-status')
+      'whatsapp-channel':'🎬 *'+title+'*\n🍿 My verdict is up. Have you watched it yet?\n🎟️ Full review: '+link('whatsapp-channel')+'\n📸 More reviews on Instagram: '+instagram,
+      'whatsapp-status':'🎬 STATUS PUBLISHING NOTE (no repeated MY POV)\n🎟️ Add the link where your Status editor supports it; otherwise publish a linked text Status: '+link('whatsapp-status')
     };
   }
   function updateCaptionEditor() {
     const key=inputs.captionPlatform.value;
     inputs.captionText.value=state.captions[key] || '';
     inputs.trackedUrl.value=trackedUrl(key);
-    inputs.captionStatus.textContent=state.review?'Edit and copy the caption for '+inputs.captionPlatform.selectedOptions?.[0]?.textContent+'.':'Select a saved review.';
+    const isStory=key.endsWith('story')||key.endsWith('status');
+    inputs.captionStatus.textContent=state.review?(isStory?'Story/Status posting instructions (not a public caption). Copy the tracked link for the native link feature.':'Edit and copy the short promotional caption for '+inputs.captionPlatform.selectedOptions?.[0]?.textContent+'.'):'Select a saved review.';
   }
   async function copyText(value,message) {
     if(!value) {inputs.captionStatus.textContent='Nothing to copy yet.';return;}
