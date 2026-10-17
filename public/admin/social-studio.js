@@ -138,9 +138,9 @@
     const xBase='🎬 '+title+'\n🍿 My verdict is up. Agree or disagree?\n🎟️ '+link('x-post');
     const xCaption=xBase.length+1+tags.length<=280?xBase+'\n'+tags:xBase;
     return {
-      'instagram-post':'🎬 '+title+' is now screening in the Auditorium!\n🍿 Worth your popcorn? Find out in the full review.\n🎟️ Link in bio.\n📣 Join our WhatsApp Channel: '+channel+'\n'+tags,
+      'instagram-post':'🎬 '+title+' has reached the Auditorium!\n🍿 Worth your popcorn? Find out in the full review.\n🎟️ Link in bio.\n📣 Join our WhatsApp Channel: '+channel+'\n'+tags,
       'instagram-story':'🎬 STORY PUBLISHING NOTE (do not paste as a caption)\n🎟️ Place the native link sticker in the reserved zone: '+link('instagram-story'),
-      'facebook-post':'🎬 '+title+' is now screening in my Auditorium!\n🍿 Agree with my verdict?\n🎟️ Read the full review: '+link('facebook-post')+'\n📸 Follow on Instagram: '+instagram,
+      'facebook-post':'🎬 '+title+' has reached my Auditorium!\n🍿 Agree with my verdict?\n🎟️ Read the full review: '+link('facebook-post')+'\n📸 Follow on Instagram: '+instagram,
       'facebook-story':'🎬 STORY PUBLISHING NOTE (no caption required)\n🎟️ Attach the review URL using the native story-link feature, where available: '+link('facebook-story'),
       'x-post':xCaption,
       'whatsapp-channel':'🎬 *'+title+'*\n🍿 My verdict is up. Have you watched it yet?\n🎟️ Full review: '+link('whatsapp-channel')+'\n📸 More reviews on Instagram: '+instagram,
