@@ -280,9 +280,9 @@
           ctx.shadowColor='#000000';ctx.shadowBlur=8;ctx.shadowOffsetX=3;ctx.shadowOffsetY=3;
         }else if(piece.style?.effect==='outline'){
           ctx.strokeStyle='#f1f1f1';ctx.lineWidth=1.5;
-          ctx.strokeText(piece.text,px,py+row.height/2);
+          ctx.strokeText(piece.text,px,py+row.height/2,Math.max(1,piece.width));
         }
-        ctx.fillText(piece.text,px,py+row.height/2);
+        ctx.fillText(piece.text,px,py+row.height/2,Math.max(1,piece.width));
         if(piece.style?.underline){
           ctx.shadowBlur=0;
           ctx.fillRect(px,py+row.height/2+piece.size*.31,piece.width,Math.max(1,piece.size*.05));
