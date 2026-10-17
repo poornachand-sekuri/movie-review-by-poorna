@@ -135,7 +135,7 @@ test('Four approved templates share two export dimensions',()=>{
 test('Post and Story captions use separate tracked links and can be independently edited', async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  assert.match(h.element('socialCaptionText').value,/utm_source=instagram/);
+  assert.match(h.element('socialCaptionText').value,/Link in bio/);
   assert.match(h.element('socialTrackedUrl').value,/utm_campaign=toxic-a-fairy-tale-for-grown-ups/);
   h.element('socialCaptionText').value='MY CUSTOM IG MESSAGE';
   h.element('socialCaptionText').listeners.input();
@@ -215,9 +215,9 @@ test('Story metadata uses two columns and retains an empty dynamic title ticket'
   assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
 });
 test('MY POV has top inset and stays inside the new approved red panel',()=>{
-  assert.ok(STUDIO_JS.includes('pov:[484,754,523,120]'));
+  assert.ok(STUDIO_JS.includes('pov:[484,749,523,137]'));
   assert.ok(STUDIO_JS.includes('pov:[93,1352,892,220]'));
-  assert.ok(754+120<891,'Post MY POV has interior bottom clearance');
+  assert.ok(749+137<891,'Post MY POV has interior bottom clearance');
   assert.ok(1352+220<1612,'Story MY POV has interior bottom clearance');
 });
 
