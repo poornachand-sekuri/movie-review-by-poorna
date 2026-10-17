@@ -589,7 +589,7 @@
   // Language values are part of the vintage ticket, not ordinary form text.
   // Barlow Condensed's upright cinema-lettering pairs with the fixed header art.
   function drawLanguage(ctx,value,place) {
-    const language=String(value||'').replace(/\\s+/g,' ').trim();
+    const language=String(value||'').replace(/\s+/g,' ').trim();
     if(!language)return;
     ctx.save();
     ctx.textAlign='center';ctx.textBaseline='middle';
