@@ -432,8 +432,8 @@ test('Poster rectangles have verified clearances from the four approved master b
 });
 
 test('Both promotional text editors offer twelve usable cinematic font choices and sixteen color swatches',()=>{
-  const title=ADMIN_HTML.match(/data-rich-toolbar="title"[\\s\\S]*?<\\/div>/)?.[0]||'';
-  const pov=ADMIN_HTML.match(/data-rich-toolbar="pov"[\\s\\S]*?<\\/div>/)?.[0]||'';
+  const title=ADMIN_HTML.slice(ADMIN_HTML.indexOf('data-rich-toolbar="title"'),ADMIN_HTML.indexOf('id="socialTitleRich"'));
+  const pov=ADMIN_HTML.slice(ADMIN_HTML.indexOf('data-rich-toolbar="pov"'),ADMIN_HTML.indexOf('id="socialPovRich"'));
   const fonts=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','DM Sans'];
   for(const html of [title,pov]){
     for(const font of fonts)assert.ok(html.includes('value="'+font+'"'),font+' is missing');
