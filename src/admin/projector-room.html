@@ -204,7 +204,7 @@
 
       <section id="socialPanel" class="admin-panel hidden social-panel">
         <div class="panel-heading">
-          <div><p class="eyebrow">PROMOTIONAL CREATIVE GENERATOR</p><h1>Social Media Studio</h1><p class="panel-copy">Two locked visual templates. Movie data and posters load from your saved reviews. Adjust typography without altering the original review.</p></div>
+          <div><p class="eyebrow">PROMOTIONAL CREATIVE GENERATOR</p><h1>Social Media Studio</h1><p class="panel-copy">Four approved cinematic masters: Instagram Post, Facebook/X Post, WhatsApp Channel and Story. Dynamic text and poster edits never alter saved reviews.</p></div>
         </div>
         <div class="social-workspace">
           <section class="social-controls" aria-label="Social Studio controls">
@@ -258,10 +258,10 @@
               </div>
               <div class="social-grid2">
                 <label class="field"><span>WATCHED IN (this format)</span><input id="socialLanguage" maxlength="60"></label>
-                <label class="field"><span>RELEASE DATE (this format)</span><input id="socialReleaseDate" type="date"></label>
+                
               </div>
               <label class="field"><span>POORNA'S RATING (stars only)</span><input id="socialRating" type="number" min="0" max="5" step="0.25"><small>Five stars with 0.25 fractional fill. No numeric rating on the image.</small></label>
-              <p class="social-help">Post and Story data, fonts and MY POV edits are independent. Edits here affect promotional images only and never change saved reviews.</p>
+              <p class="social-help">Post and Story data, fonts and MY POV edits are independent; the three Post layouts share the Post draft. Edits here affect promotional images only and never change saved reviews.</p>
             </div>
             <div class="social-group social-fit-controls"><h2>Layout & Text Fit</h2>
               <p class="social-help">Use the toolbar directly above each text box for font, size, color and effects. No text selected formats the whole box; selected text formats only those words.</p>
@@ -275,11 +275,13 @@
               </div>
               <p class="social-help">If styling cannot fit the approved panel at a readable size, downloading is blocked rather than cutting off text.</p>
             </div>
-            <div class="social-group"><h2>Approved Master Backgrounds</h2>
-              <p class="social-help">Upload the exact approved Post and Story PNG/WebP files once. They are saved privately to Cloudflare R2, not into review records.</p>
-              <label class="field"><span>Post master (1080 × 1080)</span><input id="socialPostFile" type="file" accept="image/png,image/webp"></label>
-              <label class="field"><span>Story master (1080 × 1920)</span><input id="socialStoryFile" type="file" accept="image/png,image/webp"></label>
-              <button class="ghost" type="button" id="socialSaveTemplates">SAVE APPROVED MASTERS TO R2</button>
+            <div class="social-group"><h2>Approved Platform Masters</h2>
+              <p class="social-help">Upload the four PNG files from the approved October 17 master package. Original backgrounds are saved privately to R2. Movie title, language, rating, MY POV and original poster are overlaid dynamically.</p>
+              <label class="field"><span>Instagram Post master (1080 × 1080)</span><input id="socialInstagramFile" type="file" accept="image/png,image/webp"></label>
+              <label class="field"><span>Facebook / X Post master (1080 × 1080)</span><input id="socialFacebookXFile" type="file" accept="image/png,image/webp"></label>
+              <label class="field"><span>WhatsApp Channel master (1080 × 1080)</span><input id="socialWhatsAppFile" type="file" accept="image/png,image/webp"></label>
+              <label class="field"><span>Story / Status master (1080 × 1920)</span><input id="socialStoryFile" type="file" accept="image/png,image/webp"></label>
+              <button class="ghost" type="button" id="socialSaveTemplates">SAVE FOUR APPROVED MASTERS TO R2</button>
               <div class="social-help" id="socialAssetsStatus"></div>
             </div>
             <div class="social-group social-captions"><h2>Platform Captions & Links</h2>
@@ -305,6 +307,11 @@
           <section class="social-preview-area" aria-label="Generated image preview">
             <div class="social-preview-head"><h2>Live Preview</h2>
               <div class="social-switch"><button class="active" type="button" data-social-format="post">POST</button><button type="button" data-social-format="story">STORY</button></div>
+              <label class="field"><span>Post platform design</span><select id="socialPostPlatform">
+                <option value="instagram-post">Instagram Post</option>
+                <option value="facebook-x-post">Facebook / X Post</option>
+                <option value="whatsapp-channel">WhatsApp Channel</option>
+              </select></label>
             </div>
             <div class="social-canvas-wrap"><canvas id="socialCanvas" width="1080" height="1080" aria-label="Rendered promotional image"></canvas></div>
             <p class="social-warning" id="socialWarnings" role="status" aria-live="polite">Select a movie and load the approved master backgrounds.</p>
@@ -317,9 +324,9 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=4">
+  <link rel="stylesheet" href="/admin/social-studio.css?v=5">
   <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
-  <script src="/admin/social-studio.js?v=4" defer></script>
+  <script src="/admin/social-studio.js?v=5" defer></script>
   <script src="/admin/social-rich-editor.js?v=2" defer></script>
 </body>
 </html>
