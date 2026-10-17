@@ -19,28 +19,30 @@
     seq: 0, drafts: { post:null, story:null }, captions:{}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
-  // Keep every element within the actual content apertures of each approved master.
+  // Poster apertures are strictly inset inside the bright ornamental frame edges,
+  // pixel-measured from the final 1080px masters. Never draw over master borders.
+  // FB star centers measured from the five baked white outlines (y=575.8, not 580.5).
   // Star outlines are PRINTED in the source PNG: we fill them, never draw duplicates.
   const geometry={
     post:{
-      size:[1080,1080],poster:[52,291,388,599],title:[505,333,477,90],
+      size:[1080,1080],poster:[59,299,375,580],title:[505,333,477,90],
       pov:[485,748,517,128],language:{cx:594,y:622,max:223},
       rating:{centers:[760.5,818.4,876.5,934,991.5],y:601.5,r:24}
     },
     story:{
-      size:[1080,1920],poster:[251,261,577,630],title:[162,926,756,103],
+      size:[1080,1920],poster:[259,276,562,602],title:[162,926,756,103],
       pov:[99,1388,870,197],language:{cx:251,y:1211,max:290},
       rating:{centers:[577.8,665,751,837.8,921.6],y:1215.8,r:33}
     }
   };
   const postOverrides={
     'facebook-x-post':{
-      poster:[41,283,389,611],title:[504,329,478,93],
+      poster:[48,293,378,592],title:[504,329,478,93],
       pov:[486,745,515,129],language:{cx:592,y:613,max:217},
-      rating:{centers:[755.8,817.6,878.5,939.7,1000.5],y:580.5,r:22}
+      rating:{centers:[755.9,817.5,878.5,939.9,1000.6],y:575.8,r:24.5}
     },
     'whatsapp-channel':{
-      poster:[49,283,380,603],title:[503,335,480,90],
+      poster:[56,283,365,594],title:[503,335,480,90],
       pov:[485,750,518,127],language:{cx:585,y:627,max:214},
       rating:{centers:[732.5,796.4,861.8,926.7,991.1],y:600,r:26}
     }
@@ -474,11 +476,11 @@
   }
   // Same image policy as Now Reviewed on Lounge: contain the entire original
   // poster over a softly blurred, darkened cover version of that poster.
-  // Ticket corners are an integral part of the approved artwork; a matching
-  // rounded mask prevents dynamic pixels from painting over their outlines.
+  // Ticket corners are integral to the approved artwork. A conservatively inset
+  // rounded aperture preserves every ornamental border and curved corner.
   function posterOpeningPath(ctx,box) {
     const [x,y,w,h]=box;
-    const r=Math.min(16,w/12,h/12);
+    const r=Math.min(20,w/12,h/12);
     ctx.beginPath();
     ctx.moveTo(x+r,y);
     ctx.lineTo(x+w-r,y);
@@ -500,7 +502,7 @@
     // Inset -16px matches review-image-fit.css; soften the BACKGROUND only.
     const bleed=16,cover=Math.max((w+2*bleed)/image.width,(h+2*bleed)/image.height);
     const iw=image.width*cover,ih=image.height*cover;
-    ctx.filter='blur(12px) brightness(.45) saturate(.7)';
+    ctx.filter='blur(14px) brightness(.33) saturate(.75)';
     ctx.drawImage(image,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
     ctx.filter='none';
     const contain=Math.min(w/image.width,h/image.height);
