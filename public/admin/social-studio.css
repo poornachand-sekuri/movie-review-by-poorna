@@ -81,3 +81,16 @@
   .social-rich-toolbar{gap:4px}
   .social-rich-toolbar button,.social-rich-toolbar select {padding:6px!important;min-height:36px}
 }
+
+/* Platform logo row mirrors the site's Stay Connected icon set. The logos are
+   interactive in Social Studio, not fake clickable artwork in exported PNGs. */
+.social-platform-icons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 8px}
+.social-platform-icon{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px 4px;min-height:66px;border:1px solid rgb(241 241 241 / 20%);border-radius:10px;background:#181416;color:#f1f1f1;text-decoration:none;text-align:center;font:700 11px/1.15 Inter,"Segoe UI",sans-serif;transition:border-color .15s,background .15s,transform .15s}
+.social-platform-icon svg{display:block;width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.social-platform-icon--instagram svg{color:#f056ae}
+.social-platform-icon--facebook svg{color:#398cf5}
+.social-platform-icon--x svg{color:#f1f1f1}
+.social-platform-icon--whatsapp svg{color:#25d366}
+.social-platform-icon:hover{border-color:#f7010e;background:#280f13;transform:translateY(-1px)}
+.social-platform-icon:focus-visible{outline:2px solid #f7010e;outline-offset:2px}
+@media(max-width:460px){.social-platform-icons{gap:4px}.social-platform-icon{font-size:9px;padding:7px 2px}.social-platform-icon svg{width:23px;height:23px}}

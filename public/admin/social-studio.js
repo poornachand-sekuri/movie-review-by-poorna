@@ -23,24 +23,24 @@
   // Star outlines are PRINTED in the source PNG: we fill them, never draw duplicates.
   const geometry={
     post:{
-      size:[1080,1080],poster:[54,298,384,587],title:[505,333,477,90],
+      size:[1080,1080],poster:[52,291,388,599],title:[505,333,477,90],
       pov:[485,748,517,128],language:{cx:594,y:622,max:223},
       rating:{centers:[760.5,818.4,876.5,934,991.5],y:601.5,r:24}
     },
     story:{
-      size:[1080,1920],poster:[261,243,567,645],title:[162,926,756,103],
+      size:[1080,1920],poster:[251,261,577,630],title:[162,926,756,103],
       pov:[99,1388,870,197],language:{cx:251,y:1211,max:290},
       rating:{centers:[577.8,665,751,837.8,921.6],y:1215.8,r:33}
     }
   };
   const postOverrides={
     'facebook-x-post':{
-      poster:[42,292,387,597],title:[504,329,478,93],
+      poster:[41,283,389,611],title:[504,329,478,93],
       pov:[486,745,515,129],language:{cx:592,y:613,max:217},
       rating:{centers:[755.8,817.6,878.5,939.7,1000.5],y:580.5,r:22}
     },
     'whatsapp-channel':{
-      poster:[49,285,379,598],title:[503,335,480,90],
+      poster:[49,283,380,603],title:[503,335,480,90],
       pov:[485,750,518,127],language:{cx:585,y:627,max:214},
       rating:{centers:[732.5,796.4,861.8,926.7,991.1],y:600,r:26}
     }
@@ -162,9 +162,9 @@
   const followEverywhere=()=>[
     '📣 FOLLOW MOVIE REVIEWS BY POORNA EVERYWHERE',
     '📸 Instagram: '+SOCIAL_ACCOUNTS.instagram,
-    '👍 Facebook: '+SOCIAL_ACCOUNTS.facebook,
+    '🔵 Facebook: '+SOCIAL_ACCOUNTS.facebook,
     '𝕏 X: '+SOCIAL_ACCOUNTS.x,
-    '📲 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
+    '🟢 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
   ];
   // The follow-up reply is deliberately compact enough for an individual X post.
   const xFollowUp=()=>spaced([
@@ -470,13 +470,33 @@
     ctx.restore();
     return {ok:true,size:layout.size};
   }
-  // Fit the complete original poster without ugly black sidebars in the Story.
-  // A dimmed cropped copy fills the backdrop while the uncropped poster remains visible.
+  // Same image policy as Now Reviewed on Lounge: contain the entire original
+  // poster over a softly blurred, darkened cover version of that poster.
+  // Ticket corners are an integral part of the approved artwork; a matching
+  // rounded mask prevents dynamic pixels from painting over their outlines.
+  function posterOpeningPath(ctx,box) {
+    const [x,y,w,h]=box;
+    const r=Math.min(16,w/12,h/12);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
   function drawPoster(ctx,image,box) {
     if(!image)return;
     const [x,y,w,h]=box;
-    ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
-    const cover=Math.max(w/image.width,h/image.height);
+    ctx.save();
+    posterOpeningPath(ctx,box);
+    ctx.clip();
+    // Inset -16px matches review-image-fit.css; soften the BACKGROUND only.
+    const bleed=16,cover=Math.max((w+2*bleed)/image.width,(h+2*bleed)/image.height);
     const iw=image.width*cover,ih=image.height*cover;
     ctx.filter='blur(12px) brightness(.45) saturate(.7)';
     ctx.drawImage(image,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
