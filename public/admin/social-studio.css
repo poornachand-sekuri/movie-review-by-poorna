@@ -66,11 +66,18 @@
   border:1px solid rgba(255,255,255,.4)!important;border-radius:50%;
   min-width:21px;width:21px!important;height:21px;min-height:21px;padding:0!important;
 }
-.social-rich-toolbar .social-swatch.red {background:#F7010E!important}
-.social-rich-toolbar .social-swatch.silver {background:#F1F1F1!important}
-.social-rich-toolbar .social-swatch.cyan {background:#19F9FF!important}
-.social-rich-toolbar .social-swatch.gold {background:#F7D154!important}
-.social-rich-toolbar .social-swatch.purple {background:#C770FF!important}
+.social-rich-toolbar .social-rich-palette{display:flex;flex-wrap:wrap;align-items:center;gap:5px;flex:1 1 220px;min-width:190px;padding:3px 4px;border-left:1px solid #574739}
+.social-rich-toolbar .social-swatch{background:var(--swatch,#F1F1F1)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22);transition:transform .15s,border-color .15s}
+.social-rich-toolbar .social-swatch:hover,.social-rich-toolbar .social-swatch:focus-visible{transform:scale(1.18);border-color:#f1f1f1!important}
+.social-rich-toolbar [data-rich-action=hex]{width:85px!important;letter-spacing:.02em;text-transform:uppercase;font-family:ui-monospace,SFMono-Regular,Consolas,monospace!important}
+.social-rich-toolbar [data-rich-action=font]{flex:1 1 130px;max-width:215px}
+.social-rich-field [data-rich-editor=title]{background:#eee6df;color:#060505}
+.social-language-value{grid-column:1/-1}
+.social-language-style{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;border:1px solid #4b3d34;border-radius:8px;background:#151211}
+.social-language-style .field{min-width:0}
+.social-language-style .field input[type=color]{width:64px!important;min-height:39px;padding:3px!important;background:#100e0d;border:1px solid #68503a;border-radius:5px;cursor:pointer}
+.social-language-style .social-check{grid-column:1/-1;margin:0}
+@media(max-width:460px){.social-language-style{grid-template-columns:minmax(0,1fr)}.social-rich-toolbar .social-rich-palette{min-width:100%}}
 [data-rich-editor] {padding:14px 13px;outline:0;color:#f1f1f1;white-space:pre-wrap;overflow-wrap:anywhere;
   min-height:65px;max-height:360px;overflow-y:auto;cursor:text;caret-color:#f7010e;}
 [data-rich-editor="pov"]{min-height:145px}
