@@ -211,7 +211,7 @@ test('Locked master icons and metadata headers are not redrawn over approved art
   assert.ok(drawn('Telugu',1211),'Story language is positioned in left metadata panel');
   assert.ok(!h.drawnText.includes('RELEASE DATE'),'No release date overlay');
   assert.ok(!h.drawnText.includes("POORNA'S RATING"),'Master already contains rating header');
-  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Oswald')));
+  assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Barlow Condensed') && d.color==='#F7D154')));
   assert.ok(!h.drawnText.some(d=>d.includes('2.25/5')),'No numeric rating');
 });
 test('Rich edits support color, font, size, glow, italic and underline on exports',()=>{
@@ -429,4 +429,46 @@ test('Poster rectangles have verified clearances from the four approved master b
     assert.ok(STUDIO_JS.includes('poster:['+[b.x,b.y,b.w,b.h].join(',')+']'),b.id+' measured aperture used');
   }
   assert.ok(STUDIO_JS.includes('y:575.8,r:24.5'),'Facebook rating centered on baked white stars');
+});
+
+test('Both promotional text editors offer twelve usable cinematic font choices and sixteen color swatches',()=>{
+  const title=ADMIN_HTML.match(/data-rich-toolbar="title"[\\s\\S]*?<\\/div>/)?.[0]||'';
+  const pov=ADMIN_HTML.match(/data-rich-toolbar="pov"[\\s\\S]*?<\\/div>/)?.[0]||'';
+  const fonts=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','DM Sans'];
+  for(const html of [title,pov]){
+    for(const font of fonts)assert.ok(html.includes('value="'+font+'"'),font+' is missing');
+    assert.equal((html.match(/data-rich-color=/g)||[]).length,16);
+    assert.ok(html.includes('data-rich-action="hex"'));
+    assert.ok(html.includes('data-rich-action="color"'));
+  }
+  assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=3'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=10'));
+  assert.ok(RICH_JS.includes("hex.toUpperCase()"));
+  assert.ok(RICH_JS.includes("editor.style.color=base.color"));
+  for(const font of fonts)assert.ok(STUDIO_JS.includes("'"+font+"'"),'Canvas should allow '+font);
+  assert.ok(STUDIO_JS.includes('document.fonts.load(spec)'),'Chosen font must load before export');
+  assert.match(ADMIN_HTML,/--swatch:#FF739F/);
+  assert.match(ADMIN_HTML,/--swatch:#83F4AA/);
+});
+test('New fonts and colors are respected in drawn promotional image text',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';
+  await h.element('socialMovie').listeners.change();await settle();
+  const draft=h.window.SocialStudioRichBridge.getDraft();
+  draft.styles.title=[{start:0,end:5,font:'Bebas Neue',color:'#FF739F',weight:'700',size:52}];
+  draft.styles.pov=[{start:0,end:5,font:'Playfair Display',color:'#83F4AA',size:42}];
+  h.window.SocialStudioRichBridge.refresh();await settle();
+  assert.ok(h.styledDraws.some(d=>d.text==='TOXIC'&&d.font.includes('Bebas Neue')&&d.color==='#FF739F'),
+    'Title image must render selected font and rose text color');
+  assert.ok(h.styledDraws.some(d=>d.text==='Geetu'&&d.font.includes('Playfair Display')&&d.color==='#83F4AA'),
+    'MY POV image must render selected font and mint text color');
+});
+test('Watched In value uses fitted and shadowed cinema-gold Barlow Condensed typography',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  const lang=h.styledDraws.filter(d=>d.text==='Telugu');
+  assert.ok(lang.length>=2);
+  assert.ok(lang.every(d=>d.font.includes('Barlow Condensed')&&d.color==='#F7D154'));
+  assert.ok(STUDIO_JS.includes('place.max-8'));
+  assert.ok(STUDIO_JS.includes('ctx.shadowBlur=3'));
 });
