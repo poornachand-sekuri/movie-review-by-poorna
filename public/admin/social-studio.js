@@ -141,6 +141,9 @@
     url.searchParams.set('utm_source',platforms[platform]||'social');
     url.searchParams.set('utm_medium',platform.endsWith('story')||platform.endsWith('status')?'story':'social');
     url.searchParams.set('utm_campaign',slug);
+    // A very long title slug must not make the first X post exceed its limit.
+    // Retain source/medium tracking even when dropping the optional campaign key.
+    if(platform==='x-post' && url.toString().length>190)url.searchParams.delete('utm_campaign');
     return url.toString();
   }
   function trackedUrl(platform) {
