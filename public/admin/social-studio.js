@@ -47,6 +47,7 @@
       rating:{centers:[732.5,796.4,861.8,926.7,991.1],y:600,r:26}
     }
   };
+  const PROMO_FONTS=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','DM Sans'];
   const POST_KINDS=['instagram-post','facebook-x-post','whatsapp-channel'];
   function layoutFor(kind){
     return kind==='story'?geometry.story:{...geometry.post,...postOverrides[state.postPlatform]};
@@ -302,7 +303,7 @@
         let style=null;
         for(const range of ranges)if(range.start<=at&&range.end>=stop)style=range;
         const size=Math.max(17,Math.min(100,Number(style?.size)||options.size)*scale);
-        const family=['Inter','Oswald','Cinzel','Source Serif 4'].includes(style?.font)?style.font:options.family;
+        const family=PROMO_FONTS.includes(style?.font)?style.font:options.family;
         const weight=['400','600','700','800'].includes(String(style?.weight))?style.weight:options.weight;
         const font=(style?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
         const segment=raw.slice(at,stop);
@@ -585,20 +586,25 @@
       ctx.restore();
     }
   }
+  // Language values are part of the vintage ticket, not ordinary form text.
+  // Barlow Condensed's upright cinema-lettering pairs with the fixed header art.
   function drawLanguage(ctx,value,place) {
-    const language=String(value||'').trim();
+    const language=String(value||'').replace(/\\s+/g,' ').trim();
     if(!language)return;
     ctx.save();
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#f1f1f1';
-    ctx.shadowColor='rgba(247,1,14,.2)';ctx.shadowBlur=3;
-    let size=32;
+    ctx.fillStyle='#F7D154';
+    ctx.shadowColor='rgba(6,5,5,.85)';ctx.shadowBlur=3;
+    const maxSize=place.max>=275?38:33;
+    let size=maxSize;
     while(size>18){
-      ctx.font='700 '+size+'px "Oswald"';
-      if(ctx.measureText(language).width<=place.max)break;
+      ctx.font='700 '+size+'px "Barlow Condensed"';
+      if(ctx.measureText(language).width<=place.max-8)break;
       size--;
     }
-    ctx.fillText(language,place.cx,place.y);
+    ctx.font='700 '+size+'px "Barlow Condensed"';
+    // The language input remains untouched; never alter the saved review.
+    ctx.fillText(language,place.cx,place.y,place.max-4);
     ctx.restore();
   }
   function drawApprovedMeta(ctx,kind) {
@@ -654,7 +660,21 @@
   }
   let drawQueued=false;
   async function refreshAll(){
-    await Promise.all([document.fonts.load('700 60px "Oswald"'), document.fonts.load('600 48px "Inter"'),document.fonts.load('600 48px "Source Serif 4"'),document.fonts.load('700 60px "Cinzel"')]);
+    // Load the ACTUALLY selected fonts before making canvas text measurements.
+    // Otherwise the preview can use a fallback font and export mismatched glyphs.
+    const needed=new Set(['700 38px "Barlow Condensed"']);
+    for(const draft of Object.values(state.drafts)){
+      if(!draft)continue;
+      for(const field of ['title','pov']){
+        const base=draft[field+'Style'];
+        if(PROMO_FONTS.includes(base?.family))needed.add((base.weight||'700')+' '+(base.size||48)+'px "'+base.family+'"');
+        for(const style of draft.styles?.[field]||[]){
+          const font=style.font||base?.family;
+          if(PROMO_FONTS.includes(font))needed.add((style.weight||base?.weight||'700')+' '+(style.size||base?.size||48)+'px "'+font+'"');
+        }
+      }
+    }
+    await Promise.all([...needed].map(spec=>document.fonts.load(spec).catch(()=>[])));
     state.renders.post=renderFrame('post');
     state.renders.story=renderFrame('story');
     displayCurrent();
