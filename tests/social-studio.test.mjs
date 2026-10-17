@@ -120,13 +120,13 @@ test('MY POV overflow blocks PNG exports instead of silently truncating', async(
   await settle();
   assert.equal(h.element('socialDownloadPost').disabled,true);
   assert.equal(h.element('socialDownloadStory').disabled,false,'Story remains valid when only Post text overflows');
-  assert.match(h.element('socialWarnings').textContent,/cannot fit without clipping/);
+  assert.match(h.element('socialWarnings').textContent,/cannot fit inside the panel/);
 });
 
 test('Four approved templates share two export dimensions',()=>{
   assert.match(STUDIO_JS,/post:\s*\{\s*size:\s*\[1080,1080\]/);
   assert.match(STUDIO_JS,/story:\s*\{\s*size:\s*\[1080,1920\]/);
-  assert.match(STUDIO_JS,/for\s*\(let i = 0; i < 5; i\+\+\)/);
+  assert.match(STUDIO_JS,/for\(let i=0;i<5;i\+\+\)/);
   assert.doesNotMatch(STUDIO_JS,/numericX|value\.toFixed\(2\).*\/5/);
   assert.doesNotMatch(STUDIO_JS,/\.slice\(0,\s*\d+\)\s*\+\s*['"]\.\.\./);
 });
