@@ -136,7 +136,7 @@ test('Four approved templates share two export dimensions',()=>{
 test('Post and Story captions use separate tracked links and can be independently edited', async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  assert.match(h.element('socialCaptionText').value,/Link in bio/);
+  assert.match(h.element('socialCaptionText').value,/LINK IN BIO/i);
   assert.match(h.element('socialTrackedUrl').value,/utm_campaign=toxic-a-fairy-tale-for-grown-ups/);
   h.element('socialCaptionText').value='MY CUSTOM IG MESSAGE';
   h.element('socialCaptionText').listeners.input();
