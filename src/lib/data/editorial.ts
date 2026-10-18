@@ -13,7 +13,7 @@ export const EDITORIAL_DEFAULTS: Record<EditorialKey,EditorialStyle> = {
   'social.title': {family:'Oswald',size:59,weight:'700',color:'#060505',align:'center',line:1.11,auto:true},
   'social.pov': {family:'Inter',size:48,weight:'600',color:'#F1F1F1',align:'left',line:1.22,auto:true},
   'social.language': {family:'Oswald',size:38,weight:'700',color:'#F1F1F1',align:'center',line:1.1,auto:true},
-  'review.verdict': {family:'Barlow Condensed',size:32,weight:'600',color:'#FFE2B6',align:'left',line:1.3,auto:true},
+  'review.verdict': {family:'Barlow Condensed',size:48,weight:'600',color:'#FFE2B6',align:'left',line:1.3,auto:true},
   'review.body': {family:'Inter',size:16,weight:'400',color:'#F1EDE8',align:'left',line:1.55,auto:true},
 };
 const COLOR=/^#[0-9a-fA-F]{6}$/;
@@ -107,11 +107,11 @@ export async function saveVerdictMarks(reviewId:number,verdict:string,marks:unkn
   await getContentDb().prepare('INSERT INTO review_verdict_formatting(review_id,marks_json) VALUES(?1,?2) ON CONFLICT(review_id) DO UPDATE SET marks_json=excluded.marks_json,updated_at=CURRENT_TIMESTAMP').bind(reviewId,JSON.stringify(clean)).run();
   return clean;
 }
-export async function getPublicEditorial(reviewId:number):Promise<{verdict:EditorialStyle;body:EditorialStyle;marks:EditorialMark[]}> {
+export async function getPublicEditorial(reviewId:number):Promise<{verdict:EditorialStyle;body:EditorialStyle;marks:EditorialMark[];hasVerdictPreset:boolean;hasBodyPreset:boolean}> {
   // One indexed query for a single displayed movie, never for browse/search lists.
   const sql="SELECT (SELECT style_json FROM editorial_presets WHERE preset_key='review.verdict') AS verdict_style, (SELECT style_json FROM editorial_presets WHERE preset_key='review.body') AS body_style, (SELECT marks_json FROM review_verdict_formatting WHERE review_id=?1) AS marks_json";
   const row=await getContentDb().prepare(sql).bind(reviewId).first<{verdict_style:string|null;body_style:string|null;marks_json:string|null}>();
-  return {verdict:sanitizeStyle(parse(row?.verdict_style??null,null),'review.verdict'),body:sanitizeStyle(parse(row?.body_style??null,null),'review.body'),marks:sanitizeMarks(parse(row?.marks_json??null,[]),260)};
+  return {verdict:sanitizeStyle(parse(row?.verdict_style??null,null),'review.verdict'),body:sanitizeStyle(parse(row?.body_style??null,null),'review.body'),marks:sanitizeMarks(parse(row?.marks_json??null,[]),260),hasVerdictPreset:!!row?.verdict_style,hasBodyPreset:!!row?.body_style};
 }
 const escapeHtml=(s:string):string=>s.replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]??x));
 export function renderMarkedVerdict(text:string,marks:EditorialMark[]):string {
