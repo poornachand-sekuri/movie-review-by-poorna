@@ -6,6 +6,7 @@ import { auditoriumRuntimeAssets as assets } from '../../lib/auditorium-assets';
 import { getReviewReactionSnapshot } from '../../lib/data/reactions';
 import { listRelatedReviews } from '../../lib/data/related-reviews';
 import { getReviewBySlug } from '../../lib/data/reviews';
+import { getPublicEditorial, renderMarkedVerdict, editorialCss } from '../../lib/data/editorial';
 import '../../styles/comments.css';
 import '../../styles/auditorium-sharing.css';
 import '../../styles/auditorium.css';
@@ -28,9 +29,10 @@ const review = loadedReview;
 Astro.response.headers.set('cache-control', 'private, no-store');
 const legacyVoterKey = Astro.cookies.get('mrp_voter')?.value ?? null;
 const viewerReactionKey = Astro.cookies.get('mrp_reaction_voter')?.value ?? legacyVoterKey;
-const [reactionSnapshot, relatedReviews] = await Promise.all([
+const [reactionSnapshot, relatedReviews, editorial] = await Promise.all([
   getReviewReactionSnapshot(review.id, viewerReactionKey, legacyVoterKey),
   listRelatedReviews(review, 4),
+  getPublicEditorial(review.id),
 ]);
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', {
@@ -188,7 +190,7 @@ const reviewStructuredData = {
           )}
 
           <div class="auditorium-my-pov" data-pov-fit tabindex="0" role="region" aria-label="My POV">
-            <p>{review.verdict ?? review.excerpt ?? '—'}</p>
+            <p style={editorialCss(editorial.verdict)+';font-size:clamp(20px,4cqw,'+editorial.verdict.size+'px)'} set:html={renderMarkedVerdict(review.verdict ?? review.excerpt ?? '—', editorial.marks)} />
           </div>
         </div>
       </section>
@@ -250,6 +252,7 @@ const reviewStructuredData = {
               id="auditorium-review-body"
               class="auditorium-review-scroll"
               tabindex="0"
+              style={'--editorial-body-max-size:'+editorial.body.size+'px;'+editorialCss(editorial.body)}
               set:html={review.bodyHtml}
             ></article>
 
