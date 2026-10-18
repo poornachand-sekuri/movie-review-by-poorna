@@ -385,7 +385,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
-  assert.ok(ADMIN_HTML.includes('social-studio.css?v=7'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=8'));
   assert.ok(ADMIN_HTML.includes('social-studio.js?v=10'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=3'));
 
