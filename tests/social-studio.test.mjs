@@ -262,7 +262,7 @@ test('No duplicate typography sliders and obsolete detached word controls remain
   assert.doesNotMatch(STUDIO_JS,/inputs\.titleSizeOut|inputs\.povSizeOut|activeText:'pov'/);
   assert.match(RICH_JS,/the entire text/);
   assert.match(RICH_JS,/refreshLayout/);
-  assert.match(RICH_JS,/editor\.style\.fontSize=Number\(base\.size\)/);
+  assert.match(RICH_JS,/editor\.style\.fontSize='19px'/);
 });
 
 test('All seven platform messages include the four canonical accounts with a blank line between every line',async()=>{
@@ -385,9 +385,9 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
-  assert.ok(ADMIN_HTML.includes('social-studio.css?v=7'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=10'));
-  assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=3'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=8'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=11'));
+  assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
 test('All dynamic poster draws use inner rounded clipping and never paint over the approved borders',()=>{
@@ -490,4 +490,36 @@ test('WATCHED IN long values auto-fit or warn before download, never cross secti
   h.element('socialLanguageAuto').listeners.change();await settle();
   assert.match(h.element('socialWarnings').textContent,/WATCHED IN value is too long/);
   assert.equal(h.element('socialDownloadPost').disabled,true);
+});
+
+
+test('Unified style actions are present and save without changing original review fields', async()=>{
+  assert.match(ADMIN_HTML,/id="socialSaveMovieStyle"/);
+  assert.match(ADMIN_HTML,/id="socialSaveDefaults"/);
+  assert.match(ADMIN_HTML,/id="socialApplyBoth"/);
+  assert.match(ADMIN_HTML,/id="socialOverrideFormat"/);
+  assert.match(STUDIO_JS,/type:'social'/);
+  assert.match(STUDIO_JS,/type:'preset'/);
+  assert.match(STUDIO_JS,/\/api\/admin\/editorial/);
+});
+test('Shared format styling can be copied without changing the original source review',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  h.buttons.story.listeners.click();
+  h.element('socialPov').value='STORY PERSONALIZATION';
+  h.element('socialPov').listeners.input();await settle();
+  h.element('socialApplyBoth').listeners.click();await settle();
+  h.buttons.post.listeners.click();
+  assert.equal(h.element('socialPov').value,'STORY PERSONALIZATION');
+  await h.element('socialSaveMovieStyle').listeners.click();await settle();
+  assert.match(h.element('socialEditorialStatus').textContent,/saved in D1/i);
+});
+test('Editorial schema is additive and production Worker deploy gates on migration',()=>{
+  const migration=fs.readFileSync(path.join(ROOT,'migrations/0009_unified_editorial.sql'),'utf8');
+  const deploy=fs.readFileSync(path.join(ROOT,'scripts/cloudflare.mjs'),'utf8');
+  assert.match(migration,/CREATE TABLE IF NOT EXISTS editorial_presets/);
+  assert.match(migration,/CREATE TABLE IF NOT EXISTS social_promotional_drafts/);
+  assert.match(migration,/CREATE TABLE IF NOT EXISTS review_verdict_formatting/);
+  assert.doesNotMatch(migration,/DROP TABLE|DELETE FROM reviews|UPDATE reviews/);
+  assert.match(deploy,/apply-unified-editorial\.mjs/);
 });

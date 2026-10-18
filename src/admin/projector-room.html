@@ -166,7 +166,22 @@
 
                 <section class="form-section copy-section">
                   <h3>Homepage Copy</h3>
-                  <label class="field"><span>My POV / Popcorn Verdict</span><textarea id="verdict" rows="4" maxlength="260"></textarea><small><span id="verdictCount">0</span>/260</small></label>
+                  <div class="field">
+                    <span>My POV / Popcorn Verdict</span>
+                    <div class="editorial-review-controls" role="toolbar" aria-label="Popcorn verdict formatting">
+                      <select id="verdictFont" aria-label="Verdict font family"><option>Barlow Condensed</option><option>Inter</option><option>Oswald</option><option>Cinzel</option><option>Anton</option><option>Montserrat</option><option>Poppins</option><option>Playfair Display</option></select>
+                      <input type="number" id="verdictSize" value="48" min="20" max="48" step="1" aria-label="Verdict maximum font size (px)" title="Preferred public verdict size (px)">
+                      <button type="button" data-verdict-action="bold"><b>B</b></button>
+                      <button type="button" data-verdict-action="italic"><i>I</i></button>
+                      <button type="button" data-verdict-action="underline"><u>U</u></button>
+                      <input type="color" id="verdictColor" value="#FFE2B6" aria-label="Verdict text color">
+                      <button type="button" data-verdict-action="clear">CLEAR STYLE</button>
+                      <button type="button" id="verdictSaveDefault">SAVE DEFAULT</button>
+                    </div>
+                    <div id="verdictRich" contenteditable="true" class="editorial-verdict-rich" role="textbox" aria-multiline="true" aria-label="My POV or Popcorn Verdict" data-placeholder="Write your popcorn verdict…"></div>
+                    <textarea id="verdict" rows="4" maxlength="260" class="editorial-hidden-source" aria-hidden="true" tabindex="-1"></textarea>
+                    <small><span id="verdictCount">0</span>/260 · Select words to highlight; original wording stays unchanged.</small>
+                  </div>
                   <label class="field"><span>Short Excerpt</span><textarea id="excerpt" rows="5" maxlength="700"></textarea><small><span id="excerptCount">0</span>/700</small></label>
                 </section>
 
@@ -185,6 +200,10 @@
                   <div class="section-title-row"><h3>Full Review</h3><span class="hint">Displayed inside the Auditorium theater screen.</span></div>
                   <div class="editor-toolbar" aria-label="Review formatting toolbar">
                     <button type="button" data-cmd="bold"><b>B</b></button><button type="button" data-cmd="italic"><i>I</i></button><button type="button" data-cmd="formatBlock" data-value="h2">H2</button><button type="button" data-cmd="insertUnorderedList">• LIST</button><button type="button" data-cmd="insertOrderedList">1. LIST</button><button type="button" id="linkBtn">LINK</button><button type="button" data-cmd="removeFormat">CLEAR FORMAT</button>
+                    <select id="bodyFont" aria-label="Full review font family"><option value="Inter">Inter</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair Display</option><option value="Merriweather">Merriweather</option><option value="Source Serif 4">Source Serif 4</option></select>
+                    <input id="bodyColor" type="color" value="#F1EDE8" aria-label="Review text color">
+                    <input id="bodySize" type="number" value="16" min="10" max="30" aria-label="Full review size (px)">
+                    <button type="button" id="bodySaveDefault">SAVE DEFAULT</button>
                   </div>
                   <div id="reviewEditor" class="rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Write your full movie review here…"></div>
                 </section>
@@ -212,6 +231,17 @@
               <div class="social-mode-bar"><strong>EDITING</strong><span id="socialEditingMode">POST IMAGE</span><small>Each format retains its own text and formatting.</small></div>
               <label class="field"><span>Select saved review</span><select id="socialMovie"><option value="">Choose a movie…</option></select></label>
               <p class="social-help" id="socialMovieStatus">Select a published review to begin.</p>
+              <div class="editorial-preset-actions" aria-label="Reusable styling">
+                <div class="editorial-preset-heading"><strong>Editorial Styles</strong><small>Style once, reuse across movies and platforms.</small></div>
+                <div class="editorial-preset-buttons">
+                  <button type="button" class="ghost" id="socialSaveMovieStyle">SAVE MOVIE STYLE</button>
+                  <button type="button" class="ghost" id="socialSaveDefaults">SAVE AS DEFAULT</button>
+                  <button type="button" class="ghost" id="socialApplyBoth">APPLY TO POST + STORY</button>
+                </div>
+                <label class="social-check"><input id="socialOverrideFormat" type="checkbox"> Customize this format only (optional)</label>
+                <button type="button" class="ghost small" id="socialResetOverride">RESET PLATFORM OVERRIDE</button>
+                <p id="socialEditorialStatus" class="social-help" role="status" aria-live="polite">Select a movie to load saved styles.</p>
+              </div>
               <div class="field social-rich-field">
                 <span>Promotional Movie Title</span>
                 <div class="social-rich-shell">
@@ -287,7 +317,7 @@
                 
               </div>
               <label class="field"><span>POORNA'S RATING (stars only)</span><input id="socialRating" type="number" min="0" max="5" step="0.25"><small>Five stars with 0.25 fractional fill. No numeric rating on the image.</small></label>
-              <p class="social-help">Post and Story data, fonts and MY POV edits are independent; the three Post layouts share the Post draft. Edits here affect promotional images only and never change saved reviews.</p>
+              <p class="social-help">Both formats inherit the same saved style by default. Opt into a Post-only or Story-only override when needed. Changes affect promotional images only, never the original review.</p>
             </div>
             <div class="social-group social-fit-controls"><h2>Layout & Text Fit</h2>
               <p class="social-help">Use the toolbar directly above each text box for font, size, color and effects. No text selected formats the whole box; selected text formats only those words.</p>
@@ -366,9 +396,10 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=7">
-  <script src="/admin/admin.js?v=20261016-quarter-stars-1" defer></script>
-  <script src="/admin/social-studio.js?v=10" defer></script>
-  <script src="/admin/social-rich-editor.js?v=3" defer></script>
+  <link rel="stylesheet" href="/admin/social-studio.css?v=8">
+  <script src="/admin/review-editorial.js?v=1" defer></script>
+  <script src="/admin/admin.js?v=20261018-editorial-v2" defer></script>
+  <script src="/admin/social-studio.js?v=11" defer></script>
+  <script src="/admin/social-rich-editor.js?v=4" defer></script>
 </body>
 </html>

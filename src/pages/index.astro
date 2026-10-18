@@ -3,6 +3,7 @@ import { renderRatingStars, ratingLabel } from '../lib/rating-stars';
 import SiteFrame from '../layouts/SiteFrame.astro';
 import LoungeLoading from '../components/lounge/LoungeLoading.astro';
 import { listReviews } from '../lib/data/reviews';
+import { getPublicEditorial, renderMarkedVerdict, editorialCss } from '../lib/data/editorial';
 import '../styles/comments.css';
 import '../styles/lounge.css';
 
@@ -47,6 +48,7 @@ function reviewTarget(slug: string): string {
 }
 
 const featuredPov = featured?.verdict?.trim() || '';
+const featuredEditorial=featured?await getPublicEditorial(featured.id):null;
 ---
 
 <SiteFrame
@@ -109,7 +111,7 @@ const featuredPov = featured?.verdict?.trim() || '';
 
             <div class="now-pov" data-pov-fit tabindex="0" role="region" aria-label="My POV">
               <span class="now-pov__label"><span aria-hidden="true">◉</span> My POV</span>
-              <p>{featuredPov || 'POV coming soon.'}</p>
+              <p style={featuredEditorial?.hasVerdictPreset?editorialCss(featuredEditorial.verdict):undefined} set:html={renderMarkedVerdict(featuredPov || 'POV coming soon.', featuredEditorial?.marks||[])} />
             </div>
 
             <a class="now-read-hit" href={reviewTarget(featured.slug)} aria-label={`Read ${featured.title} review`}>
