@@ -129,11 +129,13 @@
       if(presets?.['review.verdict']){
         const p=presets['review.verdict'];if([...font.options].some(x=>x.value===p.family))font.value=p.family;
         if(validHex.test(p.color))color.value=p.color;
+        $('verdictSize').value=String(p.size);
       }
       if(presets?.['review.body']){
         const p=presets['review.body'];const bodyFont=$('bodyFont'),bodyColor=$('bodyColor');
         if([...bodyFont.options].some(x=>x.value===p.family))bodyFont.value=p.family;
         if(validHex.test(p.color))bodyColor.value=p.color;
+        $('bodySize').value=String(p.size);
       }
       render();
     }).catch(err=>{console.warn('Could not load saved editorial formatting',err);});
@@ -144,7 +146,7 @@
     return write('verdict',{reviewId:id,marks:clone(marks)});
   }
   const defaults={
-    'review.verdict':{family:'Barlow Condensed',size:32,weight:'600',color:'#FFE2B6',align:'left',line:1.3,auto:true},
+    'review.verdict':{family:'Barlow Condensed',size:48,weight:'600',color:'#FFE2B6',align:'left',line:1.3,auto:true},
     'review.body':{family:'Inter',size:16,weight:'400',color:'#F1EDE8',align:'left',line:1.55,auto:true},
   };
   async function saveDefault(key,style,button){
@@ -154,10 +156,10 @@
     finally{setTimeout(()=>{button.textContent='SAVE DEFAULT';button.disabled=false;},1800);}
   }
   $('verdictSaveDefault').addEventListener('click',()=>saveDefault('review.verdict',{
-    ...(presets?.['review.verdict']||defaults['review.verdict']),family:font.value,color:color.value
+    ...(presets?.['review.verdict']||defaults['review.verdict']),family:font.value,color:color.value,size:Number($('verdictSize').value)||48
   },$('verdictSaveDefault')));
   $('bodySaveDefault').addEventListener('click',()=>saveDefault('review.body',{
-    ...(presets?.['review.body']||defaults['review.body']),family:$('bodyFont').value,color:$('bodyColor').value
+    ...(presets?.['review.body']||defaults['review.body']),family:$('bodyFont').value,color:$('bodyColor').value,size:Number($('bodySize').value)||16
   },$('bodySaveDefault')));
   function styleBodySelected(property,value){
     if(!body)return;
