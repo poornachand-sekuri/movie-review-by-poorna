@@ -190,7 +190,7 @@ const reviewStructuredData = {
           )}
 
           <div class="auditorium-my-pov" data-pov-fit tabindex="0" role="region" aria-label="My POV">
-            <p style={editorialCss(editorial.verdict)+';font-size:clamp(20px,4cqw,'+editorial.verdict.size+'px)'} set:html={renderMarkedVerdict(review.verdict ?? review.excerpt ?? '—', editorial.marks)} />
+            <p style={editorial.hasVerdictPreset?editorialCss(editorial.verdict)+';font-size:clamp(20px,4cqw,'+editorial.verdict.size+'px)':undefined} set:html={renderMarkedVerdict(review.verdict ?? review.excerpt ?? '—', editorial.marks)}></p>
           </div>
         </div>
       </section>
@@ -252,7 +252,7 @@ const reviewStructuredData = {
               id="auditorium-review-body"
               class="auditorium-review-scroll"
               tabindex="0"
-              style={'--editorial-body-max-size:'+editorial.body.size+'px;'+editorialCss(editorial.body)}
+              style={editorial.hasBodyPreset?'--editorial-body-max-size:'+editorial.body.size+'px;'+editorialCss(editorial.body):undefined}
               set:html={review.bodyHtml}
             ></article>
 
