@@ -11,13 +11,15 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyXReply: $('socialCopyXReply'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus')
+    copyCaption: $('socialCopyCaption'),copyXReply: $('socialCopyXReply'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
+    editorialStatus: $('socialEditorialStatus'), saveMovieStyle: $('socialSaveMovieStyle'), saveDefaults: $('socialSaveDefaults'), applyBoth: $('socialApplyBoth'),
+    overrideFormat: $('socialOverrideFormat'), resetOverride: $('socialResetOverride')
   };
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { 'instagram-post':null, 'facebook-x-post':null, 'whatsapp-channel':null, story:null }, postPlatform:'instagram-post', renders: {},
-    seq: 0, drafts: { post:null, story:null }, captions:{}
+    seq: 0, drafts: { post:null, story:null }, captions:{}, presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const SOCIAL_FONTS=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','Merriweather'];
@@ -115,12 +117,22 @@
     if (!id) { updateCaptionEditor(); await refreshAll(); return; }
     inputs.status.textContent = 'Loading selected review and original poster…';
     try {
-      const review = await jsonApi('/api/admin/reviews/' + encodeURIComponent(id));
+      const [review,editorial]=await Promise.all([
+        jsonApi('/api/admin/reviews/' + encodeURIComponent(id)),
+        jsonApi('/api/admin/editorial?reviewId='+encodeURIComponent(id)).catch(()=>null)
+      ]);
       if (sequence !== state.seq) return;
       state.review = review;
-      state.drafts.post=defaultDraft(review);
-      state.drafts.story=defaultDraft(review);
+      state.presets=editorial?.presets||null;
+      const base=editorial?.drafts?.shared||defaultDraft(review);
+      state.sharedDraft=cloneDraft(base);
+      state.savedOverrides=editorial?.drafts||{};
+      state.drafts.post=cloneDraft(editorial?.drafts?.post||base);
+      state.drafts.story=cloneDraft(editorial?.drafts?.story||base);
       state.format='post'; applyDraft('post');
+      if(inputs.overrideFormat)inputs.overrideFormat.checked=false;
+      state.editorialLoaded=!!editorial?.presets;
+      showEditorialStatus(editorial?.presets?'Reusable styles loaded. Changes are not saved until you save them.':'Default styles loaded. Editorial storage unavailable; check before saving.');
       state.captions=makeCaptions(review);
       updateCaptionEditor();
       try { const original = await loadPoster(review.m || ''); if (sequence !== state.seq) return; state.poster = original; }
@@ -371,14 +383,17 @@
     return {ok:true,scale:layout.scale};
   }
 
+  const cloneDraft=value=>JSON.parse(JSON.stringify(value));
+  function showEditorialStatus(message) {if(inputs.editorialStatus)inputs.editorialStatus.textContent=message;}
   function defaultDraft(review) {
+    const preset=state.presets||{};
     return {
       title:review.t || '',pov:review.v || '',styles:{title:[],pov:[]},language:review.l || '',
       rating:review.r == null?'':String(review.r),
       titleCase:'uppercase',
-      titleStyle:{ family:'Oswald', weight:'700', align:'center',color:'#060505',size:59,auto:true,line:1.11 },
-      povStyle:{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:48,auto:true,line:1.22 },
-      languageStyle:{family:'Oswald',size:38,color:'#f1f1f1',auto:true}
+      titleStyle:cloneDraft(preset['social.title']||{ family:'Oswald', weight:'700', align:'center',color:'#060505',size:59,auto:true,line:1.11 }),
+      povStyle:cloneDraft(preset['social.pov']||{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:48,auto:true,line:1.22 }),
+      languageStyle:cloneDraft(preset['social.language']||{family:'Oswald',size:38,color:'#f1f1f1',auto:true})
     };
   }
   function persistDraft(){
@@ -430,6 +445,7 @@
     }
     inputs.povLine.value=String(draft.povStyle.line);
     inputs.editingMode.textContent=kind==='post'?'POST IMAGE · '+state.postPlatform.toUpperCase().replaceAll('-',' '):'STORY IMAGE';
+    if(inputs.overrideFormat)inputs.overrideFormat.checked=!!state.savedOverrides[kind];
     window.SocialStudioRich?.sync();
     document.querySelectorAll('[data-social-format]').forEach(button=>button.classList.toggle('active',button.dataset.socialFormat===kind));
   }
@@ -772,6 +788,51 @@
     },
     refresh:requestRefresh,
   };
+  async function saveEditorialOp(payload) {
+    return jsonApi('/api/admin/editorial',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  }
+  async function runEditorialSave(button,work,success){
+    if(!state.review){showEditorialStatus('Select a movie first.');return;}
+    if(button)button.disabled=true;
+    try{await work();showEditorialStatus(success);}catch(error){showEditorialStatus('Not saved: '+errorMessage(error));}
+    finally{if(button)button.disabled=false;}
+  }
+  if(inputs.saveMovieStyle)inputs.saveMovieStyle.addEventListener('click',()=>runEditorialSave(inputs.saveMovieStyle,async()=>{
+    persistDraft();
+    const format=inputs.overrideFormat.checked?state.format:'shared';
+    const current=cloneDraft(state.drafts[state.format]);
+    await saveEditorialOp({type:'social',reviewId:Number(state.review.i),format,draft:current});
+    state.savedOverrides[format]=current;
+    if(format==='shared'){
+      state.sharedDraft=cloneDraft(current);
+      state.drafts.post=cloneDraft(current);state.drafts.story=cloneDraft(current);
+      await Promise.all(['post','story'].filter(k=>state.savedOverrides[k]).map(k=>saveEditorialOp({type:'reset-social',reviewId:Number(state.review.i),format:k})));
+      delete state.savedOverrides.post;delete state.savedOverrides.story;
+      applyDraft(state.format);
+    }
+  },'Movie styling saved in D1. It will be available next time.'));
+  if(inputs.saveDefaults)inputs.saveDefaults.addEventListener('click',()=>runEditorialSave(inputs.saveDefaults,async()=>{
+    persistDraft();const current=state.drafts[state.format];
+    await Promise.all([
+      ['social.title',current.titleStyle],['social.pov',current.povStyle],['social.language',current.languageStyle]
+    ].map(([key,style])=>saveEditorialOp({type:'preset',key,style})));
+    state.presets={'social.title':cloneDraft(current.titleStyle),'social.pov':cloneDraft(current.povStyle),'social.language':cloneDraft(current.languageStyle)};
+  },'Shared defaults saved for all future movie drafts. Existing movie-specific overrides remain unchanged.'));
+  if(inputs.applyBoth)inputs.applyBoth.addEventListener('click',()=>{
+    if(!state.review)return;
+    persistDraft();
+    const draft=cloneDraft(state.drafts[state.format]);
+    state.drafts.post=cloneDraft(draft);state.drafts.story=cloneDraft(draft);
+    applyDraft(state.format);requestRefresh();
+    showEditorialStatus('Applied to Post and Story. Choose Save Movie Style to keep it across sessions.');
+  });
+  if(inputs.resetOverride)inputs.resetOverride.addEventListener('click',()=>runEditorialSave(inputs.resetOverride,async()=>{
+    const format=state.format;
+    await saveEditorialOp({type:'reset-social',reviewId:Number(state.review.i),format});
+    delete state.savedOverrides[format];
+    state.drafts[format]=cloneDraft(state.sharedDraft||defaultDraft(state.review));
+    inputs.overrideFormat.checked=false;applyDraft(format);requestRefresh();
+  },'Platform override reset to the shared movie styling.'));
   inputs.movie.addEventListener('change',chooseMovie);
   inputs.postPlatform.addEventListener('change',()=>{state.postPlatform=inputs.postPlatform.value;applyDraft(state.format);requestRefresh();});
   inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
