@@ -111,7 +111,7 @@ const featuredEditorial=featured?await getPublicEditorial(featured.id):null;
 
             <div class="now-pov" data-pov-fit tabindex="0" role="region" aria-label="My POV">
               <span class="now-pov__label"><span aria-hidden="true">◉</span> My POV</span>
-              <p style={featuredEditorial?editorialCss(featuredEditorial.verdict):undefined} set:html={renderMarkedVerdict(featuredPov || 'POV coming soon.', featuredEditorial?.marks||[])} />
+              <p style={featuredEditorial?.hasVerdictPreset?editorialCss(featuredEditorial.verdict):undefined} set:html={renderMarkedVerdict(featuredPov || 'POV coming soon.', featuredEditorial?.marks||[])} />
             </div>
 
             <a class="now-read-hit" href={reviewTarget(featured.slug)} aria-label={`Read ${featured.title} review`}>
