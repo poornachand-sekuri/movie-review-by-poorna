@@ -386,8 +386,8 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=8'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=10'));
-  assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=3'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=11'));
+  assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
 test('All dynamic poster draws use inner rounded clipping and never paint over the approved borders',()=>{
