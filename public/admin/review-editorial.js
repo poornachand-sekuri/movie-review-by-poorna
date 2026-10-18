@@ -15,7 +15,7 @@
   };
   const write=(type,rest)=>request('/api/admin/editorial',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({type,...rest})});
   const textOf=()=>editor.textContent||'';
-  const lengthOf=s=>[...s].length;
+  const lengthOf=s=>s.length;
   function selected(){
     const selection=window.getSelection?.();
     if(!selection?.rangeCount)return null;
@@ -72,13 +72,26 @@
     lastText=next;
     const count=$('verdictCount');if(count)count.textContent=String(next.length);
   });
+  editor.addEventListener('keydown',event=>{
+    if(event.key==='Enter'){
+      event.preventDefault();
+      const selection=window.getSelection();
+      if(!selection?.rangeCount)return;
+      const range=selection.getRangeAt(0);
+      range.deleteContents();
+      const node=document.createTextNode('\n');
+      range.insertNode(node);range.setStartAfter(node);range.collapse(true);
+      selection.removeAllRanges();selection.addRange(range);
+      editor.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  });
   editor.addEventListener('paste',event=>{
     event.preventDefault();
     const text=event.clipboardData?.getData('text/plain')||'';
     const selection=window.getSelection();if(!selection?.rangeCount)return;
     const selectedLength=selection.toString().length;
     const remaining=Math.max(0,260-source.value.length+selectedLength);
-    const clean=[...text].slice(0,remaining).join('');
+    const clean=text.slice(0,remaining);
     const range=selection.getRangeAt(0);range.deleteContents();
     const node=document.createTextNode(clean);range.insertNode(node);range.setStartAfter(node);range.collapse(true);
     selection.removeAllRanges();selection.addRange(range);
@@ -118,13 +131,14 @@
     currentId=Number(record?.i)||0;
     marks=[];
     source.value=String(record?.v||'');
+    const openingText=source.value;
     lastText=source.value;
     editor.textContent=source.value;
     const count=$('verdictCount');if(count)count.textContent=String(source.value.length);
     if(!currentId)return;
     request('/api/admin/editorial?reviewId='+currentId).then(data=>{
       if(ticket!==version)return;
-      marks=Array.isArray(data.verdictMarks)?data.verdictMarks:[];
+      if(source.value===openingText)marks=Array.isArray(data.verdictMarks)?data.verdictMarks:[];
       presets=data.presets||null;
       if(presets?.['review.verdict']){
         const p=presets['review.verdict'];if([...font.options].some(x=>x.value===p.family))font.value=p.family;
@@ -137,7 +151,7 @@
         if(validHex.test(p.color))bodyColor.value=p.color;
         $('bodySize').value=String(p.size);
       }
-      render();
+      if(source.value===openingText)render();
     }).catch(err=>{console.warn('Could not load saved editorial formatting',err);});
   }
   function setNew(){setReview(null);}
