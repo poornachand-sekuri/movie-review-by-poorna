@@ -265,6 +265,17 @@
       const cmd=control.dataset.richAction;
       if(['font','size','color','hex','effect'].includes(cmd))action(field,cmd,control.value);
     });
+    const more=document.createElement('button');
+    more.type='button';
+    more.dataset.richExpand='true';
+    more.textContent='MORE COLORS & EFFECTS';
+    more.setAttribute('aria-expanded','false');
+    more.addEventListener('click',()=>{
+      const visible=toolbar.classList.toggle('show-advanced');
+      more.setAttribute('aria-expanded',String(visible));
+      more.textContent=visible?'LESS OPTIONS':'MORE COLORS & EFFECTS';
+    });
+    toolbar.appendChild(more);
     const hint=document.createElement('p');
     hint.className='social-rich-hint';
     hint.textContent='Select words to format them, or leave text unselected to format the entire box.';
