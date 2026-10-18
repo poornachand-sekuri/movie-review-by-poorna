@@ -12,6 +12,12 @@ import {
 import { adminReactionSyncWindow, getAdminAnalytics } from '../../../lib/data/analytics';
 import { listAdminComments, moderateAdminComment } from '../../../lib/data/admin-comments';
 import { clean, slugify } from '../../../lib/admin/values';
+import {
+  EDITORIAL_KEYS, getEditorialPresets, getSocialEditorial, getAdminVerdictMarks,
+  saveEditorialPreset, saveSocialEditorial, deleteSocialOverride, saveVerdictMarks,
+  type EditorialKey,
+} from '../../../lib/data/editorial';
+
 import { jsonResponse } from '../../../lib/http/json';
 import {
   isAdminAuthenticated,
@@ -198,6 +204,38 @@ async function handle(request: Request): Promise<Response> {
     }
     if (pathname === '/api/admin/social-poster' && request.method === 'GET') {
       return getSocialPoster(url.searchParams.get('url'));
+    }
+    if (pathname === '/api/admin/editorial' && request.method === 'GET') {
+      const id=Number(url.searchParams.get('reviewId') || 0);
+      if(!id)return json({presets:await getEditorialPresets()});
+      const review=await getAdminReview(id);
+      if(!review)return json({error:'Review not found.'},404);
+      const [social,verdictMarks]=await Promise.all([getSocialEditorial(id),getAdminVerdictMarks(id)]);
+      return json({...social,verdictMarks});
+    }
+    if (pathname === '/api/admin/editorial' && request.method === 'PUT') {
+      const body=await request.json().catch(()=>null) as Record<string,unknown>|null;
+      if(!body || typeof body.type!=='string')return json({error:'Invalid editorial request.'},400);
+      if(body.type==='preset'){
+        const key=body.key as EditorialKey;
+        if(!EDITORIAL_KEYS.includes(key))return json({error:'Invalid preset key.'},400);
+        return json({saved:true,key,style:await saveEditorialPreset(key,body.style)});
+      }
+      const reviewId=Number(body.reviewId);
+      const review=await getAdminReview(reviewId);
+      if(!review)return json({error:'Review not found.'},404);
+      if(body.type==='social'){
+        await saveSocialEditorial(reviewId,String(body.format||''),body.draft);
+        return json({saved:true});
+      }
+      if(body.type==='reset-social'){
+        await deleteSocialOverride(reviewId,String(body.format||''));
+        return json({saved:true});
+      }
+      if(body.type==='verdict'){
+        return json({saved:true,marks:await saveVerdictMarks(reviewId,review.v||'',body.marks)});
+      }
+      return json({error:'Unsupported editorial operation.'},400);
     }
     if (pathname === '/api/admin/analytics' && request.method === 'GET') {
       return json(await getAdminAnalytics(Number(url.searchParams.get('days') || 30)));
