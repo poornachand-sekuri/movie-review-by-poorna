@@ -60,7 +60,7 @@
       span.dataset.socialStyle=JSON.stringify(style);
       if(style.color && colorPattern.test(style.color))span.style.color=style.color;
       if(style.font)span.style.fontFamily='"'+style.font.replace(/[^a-zA-Z0-9 ]/g,'')+'"';
-      if(Number.isFinite(Number(style.size)))span.style.fontSize=Math.max(18,Math.min(100,Number(style.size)))+'px';
+      if(Number.isFinite(Number(style.size)))span.style.fontSize=Math.max(17,Math.min(23,Math.round(Number(style.size)*.4)))+'px';
       if(style.weight)span.style.fontWeight=String(style.weight);
       if(style.italic)span.style.fontStyle='italic';
       if(style.underline)span.style.textDecoration='underline';
@@ -74,9 +74,10 @@
     const base=draft[field+'Style'];
     editor.style.fontFamily='"'+base.family+'"';
     editor.style.color=base.color||(field==='title'?'#060505':'#f1f1f1');
-    editor.style.fontSize=Number(base.size)+'px';
+    // The editor remains readable; the canvas underneath is the pixel-accurate export preview.
+    editor.style.fontSize='19px';
     editor.style.fontWeight=base.weight;
-    editor.style.lineHeight=String(base.line);
+    editor.style.lineHeight='1.55';
     editor.style.textAlign=base.align;
     syncing=false;
   }
@@ -170,6 +171,16 @@
     // No highlighted text means the entire Title or MY POV, not a silent no-op.
     const sel=selected && selected.end>selected.start
       ? selected : {start:0,end:fullText.length};
+    if(!(selected && selected.end>selected.start)){
+      // Whole-text commands set the reusable base AND the export style ranges.
+      const base=draft[field+'Style'];
+      if(!clear){
+        if(patch?.font)base.family=patch.font;
+        if(patch?.size)base.size=patch.size;
+        if(patch?.color)base.color=patch.color;
+        if(patch?.weight)base.weight=patch.weight;
+      }
+    }
     draft.styles[field]=mutateRanges(fullText,draft.styles[field]||[],sel.start,sel.end,patch,clear);
     drawEditor(field);
     editors[field].focus();
@@ -272,7 +283,7 @@
       // Update base alignment/line spacing in-place to preserve the current selection.
       for(const field of FIELDS){
         const base=bridge().getDraft()[field+'Style'];
-        editors[field].style.lineHeight=String(base.line);
+        editors[field].style.lineHeight='1.55';
         editors[field].style.textAlign=base.align;
       }
     }
