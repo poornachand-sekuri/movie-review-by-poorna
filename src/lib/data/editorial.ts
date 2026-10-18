@@ -120,7 +120,7 @@ export function renderMarkedVerdict(text:string,marks:EditorialMark[]):string {
   for(const m of marks)if(m.start>=0&&m.end<=text.length&&m.end>m.start){cut.add(m.start);cut.add(m.end);}
   const bounds=[...cut].sort((a,b)=>a-b);let html='';
   for(let i=1;i<bounds.length;i++){
-    const start=bounds[i-1],end=bounds[i],chunk=escapeHtml(text.slice(start,end));
+    const start=bounds[i-1]!,end=bounds[i]!,chunk=escapeHtml(text.slice(start,end));
     const matching=marks.filter(m=>m.start<=start&&m.end>=end);
     if(!matching.length){html+=chunk;continue;}
     const style=Object.assign({},...matching) as EditorialMark;
