@@ -94,7 +94,7 @@
       for (const review of results[0]) {
         const opt = document.createElement('option');
         opt.value = String(review.i);
-        opt.textContent = review.t;
+        opt.textContent = review.rd ? review.t + ' · Released ' + review.rd : review.t + ' · Release date not set';
         inputs.movie.appendChild(opt);
       }
       inputs.status.textContent = results[0].length + ' saved reviews available.';
