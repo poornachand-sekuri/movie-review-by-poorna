@@ -102,6 +102,28 @@ function harness(options={}) {
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
+test('Social relaunch exporter is clearly exposed and does not mutate site data',async()=>{
+  for(const id of ['socialBulkDownload','socialBulkCancel','socialBulkStatus']){
+    assert.ok(ADMIN_HTML.includes('id="'+id+'"'),id+' required in bulk social panel');
+  }
+  assert.match(ADMIN_HTML,/social-bulk-zip\.js\?v=1/);
+  assert.match(STUDIO_JS,/const SOCIAL_CAPTION_FILES=\[/);
+  assert.match(STUDIO_JS,/function renderBulkFrame\(review,poster,drafts,kind,postPlatform\)/);
+  assert.match(STUDIO_JS,/function exportAllSocialPacks\(\)/);
+  assert.match(STUDIO_JS,/Movie_Reviews_By_Poorna_Social_Relaunch_/);
+  assert.match(STUDIO_JS,/state\.reviewCatalog\.slice\(from,to\)/);
+  assert.match(STUDIO_JS,/type:'prepare-social'|type:'social'/,'other existing editorial operations remain');
+  // Only safe read-only API endpoints are invoked by this new function;
+  // social styles are not saved or rewritten during export.
+  const exporter=STUDIO_JS.slice(STUDIO_JS.indexOf('  // BULK SOCIAL RELAUNCH:'),
+    STUDIO_JS.indexOf('  // The inline rich editors update'));
+  assert.doesNotMatch(exporter,/saveEditorialOp\(|method:'PUT'|method:'POST'/);
+  assert.match(exporter,/manifest\.csv/);
+  assert.match(exporter,/original_poster/);
+  assert.match(exporter,/SOCIAL_BULK_MAP/);
+  assert.match(exporter,/This archive does not modify existing site reviews/);
+});
+
 test('Admin routes and approved master image endpoints are present and protected',()=>{
   assert.match(ADMIN_HTML,/data-panel="social"/);
   assert.match(ADMIN_HTML,/id="socialCanvas"/);
@@ -645,7 +667,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=10'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=15'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=16'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
