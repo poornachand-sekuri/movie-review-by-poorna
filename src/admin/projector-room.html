@@ -233,15 +233,19 @@
               <p class="social-help" id="socialMovieStatus">Select a published review to begin.</p>
               <div class="social-bulk-export" aria-label="Download complete social relaunch package">
                 <strong>BULK SOCIAL RELAUNCH PACK</strong>
-                <p class="social-help">Four separate ZIP archives, one for each platform. Each ZIP has only that platform's Post/Story images and captions for all saved movies, in numbered folders sorted newest release first.</p>
+                <p class="social-help">Seven separate publishing-format ZIPs. Each ZIP contains exactly two folders: <strong>Images</strong> and <strong>Captions</strong>. Corresponding files share the same numbered movie name, starting with the oldest release so your latest movie is uploaded last.</p>
                 <div class="social-bulk-export__actions">
-                  <button type="button" class="ghost" data-bulk-platform="instagram" disabled>DOWNLOAD INSTAGRAM ZIP</button>
-                  <button type="button" class="ghost" data-bulk-platform="facebook" disabled>DOWNLOAD FACEBOOK ZIP</button>
-                  <button type="button" class="ghost" data-bulk-platform="x" disabled>DOWNLOAD X ZIP</button>
-                  <button type="button" class="ghost" data-bulk-platform="whatsapp" disabled>DOWNLOAD WHATSAPP ZIP</button>
+                  <button type="button" class="primary" id="socialBulkAll" disabled>DOWNLOAD ALL 7 ZIPS</button>
+                  <button type="button" class="ghost" data-bulk-format="instagram-post" disabled>INSTAGRAM POST ZIP</button>
+                  <button type="button" class="ghost" data-bulk-format="instagram-story" disabled>INSTAGRAM STORY ZIP</button>
+                  <button type="button" class="ghost" data-bulk-format="facebook-post" disabled>FACEBOOK POST ZIP</button>
+                  <button type="button" class="ghost" data-bulk-format="facebook-story" disabled>FACEBOOK STORY ZIP</button>
+                  <button type="button" class="ghost" data-bulk-format="x-post" disabled>X POST ZIP</button>
+                  <button type="button" class="ghost" data-bulk-format="whatsapp-channel" disabled>WHATSAPP CHANNEL ZIP</button>
+                  <button type="button" class="ghost" data-bulk-format="whatsapp-status" disabled>WHATSAPP STORY ZIP</button>
                   <button type="button" class="ghost" id="socialBulkCancel" hidden>CANCEL CURRENT EXPORT</button>
                 </div>
-                <p class="social-help" id="socialBulkStatus" role="status" aria-live="polite">Waiting for the saved movie catalogue. Download one platform at a time.</p>
+                <p class="social-help" id="socialBulkStatus" role="status" aria-live="polite">Waiting for saved reviews. Download All saves seven ZIPs to your selected folder on supported browsers; otherwise it downloads a ZIP containing all seven format ZIPs.</p>
               </div>
               <div class="editorial-preset-actions" aria-label="Reusable styling">
                 <div class="editorial-preset-heading"><strong>Editorial Styles</strong><small>Style once, reuse across movies and platforms.</small></div>
@@ -428,7 +432,7 @@
   <script src="/admin/review-editorial.js?v=1" defer></script>
   <script src="/admin/admin.js?v=20261019-release-order" defer></script>
   <script src="/admin/social-bulk-zip.js?v=1" defer></script>
-  <script src="/admin/social-studio.js?v=17" defer></script>
+  <script src="/admin/social-studio.js?v=18" defer></script>
   <script src="/admin/social-rich-editor.js?v=4" defer></script>
 </body>
 </html>
