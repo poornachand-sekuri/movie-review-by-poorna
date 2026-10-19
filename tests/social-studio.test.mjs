@@ -113,6 +113,103 @@ test('Admin routes and approved master image endpoints are present and protected
 });
 
 
+test('Movie title prefers one centered line before falling back to wrapping',async()=>{
+  for(const movieTitle of ['JYO ACHYUTANANDA','GAUTAMIPUTRA SATAKARNI']){
+    const review={i:7,t:movieTitle,v:'Brief and witty!',l:'Telugu',r:3,
+      m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'};
+    const h=harness({fetchMock:async url=>({
+      ok:true,json:async()=>url.includes('compact=1')?[review]:
+        url.includes('/api/admin/editorial?')?{drafts:{},presets:{}}:review
+    })});
+    h.element('socialAutoFitOnLoad').checked=true;
+    h.callbacks.get('social-studio:open')();await settle();
+    h.element('socialMovie').value='7';
+    await h.element('socialMovie').listeners.change();await settle();
+    const titleInk=h.styledDraws.filter(x=>x.color==='#060505'&&x.text.trim());
+    const post=titleInk.filter(x=>x.y>330&&x.y<440);
+    const story=titleInk.filter(x=>x.y>950&&x.y<1045);
+    // Canvas renders more than once while fonts/poster load; check every
+    // version uses the *complete* single-line title, not number of draw calls.
+    assert.ok(post.length>0&&story.length>0,'Both previews should render a title');
+    assert.ok(post.every(line=>line.text===movieTitle),'Post should prefer one intact title line');
+    assert.ok(story.every(line=>line.text===movieTitle),'Story should prefer one intact title line');
+    assert.ok(post.every(line=>line.align==='center'),'Post title should be centered');
+    assert.ok(story.every(line=>line.align==='center'),'Story title should be centered');
+  }
+});
+
+test('Auto-fit seeks the largest size needed per format without rewriting saved style',async()=>{
+  const review={
+    i:7,t:'GAUTAMIPUTRA SATAKARNI',
+    v:'Telugu pride hype pakkana petti normal historical movie ga chusthe GOOD one 👍 Krish sharp ga handles it, dialogues roar... and honestly Satakarni ga Balayya ne set avthadu.',
+    l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/gps/poster.jpg'
+  };
+  const saved={
+    title:review.t,pov:review.v,language:review.l,rating:'3',titleCase:'uppercase',
+    titleStyle:{family:'Oswald',size:59,weight:'700',color:'#060505',align:'center',line:1.11,auto:true},
+    povStyle:{family:'Inter',size:20,weight:'600',color:'#f1f1f1',align:'left',line:1.22,auto:true},
+    languageStyle:{family:'Oswald',size:38,color:'#f1f1f1',auto:true},
+    styles:{title:[],pov:[]}
+  };
+  const h=harness({fetchMock:async url=>({
+    ok:true,json:async()=>url.includes('compact=1')?[review]:
+      url.includes('/api/admin/editorial?')?{drafts:{shared:saved},presets:{}}:review
+  })});
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  assert.equal(h.window.SocialStudioRichBridge.getDraft().povStyle.size,20,
+    'Auto-sizing must not overwrite movie-saved styling');
+  assert.equal(h.element('socialPov').value,review.v,'Every original MY POV character remains in the editor');
+  const post=h.styledDraws.filter(x=>x.y>750&&x.y<880&&x.color==='#f1f1f1');
+  const story=h.styledDraws.filter(x=>x.y>1395&&x.y<1590&&x.color==='#f1f1f1');
+  assert.ok(post.length&&story.length,'MY POV should be visible in both preview images');
+  const sizes=items=>items.map(item=>Number(item.font.match(/(\d+(?:\.\d+)?)px/)?.[1]||0));
+  assert.ok(sizes(post).some(size=>size>=19),'Post should retain a practical best-fit size');
+  assert.ok(sizes(story).some(size=>size>=24),'Story should retain an independent larger best-fit size');
+  assert.ok(h.element('socialWarnings').textContent.length>0,'The editor should give clear fit feedback');
+});
+
+test('Manual font-size changes stay respected rather than blocked by automatic thresholds',async()=>{
+  const h=harness();h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  const draft=h.window.SocialStudioRichBridge.getDraft();
+  draft.pov='Short and witty.';
+  draft.povStyle.auto=false;
+  draft.povStyle.size=18;
+  h.window.SocialStudioRichBridge.refresh();await settle();
+  assert.equal(h.element('socialDownloadPost').disabled,false,
+    'A manual, intentionally selected smaller font must be accepted if it fits');
+});
+
+test('Too-long MY POV is visibly previewed, never silently blank or exportable',async()=>{
+  const sample={
+    i:7,t:'GAUTAMIPUTRA SATAKARNI',l:'Telugu',r:3,
+    m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg',
+    v:'Telugu pride hype pakkana petti normal historical movie ga chusthe GOOD one. '
+       +'Krish sharp ga handles it, dialogues roar and honestly Satakarni ga Balayya ne set avthadu.'
+  };
+  const h=harness({fetchMock:async url=>({
+    ok:true,json:async()=>url.includes('compact=1')?[sample]:
+      url.includes('/api/admin/editorial?')?{drafts:{},presets:{}}:sample
+  })});
+  h.element('socialAutoFitOnLoad').checked=true;
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  assert.equal(h.element('socialPov').value,sample.v,'The source MY POV must remain verbatim');
+  const drawnPov=h.styledDraws.filter(x=>x.y>=750&&x.y<=890&&x.text.trim());
+  assert.ok(drawnPov.length>0,'MY POV must be visible in the Post preview');
+  // An impossible amount of text must show a clear excerpt and warning,
+  // but downloading remains disabled rather than exporting truncated prose.
+  h.element('socialPov').value='Telugu pride hype '+ 'very long emotional story '.repeat(150);
+  h.element('socialPov').listeners.input();await settle();
+  assert.equal(h.element('socialDownloadPost').disabled,true);
+  assert.ok(h.styledDraws.some(x=>x.text.includes('MY POV NEEDS REVIEW')),
+    'Canvas must not appear blank when fitting fails');
+  assert.ok(h.styledDraws.some(x=>x.text.startsWith('Telugu pride')),
+    'The fallback preview must show actual source content');
+  assert.match(h.element('socialWarnings').textContent,/preview shows a readable excerpt/i);
+});
+
 test('Approved Post and Story titles remain inside star-free center strip on multiple long movie titles',async()=>{
   const samples=[
     'GAUTAMIPUTRA SATAKARNI','JYO ACHYUTANANDA','MANA OORI RAMAYANAM'
@@ -548,7 +645,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=10'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=14'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=15'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
