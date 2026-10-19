@@ -306,7 +306,7 @@
     if(isX)inputs.xReplyEditor.value=state.xReply;
     const mainWeight=isX?xWeightedLength(inputs.captionText.value):0;
     const replyWeight=isX?xWeightedLength(state.xReply):0;
-    inputs.captionStatus.textContent=state?(isX?
+    inputs.captionStatus.textContent=state.review?(isX?
       'Two separate X posts: main '+mainWeight+'/280, follow-up '+replyWeight+
       '/280 weighted characters. Publish the image with Post 1, then reply with Post 2.':
       isStory?'Story/Status publishing notes, not text to overlay on the image. Copy the native review link separately.':
@@ -1422,7 +1422,9 @@
   inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
   inputs.captionText.addEventListener('input',()=>{
     if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;
-    if(inputs.captionPlatform.value==='x-post')updateCaptionEditor();
+    if(inputs.captionPlatform.value==='x-post')
+      inputs.captionStatus.textContent='X main '+xWeightedLength(inputs.captionText.value)+
+        '/280, follow-up '+xWeightedLength(state.xReply)+'/280 weighted characters.';
   });
   inputs.xReplyEditor.addEventListener('input',()=>{
     if(inputs.captionPlatform.value!=='x-post'||!state.review)return;
