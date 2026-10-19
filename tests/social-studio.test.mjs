@@ -33,7 +33,7 @@ function harness(options={}) {
     const ctx={
       font:'600 24px "Inter"',
       fillRect(x,y,width,height){filledRects.push({x,y,width,height,fillStyle:this.fillStyle});},drawImage(){},beginPath(){},rect(){},moveTo(){},lineTo(){},quadraticCurveTo(){},closePath(){},stroke(){},clip(){},save(){},restore(){},
-      fillText(str,x,y){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle,font:this.font,x,y});},strokeText(){},
+      fillText(str,x,y){drawnText.push(String(str));styledDraws.push({text:String(str),color:this.fillStyle,font:this.font,x,y,align:this.textAlign,width:this.measureText(str).width});},strokeText(){},
       measureText(str){
         const size=Number(this.font.match(/(\d+)px/)?.[1]||24);
         return {width:Array.from(String(str)).length*size*0.53};
@@ -112,6 +112,69 @@ test('Admin routes and approved master image endpoints are present and protected
   assert.match(ADMIN_API,/getSocialPoster\(url\.searchParams\.get\('url'\)\)/);
 });
 
+
+test('Approved Post and Story titles remain inside star-free center strip on multiple long movie titles',async()=>{
+  const samples=[
+    'GAUTAMIPUTRA SATAKARNI','JYO ACHYUTANANDA','MANA OORI RAMAYANAM'
+  ];
+  for(const title of samples){
+    const review={i:7,t:title,v:'A clever, sweet and emotional movie with a natural flow and good moments.',
+      l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'};
+    const h=harness({fetchMock:async url=>({
+      ok:true,json:async()=>url.includes('compact=1')?[review]:
+        url.includes('/api/admin/editorial?')?{drafts:{},presets:{}}:review
+    })});
+    h.element('socialAutoFitOnLoad').checked=true;
+    h.callbacks.get('social-studio:open')();await settle();
+    h.element('socialMovie').value='7';
+    await h.element('socialMovie').listeners.change();await settle();
+
+    const ink=h.styledDraws.filter(item=>item.color==='#060505'&&item.text.trim());
+    const post=ink.filter(item=>item.y>330&&item.y<430);
+    const story=ink.filter(item=>item.y>950&&item.y<1045);
+    assert.ok(post.length,title+' should have drawn a Post title');
+    assert.ok(story.length,title+' should have drawn a Story title');
+    const extent=item=>item.align==='center'?
+      [item.x-item.width/2,item.x+item.width/2]:[item.x,item.x+item.width];
+    for(const item of post){
+      const [left,right]=extent(item);
+      assert.ok(left>=569&&right<=918,title+' Post title must not overlap stars at x=513..544 and x=949..987: '+left+'..'+right);
+    }
+    for(const item of story){
+      const [left,right]=extent(item);
+      assert.ok(left>=230&&right<=850,title+' Story title must not overlap stars at x=131..182 and x=899..950: '+left+'..'+right);
+    }
+    const storyVisualY=story.reduce((sum,item)=>sum+item.y,0)/story.length;
+    assert.ok(storyVisualY>976&&storyVisualY<1014,title+' Story title must sit near the stars vertical center (y≈991), got '+storyVisualY);
+  }
+});
+
+test('Previously saved tiny Post-fit MY POV is not reused at a tiny Story size',async()=>{
+  const review={i:7,t:'JYO ACHYUTANANDA',v:'Sensibile, clean, witty, emotional. '+ 'Strong performances and a natural story. '.repeat(3),
+    l:'Telugu',r:4,m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'};
+  const draft={
+    title:review.t,pov:review.v,language:review.l,rating:'4',titleCase:'uppercase',
+    titleStyle:{family:'Oswald',weight:'700',align:'center',color:'#060505',size:38,auto:true,line:1.11},
+    povStyle:{family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:20,auto:true,line:1.22},
+    languageStyle:{family:'Oswald',size:38,color:'#f1f1f1',auto:true},
+    styles:{title:[],pov:[]}
+  };
+  const h=harness({fetchMock:async url=>({
+    ok:true,json:async()=>url.includes('compact=1')?[review]:
+      url.includes('/api/admin/editorial?')?{drafts:{shared:draft},presets:{}}:review
+  })});
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';
+  await h.element('socialMovie').listeners.change();await settle();
+  assert.equal(h.window.SocialStudioRichBridge.getDraft().povStyle.size,20,
+    'Do not overwrite or silently rewrite a manually saved D1 movie style');
+  const storyPovInk=h.styledDraws.filter(item=>item.y>1400&&item.y<1600&&item.text.trim());
+  assert.ok(storyPovInk.length,'Story should render the MY POV');
+  assert.ok(storyPovInk.every(item=>Number(item.font.match(/(\d+(?:\.\d+)?)px/)?.[1]||0)>=30),
+    'Story MY POV must render at 30px or larger, even if old shared draft is Post-sized');
+  assert.equal(h.element('socialDownloadStory').disabled,false,
+    'Story export stays enabled when its own readable fit succeeds');
+});
 
 test('Smart-fit tools are visible, non-destructive, and use approved safe title boxes',async()=>{
   for(const id of ['socialAutoFitOnLoad','socialRecalculateFit','socialScanAllFits',
@@ -313,6 +376,10 @@ test('Partial-word selection renders only selected letters in the chosen color a
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   const draft=h.window.SocialStudioRichBridge.getDraft();
+  // Keep this example within the readability floor; truly crowded rich copy
+  // should be flagged instead of silently shrunk under the approved minimum.
+  draft.pov='Geetu makes this a fun, unusual watch.';
+  h.element('socialPov').value=draft.pov;
   draft.styles.pov=[{start:0,end:3,color:'#19f9ff',font:'Cinzel',size:50,effect:'glow'}];
   h.window.SocialStudioRichBridge.refresh();await settle();
   assert.ok(h.styledDraws.some(d=>d.text==='Gee'&&d.color==='#19f9ff'&&d.font.includes('Cinzel')),
@@ -481,7 +548,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=10'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=13'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=14'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
