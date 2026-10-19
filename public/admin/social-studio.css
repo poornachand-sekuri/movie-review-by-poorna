@@ -156,3 +156,17 @@
 @media(max-width:420px) {
   .social-inline-fit__grid {grid-template-columns:minmax(0,1fr)}
 }
+
+/* Smart-fit recommendations are reviewable; saved editorial styles stay untouched. */
+.social-preflight-tools {margin:15px 0;padding:12px;border:1px solid #6a4731;border-radius:10px;background:#1c1511}
+.social-preflight-tools .editorial-preset-heading {margin-bottom:10px}
+.social-preflight-tools .social-check {margin:8px 0 12px;line-height:1.4}
+.social-preflight-actions {display:flex;flex-wrap:wrap;gap:7px}
+.social-preflight-actions button {flex:1 1 135px;min-height:38px;font-size:11px;white-space:normal}
+.social-preflight-actions button:disabled {opacity:.45;cursor:not-allowed}
+.social-fit-report:empty {display:none}
+.social-fit-report {margin-top:9px;max-height:280px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.social-fit-review {width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;text-align:left;padding:9px 10px;cursor:pointer;border:1px solid #554333;border-radius:7px;background:#0f0c0a;color:#f1f1f1}
+.social-fit-review span {min-width:0;overflow-wrap:anywhere}
+.social-fit-review small {font-size:11px;color:#d1bc9c;white-space:nowrap}
+.social-fit-review:focus-visible {outline:2px solid #f7010e;outline-offset:2px}

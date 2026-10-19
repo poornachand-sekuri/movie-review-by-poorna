@@ -14,7 +14,7 @@ import { listAdminComments, moderateAdminComment } from '../../../lib/data/admin
 import { clean, slugify } from '../../../lib/admin/values';
 import {
   EDITORIAL_KEYS, getEditorialPresets, getSocialEditorial, getAdminVerdictMarks,
-  saveEditorialPreset, saveSocialEditorial, deleteSocialOverride, saveVerdictMarks,
+  saveEditorialPreset, saveSocialEditorial, prepareSocialEditorialIfAbsent, deleteSocialOverride, saveVerdictMarks,
   type EditorialKey,
 } from '../../../lib/data/editorial';
 
@@ -227,6 +227,10 @@ async function handle(request: Request): Promise<Response> {
       if(body.type==='social'){
         await saveSocialEditorial(reviewId,String(body.format||''),body.draft);
         return json({saved:true});
+      }
+      if(body.type==='prepare-social'){
+        const created=await prepareSocialEditorialIfAbsent(reviewId,body.draft);
+        return json({saved:created,created,existingPreserved:!created});
       }
       if(body.type==='reset-social'){
         await deleteSocialOverride(reviewId,String(body.format||''));

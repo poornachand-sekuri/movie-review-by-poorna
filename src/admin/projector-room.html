@@ -242,6 +242,17 @@
                 <button type="button" class="ghost small" id="socialResetOverride">RESET PLATFORM OVERRIDE</button>
                 <p id="socialEditorialStatus" class="social-help" role="status" aria-live="polite">Select a movie to load saved styles.</p>
               </div>
+              <div class="social-preflight-tools" aria-label="Smart promotional text fitting">
+                <div class="editorial-preset-heading"><strong>Smart Auto-Fit</strong><small>Review-ready layouts without changing your original words.</small></div>
+                <label class="social-check"><input id="socialAutoFitOnLoad" type="checkbox" checked> Prepare recommended fit when an unsaved movie loads</label>
+                <div class="social-preflight-actions">
+                  <button type="button" class="ghost" id="socialRecalculateFit">RECALCULATE CURRENT FIT</button>
+                  <button type="button" class="ghost" id="socialScanAllFits">SCAN ALL MOVIES</button>
+                  <button type="button" class="ghost" id="socialPrepareFits" disabled>SAVE SAFE RECOMMENDATIONS</button>
+                </div>
+                <p id="socialFitStatus" class="social-help" role="status" aria-live="polite">Saved styles remain protected. Changes to the current draft are not persisted until you save.</p>
+                <div id="socialFitReport" class="social-fit-report" aria-label="Movie fit audit results"></div>
+              </div>
               <div class="field social-rich-field">
                 <span>Promotional Movie Title</span>
                 <div class="social-rich-shell">
@@ -401,10 +412,10 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=9">
+  <link rel="stylesheet" href="/admin/social-studio.css?v=10">
   <script src="/admin/review-editorial.js?v=1" defer></script>
   <script src="/admin/admin.js?v=20261019-release-order" defer></script>
-  <script src="/admin/social-studio.js?v=12" defer></script>
+  <script src="/admin/social-studio.js?v=13" defer></script>
   <script src="/admin/social-rich-editor.js?v=4" defer></script>
 </body>
 </html>
