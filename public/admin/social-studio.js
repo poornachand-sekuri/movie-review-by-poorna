@@ -399,7 +399,7 @@
     ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();
     let py=y+(height-layout.height)/2;
     for(const row of layout.lines){
-      let px=x+3+(options.align==='center'?(maxW-row.width)/2:0);
+      let px=x+(options.centerRichTitle?5:3)+(options.align==='center'?(maxW-row.width)/2:0);
       for(const piece of row.pieces){
         ctx.save();
         ctx.font=piece.font;
@@ -789,7 +789,7 @@
       // Honor the approved center placement on the Facebook/X master even if
       // an older saved Post draft selected left alignment. Do not modify D1.
       const titleOptions=kind==='post'&&state.postPlatform==='facebook-x-post'
-        ?{...preferredTitleStyle,align:'center'}:preferredTitleStyle;
+        ?{...preferredTitleStyle,align:'center',centerRichTitle:true}:preferredTitleStyle;
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
       const fit=drawStyled(ctx,normalized,safeTextBox(g.title,'title',kind),titleOptions,3,textMinimum('title',kind),draft.styles.title,true);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
