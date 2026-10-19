@@ -812,10 +812,10 @@ test('All seven platform messages include the four canonical accounts with a bla
     // The single X post groups links on consecutive lines to fit 280
     // weighted characters; every other platform retains airy blank lines.
     if(platform!=='x-post')
-      assert.doesNotMatch(caption,/(?<!\\n)\\n(?!\\n)/u,
+      assert.doesNotMatch(caption,/(?<!\n)\n(?!\n)/u,
         platform+' must have one blank line between displayed lines');
     else
-      assert.match(caption,/📸 IG: [^\\n]+\\nⓕ FB: [^\\n]+\\n𝕏 X: [^\\n]+\\n💬 WA: /u,
+      assert.match(caption,/📸 IG: [^\n]+\nⓕ FB: [^\n]+\n𝕏 X: [^\n]+\n💬 WA: /u,
         'X uses four compact account lines in one post');
   }
   h.element('socialCaptionPlatform').value='instagram-post';
