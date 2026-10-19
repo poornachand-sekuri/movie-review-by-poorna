@@ -34,15 +34,17 @@
   // pixel-measured from the final 1080px masters. Never draw over master borders.
   // FB star centers measured from the five baked white outlines (y=575.8, not 580.5).
   // Star outlines are PRINTED in the source PNG: we fill them, never draw duplicates.
+  // Language values are positioned from master-specific clear interior bounds;
+  // never reuse the header center or the rating-panel center.
   const geometry={
     post:{
       size:[1080,1080],poster:[59,299,375,580],title:[505,333,477,90],
-      pov:[485,748,517,128],language:{cx:594,y:622,max:223},
+      pov:[485,748,517,128],language:{left:463,right:716,valueTop:569,valueBottom:672,max:223},
       rating:{centers:[760.5,818.4,876.5,934,991.5],y:601.5,r:24}
     },
     story:{
       size:[1080,1920],poster:[259,276,562,602],title:[162,926,756,103],
-      pov:[99,1388,870,197],language:{cx:251,y:1211,max:290},
+      pov:[99,1388,870,197],language:{left:52,right:459,valueTop:1187,valueBottom:1276,max:290},
       rating:{centers:[577.8,665,751,837.8,921.6],y:1215.8,r:33}
     }
   };
@@ -53,12 +55,12 @@
       // Shift only the text region +7px horizontally and -14px vertically:
       // rendered ink now sits optically midway between the two stars.
       poster:[48,293,378,592],title:[511,315,478,93],
-      pov:[486,745,515,129],language:{cx:592,y:613,max:217},
+      pov:[486,745,515,129],language:{left:449,right:702,valueTop:548,valueBottom:654,max:217},
       rating:{centers:[755.9,817.5,878.5,939.9,1000.6],y:575.8,r:24.5}
     },
     'whatsapp-channel':{
       poster:[56,283,365,594],title:[503,335,480,90],
-      pov:[485,750,518,127],language:{cx:585,y:627,max:214},
+      pov:[485,750,518,127],language:{left:449,right:684,valueTop:568,valueBottom:668,max:214},
       rating:{centers:[732.5,796.4,861.8,926.7,991.1],y:600,r:26}
     }
   };
@@ -751,7 +753,11 @@
       ctx.restore();
       return {ok:false,message:'WATCHED IN value is too long for this font and size. Enable auto-fit or choose a narrower font.'};
     }
-    ctx.fillText(language,place.cx,place.y);
+    // Always center within the safe VALUE area below the baked WATCHED IN heading.
+    // The four approved masters have different dividers and vertical spacing.
+    const centerX=(place.left+place.right)/2;
+    const centerY=(place.valueTop+place.valueBottom)/2;
+    ctx.fillText(language,centerX,centerY);
     ctx.restore();
     return {ok:true,size};
   }
