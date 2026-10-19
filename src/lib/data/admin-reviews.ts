@@ -254,7 +254,13 @@ export async function listAdminReviews(compact = false): Promise<AdminReviewReco
            rating, verdict, excerpt, ${compact ? "'' AS body_html" : 'body_html'}, poster_url, updated_at
     FROM reviews
     WHERE status <> 'archived'
-    ORDER BY reviewed_date DESC, id DESC
+    -- ISO YYYY-MM-DD values sort chronologically as text. Missing release dates
+    -- must always appear after dated movies; ties remain deterministic.
+    ORDER BY
+      CASE WHEN release_date IS NULL OR TRIM(release_date) = '' THEN 1 ELSE 0 END,
+      release_date DESC,
+      reviewed_date DESC,
+      id DESC
   `).run<ReviewRow>();
 
   return result.results.map((row) => mapAdminReview(row, emptyCredits(), []));
