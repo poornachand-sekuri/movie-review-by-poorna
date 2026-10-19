@@ -774,7 +774,10 @@
     // Use the smallest actual measured display size across approved designs.
     // Shared movie styling then previews the same across Post and Story.
     for(const field of ['title','pov']){
-      if(sizes[field].length===cases.length){
+      // Explicit word-level sizes are relative to the preferred base size.
+      // Preserve their original sizing ratio instead of unexpectedly enlarging
+      // highlighted spans when generating a shared draft.
+      if(sizes[field].length===cases.length && !(draft.styles?.[field]||[]).length){
         // Story uses a larger minimum than Post. Keep a shared preferred
         // size at least as large as that minimum; Post may still shrink safely.
         const storyFloor=field==='title'?30:20;
