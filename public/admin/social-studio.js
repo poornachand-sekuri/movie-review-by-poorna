@@ -319,8 +319,8 @@
       return [];
     });
   }
-  function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[]) {
-    if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum);
+  function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[],preferSingleLine=false) {
+    if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum,preferSingleLine);
     // Never render a styled MY POV below its platform's readable floor.
     // Earlier shared drafts saved Post-sized typography for Story as well.
     if(!options.auto&&options.size<minimum)
@@ -355,28 +355,37 @@
     };
     const tokens=[...raw.matchAll(/\S+|[^\S\n]+|\n/g)];
     let layout=null;
+    // Title priority: search all readable sizes for a SINGLE LINE before
+    // considering wrapping. MY POV retains natural multi-line composition.
+    for(const singleLine of preferSingleLine?[true,false]:[false]){
     for(let base=options.size;base>=(options.auto?minimum:options.size);base--){
       const scale=base/options.size,lines=[];
-      let row={pieces:[],width:0,height:base*Math.max(1.25,options.line)},failed=false;
-      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*Math.max(1.25,options.line)};};
+      const lineFactor=options.tightPov?Math.min(1.12,options.line||1.12):Math.max(1.25,options.line);
+      let row={pieces:[],width:0,height:base*lineFactor},failed=false;
+      const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*lineFactor};};
       for(const match of tokens){
         const token=match[0];
-        if(token==='\n'){flush();continue;}
+        if(token==='\n'){if(singleLine){failed=true;break;}flush();continue;}
         if(!token.trim() && !row.pieces.length)continue;
         const parts=splitToken(token,match.index,scale);
         const groupWidth=parts.reduce((sum,p)=>sum+p.width,0);
         if(!Number.isFinite(groupWidth)||parts.some(p=>p.width<=0&&p.text.trim())){failed=true;break;}
-        if(token.trim() && row.pieces.length && row.width+groupWidth>maxW)flush();
+        if(token.trim() && row.pieces.length && row.width+groupWidth>maxW){
+          if(singleLine){failed=true;break;}
+          flush();
+        }
         if(!token.trim() && !row.pieces.length)continue;
         if(groupWidth>maxW || row.width+groupWidth>maxW){failed=true;break;}
         for(const piece of parts){
           row.pieces.push(piece);row.width+=piece.width;
-          row.height=Math.max(row.height,piece.size*Math.max(1.25,options.line)+5);
+          row.height=Math.max(row.height,piece.size*lineFactor+(options.tightPov?0.5:5));
         }
       }
       if(!failed && (row.pieces.length||!lines.length))flush();
       const totalHeight=lines.reduce((sum,line)=>sum+line.height,0);
-      if(!failed&&lines.length<=maxLines&&totalHeight<=height){layout={lines,height:totalHeight,scale};break;}
+      if(!failed&&lines.length<=(singleLine?1:maxLines)&&totalHeight<=height){layout={lines,height:totalHeight,scale};break;}
+    }
+    if(layout)break;
     }
     if(!layout)return {ok:false,message:'Selected text formatting cannot fit inside the panel. Reduce the font size or enable auto-fit.'};
     ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();
@@ -508,20 +517,29 @@
       family:'Inter',weight:'600',align:'left',size:42,auto:true,line:1.2
     };
   }
-  function drawFitted(ctx,value,box,options,maxLines,minimum){
+  function drawFitted(ctx,value,box,options,maxLines,minimum,preferSingleLine=false){
     if(!options.auto&&options.size<minimum)
       return {ok:false,message:'Preferred font size is below the readable '+minimum+'px minimum.'};
     if(options.auto&&options.size<minimum)options={...options,size:minimum};
     const [x,y,width,height]=box,availableWidth=width-12;
     let layout=null;
     const lowerBound=options.auto?minimum:options.size;
-    for(let size=options.size;size>=lowerBound;size--){
-      setFont(ctx,options,size);
-      const lines=wrapLines(ctx,value,availableWidth);
-      const lineH=Math.max(size*1.25,size*options.line);
-      if(lines.length<=maxLines && lines.length*lineH<=height){
-        layout={size,lines,lineH};break;
+    // A one-line title is preferred whenever the complete title fits
+    // at or above the readable minimum. Only then allow multiple lines.
+    for(const singleLine of preferSingleLine?[true,false]:[false]){
+      for(let size=options.size;size>=lowerBound;size--){
+        setFont(ctx,options,size);
+        const lines=singleLine
+          ?(String(value).includes('\n')||ctx.measureText(String(value)).width>availableWidth?null:[String(value)])
+          :wrapLines(ctx,value,availableWidth);
+        if(!lines)continue;
+        const lineFactor=options.tightPov?Math.min(1.12,options.line||1.12):Math.max(1.25,options.line);
+        const lineH=size*lineFactor;
+        if(lines.length<=(singleLine?1:maxLines) && lines.length*lineH<=height){
+          layout={size,lines,lineH};break;
+        }
       }
+      if(layout)break;
     }
     if(!layout)return {ok:false,message:'Text cannot fit inside the panel. Reduce the preferred font size or shorten the promotional copy.'};
     ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();
@@ -533,6 +551,27 @@
     layout.lines.forEach((line,i)=>ctx.fillText(line,px,initial+i*layout.lineH));
     ctx.restore();
     return {ok:true,size:layout.size,lines:layout.lines.length};
+  }
+  // A fit error must never look like a missing review. Display as much of
+  // the REAL original MY POV as is readable, visibly label the incomplete
+  // preview, and block export. This never replaces or truncates saved content.
+  function drawUnfittedPovPreview(ctx,value,box,options,minimum){
+    const [x,y,width,height]=box;
+    const size=minimum,lineHeight=size*1.12;
+    const fontOptions={...options,size};
+    setFont(ctx,fontOptions,size);
+    const lines=wrapLines(ctx,value,width-12);
+    const maxVisible=Math.max(1,Math.floor((height-lineHeight)/lineHeight));
+    ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillStyle=options.color||'#f1f1f1';
+    for(let i=0;i<Math.min(maxVisible,lines.length);i++){
+      ctx.fillText(lines[i],x+6,y+lineHeight*(i+.5));
+    }
+    ctx.font='700 '+Math.min(size,19)+'px "Inter"';
+    ctx.fillStyle='#ffbf47';
+    ctx.fillText('… MY POV NEEDS REVIEW',x+6,y+height-12);
+    ctx.restore();
   }
   // Same image policy as Now Reviewed on Lounge: contain the entire original
   // poster over a softly blurred, darkened cover version of that poster.
@@ -568,8 +607,12 @@
       return [x+starGutter,y+verticalInset+opticalShift,
         w-2*starGutter,h-2*verticalInset];
     }
-    const horiz=kind==='story'?15:10;
-    const vert=kind==='story'?10:7;
+    if(kind==='post'){
+      // Take back unused black-panel space previously lost to aggressive
+      // inset padding, without entering the red frame or MY POV header.
+      return [x-6,y+3,w+12,h+1];
+    }
+    const horiz=15,vert=10;
     return [x+horiz,y+vert,w-2*horiz,h-2*vert];
   }
   // Platform-local readability limits: a compact Post must never force its
@@ -728,7 +771,7 @@
     else {
       const titleOptions=textOptions('title',kind);
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
-      const fit=drawStyled(ctx,normalized,safeTextBox(g.title,'title',kind),titleOptions,3,textMinimum('title',kind),draft.styles.title);
+      const fit=drawStyled(ctx,normalized,safeTextBox(g.title,'title',kind),titleOptions,3,textMinimum('title',kind),draft.styles.title,true);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
       else if(titleOptions.auto) {
         const ratio=fit.scale??((fit.size||titleOptions.size)/titleOptions.size);
@@ -740,8 +783,12 @@
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const fit=drawStyled(ctx,pov,safeTextBox(g.pov,'pov',kind),textOptions('pov',kind),kind==='post'?8:10,textMinimum('pov',kind),draft.styles.pov);
-      if(!fit.ok) errors.push('MY POV: '+fit.message);
+      const povOptions={...textOptions('pov',kind),tightPov:true};
+      const fit=drawStyled(ctx,pov,safeTextBox(g.pov,'pov',kind),povOptions,kind==='post'?8:10,textMinimum('pov',kind),draft.styles.pov);
+      if(!fit.ok){
+        errors.push('MY POV: '+fit.message+' This preview shows a readable excerpt; PNG export is blocked until all words fit.');
+        drawUnfittedPovPreview(ctx,pov,safeTextBox(g.pov,'pov',kind),povOptions,textMinimum('pov',kind));
+      }
       else if(draft.povStyle.auto) {
         const ratio=fit.scale??((fit.size||draft.povStyle.size)/draft.povStyle.size);
         if(ratio<.98)notes.push('MY POV auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
@@ -788,7 +835,8 @@
       ];
       for(const {field,value,limit,min} of specs){
         if(!value?.trim())continue;
-        const result=drawStyled(ctx,value,safeTextBox(layout[field],field,kind),draft[field+'Style'],limit,min,draft.styles?.[field]||[]);
+        const fitOptions=field==='pov'?{...draft.povStyle,tightPov:true}:draft.titleStyle;
+        const result=drawStyled(ctx,value,safeTextBox(layout[field],field,kind),fitOptions,limit,min,draft.styles?.[field]||[],field==='title');
         if(result.ok)sizes[field].push({kind,size:result.size});
         else messages.push((kind==='story'?'Story':'Post')+' '+field.toUpperCase()+' cannot fit at a readable size.');
       }
