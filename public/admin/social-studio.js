@@ -321,10 +321,8 @@
   }
   function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[],preferSingleLine=false) {
     if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum,preferSingleLine);
-    // Never render a styled MY POV below its platform's readable floor.
-    // Earlier shared drafts saved Post-sized typography for Story as well.
-    if(!options.auto&&options.size<minimum)
-      return {ok:false,message:'Preferred font size is below the readable '+minimum+'px minimum.'};
+    // Preserve manual size decisions. For auto-fit, measure the largest
+    // comfortable size first; minimum is a fallback, not the default size.
     if(options.auto&&options.size<minimum)options={...options,size:minimum};
     const [x,y,width,height]=box,raw=String(text),maxW=width-10;
     // Split each word at its formatting boundaries. Previously a selection
@@ -342,7 +340,7 @@
         let style=null;
         for(const range of ranges)if(range.start<=at&&range.end>=stop)style=range;
         const rawSize=Math.min(100,(Number(style?.size)||options.size)*scale);
-        const size=Math.max(minimum,rawSize);
+        const size=Math.max(options.auto?minimum:12,rawSize);
         const family=SOCIAL_FONTS.includes(style?.font)?style.font:options.family;
         const weight=['400','600','700','800'].includes(String(style?.weight))?style.weight:options.weight;
         const font=(style?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
@@ -518,8 +516,8 @@
     };
   }
   function drawFitted(ctx,value,box,options,maxLines,minimum,preferSingleLine=false){
-    if(!options.auto&&options.size<minimum)
-      return {ok:false,message:'Preferred font size is below the readable '+minimum+'px minimum.'};
+    // Manual font sizes are respected exactly; only automatic fitting
+    // considers a safe minimum when selecting its smallest candidate.
     if(options.auto&&options.size<minimum)options={...options,size:minimum};
     const [x,y,width,height]=box,availableWidth=width-12;
     let layout=null;
@@ -617,8 +615,16 @@
   }
   // Platform-local readability limits: a compact Post must never force its
   // smaller type onto the much larger Story MY POV panel.
-  const TEXT_MINIMUM={post:{title:24,pov:22},story:{title:30,pov:30}};
+  // Readability preferences guide warnings; they must not erase content.
+  // Search from a comfortable starting size and use smaller type only when
+  // necessary to show every word. Admin can always override manually.
+  const TEXT_MINIMUM={post:{title:24,pov:19},story:{title:30,pov:24}};
+  const POV_COMFORTABLE={post:22,story:30};
   function textMinimum(field,kind){return TEXT_MINIMUM[kind][field];}
+  function povFitOptions(kind,style){
+    return {...style,tightPov:true,
+      size:style.auto?Math.max(style.size||0,kind==='story'?38:32):style.size};
+  }
   function drawPoster(ctx,image,box) {
     if(!image)return;
     const [x,y,w,h]=box;
@@ -783,15 +789,20 @@
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const povOptions={...textOptions('pov',kind),tightPov:true};
+      const povOptions=povFitOptions(kind,textOptions('pov',kind));
       const fit=drawStyled(ctx,pov,safeTextBox(g.pov,'pov',kind),povOptions,kind==='post'?8:10,textMinimum('pov',kind),draft.styles.pov);
       if(!fit.ok){
         errors.push('MY POV: '+fit.message+' This preview shows a readable excerpt; PNG export is blocked until all words fit.');
         drawUnfittedPovPreview(ctx,pov,safeTextBox(g.pov,'pov',kind),povOptions,textMinimum('pov',kind));
       }
       else if(draft.povStyle.auto) {
-        const ratio=fit.scale??((fit.size||draft.povStyle.size)/draft.povStyle.size);
-        if(ratio<.98)notes.push('MY POV auto-fit reduced font sizes to '+Math.round(ratio*100)+'% to stay inside the frame.');
+        if(fit.size<POV_COMFORTABLE[kind]){
+          notes.push('MY POV fits at '+fit.size+'px, below the recommended '+POV_COMFORTABLE[kind]+
+            'px. Review and adjust the font or copy if you prefer.');
+        }else if(fit.size<povOptions.size-1){
+          notes.push('MY POV fitted at '+fit.size+'px for '+kind.toUpperCase()+
+            '. You can adjust it in the editor.');
+        }
       }
     }
     return {canvas,errors,notes};
@@ -835,7 +846,7 @@
       ];
       for(const {field,value,limit,min} of specs){
         if(!value?.trim())continue;
-        const fitOptions=field==='pov'?{...draft.povStyle,tightPov:true}:draft.titleStyle;
+        const fitOptions=field==='pov'?povFitOptions(kind,draft.povStyle):draft.titleStyle;
         const result=drawStyled(ctx,value,safeTextBox(layout[field],field,kind),fitOptions,limit,min,draft.styles?.[field]||[],field==='title');
         if(result.ok)sizes[field].push({kind,size:result.size});
         else messages.push((kind==='story'?'Story':'Post')+' '+field.toUpperCase()+' cannot fit at a readable size.');
@@ -851,10 +862,10 @@
     // review instead of declaring the result publication-ready.
     if(sizes.title.some(x=>x.kind==='post'&&x.size<=26))
       messages.push('Post title is near its minimum readable size.');
-    if(sizes.pov.some(x=>x.kind==='post'&&x.size<=TEXT_MINIMUM.post.pov+1))
-      messages.push('Post MY POV is near the readability limit; review the preview.');
-    if(sizes.pov.some(x=>x.kind==='story'&&x.size<=TEXT_MINIMUM.story.pov+1))
-      messages.push('Story MY POV is near the readability limit; review the preview.');
+    if(sizes.pov.some(x=>x.kind==='post'&&x.size<POV_COMFORTABLE.post))
+      messages.push('Post MY POV is below the preferred font size; you can adjust it.');
+    if(sizes.pov.some(x=>x.kind==='story'&&x.size<POV_COMFORTABLE.story))
+      messages.push('Story MY POV is below the preferred font size; you can adjust it.');
     if(!draft.language?.trim())messages.push('WATCHED IN is missing.');
     return {draft,status:messages.length?'review':'ready',messages:[...new Set(messages)]};
   }
