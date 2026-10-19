@@ -93,6 +93,20 @@ export async function saveSocialEditorial(reviewId:number,format:string,draft:un
   const normalized=sanitizeSocialDraft(draft);
   await getContentDb().prepare('INSERT INTO social_promotional_drafts(review_id,format,draft_json) VALUES(?1,?2,?3) ON CONFLICT(review_id,format) DO UPDATE SET draft_json=excluded.draft_json,updated_at=CURRENT_TIMESTAMP').bind(reviewId,format,JSON.stringify(normalized)).run();
 }
+/** Insert-only bulk recommendation. Never overwrite existing shared/Post/Story
+ * movie styling, even if an editor saved changes during a long bulk scan. */
+export async function prepareSocialEditorialIfAbsent(reviewId:number,draft:unknown):Promise<boolean> {
+  if(!Number.isInteger(reviewId)||reviewId<=0)throw new Error('Invalid review.');
+  const normalized=sanitizeSocialDraft(draft);
+  const result=await getContentDb().prepare(`
+    INSERT INTO social_promotional_drafts (review_id,format,draft_json)
+    SELECT ?1,'shared',?2
+    WHERE NOT EXISTS (
+      SELECT 1 FROM social_promotional_drafts WHERE review_id=?1
+    )
+  `).bind(reviewId,JSON.stringify(normalized)).run();
+  return Number(result.meta.changes||0)>0;
+}
 export async function deleteSocialOverride(reviewId:number,format:string):Promise<void> {
   if(!Number.isInteger(reviewId)||reviewId<=0||!['post','story'].includes(format))throw new Error('Invalid review or format.');
   await getContentDb().prepare('DELETE FROM social_promotional_drafts WHERE review_id=?1 AND format=?2').bind(reviewId,format).run();
