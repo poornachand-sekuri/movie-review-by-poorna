@@ -191,16 +191,16 @@ test('Bulk relaunch UI exposes four independent ZIP downloads without mutation',
   }
   for(const id of ['socialBulkCancel','socialBulkStatus'])
     assert.ok(ADMIN_HTML.includes('id="'+id+'"'));
-  assert.match(ADMIN_HTML,/social-bulk-zip\\.js\\?v=1/);
-  assert.match(STUDIO_JS,/const BULK_PLATFORMS=Object\\.freeze/);
-  assert.match(STUDIO_JS,/function sortedBulkReviews\\(\\)/);
-  assert.match(STUDIO_JS,/function exportPlatformZip\\(platform\\)/);
-  assert.match(STUDIO_JS,/bulkFolder\\(review,rank\\)/);
+  assert.match(ADMIN_HTML,/social-bulk-zip\.js\?v=1/);
+  assert.match(STUDIO_JS,/const BULK_PLATFORMS=Object\.freeze/);
+  assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
+  assert.match(STUDIO_JS,/function exportPlatformZip\(platform\)/);
+  assert.match(STUDIO_JS,/bulkFolder\(review,rank\)/);
   const exporter=STUDIO_JS.slice(STUDIO_JS.indexOf('  // Each social platform gets'),
     STUDIO_JS.indexOf('  // The inline rich editors update'));
-  assert.doesNotMatch(exporter,/saveEditorialOp\\(|method:'PUT'|method:'POST'/);
-  assert.match(exporter,/manifest\\.csv/);
-  assert.match(exporter,/source\\/original_poster/);
+  assert.doesNotMatch(exporter,/saveEditorialOp\(|method:'PUT'|method:'POST'/);
+  assert.match(exporter,/manifest\.csv/);
+  assert.match(exporter,/source\/original_poster/);
 });
 
 test('Admin routes and approved master image endpoints are present and protected',()=>{
