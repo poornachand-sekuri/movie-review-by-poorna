@@ -254,7 +254,7 @@ test('Partial-word selection renders only selected letters in the chosen color a
 });
 
 test('No duplicate typography sliders and obsolete detached word controls remain',()=>{
-  assert.match(ADMIN_HTML,/Layout & Text Fit/);
+  assert.match(ADMIN_HTML,/Layout &amp; Text Fit/);
   assert.doesNotMatch(ADMIN_HTML,/<h2>Title Typography<\/h2>/);
   assert.doesNotMatch(ADMIN_HTML,/<h2>MY POV Typography<\/h2>/);
   assert.doesNotMatch(ADMIN_HTML,/id="socialTitleSize"/);
@@ -263,6 +263,32 @@ test('No duplicate typography sliders and obsolete detached word controls remain
   assert.match(RICH_JS,/the entire text/);
   assert.match(RICH_JS,/refreshLayout/);
   assert.match(RICH_JS,/editor\.style\.fontSize='19px'/);
+});
+
+
+test('Title and MY POV keep text-fit controls inline with their respective editors',()=>{
+  const title=ADMIN_HTML.indexOf('id="socialTitleRich"');
+  const pov=ADMIN_HTML.indexOf('id="socialPovRich"');
+  const watched=ADMIN_HTML.indexOf('id="socialLanguage"');
+  assert.ok(title>=0 && pov>title && watched>pov,'Title, MY POV and WATCHED IN remain ordered');
+  const titleSection=ADMIN_HTML.slice(title,pov);
+  const povSection=ADMIN_HTML.slice(pov,watched);
+  for(const id of ['socialTitleAlign','socialTitleCase','socialTitleAuto']){
+    assert.ok(titleSection.includes('id="'+id+'"'),id+' must be located directly with title');
+    assert.ok(!povSection.includes('id="'+id+'"'),id+' must not be duplicated with MY POV');
+  }
+  for(const id of ['socialPovAlign','socialPovLine','socialPovAuto']){
+    assert.ok(povSection.includes('id="'+id+'"'),id+' must be located directly with MY POV');
+    assert.ok(!titleSection.includes('id="'+id+'"'),id+' must not be duplicated with title');
+  }
+  for(const id of ['socialTitleAlign','socialTitleCase','socialTitleAuto','socialPovAlign','socialPovLine','socialPovAuto']){
+    assert.equal(ADMIN_HTML.split('id="'+id+'"').length-1,1,id+' must retain exactly one unique DOM ID');
+  }
+  assert.equal((ADMIN_HTML.match(/<fieldset class="social-inline-fit"/g)||[]).length,2);
+  assert.doesNotMatch(ADMIN_HTML,/class="social-group social-fit-controls"/);
+  assert.match(ADMIN_HTML,/id="socialLanguageAuto"/,'WATCHED IN auto-fit stays in its current place');
+  assert.match(ADMIN_HTML,/id="socialSaveDefaults"/,'persistent style-save action remains');
+  assert.match(ADMIN_HTML,/id="socialOverrideFormat"/,'per-format overrides remain');
 });
 
 test('All seven platform messages include the four canonical accounts with a blank line between every line',async()=>{
@@ -385,7 +411,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
-  assert.ok(ADMIN_HTML.includes('social-studio.css?v=8'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=9'));
   assert.ok(ADMIN_HTML.includes('social-studio.js?v=11'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
