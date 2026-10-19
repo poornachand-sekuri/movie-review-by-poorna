@@ -544,7 +544,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=10'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=13'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=14'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
