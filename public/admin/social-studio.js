@@ -360,7 +360,7 @@
     for(const singleLine of preferSingleLine?[true,false]:[false]){
     for(let base=options.size;base>=(options.auto?minimum:options.size);base--){
       const scale=base/options.size,lines=[];
-      const lineFactor=options.tightPov?Math.min(1.12,options.line||1.12):Math.max(1.25,options.line);
+      const lineFactor=options.tightPov?Math.max(1.1,Math.min(1.12,options.line||1.12)):Math.max(1.25,options.line);
       let row={pieces:[],width:0,height:base*lineFactor},failed=false;
       const flush=()=>{lines.push(row);row={pieces:[],width:0,height:base*lineFactor};};
       for(const match of tokens){
@@ -533,7 +533,7 @@
           ?(String(value).includes('\n')||ctx.measureText(String(value)).width>availableWidth?null:[String(value)])
           :wrapLines(ctx,value,availableWidth);
         if(!lines)continue;
-        const lineFactor=options.tightPov?Math.min(1.12,options.line||1.12):Math.max(1.25,options.line);
+        const lineFactor=options.tightPov?Math.max(1.1,Math.min(1.12,options.line||1.12)):Math.max(1.25,options.line);
         const lineH=size*lineFactor;
         if(lines.length<=(singleLine?1:maxLines) && lines.length*lineH<=height){
           layout={size,lines,lineH};break;
