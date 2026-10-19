@@ -789,7 +789,7 @@
       for(const {field,value,limit,min} of specs){
         if(!value?.trim())continue;
         const result=drawStyled(ctx,value,safeTextBox(layout[field],field,kind),draft[field+'Style'],limit,min,draft.styles?.[field]||[]);
-        if(result.ok)sizes[field].push(result.size);
+        if(result.ok)sizes[field].push({kind,size:result.size});
         else messages.push((kind==='story'?'Story':'Post')+' '+field.toUpperCase()+' cannot fit at a readable size.');
       }
       const lang=drawLanguage(ctx,draft.language,layout.language,draft.languageStyle);
@@ -801,11 +801,12 @@
     // independently from the same unchanged preferred size.
     // Text may technically fit at a very small size. Flag that for human
     // review instead of declaring the result publication-ready.
-    if(sizes.title.some(n=>n<=26))messages.push('Title is close to the minimum readable size.');
-    if(sizes.pov.some(n=>n<=TEXT_MINIMUM.post.pov+1))
+    if(sizes.title.some(x=>x.kind==='post'&&x.size<=26))
+      messages.push('Post title is near its minimum readable size.');
+    if(sizes.pov.some(x=>x.kind==='post'&&x.size<=TEXT_MINIMUM.post.pov+1))
       messages.push('Post MY POV is near the readability limit; review the preview.');
-    if(sizes.pov.some(n=>n<=TEXT_MINIMUM.story.pov+1))
-      messages.push('MY POV has a tightly fitted layout; review readability.');
+    if(sizes.pov.some(x=>x.kind==='story'&&x.size<=TEXT_MINIMUM.story.pov+1))
+      messages.push('Story MY POV is near the readability limit; review the preview.');
     if(!draft.language?.trim())messages.push('WATCHED IN is missing.');
     return {draft,status:messages.length?'review':'ready',messages:[...new Set(messages)]};
   }
