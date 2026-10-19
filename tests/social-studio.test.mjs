@@ -20,9 +20,11 @@ function harness(options={}) {
   const copied = [];
   const downloadedBlobs=[];
   const buttons = Object.fromEntries(['post','story'].map(kind=>[kind,{dataset:{socialFormat:kind},listeners:{},classList:{toggle(){}},addEventListener(type,cb){this.listeners[type]=cb;}}]));
-  const bulkButtons=Object.fromEntries(['instagram','facebook','x','whatsapp'].map(platform=>
-    [platform,{dataset:{bulkPlatform:platform},listeners:{},disabled:true,textContent:'',
+  const formatKeys=['instagram-post','instagram-story','facebook-post','facebook-story','x-post','whatsapp-channel','whatsapp-status'];
+  const bulkButtons=Object.fromEntries(formatKeys.map(format=>
+    [format,{dataset:{bulkFormat:format},listeners:{},disabled:true,textContent:'',
       addEventListener(type,callback){this.listeners[type]=callback;}}]));
+  const savedDirectoryFiles=new Map();
   function element(id) {
     if(!elementMap.has(id))elementMap.set(id,{
       id, value:'', checked:false, textContent:'', className:'', disabled:false, files:[],
@@ -73,7 +75,7 @@ function harness(options={}) {
   }
   const document={
     getElementById:element,
-    querySelectorAll:selector=>selector==='[data-social-format]'?Object.values(buttons):selector==='[data-bulk-platform]'?Object.values(bulkButtons):[],
+    querySelectorAll:selector=>selector==='[data-social-format]'?Object.values(buttons):selector==='[data-bulk-format]'?Object.values(bulkButtons):[],
     fonts:{ready:Promise.resolve(),load:()=>Promise.resolve([])},
     createElement(tag){ if(tag==='option')return {value:'',textContent:''};
       if(tag==='canvas')return {width:1080,height:1080,getContext:()=>makeContext(),toBlob(callback){callback(new Blob([new Uint8Array([137,80,78,71])],{type:'image/png'}));}};
@@ -87,6 +89,18 @@ function harness(options={}) {
     get src(){return this._src;}
   }
   const win={addEventListener:(type,cb)=>callbacks.set(type,cb),dispatchEvent(e){return callbacks.get(e.type)?.(e);}};
+  if(options.directoryMode){
+    win.showDirectoryPicker=async()=>({
+      async getFileHandle(filename){
+        return {async createWritable(){
+          const chunks=[];
+          return {async write(bytes){chunks.push(bytes);},
+            async close(){savedDirectoryFiles.set(filename,new Blob(chunks,{type:'application/zip'}));},
+            async abort(){savedDirectoryFiles.delete(filename);}};
+        }};
+      }
+    });
+  }
   const sample={
     i:7,t:'TOXIC: A FAIRY TALE FOR GROWN-UPS',s:'toxic-a-fairy-tale-for-grown-ups',
     l:'Telugu',rd:'2026-08-26',r:2.25,m:'https://assets.moviereviewbypoorna.com/reviews/toxic/poster.jpg',
@@ -107,100 +121,140 @@ function harness(options={}) {
   };
   vm.runInNewContext(BULK_ZIP_JS,ctx,{filename:'social-bulk-zip.js'});
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText,filledRects,pixelFills,buttons,bulkButtons,styledDraws,copied,downloadedBlobs,window:win};
+  return {element,callbacks,document,drawnText,filledRects,pixelFills,buttons,bulkButtons,savedDirectoryFiles,styledDraws,copied,downloadedBlobs,window:win};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
-test('Platform ZIPs each contain ONLY relevant images and platform-specific caption text',async()=>{
-  const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
-    v:'Sensible and witty. A memorable little movie.',l:'Telugu',r:4.25,
-    m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'}];
+
+async function zipEntries(blob){
+  const bytes=new Uint8Array(await blob.arrayBuffer());
+  const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  const entries=new Map();let offset=0;
+  while(offset+30<=bytes.length&&view.getUint32(offset,true)===0x04034b50){
+    const fileSize=view.getUint32(offset+18,true);
+    const nameSize=view.getUint16(offset+26,true),extra=view.getUint16(offset+28,true);
+    const name=new TextDecoder().decode(bytes.subarray(offset+30,offset+30+nameSize));
+    const start=offset+30+nameSize+extra;
+    entries.set(name,bytes.slice(start,start+fileSize));
+    offset=start+fileSize;
+  }
+  assert.equal(view.getUint32(offset,true),0x02014b50,'Expected central ZIP directory');
+  return entries;
+}
+
+function bulkFixture(reviews){
   let writes=0;
-  const h=harness({fetchMock:async(url,opts)=>{
+  const h=harness({directoryMode:reviews.length>100,fetchMock:async(url,opts)=>{
     if(opts?.method&&opts.method!=='GET'){writes++;return {ok:true,json:async()=>({})};}
     if(url.includes('compact=1'))return {ok:true,json:async()=>reviews};
     if(url.includes('/api/admin/editorial?reviewId='))return {ok:true,json:async()=>({presets:{},drafts:{}})};
     if(url==='/api/admin/editorial')return {ok:true,json:async()=>({presets:{}})};
     if(url.includes('/api/admin/social-poster?'))return {ok:true,headers:{get:()=>'image/jpeg'},
       blob:async()=>new Blob([new Uint8Array([255,216,255])],{type:'image/jpeg'})};
-    return {ok:true,json:async()=>reviews[0]};
+    return {ok:true,json:async()=>reviews.find(x=>x.i===Number(url.split('/').pop()))||reviews[0]};
   }});
+  return {h,writeCount:()=>writes};
+}
+
+test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with matching names',async()=>{
+  const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
+    v:'Sensible and witty. A memorable little movie.',l:'Telugu',r:4.25,
+    m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'}];
+  const {h,writeCount}=bulkFixture(reviews);
   h.callbacks.get('social-studio:open')();await settle();
-  const formats={
-    instagram:{images:['instagram-post.png','story.png'],captions:['instagram-post','instagram-story']},
-    facebook:{images:['facebook-x-post.png','story.png'],captions:['facebook-post','facebook-story']},
-    x:{images:['facebook-x-post.png'],captions:['x-post']},
-    whatsapp:{images:['whatsapp-channel.png','story.png'],captions:['whatsapp-channel','whatsapp-status']}
-  };
-  for(const [platform,settings] of Object.entries(formats)){
-    assert.equal(h.bulkButtons[platform].disabled,false,platform+' ZIP should be available');
-    await h.bulkButtons[platform].listeners.click();await settle();
-    const blob=h.downloadedBlobs.at(-1);
-    assert.ok(blob,platform+' ZIP should download');
-    const archive=new TextDecoder().decode(new Uint8Array(await blob.arrayBuffer()));
-    for(const item of settings.images)assert.ok(archive.includes('/images/'+item),platform+' image '+item);
-    for(const item of settings.captions)assert.ok(archive.includes('/captions/'+item+'.txt'),platform+' caption '+item);
-    for(const [other,otherSettings] of Object.entries(formats)){
-      if(other===platform)continue;
-      for(const item of otherSettings.captions)if(!settings.captions.includes(item))
-        assert.ok(!archive.includes('/captions/'+item+'.txt'),platform+' must exclude '+other+' caption '+item);
+  const formats=['instagram-post','instagram-story','facebook-post','facebook-story','x-post','whatsapp-channel','whatsapp-status'];
+  const expectedStem='001_2016-09-09_JYO_ACHYUTANANDA_7';
+  for(const format of formats){
+    assert.equal(h.bulkButtons[format].disabled,false,format+' download enabled');
+    await h.bulkButtons[format].listeners.click();await settle();
+    const entries=await zipEntries(h.downloadedBlobs.at(-1));
+    assert.deepEqual([...entries.keys()].sort(),[
+      'Captions/000_EXPORT_REPORT.txt',
+      'Captions/'+expectedStem+'.txt',
+      'Images/'+expectedStem+'.png'
+    ].sort(),format+' ZIP should contain two folders and matching files only');
+    assert.match(new TextDecoder().decode(entries.get('Captions/'+expectedStem+'.txt')),/JYO ACHYUTANANDA|review/i);
+    assert.match(new TextDecoder().decode(entries.get('Captions/000_EXPORT_REPORT.txt')),/oldest.*last/i);
+  }
+  assert.equal(h.downloadedBlobs.length,7,'Each button downloads one distinct ZIP');
+  assert.equal(writeCount(),0,'No review or social account writes');
+});
+
+test('One Download All click bundles seven independently usable ZIPs on fallback browsers',async()=>{
+  const reviews=[{i:9,t:'A Movie',s:'a-movie',rd:'2000-01-01',d:'2000-02-02',
+    v:'Enjoyable.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'}];
+  const {h,writeCount}=bulkFixture(reviews);
+  h.callbacks.get('social-studio:open')();await settle();
+  await h.element('socialBulkAll').listeners.click();await settle();
+  assert.equal(h.downloadedBlobs.length,1,'Single outer download avoids blocked multiple downloads');
+  const archive=await zipEntries(h.downloadedBlobs[0]);
+  assert.equal(archive.size,7,'Seven nested platform ZIPs');
+  const names=[...archive.keys()];
+  for(const label of ['Instagram_Post','Instagram_Story','Facebook_Post','Facebook_Story',
+    'X_Post','WhatsApp_Channel','WhatsApp_Story']){
+    const key=names.find(name=>name.includes(label));
+    assert.ok(key,'Missing '+label+' ZIP');
+    const nested=await zipEntries(new Blob([archive.get(key)]));
+    assert.ok(nested.has('Images/001_2000-01-01_A_Movie_9.png'),label+' image');
+    assert.ok(nested.has('Captions/001_2000-01-01_A_Movie_9.txt'),label+' caption');
+  }
+  assert.equal(writeCount(),0);
+});
+
+test('Download All streams seven standalone ZIP files into a chosen folder when supported',async()=>{
+  const reviews=[{i:7,t:'NEWEST',s:'newest',rd:'2026-10-18',d:'2026-10-18',
+    v:'Recent.',l:'Telugu',r:4,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'},
+    {i:4,t:'OLDEST',s:'oldest',rd:'2001-01-01',d:'2026-10-19',
+    v:'Classic.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'},
+    {i:6,t:'MIDDLE MOVIE',s:'middle',rd:'2016-05-01',d:'2026-10-17',
+    v:'Good.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'},
+    {i:2,t:'UNKNOWN',s:'unknown',rd:'',d:'2026-10-19',
+    v:'No release info.',l:'Telugu',r:2,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'}
+  ];
+  const {h,writeCount}=bulkFixture(reviews);
+  // Enable folder picker explicitly for a small fixture too.
+  const saved=h.savedDirectoryFiles;
+  h.window.showDirectoryPicker=async()=>({
+    async getFileHandle(name){return {async createWritable(){
+      const chunks=[];
+      return {async write(bytes){chunks.push(bytes);},
+        async close(){saved.set(name,new Blob(chunks,{type:'application/zip'}));}};}};}
+  });
+  h.callbacks.get('social-studio:open')();await settle();
+  await h.element('socialBulkAll').listeners.click();await settle();
+  assert.equal(saved.size,7,'Seven individual ZIPs should be created with one folder selection');
+  assert.equal(h.downloadedBlobs.length,0,'Native folder selection does not trigger seven browser downloads');
+  for(const archive of saved.values()){
+    const entries=await zipEntries(archive);
+    const paths=[...entries.keys()].filter(name=>name.startsWith('Images/'));
+    assert.deepEqual(paths,[
+      'Images/001_date-not-set_UNKNOWN_2.png',
+      'Images/002_2001-01-01_OLDEST_4.png',
+      'Images/003_2016-05-01_MIDDLE_MOVIE_6.png',
+      'Images/004_2026-10-18_NEWEST_7.png'
+    ],'File upload order must be oldest-to-newest, unknown date first');
+    for(const image of paths){
+      const caption=image.replace('Images/','Captions/').replace(/\.png$/,'.txt');
+      assert.ok(entries.has(caption),'Matching caption required for '+image);
     }
-    assert.ok(archive.includes('movies/001_2016-09-09_jyo-achyutananda_7/'),platform+' folder numbering');
-    assert.match(archive,/Sensible and witty/);
-    assert.ok(archive.includes('/source/original_poster.jpg'));
-    assert.ok(archive.includes('manifest.csv'));
   }
-  assert.equal(h.downloadedBlobs.length,4,'Four independent ZIP files are created');
-  assert.equal(writes,0,'No database or social account writes');
+  assert.equal(writeCount(),0);
 });
 
-test('Folder prefixes preserve reverse release-date ordering even with unordered API results',async()=>{
-  const catalog=[
-    {i:2,t:'Older release',s:'older',rd:'2024-01-15',d:'2026-10-19'},
-    {i:1,t:'Latest release',s:'latest',rd:'2026-10-17',d:'2026-09-20'},
-    {i:4,t:'Unknown release',s:'undated',rd:'',d:'2026-10-19'},
-    {i:3,t:'Middle release',s:'middle',rd:'2025-03-21',d:'2025-06-01'}
-  ].map(x=>({...x,v:'A short review.',l:'Telugu',r:3,
-    m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'}));
-  const h=harness({fetchMock:async(url)=>{
-    if(url.includes('compact=1'))return {ok:true,json:async()=>catalog};
-    if(url.includes('/api/admin/editorial?reviewId='))return {ok:true,json:async()=>({presets:{},drafts:{}})};
-    if(url==='/api/admin/editorial')return {ok:true,json:async()=>({presets:{}})};
-    if(url.includes('/api/admin/social-poster?'))return {ok:true,headers:{get:()=>'image/jpeg'},
-      blob:async()=>new Blob([new Uint8Array([255,216,255])],{type:'image/jpeg'})};
-    const id=Number(url.split('/').pop());return {ok:true,json:async()=>catalog.find(x=>x.i===id)};
-  }});
-  h.callbacks.get('social-studio:open')();await settle();
-  await h.bulkButtons.x.listeners.click();await settle();
-  const text=new TextDecoder().decode(new Uint8Array(await h.downloadedBlobs[0].arrayBuffer()));
-  const expected=['movies/001_2026-10-17_latest_1/','movies/002_2025-03-21_middle_3/',
-    'movies/003_2024-01-15_older_2/','movies/004_no-release-date_undated_4/'];
-  for(const label of expected)assert.ok(text.includes(label),'Missing ordered folder '+label);
-  let last=-1;
-  for(const folder of expected){
-    const pos=text.indexOf(folder);
-    assert.ok(pos>last,'ZIP entry and manifest order should follow release date');
-    last=pos;
-  }
-  assert.equal(h.downloadedBlobs.length,1);
-});
-
-test('Bulk relaunch UI exposes four independent ZIP downloads without mutation',()=>{
-  for(const platform of ['instagram','facebook','x','whatsapp']){
-    assert.ok(ADMIN_HTML.includes('data-bulk-platform="'+platform+'"'),platform+' ZIP button');
-  }
-  for(const id of ['socialBulkCancel','socialBulkStatus'])
-    assert.ok(ADMIN_HTML.includes('id="'+id+'"'));
-  assert.match(ADMIN_HTML,/social-bulk-zip\.js\?v=1/);
-  assert.match(STUDIO_JS,/const BULK_PLATFORMS=Object\.freeze/);
+test('Seven downloadable format buttons and standalone bulk-all button are wired',()=>{
+  for(const format of ['instagram-post','instagram-story','facebook-post','facebook-story',
+    'x-post','whatsapp-channel','whatsapp-status'])
+    assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
+  assert.match(ADMIN_HTML,/id="socialBulkAll"/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=18/);
+  assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
-  assert.match(STUDIO_JS,/function exportPlatformZip\(platform\)/);
-  assert.match(STUDIO_JS,/bulkFolder\(review,rank\)/);
-  const exporter=STUDIO_JS.slice(STUDIO_JS.indexOf('  // Each social platform gets'),
+  assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
+  const exporter=STUDIO_JS.slice(STUDIO_JS.indexOf('  // Seven self-contained format archives'),
     STUDIO_JS.indexOf('  // The inline rich editors update'));
   assert.doesNotMatch(exporter,/saveEditorialOp\(|method:'PUT'|method:'POST'/);
-  assert.match(exporter,/manifest\.csv/);
-  assert.match(exporter,/source\/original_poster/);
+  assert.match(exporter,/Captions\/000_EXPORT_REPORT\.txt/);
+  assert.match(exporter,/showDirectoryPicker/);
 });
 
 test('Admin routes and approved master image endpoints are present and protected',()=>{
@@ -746,7 +800,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=17'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=18'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
