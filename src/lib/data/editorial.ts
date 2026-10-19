@@ -70,7 +70,7 @@ export function sanitizeSocialDraft(value:unknown):Record<string,unknown> {
   };
 }
 export async function getEditorialPresets():Promise<Record<EditorialKey,EditorialStyle>> {
-  const rows=await getContentDb().prepare('SELECT preset_key,style_json FROM editorial_presets').all<{preset_key:string;style_json:string}>();
+  const rows=await getContentDb().prepare('SELECT preset_key,style_json FROM editorial_presets').run<{preset_key:string;style_json:string}>();
   const presets=structuredClone(EDITORIAL_DEFAULTS);
   for(const row of rows.results){const key=row.preset_key as EditorialKey;if(EDITORIAL_KEYS.includes(key))presets[key]=sanitizeStyle(parse(row.style_json,null),key);}
   return presets;
