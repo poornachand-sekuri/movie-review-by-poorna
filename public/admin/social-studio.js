@@ -17,14 +17,15 @@
     autoFitOnLoad: $('socialAutoFitOnLoad'), recalculateFit: $('socialRecalculateFit'),
     scanFits: $('socialScanAllFits'), prepareFits: $('socialPrepareFits'),
     fitStatus: $('socialFitStatus'), fitReport: $('socialFitReport'),
-    bulkDownload: $('socialBulkDownload'), bulkCancel: $('socialBulkCancel'), bulkStatus: $('socialBulkStatus')
+    bulkButtons: [...document.querySelectorAll('[data-bulk-platform]')], bulkCancel: $('socialBulkCancel'), bulkStatus: $('socialBulkStatus')
   };
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { 'instagram-post':null, 'facebook-x-post':null, 'whatsapp-channel':null, story:null }, postPlatform:'instagram-post', renders: {},
     seq: 0, drafts: { post:null, story:null }, captions:{}, presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false,
-    reviewCatalog:[], bulkFits:[], scanning:false, bulkSession:null, bulkCursor:0
+    reviewCatalog:[], bulkFits:[], scanning:false, bulkSession:null,
+    bulkCursor:{instagram:0,facebook:0,x:0,whatsapp:0}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const SOCIAL_FONTS=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','Merriweather'];
@@ -104,10 +105,9 @@
         inputs.movie.appendChild(opt);
       }
       inputs.status.textContent = results[0].length + ' saved reviews available.';
-      if(inputs.bulkDownload){
-        inputs.bulkDownload.disabled=!results[0].length;
-        inputs.bulkStatus.textContent=results[0].length+' movies ready. Export uses saved styles and the original D1 review content.';
-      }
+      for(const button of inputs.bulkButtons)button.disabled=!results[0].length;
+      if(inputs.bulkStatus)inputs.bulkStatus.textContent=results[0].length+
+        ' movies ready. Download Instagram, Facebook, X and WhatsApp as separate ZIPs.';
       updateAssetStatus();
       await refreshAll();
     } catch(err) {
@@ -1045,25 +1045,41 @@
     },'image/png');
   }
 
-  // BULK SOCIAL RELAUNCH: All rendering uses the same approved, per-platform
-  // canvas geometry and saved D1 movie styles as the manual exports. No data
-  // writes: images and captions are generated locally in the administrator's
-  // browser and packaged in a single streaming archive when supported.
-  const SOCIAL_BULK_MAP={
-    'instagram-post':'instagram-post.png','facebook-post':'facebook-x-post.png',
-    'x-post':'facebook-x-post.png','whatsapp-channel':'whatsapp-channel.png',
-    'instagram-story':'story.png','facebook-story':'story.png','whatsapp-status':'story.png'
-  };
-  const SOCIAL_CAPTION_FILES=[
-    'instagram-post','instagram-story','facebook-post','facebook-story',
-    'x-post','whatsapp-channel','whatsapp-status'
-  ];
+  // Each social platform gets its own release-ordered ZIP. The two formats
+  // of Instagram/Facebook/WhatsApp appear together for that platform, whereas
+  // X only needs its post image and its two-part thread caption.
+  const BULK_PLATFORMS=Object.freeze({
+    instagram:{label:'Instagram',items:[
+      {caption:'instagram-post',image:'instagram-post.png',kind:'post',design:'instagram-post'},
+      {caption:'instagram-story',image:'story.png',kind:'story',design:'story'}]},
+    facebook:{label:'Facebook',items:[
+      {caption:'facebook-post',image:'facebook-x-post.png',kind:'post',design:'facebook-x-post'},
+      {caption:'facebook-story',image:'story.png',kind:'story',design:'story'}]},
+    x:{label:'X',items:[
+      {caption:'x-post',image:'facebook-x-post.png',kind:'post',design:'facebook-x-post'}]},
+    whatsapp:{label:'WhatsApp',items:[
+      {caption:'whatsapp-channel',image:'whatsapp-channel.png',kind:'post',design:'whatsapp-channel'},
+      {caption:'whatsapp-status',image:'story.png',kind:'story',design:'story'}]}
+  });
   function setBulkStatus(message){
     if(inputs.bulkStatus)inputs.bulkStatus.textContent=message;
   }
-  function bulkFolder(review){
-    const date=/^\d{4}-\d{2}-\d{2}$/.test(review.rd||'')?review.rd:'no-release-date';
-    return 'movies/'+date+'_'+safeSlug(review.s||review.t)+'_'+Number(review.i);
+  function sortedBulkReviews(){
+    // Defensive sort even when API ordering changes. Keep missing dates last,
+    // and mirror the server's reviewed_date and ID tie-breaker.
+    return [...state.reviewCatalog].sort((a,b)=>{
+      const aDate=/^\\d{4}-\\d{2}-\\d{2}$/.test(a.rd||'')?a.rd:'';
+      const bDate=/^\\d{4}-\\d{2}-\\d{2}$/.test(b.rd||'')?b.rd:'';
+      return (bDate.localeCompare(aDate))||
+        String(b.d||'').localeCompare(String(a.d||''))||
+        (Number(b.i)-Number(a.i));
+    });
+  }
+  function bulkFolder(review,rank){
+    const date=/^\\d{4}-\\d{2}-\\d{2}$/.test(review.rd||'')?review.rd:'no-release-date';
+    // ZIP viewers sort filenames alphabetically, so zero-padded sequence
+    // ensures newest releases appear FIRST after download or extraction.
+    return 'movies/'+String(rank).padStart(3,'0')+'_'+date+'_'+safeSlug(review.s||review.t)+'_'+Number(review.i);
   }
   function writeBlobToDownload(blob,name){
     const anchor=document.createElement('a');
