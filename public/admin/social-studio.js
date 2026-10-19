@@ -13,13 +13,17 @@
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
     copyCaption: $('socialCopyCaption'),copyXReply: $('socialCopyXReply'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
     editorialStatus: $('socialEditorialStatus'), saveMovieStyle: $('socialSaveMovieStyle'), saveDefaults: $('socialSaveDefaults'), applyBoth: $('socialApplyBoth'),
-    overrideFormat: $('socialOverrideFormat'), resetOverride: $('socialResetOverride')
+    overrideFormat: $('socialOverrideFormat'), resetOverride: $('socialResetOverride'),
+    autoFitOnLoad: $('socialAutoFitOnLoad'), recalculateFit: $('socialRecalculateFit'),
+    scanFits: $('socialScanAllFits'), prepareFits: $('socialPrepareFits'),
+    fitStatus: $('socialFitStatus'), fitReport: $('socialFitReport')
   };
   if (!inputs.canvas) return;
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { 'instagram-post':null, 'facebook-x-post':null, 'whatsapp-channel':null, story:null }, postPlatform:'instagram-post', renders: {},
-    seq: 0, drafts: { post:null, story:null }, captions:{}, presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false
+    seq: 0, drafts: { post:null, story:null }, captions:{}, presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false,
+    reviewCatalog:[], bulkFits:[], scanning:false
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const SOCIAL_FONTS=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','Merriweather'];
@@ -91,6 +95,7 @@
         ...POST_KINDS.map(loadMaster), loadMaster('story'),
         document.fonts.ready
       ]);
+      state.reviewCatalog=results[0];
       for (const review of results[0]) {
         const opt = document.createElement('option');
         opt.value = String(review.i);
@@ -129,6 +134,21 @@
       state.savedOverrides=editorial?.drafts||{};
       state.drafts.post=cloneDraft(editorial?.drafts?.post||base);
       state.drafts.story=cloneDraft(editorial?.drafts?.story||base);
+      const protectedStyles=Object.values(editorial?.drafts||{}).some(Boolean);
+      if(inputs.autoFitOnLoad?.checked && !protectedStyles){
+        const proposal=await recommendFit(base);
+        if(sequence!==state.seq)return;
+        state.sharedDraft=cloneDraft(proposal.draft);
+        state.drafts.post=cloneDraft(proposal.draft);
+        state.drafts.story=cloneDraft(proposal.draft);
+        showFitStatus(proposal.status==='ready'
+          ?'Recommended title, MY POV and language fit prepared for Post and Story. Review the preview, then save if you like.'
+          :'Automatic preflight: '+proposal.messages.join(' ')+' Review before saving.');
+      }else{
+        showFitStatus(protectedStyles
+          ?'Previously saved styling retained. Choose RECALCULATE CURRENT FIT to preview new settings without saving.'
+          :'Auto-fit on load is off. Turn it on for future unsaved movies.');
+      }
       state.format='post'; applyDraft('post');
       if(inputs.overrideFormat)inputs.overrideFormat.checked=false;
       state.editorialLoaded=!!editorial?.presets;
@@ -380,13 +400,13 @@
       py+=row.height;
     }
     ctx.restore();
-    return {ok:true,scale:layout.scale};
+    return {ok:true,scale:layout.scale,size:Math.round(options.size*layout.scale),lines:layout.lines.length};
   }
 
   const cloneDraft=value=>JSON.parse(JSON.stringify(value));
   function showEditorialStatus(message) {if(inputs.editorialStatus)inputs.editorialStatus.textContent=message;}
-  function defaultDraft(review) {
-    const preset=state.presets||{};
+  function defaultDraft(review, presets=state.presets) {
+    const preset=presets||{};
     return {
       title:review.t || '',pov:review.v || '',styles:{title:[],pov:[]},language:review.l || '',
       rating:review.r == null?'':String(review.r),
@@ -503,7 +523,7 @@
     const initial=y+(height-layout.lineH*layout.lines.length)/2+layout.lineH/2;
     layout.lines.forEach((line,i)=>ctx.fillText(line,px,initial+i*layout.lineH));
     ctx.restore();
-    return {ok:true,size:layout.size};
+    return {ok:true,size:layout.size,lines:layout.lines.length};
   }
   // Same image policy as Now Reviewed on Lounge: contain the entire original
   // poster over a softly blurred, darkened cover version of that poster.
@@ -523,6 +543,14 @@
     ctx.lineTo(x,y+r);
     ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
+  }
+  // Approved ticket flourishes intrude near title edges. Keeping a measured
+  // internal safe zone protects title letters without altering the master image.
+  function safeTextBox(box,field,kind) {
+    const [x,y,w,h]=box;
+    const horiz=field==='title'?(kind==='story'?35:28):(kind==='story'?15:10);
+    const vert=field==='title'?(kind==='story'?10:8):(kind==='story'?10:7);
+    return [x+horiz,y+vert,w-2*horiz,h-2*vert];
   }
   function drawPoster(ctx,image,box) {
     if(!image)return;
@@ -676,7 +704,7 @@
     else {
       const titleOptions=textOptions('title',kind);
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
-      const fit=drawStyled(ctx,normalized,g.title,titleOptions,3,kind==='post'?24:30,draft.styles.title);
+      const fit=drawStyled(ctx,normalized,safeTextBox(g.title,'title',kind),titleOptions,3,kind==='post'?24:30,draft.styles.title);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
       else if(titleOptions.auto) {
         const ratio=fit.scale??((fit.size||titleOptions.size)/titleOptions.size);
@@ -688,7 +716,7 @@
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const fit=drawStyled(ctx,pov,g.pov,textOptions('pov',kind),kind==='post'?8:10,kind==='post'?18:20,draft.styles.pov);
+      const fit=drawStyled(ctx,pov,safeTextBox(g.pov,'pov',kind),textOptions('pov',kind),kind==='post'?8:10,kind==='post'?18:20,draft.styles.pov);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
       else if(draft.povStyle.auto) {
         const ratio=fit.scale??((fit.size||draft.povStyle.size)/draft.povStyle.size);
@@ -697,6 +725,157 @@
     }
     return {canvas,errors,notes};
   }
+
+  function showFitStatus(message) {
+    if(inputs.fitStatus)inputs.fitStatus.textContent=message;
+  }
+  async function loadDraftFonts(drafts) {
+    const fonts=new Set(['Oswald','Inter']);
+    for(const draft of drafts){
+      if(!draft)continue;
+      for(const field of ['title','pov']){
+        if(SOCIAL_FONTS.includes(draft[field+'Style']?.family))fonts.add(draft[field+'Style'].family);
+        for(const range of draft.styles?.[field]||[])if(SOCIAL_FONTS.includes(range.font))fonts.add(range.font);
+      }
+      if(SOCIAL_FONTS.includes(draft.languageStyle?.family))fonts.add(draft.languageStyle.family);
+    }
+    await Promise.all([...fonts].map(font=>document.fonts.load('700 48px "'+font+'"').catch(()=>[])));
+  }
+  // Preview/export and preflight share the exact canvas text measurer and safe
+  // regions. Only title/Pov layout and display sizes are recommended; original
+  // movie text, rating, poster, word-level marks and source review are not edited.
+  async function recommendFit(source){
+    const draft=cloneDraft(source);
+    draft.titleStyle.auto=true;draft.povStyle.auto=true;draft.languageStyle.auto=true;
+    await loadDraftFonts([draft]);
+    const canvas=makeImageCanvas('post'),ctx=canvas.getContext('2d');
+    const cases=[
+      {kind:'post',layout:geometry.post},
+      ...Object.values(postOverrides).map(overrides=>({kind:'post',layout:{...geometry.post,...overrides}})),
+      {kind:'story',layout:geometry.story}
+    ];
+    const sizes={title:[],pov:[]},messages=[];
+    if(!String(draft.title||'').trim())messages.push('Movie Title missing.');
+    if(!String(draft.pov||'').trim())messages.push('MY POV missing.');
+    for(const {kind,layout} of cases){
+      const specs=[
+        {field:'title',value:draft.titleCase==='uppercase'?draft.title.toUpperCase():draft.title,limit:3,min:kind==='post'?24:30},
+        {field:'pov',value:draft.pov,limit:kind==='post'?8:10,min:kind==='post'?18:20}
+      ];
+      for(const {field,value,limit,min} of specs){
+        if(!value?.trim())continue;
+        const result=drawStyled(ctx,value,safeTextBox(layout[field],field,kind),draft[field+'Style'],limit,min,draft.styles?.[field]||[]);
+        if(result.ok)sizes[field].push(result.size);
+        else messages.push((kind==='story'?'Story':'Post')+' '+field.toUpperCase()+' cannot fit at a readable size.');
+      }
+      const lang=drawLanguage(ctx,draft.language,layout.language,draft.languageStyle);
+      if(!lang.ok)messages.push('WATCHED IN does not fit all formats.');
+    }
+    // Use the smallest actual measured display size across approved designs.
+    // Shared movie styling then previews the same across Post and Story.
+    for(const field of ['title','pov']){
+      if(sizes[field].length===cases.length){
+        draft[field+'Style'].size=Math.min(draft[field+'Style'].size,Math.floor(Math.min(...sizes[field])));
+      }
+    }
+    // Text may technically fit at a very small size. Flag that for human
+    // review instead of declaring the result publication-ready.
+    if(sizes.title.some(n=>n<29))messages.push('Title is close to the minimum readable size.');
+    if(sizes.pov.some(n=>n<22))messages.push('MY POV is dense: review readability.');
+    if(!draft.language?.trim())messages.push('WATCHED IN is missing.');
+    return {draft,status:messages.length?'review':'ready',messages:[...new Set(messages)]};
+  }
+  const escapeFitText=value=>String(value??'').replace(/[&<>"']/g,ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[ch]);
+  function renderFitReport(){
+    if(!inputs.fitReport)return;
+    inputs.fitReport.innerHTML=state.bulkFits.map(item=>
+      '<button class="social-fit-review" type="button" data-auto-review-id="'+Number(item.review.i)+'">'+
+      '<span>'+escapeFitText(item.review.t)+'</span><small>'+
+      (item.status==='saved'?'Saved styling kept':item.status==='ready'?'Ready to save':
+        item.status==='prepared'?'Recommendation saved':item.status==='review'?'Needs review':'Scan failed')+
+      '</small></button>'
+    ).join('');
+    if(inputs.prepareFits)inputs.prepareFits.disabled=!state.bulkFits.some(x=>x.status==='ready');
+  }
+  async function recalculateCurrentFit(){
+    if(!state.review)return showFitStatus('Select a movie first.');
+    persistDraft();
+    inputs.recalculateFit.disabled=true;
+    try{
+      const proposal=await recommendFit(state.drafts[state.format]);
+      state.drafts[state.format]=proposal.draft;
+      applyDraft(state.format);
+      await refreshAll();
+      showFitStatus(proposal.status==='ready'
+        ?'Recalculated fit for current '+state.format.toUpperCase()+'. Review the preview. Save Movie Style when satisfied.'
+        :proposal.messages.join(' ')+' Changes are preview-only until saved.');
+    }catch(error){showFitStatus('Fit recalculation failed: '+errorMessage(error));}
+    finally{inputs.recalculateFit.disabled=false;}
+  }
+  async function scanAllFits(){
+    if(state.scanning)return;
+    state.scanning=true;
+    state.bulkFits=[];
+    inputs.scanFits.disabled=true;
+    if(inputs.prepareFits)inputs.prepareFits.disabled=true;
+    try{
+      const response=await jsonApi('/api/admin/editorial');
+      const presets=response.presets;
+      const catalog=state.reviewCatalog;
+      await loadDraftFonts(catalog.map(review=>defaultDraft(review,presets)));
+      for(let i=0;i<catalog.length;i++){
+        const review=catalog[i];
+        try{
+          const saved=await jsonApi('/api/admin/editorial?reviewId='+encodeURIComponent(review.i));
+          if(Object.values(saved.drafts||{}).some(Boolean)){
+            state.bulkFits.push({review,status:'saved'});
+          }else{
+            const proposal=await recommendFit(defaultDraft(review,presets));
+            if(!review.m){
+              proposal.status='review';
+              proposal.messages.push('Original poster missing.');
+            }
+            state.bulkFits.push({review,...proposal});
+          }
+        }catch(error){state.bulkFits.push({review,status:'error',messages:[errorMessage(error)]});}
+        if(i%5===0||i===catalog.length-1){
+          showFitStatus('Scanned '+(i+1)+' / '+catalog.length+' movies. No movie styling has been saved or replaced.');
+        }
+      }
+      renderFitReport();
+      const counts=status=>state.bulkFits.filter(r=>r.status===status).length;
+      showFitStatus('Scan complete: '+counts('ready')+' ready, '+counts('review')+' need review, '+
+        counts('saved')+' protected saved styles, '+counts('error')+' scan errors. Open any row to review.');
+    }catch(error){showFitStatus('Bulk scan failed: '+errorMessage(error));}
+    finally{state.scanning=false;inputs.scanFits.disabled=false;}
+  }
+  async function saveSafeRecommendations(){
+    const eligible=state.bulkFits.filter(r=>r.status==='ready');
+    if(!eligible.length)return;
+    inputs.prepareFits.disabled=true;
+    inputs.scanFits.disabled=true;
+    let created=0,skipped=0,errors=0;
+    try{
+      for(const item of eligible){
+        try{
+          // The server performs an atomic insert-only write. A concurrent
+          // manually saved movie draft is never overwritten.
+          const result=await saveEditorialOp({type:'prepare-social',reviewId:Number(item.review.i),draft:item.draft});
+          item.status=result.created?'prepared':'saved';
+          if(result.created)created++;else skipped++;
+        }catch(error){item.status='error';item.messages=[errorMessage(error)];errors++;}
+      }
+      renderFitReport();
+      showFitStatus('Completed: '+created+' new shared recommendations saved; '+skipped+
+        ' existing movie styles protected; '+errors+' errors. Open any movie to review and refine.');
+    }finally{
+      inputs.scanFits.disabled=false;
+      renderFitReport();
+    }
+  }
+
   let drawQueued=false;
   async function refreshAll(){
     // Wait for newly selected Google Fonts BEFORE measuring canvas text;
@@ -797,6 +976,15 @@
     try{await work();showEditorialStatus(success);}catch(error){showEditorialStatus('Not saved: '+errorMessage(error));}
     finally{if(button)button.disabled=false;}
   }
+  inputs.recalculateFit?.addEventListener('click',recalculateCurrentFit);
+  inputs.scanFits?.addEventListener('click',scanAllFits);
+  inputs.prepareFits?.addEventListener('click',saveSafeRecommendations);
+  inputs.fitReport?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-auto-review-id]');
+    if(!button)return;
+    inputs.movie.value=button.dataset.autoReviewId;
+    chooseMovie();
+  });
   if(inputs.saveMovieStyle)inputs.saveMovieStyle.addEventListener('click',()=>runEditorialSave(inputs.saveMovieStyle,async()=>{
     persistDraft();
     const format=inputs.overrideFormat.checked?state.format:'shared';
