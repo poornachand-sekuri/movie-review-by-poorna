@@ -170,3 +170,12 @@
 .social-fit-review span {min-width:0;overflow-wrap:anywhere}
 .social-fit-review small {font-size:11px;color:#d1bc9c;white-space:nowrap}
 .social-fit-review:focus-visible {outline:2px solid #f7010e;outline-offset:2px}
+
+/* Read-only social relaunch exporter. Keeps all content in browser/ZIP files. */
+.social-bulk-export{margin:12px 0 16px;padding:13px;border:1px solid #714c3d;border-radius:10px;background:#1d1715}
+.social-bulk-export>strong{display:block;font-size:13px;letter-spacing:.075em;color:#f1f1f1}
+.social-bulk-export .social-help{line-height:1.5;margin:7px 0}
+.social-bulk-export__actions{display:flex;gap:8px;flex-wrap:wrap}
+.social-bulk-export__actions button{flex:1 1 165px;min-height:42px;font-size:12px;white-space:normal}
+.social-bulk-export__actions [hidden]{display:none}
+.social-bulk-export__actions button:disabled{opacity:.45;cursor:not-allowed}
