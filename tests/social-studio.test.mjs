@@ -85,7 +85,8 @@ function harness(options={}) {
   };
   class ImageMock {
     constructor(){this.width=1080;this.height=1920;}
-    set src(v){this._src=v;queueMicrotask(()=>this.onload?.());}
+    set src(v){this._src=v;queueMicrotask(()=>
+      options.failImageSrc?.(v)?this.onerror?.():this.onload?.());}
     get src(){return this._src;}
   }
   const win={addEventListener:(type,cb)=>callbacks.set(type,cb),dispatchEvent(e){return callbacks.get(e.type)?.(e);}};
@@ -142,9 +143,10 @@ async function zipEntries(blob){
   return entries;
 }
 
-function bulkFixture(reviews){
+function bulkFixture(reviews,options={}){
   let writes=0;
-  const h=harness({directoryMode:reviews.length>100,fetchMock:async(url,opts)=>{
+  const h=harness({directoryMode:reviews.length>100,failImageSrc:options.failImageSrc,
+    fetchMock:async(url,opts)=>{
     if(opts?.method&&opts.method!=='GET'){writes++;return {ok:true,json:async()=>({})};}
     if(url.includes('compact=1'))return {ok:true,json:async()=>reviews};
     if(url.includes('/api/admin/editorial?reviewId='))return {ok:true,json:async()=>({presets:{},drafts:{}})};
@@ -186,6 +188,49 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
   }
   assert.equal(h.downloadedBlobs.length,7,'Each button downloads one distinct ZIP');
   assert.equal(writeCount(),0,'No review or social account writes');
+});
+
+test('WhatsApp Channel and Status must never download captions-only ZIPs when poster decoding fails',async()=>{
+  const reviews=[{i:7,t:'BROKEN POSTER',s:'broken-poster',rd:'2026-07-01',
+    v:'Test movie.',l:'Telugu',r:3,
+    m:'https://assets.moviereviewbypoorna.com/reviews/broken-poster/poster.jpg'}];
+  for(const format of ['whatsapp-channel','whatsapp-status']){
+    const {h}=bulkFixture(reviews,{failImageSrc:url=>url.includes('/api/admin/social-poster?')});
+    h.callbacks.get('social-studio:open')();await settle();
+    await h.bulkButtons[format].listeners.click();await settle();
+    assert.equal(h.downloadedBlobs.length,0,format+' must not silently download text-only archives');
+    const message=h.element('socialBulkStatus').textContent;
+    assert.match(message,/ZIP export failed: No PNG images generated/);
+    assert.match(message,/Original poster unavailable: Image unavailable/);
+    assert.match(message,/BROKEN POSTER/);
+    assert.equal(h.bulkButtons[format].disabled,false,'Export button restored after failure');
+  }
+});
+
+test('Partial image failures omit orphan captions and retain the reason in the export report',async()=>{
+  const reviews=[
+    {i:3,t:'WORKING POSTER',s:'working',rd:'2016-01-01',
+      v:'A short review.',l:'Telugu',r:4,
+      m:'https://assets.moviereviewbypoorna.com/reviews/working/poster.jpg'},
+    {i:4,t:'BROKEN POSTER',s:'broken',rd:'2016-02-01',
+      v:'A short review.',l:'Telugu',r:3,
+      m:'https://assets.moviereviewbypoorna.com/reviews/broken/poster.jpg'}
+  ];
+  const {h}=bulkFixture(reviews,{failImageSrc:url=>url.includes('social-poster?')&&
+    url.includes('broken')});
+  h.callbacks.get('social-studio:open')();await settle();
+  await h.bulkButtons['whatsapp-channel'].listeners.click();await settle();
+  assert.equal(h.downloadedBlobs.length,1,'Partial ZIP remains usable');
+  const entries=await zipEntries(h.downloadedBlobs[0]);
+  assert.deepEqual([...entries.keys()].sort(),[
+    'Images/001_2016-01-01_WORKING_POSTER_3.png',
+    'Captions/001_2016-01-01_WORKING_POSTER_3.txt',
+    'Captions/000_EXPORT_REPORT.txt'
+  ].sort(),'Every caption must have matching image; broken review is only in audit');
+  const report=new TextDecoder().decode(entries.get('Captions/000_EXPORT_REPORT.txt'));
+  assert.match(report,/BROKEN POSTER.+IMAGE NEEDS REVIEW/);
+  assert.match(report,/Original poster unavailable/);
+  assert.match(h.element('socialBulkStatus').textContent,/1 image\(s\) need review/);
 });
 
 test('One Download All click bundles seven independently usable ZIPs on fallback browsers',async()=>{
@@ -254,7 +299,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     'x-post','whatsapp-channel','whatsapp-status'])
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=22/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=23/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
   assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
@@ -979,7 +1024,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=22'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=23'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });

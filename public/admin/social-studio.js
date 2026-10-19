@@ -74,7 +74,19 @@
     return new Promise((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error('Image unavailable: ' + src.split('?')[0]));
+      image.onerror = async () => {
+        // Image.onerror hides HTTP details. Inspect the same authorized
+        // URL only on failures to identify R2/permission/quota problems.
+        let reason='image could not be decoded';
+        try {
+          const response=await fetch(src,{credentials:'same-origin'});
+          if(!response.ok){
+            const data=await response.json().catch(()=>({}));
+            reason='HTTP '+response.status+(typeof data.error==='string'?': '+data.error:'');
+          }
+        }catch(error){reason=errorMessage(error);}
+        reject(new Error('Image unavailable ('+reason+'): '+src.split('?')[0]));
+      };
       image.src = src;
     });
   }
@@ -1214,9 +1226,12 @@
       const config=BULK_FORMATS[format],writer=writers[format];
       const key=config.kind+'_'+config.design;
       const image=prepared.images[key]||null;
-      await writer.add('Captions/'+stem+'.txt',(prepared.captionMap[format]||'')+'\n');
-
-      if(image)await writer.add('Images/'+stem+'.png',image);
+      // Do not package text for a movie without its corresponding PNG.
+      // Its failure reason remains visible in 000_EXPORT_REPORT.txt.
+      if(image){
+        await writer.add('Images/'+stem+'.png',image);
+        await writer.add('Captions/'+stem+'.txt',(prepared.captionMap[format]||'')+'\n');
+      }
       records[format].push({rank:String(rank).padStart(3,'0'),title:review.t,
         release:review.rd||'UNSET',image:!!image,notes:prepared.notes});
     }
@@ -1295,6 +1310,20 @@
           });
         }
         processed++;
+      }
+      // Reject all-image failures rather than deliver a misleading empty
+      // Images/ folder and captions-only WhatsApp (or other format) ZIPs.
+      const emptyFormats=formats.filter(format=>records[format].length &&
+        records[format].every(record=>!record.image));
+      if(emptyFormats.length){
+        const details=emptyFormats.map(format=>{
+          const first=records[format].find(record=>record.notes.length);
+          return BULK_FORMATS[format].label+': '+
+            (first?first.title+' — '+first.notes.join('; '):'No image could be generated');
+        });
+        throw new Error('No PNG images generated for '+emptyFormats.map(format=>
+          BULK_FORMATS[format].label).join(', ')+'. '+details.join(' | ').slice(0,450)+
+          '. Check the original poster and Social Studio fit settings before retrying.');
       }
       for(const format of formats){
         await writers[format].add('Captions/000_EXPORT_REPORT.txt',
