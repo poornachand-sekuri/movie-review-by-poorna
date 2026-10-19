@@ -202,7 +202,7 @@ test('WhatsApp Channel and Status must never download captions-only ZIPs when po
     const message=h.element('socialBulkStatus').textContent;
     assert.match(message,/ZIP export failed: No PNG images generated/);
     assert.match(message,/Original poster unavailable: Image unavailable/);
-    assert.match(message,/broken-poster/);
+    assert.match(message,/BROKEN POSTER/);
     assert.equal(h.bulkButtons[format].disabled,false,'Export button restored after failure');
   }
 });
