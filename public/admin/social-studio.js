@@ -775,7 +775,11 @@
     // Shared movie styling then previews the same across Post and Story.
     for(const field of ['title','pov']){
       if(sizes[field].length===cases.length){
-        draft[field+'Style'].size=Math.min(draft[field+'Style'].size,Math.floor(Math.min(...sizes[field])));
+        // Story uses a larger minimum than Post. Keep a shared preferred
+        // size at least as large as that minimum; Post may still shrink safely.
+        const storyFloor=field==='title'?30:20;
+        draft[field+'Style'].size=Math.max(storyFloor,
+          Math.min(draft[field+'Style'].size,Math.floor(Math.min(...sizes[field]))));
       }
     }
     // Text may technically fit at a very small size. Flag that for human
