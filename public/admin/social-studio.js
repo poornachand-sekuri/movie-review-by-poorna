@@ -302,7 +302,15 @@
     const isX=key==='x-post';
     inputs.copyCaption.textContent=isX?'COPY X POST 1/2':'COPY MESSAGE';
     inputs.copyXReply.hidden=!isX;
-    inputs.captionStatus.textContent=state.review?(isX?'Two-post X thread: copy and publish Post 1, then copy the links reply as Post 2. Both stay within X limits.':isStory?'Story/Status publishing notes, not text to overlay on the image. Copy the native review link separately.':'Editable social caption with a blank line between every line and all four social account URLs.'):'Select a saved review.';
+    inputs.xReplyField.hidden=!isX;
+    if(isX)inputs.xReplyEditor.value=state.xReply;
+    const mainWeight=isX?xWeightedLength(inputs.captionText.value):0;
+    const replyWeight=isX?xWeightedLength(state.xReply):0;
+    inputs.captionStatus.textContent=state?(isX?
+      'Two separate X posts: main '+mainWeight+'/280, follow-up '+replyWeight+
+      '/280 weighted characters. Publish the image with Post 1, then reply with Post 2.':
+      isStory?'Story/Status publishing notes, not text to overlay on the image. Copy the native review link separately.':
+      'Editable social caption with a blank line between every line and all four social account URLs.'):'Select a saved review.';
   }
   async function copyText(value,message) {
     if(!value) {inputs.captionStatus.textContent='Nothing to copy yet.';return;}
@@ -321,7 +329,8 @@
       'x-post':'X Post','whatsapp-channel':'WhatsApp Channel',
       'whatsapp-status':'WhatsApp Status'
     };
-    const text=Object.entries(labels).map(([k,label])=>'=== '+label+' ===\n'+(state.captions[k]||'')+'\n').join('\n');
+    const text=Object.entries(labels).map(([k,label])=>'=== '+label+' ===\n'+(state.captions[k]||'')+'\n').join('\n')+
+      '=== X Follow-up Reply (copy separately) ===\n'+state.xReply+'\n';
     const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
     const link=document.createElement('a');
     link.href=URL.createObjectURL(blob);
@@ -1182,6 +1191,8 @@
       'This ZIP contains only Images/ and Captions/.',
       'Each numbered image matches the caption of the SAME filename.',
       'Story files are publishing notes, not text to overlay automatically.',
+      ...(format==='x-post'?['X post 1/2 is the numbered .txt; X reply 2/2 is the matching _Reply.txt.',
+        'Publish the main X post with its image, then reply with the second text.']:[]),
       'Any missing artwork is listed below; do not upload an unmatched caption.',
       'Exported order range: '+(from+1)+' - '+to+' of '+total+'.',
       '',
@@ -1200,6 +1211,7 @@
       const key=config.kind+'_'+config.design;
       const image=prepared.images[key]||null;
       await writer.add('Captions/'+stem+'.txt',(prepared.captionMap[format]||'')+'\n');
+      if(format==='x-post')await writer.add('Captions/'+stem+'_Reply.txt',xFollowUp()+'\n');
       if(image)await writer.add('Images/'+stem+'.png',image);
       records[format].push({rank:String(rank).padStart(3,'0'),title:review.t,
         release:review.rd||'UNSET',image:!!image,notes:prepared.notes});
@@ -1408,13 +1420,31 @@
   inputs.movie.addEventListener('change',chooseMovie);
   inputs.postPlatform.addEventListener('change',()=>{state.postPlatform=inputs.postPlatform.value;applyDraft(state.format);requestRefresh();});
   inputs.captionPlatform.addEventListener('change',updateCaptionEditor);
-  inputs.captionText.addEventListener('input',()=>{if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;});
-  inputs.copyCaption.addEventListener('click',()=>{const copy=inputs.captionPlatform.value==='x-post'?splitXThread(inputs.captionText.value).main:inputs.captionText.value;if(inputs.captionPlatform.value==='x-post'&&copy.length>280){inputs.captionStatus.textContent='The edited X main post exceeds 280 characters. Shorten it before copying.';return;}copyText(copy,'Message copied.');});
+  inputs.captionText.addEventListener('input',()=>{
+    if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;
+    if(inputs.captionPlatform.value==='x-post')updateCaptionEditor();
+  });
+  inputs.xReplyEditor.addEventListener('input',()=>{
+    if(inputs.captionPlatform.value!=='x-post'||!state.review)return;
+    state.xReply=inputs.xReplyEditor.value;
+    const mainWeight=xWeightedLength(inputs.captionText.value),replyWeight=xWeightedLength(state.xReply);
+    inputs.captionStatus.textContent='X main '+mainWeight+'/280, follow-up '+replyWeight+'/280 weighted characters.';
+  });
+  inputs.copyCaption.addEventListener('click',()=>{
+    const x=inputs.captionPlatform.value==='x-post';
+    const copy=inputs.captionText.value.trim();
+    if(x&&xWeightedLength(copy)>280){
+      inputs.captionStatus.textContent='X main post exceeds 280 weighted characters. Edit it before copying.';return;
+    }
+    copyText(copy,x?'X main Post 1/2 copied.':'Message copied.');
+  });
   inputs.copyXReply.addEventListener('click',()=>{
     if(inputs.captionPlatform.value!=='x-post')return;
-    const reply=splitXThread(inputs.captionText.value).reply;
-    if(reply.length>280){inputs.captionStatus.textContent='The edited X reply exceeds 280 characters. Shorten it before copying.';return;}
-    copyText(reply,'X follow-up reply copied.');
+    const reply=state.xReply.trim();
+    if(xWeightedLength(reply)>280){
+      inputs.captionStatus.textContent='X follow-up exceeds 280 weighted characters. Edit it before copying.';return;
+    }
+    copyText(reply,'X follow-up Post 2/2 copied.');
   });
   inputs.copyLink.addEventListener('click',()=>copyText(inputs.trackedUrl.value,'Tracked URL copied.'));
   inputs.downloadCaptions.addEventListener('click',downloadCaptions);
