@@ -17,7 +17,7 @@
     autoFitOnLoad: $('socialAutoFitOnLoad'), recalculateFit: $('socialRecalculateFit'),
     scanFits: $('socialScanAllFits'), prepareFits: $('socialPrepareFits'),
     fitStatus: $('socialFitStatus'), fitReport: $('socialFitReport'),
-    bulkButtons: [...document.querySelectorAll('[data-bulk-platform]')], bulkCancel: $('socialBulkCancel'), bulkStatus: $('socialBulkStatus')
+    bulkButtons: [...document.querySelectorAll('[data-bulk-format]')], bulkAll: $('socialBulkAll'), bulkCancel: $('socialBulkCancel'), bulkStatus: $('socialBulkStatus')
   };
   if (!inputs.canvas) return;
   const state = {
@@ -25,7 +25,7 @@
     masters: { 'instagram-post':null, 'facebook-x-post':null, 'whatsapp-channel':null, story:null }, postPlatform:'instagram-post', renders: {},
     seq: 0, drafts: { post:null, story:null }, captions:{}, presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false,
     reviewCatalog:[], bulkFits:[], scanning:false, bulkSession:null,
-    bulkCursor:{instagram:0,facebook:0,x:0,whatsapp:0}
+    bulkCursor:{}
   };
   const REPO_ASSET_ORIGIN = 'https://assets.moviereviewbypoorna.com/';
   const SOCIAL_FONTS=['Inter','Oswald','Cinzel','Source Serif 4','Bebas Neue','Anton','Barlow Condensed','Montserrat','Playfair Display','Poppins','Rajdhani','Merriweather'];
@@ -106,8 +106,9 @@
       }
       inputs.status.textContent = results[0].length + ' saved reviews available.';
       for(const button of inputs.bulkButtons)button.disabled=!results[0].length;
+      if(inputs.bulkAll)inputs.bulkAll.disabled=!results[0].length;
       if(inputs.bulkStatus)inputs.bulkStatus.textContent=results[0].length+
-        ' movies ready. Download Instagram, Facebook, X and WhatsApp as separate ZIPs.';
+        ' reviews available for 7 format-specific ZIPs (oldest release first, newest last).';
       updateAssetStatus();
       await refreshAll();
     } catch(err) {
@@ -1045,46 +1046,46 @@
     },'image/png');
   }
 
-  // Each social platform gets its own release-ordered ZIP. The two formats
-  // of Instagram/Facebook/WhatsApp appear together for that platform, whereas
-  // X only needs its post image and its two-part thread caption.
-  const BULK_PLATFORMS=Object.freeze({
-    instagram:{label:'Instagram',items:[
-      {caption:'instagram-post',image:'instagram-post.png',kind:'post',design:'instagram-post'},
-      {caption:'instagram-story',image:'story.png',kind:'story',design:'story'}]},
-    facebook:{label:'Facebook',items:[
-      {caption:'facebook-post',image:'facebook-x-post.png',kind:'post',design:'facebook-x-post'},
-      {caption:'facebook-story',image:'story.png',kind:'story',design:'story'}]},
-    x:{label:'X',items:[
-      {caption:'x-post',image:'facebook-x-post.png',kind:'post',design:'facebook-x-post'}]},
-    whatsapp:{label:'WhatsApp',items:[
-      {caption:'whatsapp-channel',image:'whatsapp-channel.png',kind:'post',design:'whatsapp-channel'},
-      {caption:'whatsapp-status',image:'story.png',kind:'story',design:'story'}]}
+
+  // Seven self-contained format archives, NEVER combined Post/Story folders.
+  // The matching numbered filename pairs allow copy/paste publishing in order.
+  const BULK_FORMATS=Object.freeze({
+    'instagram-post':{label:'Instagram_Post',kind:'post',design:'instagram-post'},
+    'instagram-story':{label:'Instagram_Story',kind:'story',design:'story'},
+    'facebook-post':{label:'Facebook_Post',kind:'post',design:'facebook-x-post'},
+    'facebook-story':{label:'Facebook_Story',kind:'story',design:'story'},
+    'x-post':{label:'X_Post',kind:'post',design:'facebook-x-post'},
+    'whatsapp-channel':{label:'WhatsApp_Channel',kind:'post',design:'whatsapp-channel'},
+    'whatsapp-status':{label:'WhatsApp_Story',kind:'story',design:'story'}
   });
+  const BULK_FORMAT_KEYS=Object.keys(BULK_FORMATS);
+  const BULK_FALLBACK_BATCH=5;
   function setBulkStatus(message){
     if(inputs.bulkStatus)inputs.bulkStatus.textContent=message;
   }
   function sortedBulkReviews(){
-    // Defensive sort even when API ordering changes. Keep missing dates last,
-    // and mirror the server's reviewed_date and ID tie-breaker.
+    // Oldest -> latest so the latest released movie is the LAST to publish.
+    // Undated reviews go first, NEVER after the newest known release.
     return [...state.reviewCatalog].sort((a,b)=>{
       const aDate=/^\d{4}-\d{2}-\d{2}$/.test(a.rd||'')?a.rd:'';
       const bDate=/^\d{4}-\d{2}-\d{2}$/.test(b.rd||'')?b.rd:'';
-      return (bDate.localeCompare(aDate))||
-        String(b.d||'').localeCompare(String(a.d||''))||
-        (Number(b.i)-Number(a.i));
+      return aDate.localeCompare(bDate)||
+        String(a.d||'').localeCompare(String(b.d||''))||
+        Number(a.i)-Number(b.i);
     });
   }
-  function bulkFolder(review,rank){
-    const date=/^\d{4}-\d{2}-\d{2}$/.test(review.rd||'')?review.rd:'no-release-date';
-    // ZIP viewers sort filenames alphabetically, so zero-padded sequence
-    // ensures newest releases appear FIRST after download or extraction.
-    return 'movies/'+String(rank).padStart(3,'0')+'_'+date+'_'+safeSlug(review.s||review.t)+'_'+Number(review.i);
+  function bulkStem(review,rank){
+    const release=/^\d{4}-\d{2}-\d{2}$/.test(review.rd||'')?review.rd:'date-not-set';
+    // Unicode movie names remain legible. Exclude cross-platform filename
+    // metacharacters, path separators, controls and Windows trailing periods.
+    const movie=String(review.t||review.s||'movie').normalize('NFC')
+      .replace(/[\/\\:*?"<>|\u0000-\u001f]/g,' ')
+      .replace(/\s+/g,'_').replace(/[. ]+$/g,'').slice(0,82)||'movie';
+    return String(rank).padStart(3,'0')+'_'+release+'_'+movie+'_'+Number(review.i);
   }
   function writeBlobToDownload(blob,name){
     const anchor=document.createElement('a');
-    anchor.href=URL.createObjectURL(blob);
-    anchor.download=name;
+    anchor.href=URL.createObjectURL(blob);anchor.download=name;
     document.body.appendChild(anchor);anchor.click();anchor.remove();
     setTimeout(()=>URL.revokeObjectURL(anchor.href),1000);
   }
@@ -1093,197 +1094,213 @@
       canvas.toBlob(blob=>blob?resolve(blob):reject(Error('PNG conversion failed.')),'image/png');
     });
   }
-  function renderBulkFrame(review,poster,drafts,kind,postPlatform){
-    // All shared state changes are synchronous, restored before yielding, and
-    // do not alter the selected movie or any saved editorial record.
+  function renderBulkFrame(review,poster,drafts,kind,design){
     const prior={review:state.review,poster:state.poster,drafts:state.drafts,postPlatform:state.postPlatform};
     try{
-      state.review=review;state.poster=poster;state.drafts=drafts;state.postPlatform=postPlatform;
+      state.review=review;state.poster=poster;state.drafts=drafts;state.postPlatform=design;
       return renderFrame(kind);
     }finally{
       state.review=prior.review;state.poster=prior.poster;
       state.drafts=prior.drafts;state.postPlatform=prior.postPlatform;
     }
   }
-  const csvCell=value=>'"'+String(value??'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';
-  async function addBulkMovie(zip,review,presets,manifest,platform,rank){
-    const config=BULK_PLATFORMS[platform];
-    const dir=bulkFolder(review,rank),notes=[],written=[],captions=makeCaptions(review);
-    const expected=config.items.length;
-    for(const item of config.items){
-      await zip.add(dir+'/captions/'+item.caption+'.txt',(captions[item.caption]||'')+'\n');
-    }
-    const reviewUrl='https://moviereviewbypoorna.com/review/'+safeSlug(review.s);
+  async function buildBulkMovie(review,formats){
+    const notes=[],captionMap=makeCaptions(review),images={};
     let editorial;
     try{
       editorial=await jsonApi('/api/admin/editorial?reviewId='+encodeURIComponent(review.i));
-    }catch(error){
-      notes.push('Saved movie style lookup unavailable: '+errorMessage(error));
-    }
-    const saved=editorial?.drafts||{};
-    const protectedMovie=Object.values(saved).some(Boolean);
-    let base=saved.shared||defaultDraft(review,editorial?.presets||presets);
-    if(editorial&&!protectedMovie){
+    }catch(error){notes.push('Saved style lookup failed: '+errorMessage(error));}
+    const saved=editorial?.drafts||{},hasSavedStyle=Object.values(saved).some(Boolean);
+    let base=saved.shared||defaultDraft(review,editorial?.presets||state.presets);
+    if(editorial&&!hasSavedStyle){
       try{
-        const preflight=await recommendFit(base);
-        base=preflight.draft;
-        if(preflight.status==='review')notes.push(...preflight.messages);
-      }catch(error){notes.push('Auto-fit unavailable: '+errorMessage(error));}
+        const fit=await recommendFit(base);base=fit.draft;
+        if(fit.status==='review')notes.push(...fit.messages);
+      }catch(error){notes.push('Auto-fit failed: '+errorMessage(error));}
     }
     const drafts={post:cloneDraft(saved.post||base),story:cloneDraft(saved.story||base)};
-    const meta={
-      release_order:rank,movie_id:review.i,title:review.t,slug:review.s,
-      release_date:review.rd||null,watched_in:review.l||'',rating:review.r,
-      original_my_pov:review.v||'',original_poster_url:review.m||null,
-      full_review_url:reviewUrl,platform,
-      tracked_links:Object.fromEntries(config.items.map(item=>
-        [item.caption,trackedUrlFor(review,item.caption)])),
-      image_for_platform:Object.fromEntries(config.items.map(item=>[item.caption,item.image])),
-      style_source:protectedMovie?'saved-movie-styling':'shared-default-auto-fit'
-    };
     let poster=null;
-    if(!review.m)notes.push('Original movie poster missing.');
-    else{
-      try{poster=await loadPoster(review.m);}
-      catch(error){notes.push('Original poster unavailable: '+errorMessage(error));}
-      try{
-        const posterResponse=await fetch('/api/admin/social-poster?url='+encodeURIComponent(review.m),{credentials:'same-origin'});
-        if(posterResponse.ok){
-          const contentType=posterResponse.headers?.get?.('content-type')||'';
-          const ext=contentType.includes('png')?'png':contentType.includes('webp')?'webp':'jpg';
-          await zip.add(dir+'/source/original_poster.'+ext,await posterResponse.blob());
-        }else notes.push('Original poster not archived. Source URL recorded in movie_details.json.');
-      }catch{notes.push('Original poster not archived. Source URL recorded in movie_details.json.');}
-    }
-    if(!editorial)notes.push('Images skipped to avoid replacing unknown saved movie styling.');
-    else if(!poster)notes.push('Images skipped: original poster cannot be loaded.');
+    if(!review.m)notes.push('Original poster missing.');
+    else try{poster=await loadPoster(review.m);}
+    catch(error){notes.push('Original poster unavailable: '+errorMessage(error));}
+    if(!editorial)notes.push('Artwork skipped: saved styling could not be verified.');
+    else if(!poster)notes.push('Artwork skipped: original poster could not load.');
     else{
       await loadDraftFonts(Object.values(drafts));
-      for(const item of config.items){
+      // Only four unique approved designs regardless of whether 1 or 7 ZIPs
+      // are requested; Facebook+X and the three Story formats can reuse PNGs.
+      for(const format of formats){
+        const definition=BULK_FORMATS[format];
+        const key=definition.kind+'_'+definition.design;
+        if(Object.hasOwn(images,key))continue;
         try{
-          const frame=renderBulkFrame(review,poster,drafts,item.kind,item.design);
+          const frame=renderBulkFrame(review,poster,drafts,definition.kind,definition.design);
           if(frame.errors.length){
-            notes.push(item.image+' NEEDS REVIEW: '+frame.errors.join('; '));
-            continue;
-          }
-          await zip.add(dir+'/images/'+item.image,await canvasPng(frame.canvas));
-          written.push(item.image);
-          if(frame.notes?.length)notes.push(item.image+': '+frame.notes.join(' / '));
-        }catch(error){notes.push(item.image+' export failed: '+errorMessage(error));}
-      }
-    }
-    meta.exported_images=written;meta.review_notes=notes;
-    await zip.add(dir+'/movie_details.json',JSON.stringify(meta,null,2)+'\n');
-    manifest.push({rank,movie:review.t,release:review.rd||'',review:reviewUrl,
-      images:written.length,expected,status:written.length===expected?'READY':'NEEDS REVIEW',
-      notes:notes.join(' | '),directory:dir});
-  }
-  async function exportPlatformZip(platform){
-    const config=BULK_PLATFORMS[platform];
-    if(!config||state.bulkSession||!state.reviewCatalog.length)return;
-    const zipModule=window.MovieReviewBulkZip;
-    if(!zipModule){setBulkStatus('ZIP packager failed to load. Reload Projector Room.');return;}
-    const required=[...new Set(config.items.map(item=>item.design))];
-    const missing=required.filter(kind=>!state.masters[kind]);
-    if(missing.length){
-      setBulkStatus(config.label+' export cannot start until approved artwork loads: '+missing.join(', ')+'.');
-      return;
-    }
-    const catalog=sortedBulkReviews();
-    const supportsDisk=typeof window.showSaveFilePicker==='function';
-    const from=supportsDisk?0:(state.bulkCursor[platform]||0);
-    const to=supportsDisk?catalog.length:Math.min(from+5,catalog.length);
-    if(from>=to){state.bulkCursor[platform]=0;setBulkStatus('All '+config.label+' batches downloaded. Click again to restart.');return;}
-    const part=catalog.slice(from,to),today=new Date().toISOString().slice(0,10);
-    const fileName='Movie_Reviews_By_Poorna_'+config.label+'_Social_Relaunch_'+today+
-      (supportsDisk?'':'_movies_'+String(from+1).padStart(3,'0')+'-'+String(to).padStart(3,'0'))+'.zip';
-    let sink;
-    // The native file picker must occur directly during the click.
-    // Streaming single-platform ZIPs avoids holding hundreds of PNGs in RAM.
-    try{
-      if(supportsDisk){
-        const handle=await window.showSaveFilePicker({suggestedName:fileName,
-          types:[{description:'ZIP archive',accept:{'application/zip':['.zip']}}]});
-        sink=await handle.createWritable();
-      }else sink=zipModule.memorySink();
-    }catch(error){
-      setBulkStatus(error?.name==='AbortError'?'File selection cancelled.':
-        'Cannot start '+config.label+' ZIP: '+errorMessage(error));
-      return;
-    }
-    state.bulkSession={platform,cancelled:false};
-    for(const button of inputs.bulkButtons)button.disabled=true;
-    inputs.bulkCancel.hidden=false;
-    const manifest=[],problems=[];
-    const zip=new zipModule.ZipWriter(sink);
-    try{
-      await zip.add('START_HERE.txt',[
-        'MOVIE REVIEWS BY POORNA - '+config.label.toUpperCase()+' SOCIAL RELAUNCH',
-        '=======================================================',
-        'This ZIP contains ONLY '+config.label+' image designs and captions.',
-        'Movie folders are numbered 001, 002, 003... newest release date first.',
-        'Missing release dates are last. Folder numbers match the full catalogue,',
-        'including when a browser downloads the archive in smaller batches.',
-        'The platform-specific caption files are under captions/.',
-        'Images under images/ use the approved cinema designs.',
-        'Source movie posters, when available, appear under source/.',
-        'Review movie_details.json for tracked URL links and original MY POV.',
-        'Check manifest.csv for any NEEDS REVIEW records before posting.',
-        'No original review content, saved designs or social accounts were changed.',
-        'Back up old posts and confirm replacements before deleting older content.',
-        ''
-      ].join('\n'));
-      let presets={};
-      try{presets=(await jsonApi('/api/admin/editorial')).presets||{};}
-      catch{problems.push('Shared editorial preset lookup failed; stored per-movie style remains protected.');}
-      for(let n=0;n<part.length;n++){
-        if(state.bulkSession.cancelled)break;
-        const review=part[n],rank=from+n+1;
-        setBulkStatus(config.label+' · '+rank+'/'+catalog.length+' · '+review.t);
-        try{await addBulkMovie(zip,review,presets,manifest,platform,rank);}
-        catch(error){
-          manifest.push({rank,movie:review.t,release:review.rd||'',review:'',images:0,
-            expected:config.items.length,status:'ERROR',notes:errorMessage(error),
-            directory:bulkFolder(review,rank)});
+            images[key]=null;
+            notes.push(definition.design+': '+frame.errors.join('; '));
+          }else images[key]=await canvasPng(frame.canvas);
+        }catch(error){
+          images[key]=null;
+          notes.push(definition.design+': '+errorMessage(error));
         }
       }
-      const headers=['Order','Movie','Release Date','Review URL','Images Created',
-        'Images Expected','Status','Notes','Folder'];
-      const csv=[headers.map(csvCell).join(','),
-        ...manifest.map(row=>[row.rank,row.movie,row.release,row.review,row.images,
-          row.expected,row.status,row.notes,row.directory].map(csvCell).join(','))].join('\r\n');
-      await zip.add('manifest.csv',csv+'\r\n');
-      const ready=manifest.filter(row=>row.images===row.expected).length;
-      await zip.add('EXPORT_REPORT.txt',[
-        'Platform: '+config.label,
-        'Movies examined: '+manifest.length,
-        'Complete image packs: '+ready,
-        'Movies requiring image review: '+(manifest.length-ready),
-        ...problems,
-        'See manifest.csv for skipped images and errors.',
-        'No saved website reviews or social accounts were altered.'
-      ].join('\n'));
-      await zip.close();
-      if(!supportsDisk)writeBlobToDownload(sink.blob(),fileName);
-      if(!supportsDisk)state.bulkCursor[platform]=(from+manifest.length)>=catalog.length?0:from+manifest.length;
-      const left=supportsDisk?0:catalog.length-(from+manifest.length);
-      setBulkStatus(config.label+' '+(state.bulkSession.cancelled?'partial ':'')+
-        'ZIP ready: '+manifest.length+' movies, '+ready+' complete, '+
-        (manifest.length-ready)+' needing review. '+
-        (left?'Click '+config.label+' again for the next '+Math.min(5,left)+' movies.':
-          'All '+config.label+' movies processed.')+' Check manifest.csv.');
+    }
+    return {captionMap,images,notes};
+  }
+  function bulkReport(records,format,from,to,total){
+    return [
+      'MOVIE REVIEWS BY POORNA - '+BULK_FORMATS[format].label,
+      'PUBLISH IN NUMBER ORDER: 001 FIRST, '+String(total).padStart(3,'0')+' LAST.',
+      'Oldest movie release first, most recent release LAST.',
+      'Movies with no release date are listed first and flagged as undated.',
+      'This ZIP contains only Images/ and Captions/.',
+      'Each numbered image matches the caption of the SAME filename.',
+      'Story files are publishing notes, not text to overlay automatically.',
+      'Any missing artwork is listed below; do not upload an unmatched caption.',
+      'Exported order range: '+(from+1)+' - '+to+' of '+total+'.',
+      '',
+      ...records.map(x=>x.rank+' | '+x.title+' | '+x.release+
+        ' | '+(x.image?'READY':'IMAGE NEEDS REVIEW')+
+        (x.notes.length?' | '+x.notes.join(' / '):'')),
+      '',
+      'The site and saved editor styles were not changed by this export.'
+    ].join('\n');
+  }
+  async function addBulkMovieToArchives(writers,review,rank,formats,records){
+    const stem=bulkStem(review,rank);
+    const prepared=await buildBulkMovie(review,formats);
+    for(const format of formats){
+      const config=BULK_FORMATS[format],writer=writers[format];
+      const key=config.kind+'_'+config.design;
+      const image=prepared.images[key]||null;
+      await writer.add('Captions/'+stem+'.txt',(prepared.captionMap[format]||'')+'\n');
+      if(image)await writer.add('Images/'+stem+'.png',image);
+      records[format].push({rank:String(rank).padStart(3,'0'),title:review.t,
+        release:review.rd||'UNSET',image:!!image,notes:prepared.notes});
+    }
+  }
+  function zipName(format,today,from,to,batched){
+    return 'Movie_Reviews_By_Poorna_'+BULK_FORMATS[format].label+
+      '_'+today+(batched?'_'+String(from+1).padStart(3,'0')+'-'+String(to).padStart(3,'0'):'')+'.zip';
+  }
+  async function exportBulkFormats(requestedFormat){
+    const formats=requestedFormat?[requestedFormat]:BULK_FORMAT_KEYS;
+    if(state.bulkSession||!state.reviewCatalog.length||formats.some(f=>!BULK_FORMATS[f]))return;
+    const zipModule=window.MovieReviewBulkZip;
+    if(!zipModule){setBulkStatus('ZIP packager unavailable; reload Projector Room.');return;}
+    const missing=[...new Set(formats.map(f=>BULK_FORMATS[f].design))].filter(k=>!state.masters[k]);
+    if(missing.length){
+      setBulkStatus('Approved design artwork not loaded: '+missing.join(', ')+'.');
+      return;
+    }
+    const all=!requestedFormat,folderExport=all&&typeof window.showDirectoryPicker==='function';
+    const diskExport=!all&&typeof window.showSaveFilePicker==='function';
+    const streamed=folderExport||diskExport;
+    const key=all?'all':requestedFormat;
+    const catalog=sortedBulkReviews(),from=streamed?0:(state.bulkCursor[key]||0);
+    const to=streamed?catalog.length:Math.min(from+BULK_FALLBACK_BATCH,catalog.length);
+    const today=new Date().toISOString().slice(0,10);
+    const sinks={},writers={},records=Object.fromEntries(formats.map(f=>[f,[]]));
+    const handles=[];
+    let outerSink=null,outerWriter=null;
+    // Browsers permit only ONE file/folder chooser per direct user gesture.
+    // On Chrome, folder access saves seven true ZIP files in one operation.
+    // Else download ONE outer ZIP holding seven independent format ZIPs per
+    // five-movie batch to prevent silent browser multi-download blocking.
+    try{
+      if(folderExport){
+        const directory=await window.showDirectoryPicker({mode:'readwrite',id:'movie-reviews-social-relaunch'});
+        for(const format of formats){
+          const name=zipName(format,today,from,to,false);
+          const file=await directory.getFileHandle(name,{create:true});
+          handles.push(file);
+        }
+        for(let i=0;i<formats.length;i++)sinks[formats[i]]=await handles[i].createWritable();
+      }else if(diskExport){
+        const handle=await window.showSaveFilePicker({
+          suggestedName:zipName(requestedFormat,today,from,to,false),
+          types:[{description:'ZIP archive',accept:{'application/zip':['.zip']}}]
+        });
+        sinks[requestedFormat]=await handle.createWritable();
+      }else{
+        for(const format of formats)sinks[format]=zipModule.memorySink();
+      }
     }catch(error){
-      setBulkStatus(config.label+' ZIP failed: '+errorMessage(error)+'. No website data was changed.');
-      try{await sink.abort?.();}catch{}
+      for(const sink of Object.values(sinks))try{await sink.abort?.();}catch{}
+      setBulkStatus(error?.name==='AbortError'?'Download cancelled.':
+        'Unable to select download destination: '+errorMessage(error));
+      return;
+    }
+    state.bulkSession={cancelled:false,key};
+    for(const button of inputs.bulkButtons)button.disabled=true;
+    if(inputs.bulkAll)inputs.bulkAll.disabled=true;
+    inputs.bulkCancel.hidden=false;
+    let processed=0,finished=false;
+    try{
+      for(const format of formats)writers[format]=new zipModule.ZipWriter(sinks[format]);
+      for(let n=from;n<to;n++){
+        if(state.bulkSession.cancelled)break;
+        const review=catalog[n],rank=n+1;
+        setBulkStatus('Preparing '+(all?'all seven ZIPs':BULK_FORMATS[key].label)+
+          ' · '+rank+'/'+catalog.length+' · '+review.t);
+        try{
+          await addBulkMovieToArchives(writers,review,rank,formats,records);
+        }catch(error){
+          // Preserve record alignment on unexpected per-movie faults.
+          for(const format of formats)records[format].push({
+            rank:String(rank).padStart(3,'0'),title:review.t,release:review.rd||'UNSET',
+            image:false,notes:['Export error: '+errorMessage(error)]
+          });
+        }
+        processed++;
+      }
+      for(const format of formats){
+        await writers[format].add('Captions/000_EXPORT_REPORT.txt',
+          bulkReport(records[format],format,from,from+processed,catalog.length));
+        await writers[format].close();
+      }
+      if(folderExport){
+        // Seven independent ZIPs were streamed straight into the folder.
+      }else if(diskExport){
+        // One individual ZIP was streamed into the selected filename.
+      }else if(all){
+        outerSink=zipModule.memorySink();
+        outerWriter=new zipModule.ZipWriter(outerSink);
+        for(const format of formats)
+          await outerWriter.add(zipName(format,today,from,from+processed,false),
+            sinks[format].blob());
+        await outerWriter.close();
+        writeBlobToDownload(outerSink.blob(),'Movie_Reviews_By_Poorna_All_7_ZIPs_'+today+
+          '_'+String(from+1).padStart(3,'0')+'-'+String(from+processed).padStart(3,'0')+'.zip');
+      }else{
+        writeBlobToDownload(sinks[requestedFormat].blob(),
+          zipName(requestedFormat,today,from,from+processed,true));
+      }
+      if(!streamed)state.bulkCursor[key]=from+processed>=catalog.length?0:from+processed;
+      const skipped=Object.values(records).reduce((sum,rows)=>sum+rows.filter(r=>!r.image).length,0);
+      const remaining=streamed?0:catalog.length-(from+processed);
+      setBulkStatus((all?'Seven ZIPs':'ZIP')+' saved. '+processed+
+        ' movies processed in oldest-to-newest order; '+skipped+' image(s) need review. '+
+        (remaining?'Click again for the next '+Math.min(BULK_FALLBACK_BATCH,remaining)+' movies.':
+          'All available movies processed.')+
+        ' Check Captions/000_EXPORT_REPORT.txt in each ZIP.');
+      finished=true;
+    }catch(error){
+      setBulkStatus('ZIP export failed: '+errorMessage(error)+
+        '. Retry; nothing was changed in the database or social accounts.');
+      for(const sink of Object.values(sinks))try{await sink.abort?.();}catch{}
     }finally{
       state.bulkSession=null;
       inputs.bulkCancel.hidden=true;
       for(const button of inputs.bulkButtons){
         button.disabled=false;
-        const key=button.dataset.bulkPlatform;
-        const left=catalog.length-(state.bulkCursor[key]||0);
-        button.textContent='DOWNLOAD '+BULK_PLATFORMS[key].label.toUpperCase()+
-          (state.bulkCursor[key]?' NEXT BATCH':'')+' ZIP';
+        const format=button.dataset.bulkFormat;
+        button.textContent=BULK_FORMATS[format].label.replaceAll('_',' ').toUpperCase()+
+          (state.bulkCursor[format]?' NEXT BATCH':'')+' ZIP';
+      }
+      if(inputs.bulkAll){
+        inputs.bulkAll.disabled=false;
+        inputs.bulkAll.textContent='DOWNLOAD ALL 7 ZIPS'+(state.bulkCursor.all?' · NEXT BATCH':'');
       }
     }
   }
@@ -1310,8 +1327,9 @@
     finally{if(button)button.disabled=false;}
   }
   for(const button of inputs.bulkButtons){
-    button.addEventListener('click',()=>exportPlatformZip(button.dataset.bulkPlatform));
+    button.addEventListener('click',()=>exportBulkFormats(button.dataset.bulkFormat));
   }
+  inputs.bulkAll?.addEventListener('click',()=>exportBulkFormats(null));
   inputs.bulkCancel?.addEventListener('click',()=>{if(state.bulkSession){
     state.bulkSession.cancelled=true;
     setBulkStatus('Stopping after the current movie. The completed files will remain in a partial ZIP.');
