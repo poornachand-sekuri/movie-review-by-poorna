@@ -20,6 +20,9 @@ function harness(options={}) {
   const copied = [];
   const downloadedBlobs=[];
   const buttons = Object.fromEntries(['post','story'].map(kind=>[kind,{dataset:{socialFormat:kind},listeners:{},classList:{toggle(){}},addEventListener(type,cb){this.listeners[type]=cb;}}]));
+  const bulkButtons=Object.fromEntries(['instagram','facebook','x','whatsapp'].map(platform=>
+    [platform,{dataset:{bulkPlatform:platform},listeners:{},disabled:true,textContent:'',
+      addEventListener(type,callback){this.listeners[type]=callback;}}]));
   function element(id) {
     if(!elementMap.has(id))elementMap.set(id,{
       id, value:'', checked:false, textContent:'', className:'', disabled:false, files:[],
@@ -70,7 +73,7 @@ function harness(options={}) {
   }
   const document={
     getElementById:element,
-    querySelectorAll:selector=>selector==='[data-social-format]'?Object.values(buttons):[],
+    querySelectorAll:selector=>selector==='[data-social-format]'?Object.values(buttons):selector==='[data-bulk-platform]'?Object.values(bulkButtons):[],
     fonts:{ready:Promise.resolve(),load:()=>Promise.resolve([])},
     createElement(tag){ if(tag==='option')return {value:'',textContent:''};
       if(tag==='canvas')return {width:1080,height:1080,getContext:()=>makeContext(),toBlob(callback){callback(new Blob([new Uint8Array([137,80,78,71])],{type:'image/png'}));}};
@@ -104,64 +107,100 @@ function harness(options={}) {
   };
   vm.runInNewContext(BULK_ZIP_JS,ctx,{filename:'social-bulk-zip.js'});
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText,filledRects,pixelFills,buttons,styledDraws,copied,downloadedBlobs,window:win};
+  return {element,callbacks,document,drawnText,filledRects,pixelFills,buttons,bulkButtons,styledDraws,copied,downloadedBlobs,window:win};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
 
-test('One-click Social Studio bulk archive contains all seven captions, four templates and original poster',async()=>{
-  const review={i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
+test('Platform ZIPs each contain ONLY relevant images and platform-specific caption text',async()=>{
+  const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
     v:'Sensible and witty. A memorable little movie.',l:'Telugu',r:4.25,
-    m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'};
-  let writeCalls=0;
+    m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'}];
+  let writes=0;
   const h=harness({fetchMock:async(url,opts)=>{
-    if(opts?.method&&opts.method!=='GET'){writeCalls++;return {ok:true,json:async()=>({})};}
-    if(url.includes('compact=1'))return {ok:true,json:async()=>[review]};
+    if(opts?.method&&opts.method!=='GET'){writes++;return {ok:true,json:async()=>({})};}
+    if(url.includes('compact=1'))return {ok:true,json:async()=>reviews};
     if(url.includes('/api/admin/editorial?reviewId='))return {ok:true,json:async()=>({presets:{},drafts:{}})};
     if(url==='/api/admin/editorial')return {ok:true,json:async()=>({presets:{}})};
-    if(url.includes('/api/admin/social-poster?'))return {ok:true,
-      headers:{get:()=>'image/jpeg'},blob:async()=>new Blob([new Uint8Array([255,216,255])],{type:'image/jpeg'})};
-    return {ok:true,json:async()=>review};
+    if(url.includes('/api/admin/social-poster?'))return {ok:true,headers:{get:()=>'image/jpeg'},
+      blob:async()=>new Blob([new Uint8Array([255,216,255])],{type:'image/jpeg'})};
+    return {ok:true,json:async()=>reviews[0]};
   }});
   h.callbacks.get('social-studio:open')();await settle();
-  assert.equal(h.element('socialBulkDownload').disabled,false);
-  await h.element('socialBulkDownload').listeners.click();await settle();
-  assert.equal(writeCalls,0,'Bulk social export must never write to any API');
-  assert.equal(h.downloadedBlobs.length,1,'A single movie produces one downloadable ZIP');
-  const bytes=new Uint8Array(await h.downloadedBlobs[0].arrayBuffer());
-  const asText=new TextDecoder().decode(bytes);
-  for(const file of ['images/instagram-post.png','images/facebook-x-post.png',
-    'images/whatsapp-channel.png','images/story.png',
-    'captions/instagram-post.txt','captions/instagram-story.txt',
-    'captions/facebook-post.txt','captions/facebook-story.txt',
-    'captions/x-post.txt','captions/whatsapp-channel.txt',
-    'captions/whatsapp-status.txt','original_poster.jpg',
-    'movie_details.json','manifest.csv','START_HERE.txt','EXPORT_REPORT.txt'])
-    assert.ok(asText.includes(file),file+' should be listed in the ZIP');
-  assert.match(asText,/Sensible and witty/,'Original promotional MY POV text remains present');
-  assert.match(asText,/2016-09-09/,'Movie release date is retained');
-  assert.match(h.element('socialBulkStatus').textContent,/ZIP ready/);
+  const formats={
+    instagram:{images:['instagram-post.png','story.png'],captions:['instagram-post','instagram-story']},
+    facebook:{images:['facebook-x-post.png','story.png'],captions:['facebook-post','facebook-story']},
+    x:{images:['facebook-x-post.png'],captions:['x-post']},
+    whatsapp:{images:['whatsapp-channel.png','story.png'],captions:['whatsapp-channel','whatsapp-status']}
+  };
+  for(const [platform,settings] of Object.entries(formats)){
+    assert.equal(h.bulkButtons[platform].disabled,false,platform+' ZIP should be available');
+    await h.bulkButtons[platform].listeners.click();await settle();
+    const blob=h.downloadedBlobs.at(-1);
+    assert.ok(blob,platform+' ZIP should download');
+    const archive=new TextDecoder().decode(new Uint8Array(await blob.arrayBuffer()));
+    for(const item of settings.images)assert.ok(archive.includes('/images/'+item),platform+' image '+item);
+    for(const item of settings.captions)assert.ok(archive.includes('/captions/'+item+'.txt'),platform+' caption '+item);
+    for(const [other,otherSettings] of Object.entries(formats)){
+      if(other===platform)continue;
+      for(const item of otherSettings.captions)if(!settings.captions.includes(item))
+        assert.ok(!archive.includes('/captions/'+item+'.txt'),platform+' must exclude '+other+' caption '+item);
+    }
+    assert.ok(archive.includes('movies/001_2016-09-09_jyo-achyutananda_7/'),platform+' folder numbering');
+    assert.match(archive,/Sensible and witty/);
+    assert.ok(archive.includes('/source/original_poster.jpg'));
+    assert.ok(archive.includes('manifest.csv'));
+  }
+  assert.equal(h.downloadedBlobs.length,4,'Four independent ZIP files are created');
+  assert.equal(writes,0,'No database or social account writes');
 });
 
-test('Social relaunch exporter is clearly exposed and does not mutate site data',async()=>{
-  for(const id of ['socialBulkDownload','socialBulkCancel','socialBulkStatus']){
-    assert.ok(ADMIN_HTML.includes('id="'+id+'"'),id+' required in bulk social panel');
+test('Folder prefixes preserve reverse release-date ordering even with unordered API results',async()=>{
+  const catalog=[
+    {i:2,t:'Older release',s:'older',rd:'2024-01-15',d:'2026-10-19'},
+    {i:1,t:'Latest release',s:'latest',rd:'2026-10-17',d:'2026-09-20'},
+    {i:4,t:'Unknown release',s:'undated',rd:'',d:'2026-10-19'},
+    {i:3,t:'Middle release',s:'middle',rd:'2025-03-21',d:'2025-06-01'}
+  ].map(x=>({...x,v:'A short review.',l:'Telugu',r:3,
+    m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'}));
+  const h=harness({fetchMock:async(url)=>{
+    if(url.includes('compact=1'))return {ok:true,json:async()=>catalog};
+    if(url.includes('/api/admin/editorial?reviewId='))return {ok:true,json:async()=>({presets:{},drafts:{}})};
+    if(url==='/api/admin/editorial')return {ok:true,json:async()=>({presets:{}})};
+    if(url.includes('/api/admin/social-poster?'))return {ok:true,headers:{get:()=>'image/jpeg'},
+      blob:async()=>new Blob([new Uint8Array([255,216,255])],{type:'image/jpeg'})};
+    const id=Number(url.split('/').pop());return {ok:true,json:async()=>catalog.find(x=>x.i===id)};
+  }});
+  h.callbacks.get('social-studio:open')();await settle();
+  await h.bulkButtons.x.listeners.click();await settle();
+  const text=new TextDecoder().decode(new Uint8Array(await h.downloadedBlobs[0].arrayBuffer()));
+  const expected=['movies/001_2026-10-17_latest_1/','movies/002_2025-03-21_middle_3/',
+    'movies/003_2024-01-15_older_2/','movies/004_no-release-date_undated_4/'];
+  for(const label of expected)assert.ok(text.includes(label),'Missing ordered folder '+label);
+  let last=-1;
+  for(const folder of expected){
+    const pos=text.indexOf(folder);
+    assert.ok(pos>last,'ZIP entry and manifest order should follow release date');
+    last=pos;
   }
-  assert.match(ADMIN_HTML,/social-bulk-zip\.js\?v=1/);
-  assert.match(STUDIO_JS,/const SOCIAL_CAPTION_FILES=\[/);
-  assert.match(STUDIO_JS,/function renderBulkFrame\(review,poster,drafts,kind,postPlatform\)/);
-  assert.match(STUDIO_JS,/function exportAllSocialPacks\(\)/);
-  assert.match(STUDIO_JS,/Movie_Reviews_By_Poorna_Social_Relaunch_/);
-  assert.match(STUDIO_JS,/state\.reviewCatalog\.slice\(from,to\)/);
-  assert.match(STUDIO_JS,/type:'prepare-social'|type:'social'/,'other existing editorial operations remain');
-  // Only safe read-only API endpoints are invoked by this new function;
-  // social styles are not saved or rewritten during export.
-  const exporter=STUDIO_JS.slice(STUDIO_JS.indexOf('  // BULK SOCIAL RELAUNCH:'),
+  assert.equal(h.downloadedBlobs.length,1);
+});
+
+test('Bulk relaunch UI exposes four independent ZIP downloads without mutation',()=>{
+  for(const platform of ['instagram','facebook','x','whatsapp']){
+    assert.ok(ADMIN_HTML.includes('data-bulk-platform="'+platform+'"'),platform+' ZIP button');
+  }
+  for(const id of ['socialBulkCancel','socialBulkStatus'])
+    assert.ok(ADMIN_HTML.includes('id="'+id+'"'));
+  assert.match(ADMIN_HTML,/social-bulk-zip\\.js\\?v=1/);
+  assert.match(STUDIO_JS,/const BULK_PLATFORMS=Object\\.freeze/);
+  assert.match(STUDIO_JS,/function sortedBulkReviews\\(\\)/);
+  assert.match(STUDIO_JS,/function exportPlatformZip\\(platform\\)/);
+  assert.match(STUDIO_JS,/bulkFolder\\(review,rank\\)/);
+  const exporter=STUDIO_JS.slice(STUDIO_JS.indexOf('  // Each social platform gets'),
     STUDIO_JS.indexOf('  // The inline rich editors update'));
-  assert.doesNotMatch(exporter,/saveEditorialOp\(|method:'PUT'|method:'POST'/);
-  assert.match(exporter,/manifest\.csv/);
-  assert.match(exporter,/original_poster/);
-  assert.match(exporter,/SOCIAL_BULK_MAP/);
-  assert.match(exporter,/This archive does not modify existing site reviews/);
+  assert.doesNotMatch(exporter,/saveEditorialOp\\(|method:'PUT'|method:'POST'/);
+  assert.match(exporter,/manifest\\.csv/);
+  assert.match(exporter,/source\\/original_poster/);
 });
 
 test('Admin routes and approved master image endpoints are present and protected',()=>{
@@ -707,7 +746,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=16'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=17'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
