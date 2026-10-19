@@ -171,18 +171,15 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
     assert.deepEqual([...entries.keys()].sort(),[
       'Captions/000_EXPORT_REPORT.txt',
       'Captions/'+expectedStem+'.txt',
-      ...(format==='x-post'?['Captions/'+expectedStem+'_Reply.txt']:[]),
       'Images/'+expectedStem+'.png'
     ].sort(),format+' ZIP should contain Images/ and Captions/ with matching files');
     if(format==='x-post'){
-      const main=new TextDecoder().decode(entries.get('Captions/'+expectedStem+'.txt'));
-      const reply=new TextDecoder().decode(entries.get('Captions/'+expectedStem+'_Reply.txt'));
-      assert.match(main,/has reached the Auditorium!/);
-      assert.match(main,/FULL REVIEW: .*utm_source=x/);
-      assert.doesNotMatch(main,/=== X FOLLOW-UP|Instagram: /);
-      assert.match(reply,/THE MOVIE TALK DOESN'T END HERE!/);
-      assert.match(reply,/ONE LOVE\. MANY SCREENS/);
-      assert.match(reply,/WhatsApp Channel:/);
+      const caption=new TextDecoder().decode(entries.get('Captions/'+expectedStem+'.txt'));
+      assert.match(caption,/has reached the Auditorium!/);
+      assert.match(caption,/FULL REVIEW: .*utm_source=x/);
+      for(const label of ['📸 IG:','ⓕ FB:','𝕏 X:','💬 WA:'])assert.ok(caption.includes(label));
+      assert.doesNotMatch(caption,/=== X FOLLOW-UP|_Reply|POST 2\/2/);
+      assert.ok(xWeightedTestLength(caption)<=280,'X ZIP must contain one publishable caption');
     }
     assert.match(new TextDecoder().decode(entries.get('Captions/'+expectedStem+'.txt')),/JYO ACHYUTANANDA|review/i);
     assert.match(new TextDecoder().decode(entries.get('Captions/000_EXPORT_REPORT.txt')),/oldest.*last/i);
@@ -257,7 +254,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     'x-post','whatsapp-channel','whatsapp-status'])
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=21/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=22/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
   assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
@@ -805,13 +802,21 @@ test('All seven platform messages include the four canonical accounts with a bla
     assert.doesNotMatch(caption,/Geetu aimed for a Joker-like/,platform+' should not duplicate the full MY POV');
     assert.match(h.element('socialTrackedUrl').value,/utm_source=/);
     if(platform!=='instagram-post')assert.match(caption,/utm_source=/);
-    const promo=platform==='x-post'?h.element('socialXReplyEditor').value:caption;
-    for(const link of links)assert.ok(promo.includes(link),platform+' must promote '+link);
-    for(const symbol of ['📸 Instagram:','ⓕ Facebook:','𝕏 X:','💬 WhatsApp']){
-      assert.ok(promo.includes(symbol),platform+' needs the finalized '+symbol+' caption symbol');
-    }
+    for(const link of links)assert.ok(caption.includes(link),platform+' must promote '+link);
+    const symbols=platform==='x-post'?
+      ['📸 IG:','ⓕ FB:','𝕏 X:','💬 WA:']:
+      ['📸 Instagram:','ⓕ Facebook:','𝕏 X:','💬 WhatsApp'];
+    for(const symbol of symbols)assert.ok(caption.includes(symbol),
+      platform+' must include '+symbol+' and the real link in the same post');
     assert.ok(!caption.includes('🔵 Facebook')&&!caption.includes('🟢 WhatsApp'),platform+' must not use generic colored dots');
-    assert.doesNotMatch(caption,/(?<!\n)\n(?!\n)/u,platform+' must have one blank line between displayed lines');
+    // The single X post groups links on consecutive lines to fit 280
+    // weighted characters; every other platform retains airy blank lines.
+    if(platform!=='x-post')
+      assert.doesNotMatch(caption,/(?<!\n)\n(?!\n)/u,
+        platform+' must have one blank line between displayed lines');
+    else
+      assert.match(caption,/📸 IG: [^\n]+\nⓕ FB: [^\n]+\n𝕏 X: [^\n]+\n💬 WA: /u,
+        'X uses four compact account lines in one post');
   }
   h.element('socialCaptionPlatform').value='instagram-post';
   h.element('socialCaptionPlatform').listeners.change();
@@ -828,50 +833,41 @@ const xWeightedTestLength=value=>[...String(value)
   .replace(/https?:\/\/[^\s]+/gu,'x'.repeat(23))]
   .reduce((sum,ch)=>sum+(ch.codePointAt(0)<0x1100?1:2),0);
 
-test('X uses a cinematic Instagram/Facebook-style main post and a separately editable branded follow-up',async()=>{
+
+test('One X post contains movie promo, tracked review link and all four account URLs',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   h.element('socialCaptionPlatform').value='x-post';
   h.element('socialCaptionPlatform').listeners.change();
   const main=h.element('socialCaptionText').value;
-  const reply=h.element('socialXReplyEditor').value;
   assert.match(main,/🎬 TOXIC: A FAIRY TALE FOR GROWN-UPS has reached the Auditorium!/u);
-  assert.match(main,/🍿 Worth your popcorn\? My full review has the answer!/u);
+  assert.match(main,/🍿 Worth your popcorn\?/u);
   assert.match(main,/🎟️ FULL REVIEW: https:\/\/moviereviewbypoorna\.com\/review\/toxic-a-fairy-tale-for-grown-ups\?utm_source=x/u);
   assert.match(main,/#MovieReviewsByPoorna/);
-  assert.match(reply,/🎞️ THE MOVIE TALK DOESN'T END HERE!/u);
-  assert.match(reply,/🎥 ONE LOVE\. MANY SCREENS\./u);
-  for(const url of [
-    'https://www.instagram.com/moviereviewbypoorna/',
-    'https://www.facebook.com/moviereviewbypoorna',
-    'https://x.com/reviewbypoorna',
-    'https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546'
-  ])assert.ok(reply.includes(url),'Reply is missing official link '+url);
-  assert.doesNotMatch(main,/=== X FOLLOW-UP|My verdict is up|More movie talk, four ways/);
-  assert.doesNotMatch(reply,/=== X FOLLOW-UP|More movie talk, four ways/);
-  assert.ok(xWeightedTestLength(main)<=280,'Main must fit weighted X standard count');
-  assert.ok(xWeightedTestLength(reply)<=280,'Reply must fit weighted X standard count');
-  assert.equal(h.element('socialCopyCaption').textContent,'COPY X POST 1/2');
-  assert.equal(h.element('socialCopyXReply').hidden,false);
-  assert.equal(h.element('socialXReplyField').hidden,false);
+  const urlNames=[
+    ['📸 IG:','https://www.instagram.com/moviereviewbypoorna/'],
+    ['ⓕ FB:','https://www.facebook.com/moviereviewbypoorna'],
+    ['𝕏 X:','https://x.com/reviewbypoorna'],
+    ['💬 WA:','https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546']
+  ];
+  for(const [symbol,url] of urlNames){
+    assert.ok(main.includes(symbol+' '+url),'Main single post needs '+symbol+' with clickable URL');
+  }
+  assert.doesNotMatch(main,/=== X FOLLOW-UP|Post 2\/2|_Reply/);
+  assert.ok(xWeightedTestLength(main)<=280,'All-in-one X post must fit weighted 280 limit');
+  assert.equal(h.element('socialCopyCaption').textContent,'COPY X POST');
+  assert.ok(!ADMIN_HTML.includes('socialCopyXReply'),'No second X copy button');
+  assert.ok(!ADMIN_HTML.includes('socialXReplyEditor'),'No second X editor');
+  assert.match(h.element('socialCaptionStatus').textContent,/One X post per movie/i);
   h.element('socialCopyCaption').listeners.click();await settle();
-  h.element('socialCopyXReply').listeners.click();await settle();
-  assert.deepEqual(h.copied,[main,reply]);
-  h.element('socialXReplyEditor').value='MY EDITED X REPLY';
-  h.element('socialXReplyEditor').listeners.input();
-  h.element('socialCopyXReply').listeners.click();await settle();
-  assert.equal(h.copied.at(-1),'MY EDITED X REPLY','Reply must remain user-editable');
+  assert.deepEqual(h.copied,[main.trim()],'One copy action must include entire X post');
   h.element('socialCaptionPlatform').value='facebook-post';
   h.element('socialCaptionPlatform').listeners.change();
-  assert.equal(h.element('socialCopyXReply').hidden,true);
-  assert.equal(h.element('socialXReplyField').hidden,true);
   assert.equal(h.element('socialCopyCaption').textContent,'COPY MESSAGE');
-  h.element('socialCaptionPlatform').value='x-post';
-  h.element('socialCaptionPlatform').listeners.change();
-  assert.equal(h.element('socialXReplyEditor').value,'MY EDITED X REPLY','Switching platforms retains the edited reply for the current movie');
+  assert.match(h.element('socialCaptionText').value,/📸 Instagram:/);
 });
 
-test('X shortened fallback keeps the full title and tracked link without invisible truncation',async()=>{
+test('Single X caption degrades optional wording before dropping a required link',async()=>{
   const review={i:9,t:'LONG TITLE '.repeat(9).trim(),s:'long-title',
     v:'My original POV is preserved.',l:'Telugu',r:4,
     m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'};
@@ -884,17 +880,42 @@ test('X shortened fallback keeps the full title and tracked link without invisib
   h.element('socialCaptionPlatform').value='x-post';
   h.element('socialCaptionPlatform').listeners.change();
   const caption=h.element('socialCaptionText').value;
-  assert.ok(caption.includes(review.t),'Do not clip the movie title for X');
-  assert.ok(caption.includes('utm_source=x'));
-  assert.ok(xWeightedTestLength(caption)<=280,'X main respects weighted length after simplification');
+  assert.ok(caption.includes(review.t),'Do not clip original movie title for X');
+  assert.ok(caption.includes('utm_source=x'),'Review URL must remain tracked');
+  for(const link of [
+    'https://www.instagram.com/moviereviewbypoorna/',
+    'https://www.facebook.com/moviereviewbypoorna',
+    'https://x.com/reviewbypoorna',
+    'https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546'
+  ])assert.ok(caption.includes(link),'Keep all account links if fitting by removing optional wording');
+  assert.ok(xWeightedTestLength(caption)<=280,'One X post fits weighted 280 characters');
   h.element('socialCaptionText').value=caption+' EXTRA WORDS'.repeat(50);
   h.element('socialCaptionText').listeners.input();
   const count=h.copied.length;
   h.element('socialCopyCaption').listeners.click();await settle();
-  assert.equal(h.copied.length,count,'Do not copy over-limit X posts');
+  assert.equal(h.copied.length,count,'Do not copy X posts that exceed 280');
   assert.match(h.element('socialCaptionStatus').textContent,/exceeds 280 weighted characters/);
 });
 
+test('X all-in-one caption stays within limit for long names without silently truncating URLs',async()=>{
+  for(const title of ['ISM','RANABAALI','BRAHMOTSAVAM','JYO ACHYUTANANDA','GAUTAMIPUTRA SATAKARNI']){
+    const review={i:10,t:title,s:'example-movie',rd:'2016-09-09',
+      v:'Reviewed.',l:'Telugu',r:3,
+      m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'};
+    const h=harness({fetchMock:async url=>({
+      ok:true,json:async()=>url.includes('compact=1')?[review]:
+        url.includes('/api/admin/editorial?')?{drafts:{},presets:{}}:review
+    })});
+    h.callbacks.get('social-studio:open')();await settle();
+    h.element('socialMovie').value='10';await h.element('socialMovie').listeners.change();await settle();
+    h.element('socialCaptionPlatform').value='x-post';h.element('socialCaptionPlatform').listeners.change();
+    const caption=h.element('socialCaptionText').value;
+    assert.ok(caption.includes(title),'Exact movie title '+title);
+    assert.ok(xWeightedTestLength(caption)<=280,'X post within standard limit for '+title);
+    assert.match(caption,/utm_source=x/,'Review URL is tracked');
+    assert.equal((caption.match(/https?:\/\/\S+/g)||[]).length,5,'All five URLs in a single post');
+  }
+});
 test('Approved poster openings use the existing-site contain and softened full-frame technique',()=>{
   assert.match(STUDIO_JS,/poster:\[59,299,375,580\]/);
   assert.match(STUDIO_JS,/poster:\[48,293,378,592\]/);
@@ -904,7 +925,7 @@ test('Approved poster openings use the existing-site contain and softened full-f
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
   assert.match(STUDIO_JS,/blur\(14px\) brightness\(\.33\) saturate\(\.75\)/);
   assert.match(STUDIO_JS,/posterOpeningPath\(ctx,box\);/);
-  assert.ok(!!ADMIN_HTML.match(/socialCopyXReply/),'X reply copy button is available');
+  assert.ok(!ADMIN_HTML.includes('socialCopyXReply'),'X single-post UI no longer has a reply copy button');
 });
 
 test('Admin UI allows 4 approved masters and Post platform selection without editing review records',async()=>{
@@ -958,7 +979,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=21'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=22'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });

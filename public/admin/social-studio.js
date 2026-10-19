@@ -11,7 +11,7 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyXReply: $('socialCopyXReply'),xReplyEditor: $('socialXReplyEditor'),xReplyField: $('socialXReplyField'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
+    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
     editorialStatus: $('socialEditorialStatus'), saveMovieStyle: $('socialSaveMovieStyle'), saveDefaults: $('socialSaveDefaults'), applyBoth: $('socialApplyBoth'),
     overrideFormat: $('socialOverrideFormat'), resetOverride: $('socialResetOverride'),
     autoFitOnLoad: $('socialAutoFitOnLoad'), recalculateFit: $('socialRecalculateFit'),
@@ -23,7 +23,7 @@
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { 'instagram-post':null, 'facebook-x-post':null, 'whatsapp-channel':null, story:null }, postPlatform:'instagram-post', renders: {},
-    seq: 0, drafts: { post:null, story:null }, captions:{}, xReply:'', presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false,
+    seq: 0, drafts: { post:null, story:null }, captions:{}, presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false,
     reviewCatalog:[], bulkFits:[], scanning:false, bulkSession:null,
     bulkCursor:{}
   };
@@ -130,7 +130,7 @@
     const sequence = ++state.seq;
     state.review = null;
     state.poster = null;
-    inputs.title.value = ''; inputs.pov.value = ''; state.drafts={ post:null,story:null }; state.captions={};state.xReply='';
+    inputs.title.value = ''; inputs.pov.value = ''; state.drafts={ post:null,story:null }; state.captions={};
     if (!id) { updateCaptionEditor(); await refreshAll(); return; }
     inputs.status.textContent = 'Loading selected review and original poster…';
     try {
@@ -166,7 +166,6 @@
       state.editorialLoaded=!!editorial?.presets;
       showEditorialStatus(editorial?.presets?'Reusable styles loaded. Changes are not saved until you save them.':'Default styles loaded. Editorial storage unavailable; check before saving.');
       state.captions=makeCaptions(review);
-      state.xReply=xFollowUp();
       updateCaptionEditor();
       try { const original = await loadPoster(review.m || ''); if (sequence !== state.seq) return; state.poster = original; }
       catch (err) { if (sequence !== state.seq) return; inputs.status.textContent = errorMessage(err); }
@@ -216,20 +215,40 @@
     for(const ch of normalized)count+=ch.codePointAt(0)<0x1100?1:2;
     return count;
   }
+  // One published X post per movie. Always try the complete set of four
+  // official social URLs with a compact Instagram/Facebook-style promo.
+  // Optional wording is removed before any essential review/account URL.
   function makeXMain(review){
     const title=String(review.t||'').trim(),url=trackedUrlFor(review,'x-post');
-    const opening='🎬 '+title+' has reached the Auditorium!';
-    const question='🍿 Worth your popcorn? My full review has the answer!';
-    const callToAction='🎟️ FULL REVIEW: '+url;
-    const choices=[
-      spaced([opening,question,callToAction,'#MovieReviewsByPoorna']),
-      spaced([opening,question,callToAction]),
-      spaced([opening,callToAction,'#MovieReviewsByPoorna']),
-      spaced([opening,callToAction])
+    const social=[
+      '📸 IG: '+SOCIAL_ACCOUNTS.instagram,
+      'ⓕ FB: '+SOCIAL_ACCOUNTS.facebook,
+      '𝕏 X: '+SOCIAL_ACCOUNTS.x,
+      '💬 WA: '+SOCIAL_ACCOUNTS.whatsapp
     ];
-    // Keep the full movie title and tracked link; shed optional lines only
-    // when necessary, never cut the title or produce a truncated URL.
-    return choices.find(x=>xWeightedLength(x)<=280)||choices.at(-1);
+    const opening='🎬 '+title+' has reached the Auditorium!';
+    const reviewLine='🎟️ FULL REVIEW: '+url;
+    const choices=[
+      spaced([opening,'🍿 Worth your popcorn?',reviewLine,social.join('\n'),'#MovieReviewsByPoorna']),
+      spaced([opening,'🍿 Worth your popcorn?',reviewLine,social.join('\n')]),
+      spaced([opening,reviewLine,social.join('\n'),'#MovieReviewsByPoorna']),
+      spaced([opening,reviewLine,social.join('\n')]),
+      [opening,reviewLine,...social].join('\n'),
+      ['🎬 '+title,'🎟️ '+url,...social].join('\n')
+    ];
+    const fit=choices.find(message=>xWeightedLength(message)<=280);
+    if(fit)return fit;
+    // Exceptionally long movie names can exceed 280 even without any
+    // optional copy. Keep the full title and review link, and progressively
+    // omit redundant cross-promotions rather than publish an invalid post.
+    for(const keep of [3,2,1,0]){
+      const compact=['🎬 '+title,'🎟️ '+url,...social.slice(0,keep)];
+      const candidate=compact.join('\n');
+      if(xWeightedLength(candidate)<=280)return candidate;
+    }
+    // The editor/export reports this as needing manual review, never
+    // pretends an over-limit X caption is ready to publish.
+    return ['🎬 '+title,'🎟️ '+url].join('\n');
   }
   const followEverywhere=()=>[
     '📣 FOLLOW MOVIE REVIEWS BY POORNA EVERYWHERE',
@@ -238,15 +257,6 @@
     '𝕏 X: '+SOCIAL_ACCOUNTS.x,
     '💬 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
   ];
-  // Standalone promotional reply: no machine delimiter or generic filler.
-  const xFollowUp=()=>spaced([
-    "🎞️ THE MOVIE TALK DOESN'T END HERE!",
-    '📸 Instagram: '+SOCIAL_ACCOUNTS.instagram,
-    'ⓕ Facebook: '+SOCIAL_ACCOUNTS.facebook,
-    '𝕏 X: '+SOCIAL_ACCOUNTS.x,
-    '💬 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp,
-    '🎥 ONE LOVE. MANY SCREENS.'
-  ]);
   function makeCaptions(review) {
     const title=String(review.t||'').trim(),link=platform=>trackedUrlFor(review,platform);
     // Images already contain rating/language/MY POV; these messages promote reviews and other channels.
@@ -300,15 +310,11 @@
     inputs.trackedUrl.value=trackedUrl(key);
     const isStory=key.endsWith('story')||key.endsWith('status');
     const isX=key==='x-post';
-    inputs.copyCaption.textContent=isX?'COPY X POST 1/2':'COPY MESSAGE';
-    inputs.copyXReply.hidden=!isX;
-    inputs.xReplyField.hidden=!isX;
-    if(isX)inputs.xReplyEditor.value=state.xReply;
+    inputs.copyCaption.textContent=isX?'COPY X POST':'COPY MESSAGE';
     const mainWeight=isX?xWeightedLength(inputs.captionText.value):0;
-    const replyWeight=isX?xWeightedLength(state.xReply):0;
     inputs.captionStatus.textContent=state.review?(isX?
-      'Two separate X posts: main '+mainWeight+'/280, follow-up '+replyWeight+
-      '/280 weighted characters. Publish the image with Post 1, then reply with Post 2.':
+      'One X post per movie: '+mainWeight+'/280 weighted characters. Copy and publish with the image.'+
+      (mainWeight>280?' Caption needs manual shortening before copying.':''):
       isStory?'Story/Status publishing notes, not text to overlay on the image. Copy the native review link separately.':
       'Editable social caption with a blank line between every line and all four social account URLs.'):'Select a saved review.';
   }
@@ -329,8 +335,7 @@
       'x-post':'X Post','whatsapp-channel':'WhatsApp Channel',
       'whatsapp-status':'WhatsApp Status'
     };
-    const text=Object.entries(labels).map(([k,label])=>'=== '+label+' ===\n'+(state.captions[k]||'')+'\n').join('\n')+
-      '=== X Follow-up Reply (copy separately) ===\n'+state.xReply+'\n';
+    const text=Object.entries(labels).map(([k,label])=>'=== '+label+' ===\n'+(state.captions[k]||'')+'\n').join('\n');
     const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
     const link=document.createElement('a');
     link.href=URL.createObjectURL(blob);
@@ -1191,8 +1196,7 @@
       'This ZIP contains only Images/ and Captions/.',
       'Each numbered image matches the caption of the SAME filename.',
       'Story files are publishing notes, not text to overlay automatically.',
-      ...(format==='x-post'?['X post 1/2 is the numbered .txt; X reply 2/2 is the matching _Reply.txt.',
-        'Publish the main X post with its image, then reply with the second text.']:[]),
+      ...(format==='x-post'?['X has exactly one post and one caption per movie. No follow-up reply file.']:[]),
       'Any missing artwork is listed below; do not upload an unmatched caption.',
       'Exported order range: '+(from+1)+' - '+to+' of '+total+'.',
       '',
@@ -1211,7 +1215,7 @@
       const key=config.kind+'_'+config.design;
       const image=prepared.images[key]||null;
       await writer.add('Captions/'+stem+'.txt',(prepared.captionMap[format]||'')+'\n');
-      if(format==='x-post')await writer.add('Captions/'+stem+'_Reply.txt',xFollowUp()+'\n');
+
       if(image)await writer.add('Images/'+stem+'.png',image);
       records[format].push({rank:String(rank).padStart(3,'0'),title:review.t,
         release:review.rd||'UNSET',image:!!image,notes:prepared.notes});
@@ -1423,14 +1427,7 @@
   inputs.captionText.addEventListener('input',()=>{
     if(state.review)state.captions[inputs.captionPlatform.value]=inputs.captionText.value;
     if(inputs.captionPlatform.value==='x-post')
-      inputs.captionStatus.textContent='X main '+xWeightedLength(inputs.captionText.value)+
-        '/280, follow-up '+xWeightedLength(state.xReply)+'/280 weighted characters.';
-  });
-  inputs.xReplyEditor.addEventListener('input',()=>{
-    if(inputs.captionPlatform.value!=='x-post'||!state.review)return;
-    state.xReply=inputs.xReplyEditor.value;
-    const mainWeight=xWeightedLength(inputs.captionText.value),replyWeight=xWeightedLength(state.xReply);
-    inputs.captionStatus.textContent='X main '+mainWeight+'/280, follow-up '+replyWeight+'/280 weighted characters.';
+      inputs.captionStatus.textContent='One X post: '+xWeightedLength(inputs.captionText.value)+'/280 weighted characters.';
   });
   inputs.copyCaption.addEventListener('click',()=>{
     const x=inputs.captionPlatform.value==='x-post';
@@ -1438,15 +1435,7 @@
     if(x&&xWeightedLength(copy)>280){
       inputs.captionStatus.textContent='X main post exceeds 280 weighted characters. Edit it before copying.';return;
     }
-    copyText(copy,x?'X main Post 1/2 copied.':'Message copied.');
-  });
-  inputs.copyXReply.addEventListener('click',()=>{
-    if(inputs.captionPlatform.value!=='x-post')return;
-    const reply=state.xReply.trim();
-    if(xWeightedLength(reply)>280){
-      inputs.captionStatus.textContent='X follow-up exceeds 280 weighted characters. Edit it before copying.';return;
-    }
-    copyText(reply,'X follow-up Post 2/2 copied.');
+    copyText(copy,x?'Single X post copied.':'Message copied.');
   });
   inputs.copyLink.addEventListener('click',()=>copyText(inputs.trackedUrl.value,'Tracked URL copied.'));
   inputs.downloadCaptions.addEventListener('click',downloadCaptions);
