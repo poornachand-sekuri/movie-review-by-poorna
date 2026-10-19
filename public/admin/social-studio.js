@@ -1068,15 +1068,15 @@
     // Defensive sort even when API ordering changes. Keep missing dates last,
     // and mirror the server's reviewed_date and ID tie-breaker.
     return [...state.reviewCatalog].sort((a,b)=>{
-      const aDate=/^\\d{4}-\\d{2}-\\d{2}$/.test(a.rd||'')?a.rd:'';
-      const bDate=/^\\d{4}-\\d{2}-\\d{2}$/.test(b.rd||'')?b.rd:'';
+      const aDate=/^\d{4}-\d{2}-\d{2}$/.test(a.rd||'')?a.rd:'';
+      const bDate=/^\d{4}-\d{2}-\d{2}$/.test(b.rd||'')?b.rd:'';
       return (bDate.localeCompare(aDate))||
         String(b.d||'').localeCompare(String(a.d||''))||
         (Number(b.i)-Number(a.i));
     });
   }
   function bulkFolder(review,rank){
-    const date=/^\\d{4}-\\d{2}-\\d{2}$/.test(review.rd||'')?review.rd:'no-release-date';
+    const date=/^\d{4}-\d{2}-\d{2}$/.test(review.rd||'')?review.rd:'no-release-date';
     // ZIP viewers sort filenames alphabetically, so zero-padded sequence
     // ensures newest releases appear FIRST after download or extraction.
     return 'movies/'+String(rank).padStart(3,'0')+'_'+date+'_'+safeSlug(review.s||review.t)+'_'+Number(review.i);
@@ -1111,7 +1111,7 @@
     const dir=bulkFolder(review,rank),notes=[],written=[],captions=makeCaptions(review);
     const expected=config.items.length;
     for(const item of config.items){
-      await zip.add(dir+'/captions/'+item.caption+'.txt',(captions[item.caption]||'')+'\\n');
+      await zip.add(dir+'/captions/'+item.caption+'.txt',(captions[item.caption]||'')+'\n');
     }
     const reviewUrl='https://moviereviewbypoorna.com/review/'+safeSlug(review.s);
     let editorial;
@@ -1173,7 +1173,7 @@
       }
     }
     meta.exported_images=written;meta.review_notes=notes;
-    await zip.add(dir+'/movie_details.json',JSON.stringify(meta,null,2)+'\\n');
+    await zip.add(dir+'/movie_details.json',JSON.stringify(meta,null,2)+'\n');
     manifest.push({rank,movie:review.t,release:review.rd||'',review:reviewUrl,
       images:written.length,expected,status:written.length===expected?'READY':'NEEDS REVIEW',
       notes:notes.join(' | '),directory:dir});
@@ -1232,7 +1232,7 @@
         'No original review content, saved designs or social accounts were changed.',
         'Back up old posts and confirm replacements before deleting older content.',
         ''
-      ].join('\\n'));
+      ].join('\n'));
       let presets={};
       try{presets=(await jsonApi('/api/admin/editorial')).presets||{};}
       catch{problems.push('Shared editorial preset lookup failed; stored per-movie style remains protected.');}
@@ -1251,8 +1251,8 @@
         'Images Expected','Status','Notes','Folder'];
       const csv=[headers.map(csvCell).join(','),
         ...manifest.map(row=>[row.rank,row.movie,row.release,row.review,row.images,
-          row.expected,row.status,row.notes,row.directory].map(csvCell).join(','))].join('\\r\\n');
-      await zip.add('manifest.csv',csv+'\\r\\n');
+          row.expected,row.status,row.notes,row.directory].map(csvCell).join(','))].join('\r\n');
+      await zip.add('manifest.csv',csv+'\r\n');
       const ready=manifest.filter(row=>row.images===row.expected).length;
       await zip.add('EXPORT_REPORT.txt',[
         'Platform: '+config.label,
@@ -1262,7 +1262,7 @@
         ...problems,
         'See manifest.csv for skipped images and errors.',
         'No saved website reviews or social accounts were altered.'
-      ].join('\\n'));
+      ].join('\n'));
       await zip.close();
       if(!supportsDisk)writeBlobToDownload(sink.blob(),fileName);
       if(!supportsDisk)state.bulkCursor[platform]=(from+manifest.length)>=catalog.length?0:from+manifest.length;
