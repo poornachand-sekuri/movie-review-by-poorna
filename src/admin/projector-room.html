@@ -231,6 +231,15 @@
               <div class="social-mode-bar"><strong>EDITING</strong><span id="socialEditingMode">POST IMAGE</span><small>Each format retains its own text and formatting.</small></div>
               <label class="field"><span>Select saved review</span><select id="socialMovie"><option value="">Choose a movie…</option></select></label>
               <p class="social-help" id="socialMovieStatus">Select a published review to begin.</p>
+              <div class="social-bulk-export" aria-label="Download complete social relaunch package">
+                <strong>BULK SOCIAL RELAUNCH PACK</strong>
+                <p class="social-help">Get all saved movie promos in release-date order: four approved image designs, seven platform-specific captions, original posters, tracked links and a review manifest. No changes to your website or social accounts.</p>
+                <div class="social-bulk-export__actions">
+                  <button type="button" class="ghost" id="socialBulkDownload" disabled>DOWNLOAD ALL MOVIES · ZIP</button>
+                  <button type="button" class="ghost" id="socialBulkCancel" hidden>CANCEL EXPORT</button>
+                </div>
+                <p class="social-help" id="socialBulkStatus" role="status" aria-live="polite">Waiting for the saved movie catalogue.</p>
+              </div>
               <div class="editorial-preset-actions" aria-label="Reusable styling">
                 <div class="editorial-preset-heading"><strong>Editorial Styles</strong><small>Style once, reuse across movies and platforms.</small></div>
                 <div class="editorial-preset-buttons">
@@ -412,10 +421,11 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=10">
+  <link rel="stylesheet" href="/admin/social-studio.css?v=11">
   <script src="/admin/review-editorial.js?v=1" defer></script>
   <script src="/admin/admin.js?v=20261019-release-order" defer></script>
-  <script src="/admin/social-studio.js?v=15" defer></script>
+  <script src="/admin/social-bulk-zip.js?v=1" defer></script>
+  <script src="/admin/social-studio.js?v=16" defer></script>
   <script src="/admin/social-rich-editor.js?v=4" defer></script>
 </body>
 </html>
