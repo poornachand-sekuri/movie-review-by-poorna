@@ -321,6 +321,11 @@
   }
   function drawStyled(ctx,text,box,options,maxLines,minimum,ranges=[]) {
     if(!ranges?.length)return drawFitted(ctx,text,box,options,maxLines,minimum);
+    // Never render a styled MY POV below its platform's readable floor.
+    // Earlier shared drafts saved Post-sized typography for Story as well.
+    if(!options.auto&&options.size<minimum)
+      return {ok:false,message:'Preferred font size is below the readable '+minimum+'px minimum.'};
+    if(options.auto&&options.size<minimum)options={...options,size:minimum};
     const [x,y,width,height]=box,raw=String(text),maxW=width-10;
     // Split each word at its formatting boundaries. Previously a selection
     // touching one letter styled the *whole* word in the PNG export.
@@ -336,7 +341,8 @@
         const at=positions[i-1],stop=positions[i];
         let style=null;
         for(const range of ranges)if(range.start<=at&&range.end>=stop)style=range;
-        const size=Math.max(17,Math.min(100,Number(style?.size)||options.size)*scale);
+        const rawSize=Math.min(100,(Number(style?.size)||options.size)*scale);
+        const size=Math.max(minimum,rawSize);
         const family=SOCIAL_FONTS.includes(style?.font)?style.font:options.family;
         const weight=['400','600','700','800'].includes(String(style?.weight))?style.weight:options.weight;
         const font=(style?.italic?'italic ':'')+weight+' '+size+'px "'+family+'"';
@@ -503,6 +509,9 @@
     };
   }
   function drawFitted(ctx,value,box,options,maxLines,minimum){
+    if(!options.auto&&options.size<minimum)
+      return {ok:false,message:'Preferred font size is below the readable '+minimum+'px minimum.'};
+    if(options.auto&&options.size<minimum)options={...options,size:minimum};
     const [x,y,width,height]=box,availableWidth=width-12;
     let layout=null;
     const lowerBound=options.auto?minimum:options.size;
@@ -544,14 +553,29 @@
     ctx.quadraticCurveTo(x,y,x+r,y);
     ctx.closePath();
   }
-  // Approved ticket flourishes intrude near title edges. Keeping a measured
-  // internal safe zone protects title letters without altering the master image.
+  // The decorative ticket stars are *inside* the title rectangle in the
+  // approved masters. Reserve their full width plus breathing room, not merely
+  // the surrounding frame. Measurements from the supplied 1080px exports:
+  // Post stars x=513..544 and 949..987; Story x=131..182 and 899..950.
+  // Story title ink was about 18px above the star centers; correct its optical
+  // baseline without moving the baked artwork.
   function safeTextBox(box,field,kind) {
     const [x,y,w,h]=box;
-    const horiz=field==='title'?(kind==='story'?35:28):(kind==='story'?15:10);
-    const vert=field==='title'?(kind==='story'?10:8):(kind==='story'?10:7);
+    if(field==='title'){
+      const starGutter=kind==='story'?72:70;
+      const verticalInset=kind==='story'?10:8;
+      const opticalShift=kind==='story'?18:4;
+      return [x+starGutter,y+verticalInset+opticalShift,
+        w-2*starGutter,h-2*verticalInset];
+    }
+    const horiz=kind==='story'?15:10;
+    const vert=kind==='story'?10:7;
     return [x+horiz,y+vert,w-2*horiz,h-2*vert];
   }
+  // Platform-local readability limits: a compact Post must never force its
+  // smaller type onto the much larger Story MY POV panel.
+  const TEXT_MINIMUM={post:{title:24,pov:22},story:{title:30,pov:30}};
+  function textMinimum(field,kind){return TEXT_MINIMUM[kind][field];}
   function drawPoster(ctx,image,box) {
     if(!image)return;
     const [x,y,w,h]=box;
@@ -704,7 +728,7 @@
     else {
       const titleOptions=textOptions('title',kind);
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
-      const fit=drawStyled(ctx,normalized,safeTextBox(g.title,'title',kind),titleOptions,3,kind==='post'?24:30,draft.styles.title);
+      const fit=drawStyled(ctx,normalized,safeTextBox(g.title,'title',kind),titleOptions,3,textMinimum('title',kind),draft.styles.title);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
       else if(titleOptions.auto) {
         const ratio=fit.scale??((fit.size||titleOptions.size)/titleOptions.size);
@@ -716,7 +740,7 @@
     if(state.drafts[kind] && state.drafts[kind].rating !== '' && !Number.isInteger(Number(state.drafts[kind].rating)*4))errors.push('Rating must use 0.25 increments.');
     if(!pov.trim()) errors.push('MY POV is empty.');
     else {
-      const fit=drawStyled(ctx,pov,safeTextBox(g.pov,'pov',kind),textOptions('pov',kind),kind==='post'?8:10,kind==='post'?18:20,draft.styles.pov);
+      const fit=drawStyled(ctx,pov,safeTextBox(g.pov,'pov',kind),textOptions('pov',kind),kind==='post'?8:10,textMinimum('pov',kind),draft.styles.pov);
       if(!fit.ok) errors.push('MY POV: '+fit.message);
       else if(draft.povStyle.auto) {
         const ratio=fit.scale??((fit.size||draft.povStyle.size)/draft.povStyle.size);
@@ -759,8 +783,8 @@
     if(!String(draft.pov||'').trim())messages.push('MY POV missing.');
     for(const {kind,layout} of cases){
       const specs=[
-        {field:'title',value:draft.titleCase==='uppercase'?draft.title.toUpperCase():draft.title,limit:3,min:kind==='post'?24:30},
-        {field:'pov',value:draft.pov,limit:kind==='post'?8:10,min:kind==='post'?18:20}
+        {field:'title',value:draft.titleCase==='uppercase'?draft.title.toUpperCase():draft.title,limit:3,min:textMinimum('title',kind)},
+        {field:'pov',value:draft.pov,limit:kind==='post'?8:10,min:textMinimum('pov',kind)}
       ];
       for(const {field,value,limit,min} of specs){
         if(!value?.trim())continue;
@@ -771,24 +795,17 @@
       const lang=drawLanguage(ctx,draft.language,layout.language,draft.languageStyle);
       if(!lang.ok)messages.push('WATCHED IN does not fit all formats.');
     }
-    // Use the smallest actual measured display size across approved designs.
-    // Shared movie styling then previews the same across Post and Story.
-    for(const field of ['title','pov']){
-      // Explicit word-level sizes are relative to the preferred base size.
-      // Preserve their original sizing ratio instead of unexpectedly enlarging
-      // highlighted spans when generating a shared draft.
-      if(sizes[field].length===cases.length && !(draft.styles?.[field]||[]).length){
-        // Story uses a larger minimum than Post. Keep a shared preferred
-        // size at least as large as that minimum; Post may still shrink safely.
-        const storyFloor=field==='title'?30:20;
-        draft[field+'Style'].size=Math.max(storyFloor,
-          Math.min(draft[field+'Style'].size,Math.floor(Math.min(...sizes[field]))));
-      }
-    }
+    // Deliberately do NOT write the smallest measured size into the shared
+    // draft. That previous step transferred tiny Post type into Story even when
+    // Story had enough space for larger, readable text. Each canvas now fits
+    // independently from the same unchanged preferred size.
     // Text may technically fit at a very small size. Flag that for human
     // review instead of declaring the result publication-ready.
-    if(sizes.title.some(n=>n<29))messages.push('Title is close to the minimum readable size.');
-    if(sizes.pov.some(n=>n<22))messages.push('MY POV is dense: review readability.');
+    if(sizes.title.some(n=>n<=26))messages.push('Title is close to the minimum readable size.');
+    if(sizes.pov.some(n=>n<=TEXT_MINIMUM.post.pov+1))
+      messages.push('Post MY POV is near the readability limit; review the preview.');
+    if(sizes.pov.some(n=>n<=TEXT_MINIMUM.story.pov+1))
+      messages.push('MY POV has a tightly fitted layout; review readability.');
     if(!draft.language?.trim())messages.push('WATCHED IN is missing.');
     return {draft,status:messages.length?'review':'ready',messages:[...new Set(messages)]};
   }
