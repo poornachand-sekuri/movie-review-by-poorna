@@ -1062,7 +1062,7 @@
     if(inputs.bulkStatus)inputs.bulkStatus.textContent=message;
   }
   function bulkFolder(review){
-    const date=/^\\d{4}-\\d{2}-\\d{2}$/.test(review.rd||'')?review.rd:'no-release-date';
+    const date=/^\d{4}-\d{2}-\d{2}$/.test(review.rd||'')?review.rd:'no-release-date';
     return 'movies/'+date+'_'+safeSlug(review.s||review.t)+'_'+Number(review.i);
   }
   function writeBlobToDownload(blob,name){
@@ -1089,13 +1089,13 @@
       state.drafts=prior.drafts;state.postPlatform=prior.postPlatform;
     }
   }
-  const csvCell=value=>'"'+String(value??'').replace(/"/g,'""').replace(/\\r?\\n/g,' ')+'"';
+  const csvCell=value=>'"'+String(value??'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';
   async function addBulkMovie(zip,review,presets,manifest){
     const dir=bulkFolder(review),notes=[],written=[];
     const captions=makeCaptions(review);
     for(const platform of SOCIAL_CAPTION_FILES){
       const text=captions[platform]||'';
-      await zip.add(dir+'/captions/'+platform+'.txt',text+'\\n');
+      await zip.add(dir+'/captions/'+platform+'.txt',text+'\n');
     }
     const reviewUrl='https://moviereviewbypoorna.com/review/'+safeSlug(review.s);
     let editorial;
@@ -1168,7 +1168,7 @@
     }
     meta.exported_images=written;
     meta.review_notes=notes;
-    await zip.add(dir+'/movie_details.json',JSON.stringify(meta,null,2)+'\\n');
+    await zip.add(dir+'/movie_details.json',JSON.stringify(meta,null,2)+'\n');
     manifest.push({
       movie:review.t,release:review.rd||'',review:reviewUrl,
       images:written.length,status:written.length===4?'IMAGE PACK READY':'NEEDS REVIEW',
@@ -1230,7 +1230,7 @@
         'IMPORTANT: Back up old social content before archiving/deleting older posts.',
         'Verify replacement posts and profile/bio links before removing old posts.',
         ''
-      ].join('\\n'));
+      ].join('\n'));
       // Presets are also attached to editorial per movie; avoid depending on
       // a second global fetch by gracefully using built-in defaults if needed.
       let presets={};
@@ -1251,8 +1251,8 @@
       const csv=[headers.map(csvCell).join(','),
         ...manifest.map(entry=>[
           entry.movie,entry.release,entry.review,entry.images,entry.status,entry.notes,entry.directory
-        ].map(csvCell).join(','))].join('\\r\\n');
-      await zip.add('manifest.csv',csv+'\\r\\n');
+        ].map(csvCell).join(','))].join('\r\n');
+      await zip.add('manifest.csv',csv+'\r\n');
       await zip.add('EXPORT_REPORT.txt',[
         'Movies examined: '+manifest.length,
         'Complete image packs: '+manifest.filter(x=>x.images===4).length,
@@ -1261,7 +1261,7 @@
         '',
         'See manifest.csv for every omitted image and the reason.',
         'No movie data or social posts were modified.'
-      ].join('\\n'));
+      ].join('\n'));
       await zip.close();
       if(!supportsDisk){
         writeBlobToDownload(sink.blob(),fileName);
