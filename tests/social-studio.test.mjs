@@ -7,6 +7,7 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const STUDIO_JS = fs.readFileSync(path.join(ROOT, 'public/admin/social-studio.js'), 'utf8');
 const RICH_JS = fs.readFileSync(path.join(ROOT, 'public/admin/social-rich-editor.js'), 'utf8');
+const BULK_ZIP_JS=fs.readFileSync(path.join(ROOT,'public/admin/social-bulk-zip.js'),'utf8');
 const ADMIN_HTML = fs.readFileSync(path.join(ROOT, 'src/admin/projector-room.html'), 'utf8');
 const ADMIN_API = fs.readFileSync(path.join(ROOT, 'src/pages/api/admin/[...path].ts'), 'utf8');
 function harness(options={}) {
@@ -17,6 +18,7 @@ function harness(options={}) {
   const pixelFills=[];
   const styledDraws = [];
   const copied = [];
+  const downloadedBlobs=[];
   const buttons = Object.fromEntries(['post','story'].map(kind=>[kind,{dataset:{socialFormat:kind},listeners:{},classList:{toggle(){}},addEventListener(type,cb){this.listeners[type]=cb;}}]));
   function element(id) {
     if(!elementMap.has(id))elementMap.set(id,{
@@ -71,7 +73,7 @@ function harness(options={}) {
     querySelectorAll:selector=>selector==='[data-social-format]'?Object.values(buttons):[],
     fonts:{ready:Promise.resolve(),load:()=>Promise.resolve([])},
     createElement(tag){ if(tag==='option')return {value:'',textContent:''};
-      if(tag==='canvas')return {width:1080,height:1080,getContext:()=>makeContext(),toBlob(callback){callback({size:100,type:'image/png'});}};
+      if(tag==='canvas')return {width:1080,height:1080,getContext:()=>makeContext(),toBlob(callback){callback(new Blob([new Uint8Array([137,80,78,71])],{type:'image/png'}));}};
       return {click(){},remove(){},set href(url){},set download(name){}};
     },
     body:{appendChild(){}},
@@ -90,17 +92,55 @@ function harness(options={}) {
   const fetchMock=options.fetchMock|| (async url=>({
     ok:true,json:async()=>url.includes('compact=1')?[{i:7,t:sample.t}]:sample
   }));
+  const BrowserURL=class extends URL{};
+  BrowserURL.createObjectURL=blob=>{downloadedBlobs.push(blob);return 'blob:test-bulk';};
+  BrowserURL.revokeObjectURL=()=>{};
   const ctx={
     document,window:win,Image:ImageMock,
     fetch:fetchMock,Event:class {constructor(type){this.type=type;}},
     requestAnimationFrame:cb=>setImmediate(cb),
-    setTimeout,clearTimeout,URL,Blob,FormData,File:class{},
+    setTimeout,clearTimeout,URL:BrowserURL,Blob,TextEncoder,Uint8Array,Uint32Array,DataView,FormData,File:class{},
     Intl,Date,Number,String,Array,Math,Promise,console,navigator:{clipboard:{writeText:async text=>{copied.push(text);}}},
   };
+  vm.runInNewContext(BULK_ZIP_JS,ctx,{filename:'social-bulk-zip.js'});
   vm.runInNewContext(STUDIO_JS,ctx,{filename:'social-studio.js'});
-  return {element,callbacks,document,drawnText,filledRects,pixelFills,buttons,styledDraws,copied,window:win};
+  return {element,callbacks,document,drawnText,filledRects,pixelFills,buttons,styledDraws,copied,downloadedBlobs,window:win};
 }
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));};
+
+test('One-click Social Studio bulk archive contains all seven captions, four templates and original poster',async()=>{
+  const review={i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
+    v:'Sensible and witty. A memorable little movie.',l:'Telugu',r:4.25,
+    m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'};
+  let writeCalls=0;
+  const h=harness({fetchMock:async(url,opts)=>{
+    if(opts?.method&&opts.method!=='GET'){writeCalls++;return {ok:true,json:async()=>({})};}
+    if(url.includes('compact=1'))return {ok:true,json:async()=>[review]};
+    if(url.includes('/api/admin/editorial?reviewId='))return {ok:true,json:async()=>({presets:{},drafts:{}})};
+    if(url==='/api/admin/editorial')return {ok:true,json:async()=>({presets:{}})};
+    if(url.includes('/api/admin/social-poster?'))return {ok:true,
+      headers:{get:()=>'image/jpeg'},blob:async()=>new Blob([new Uint8Array([255,216,255])],{type:'image/jpeg'})};
+    return {ok:true,json:async()=>review};
+  }});
+  h.callbacks.get('social-studio:open')();await settle();
+  assert.equal(h.element('socialBulkDownload').disabled,false);
+  await h.element('socialBulkDownload').listeners.click();await settle();
+  assert.equal(writeCalls,0,'Bulk social export must never write to any API');
+  assert.equal(h.downloadedBlobs.length,1,'A single movie produces one downloadable ZIP');
+  const bytes=new Uint8Array(await h.downloadedBlobs[0].arrayBuffer());
+  const asText=new TextDecoder().decode(bytes);
+  for(const file of ['images/instagram-post.png','images/facebook-x-post.png',
+    'images/whatsapp-channel.png','images/story.png',
+    'captions/instagram-post.txt','captions/instagram-story.txt',
+    'captions/facebook-post.txt','captions/facebook-story.txt',
+    'captions/x-post.txt','captions/whatsapp-channel.txt',
+    'captions/whatsapp-status.txt','original_poster.jpg',
+    'movie_details.json','manifest.csv','START_HERE.txt','EXPORT_REPORT.txt'])
+    assert.ok(asText.includes(file),file+' should be listed in the ZIP');
+  assert.match(asText,/Sensible and witty/,'Original promotional MY POV text remains present');
+  assert.match(asText,/2016-09-09/,'Movie release date is retained');
+  assert.match(h.element('socialBulkStatus').textContent,/ZIP ready/);
+});
 
 test('Social relaunch exporter is clearly exposed and does not mutate site data',async()=>{
   for(const id of ['socialBulkDownload','socialBulkCancel','socialBulkStatus']){
@@ -666,7 +706,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
-  assert.ok(ADMIN_HTML.includes('social-studio.css?v=10'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
   assert.ok(ADMIN_HTML.includes('social-studio.js?v=16'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
