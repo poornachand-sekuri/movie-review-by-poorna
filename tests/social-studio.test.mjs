@@ -170,7 +170,7 @@ test('Previously saved tiny Post-fit MY POV is not reused at a tiny Story size',
     'Do not overwrite or silently rewrite a manually saved D1 movie style');
   const storyPovInk=h.styledDraws.filter(item=>item.y>1400&&item.y<1600&&item.text.trim());
   assert.ok(storyPovInk.length,'Story should render the MY POV');
-  assert.ok(storyPovInk.every(item=>Number(item.font.match(/(\\d+(?:\\.\\d+)?)px/)?.[1]||0)>=30),
+  assert.ok(storyPovInk.every(item=>Number(item.font.match(/(\d+(?:\.\d+)?)px/)?.[1]||0)>=30),
     'Story MY POV must render at 30px or larger, even if old shared draft is Post-sized');
   assert.equal(h.element('socialDownloadStory').disabled,false,
     'Story export stays enabled when its own readable fit succeeds');
@@ -376,6 +376,10 @@ test('Partial-word selection renders only selected letters in the chosen color a
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   const draft=h.window.SocialStudioRichBridge.getDraft();
+  // Keep this example within the readability floor; truly crowded rich copy
+  // should be flagged instead of silently shrunk under the approved minimum.
+  draft.pov='Geetu makes this a fun, unusual watch.';
+  h.element('socialPov').value=draft.pov;
   draft.styles.pov=[{start:0,end:3,color:'#19f9ff',font:'Cinzel',size:50,effect:'glow'}];
   h.window.SocialStudioRichBridge.refresh();await settle();
   assert.ok(h.styledDraws.some(d=>d.text==='Gee'&&d.color==='#19f9ff'&&d.font.includes('Cinzel')),
