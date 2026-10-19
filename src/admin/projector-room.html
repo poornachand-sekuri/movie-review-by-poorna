@@ -233,12 +233,15 @@
               <p class="social-help" id="socialMovieStatus">Select a published review to begin.</p>
               <div class="social-bulk-export" aria-label="Download complete social relaunch package">
                 <strong>BULK SOCIAL RELAUNCH PACK</strong>
-                <p class="social-help">Get all saved movie promos in release-date order: four approved image designs, seven platform-specific captions, original posters, tracked links and a review manifest. No changes to your website or social accounts.</p>
+                <p class="social-help">Four separate ZIP archives, one for each platform. Each ZIP has only that platform's Post/Story images and captions for all saved movies, in numbered folders sorted newest release first.</p>
                 <div class="social-bulk-export__actions">
-                  <button type="button" class="ghost" id="socialBulkDownload" disabled>DOWNLOAD ALL MOVIES · ZIP</button>
-                  <button type="button" class="ghost" id="socialBulkCancel" hidden>CANCEL EXPORT</button>
+                  <button type="button" class="ghost" data-bulk-platform="instagram" disabled>DOWNLOAD INSTAGRAM ZIP</button>
+                  <button type="button" class="ghost" data-bulk-platform="facebook" disabled>DOWNLOAD FACEBOOK ZIP</button>
+                  <button type="button" class="ghost" data-bulk-platform="x" disabled>DOWNLOAD X ZIP</button>
+                  <button type="button" class="ghost" data-bulk-platform="whatsapp" disabled>DOWNLOAD WHATSAPP ZIP</button>
+                  <button type="button" class="ghost" id="socialBulkCancel" hidden>CANCEL CURRENT EXPORT</button>
                 </div>
-                <p class="social-help" id="socialBulkStatus" role="status" aria-live="polite">Waiting for the saved movie catalogue.</p>
+                <p class="social-help" id="socialBulkStatus" role="status" aria-live="polite">Waiting for the saved movie catalogue. Download one platform at a time.</p>
               </div>
               <div class="editorial-preset-actions" aria-label="Reusable styling">
                 <div class="editorial-preset-heading"><strong>Editorial Styles</strong><small>Style once, reuse across movies and platforms.</small></div>
@@ -425,7 +428,7 @@
   <script src="/admin/review-editorial.js?v=1" defer></script>
   <script src="/admin/admin.js?v=20261019-release-order" defer></script>
   <script src="/admin/social-bulk-zip.js?v=1" defer></script>
-  <script src="/admin/social-studio.js?v=16" defer></script>
+  <script src="/admin/social-studio.js?v=17" defer></script>
   <script src="/admin/social-rich-editor.js?v=4" defer></script>
 </body>
 </html>
