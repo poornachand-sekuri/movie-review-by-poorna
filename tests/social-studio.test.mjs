@@ -246,7 +246,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     'x-post','whatsapp-channel','whatsapp-status'])
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=19/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=20/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
   assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
@@ -659,8 +659,8 @@ test('Locked master icons and metadata headers are not redrawn over approved art
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   const drawn=(value,y)=>h.styledDraws.some(d=>d.text===value && d.y===y);
-  assert.ok(drawn('Telugu',622),'Post language is positioned in left metadata panel');
-  assert.ok(drawn('Telugu',1211),'Story language is positioned in left metadata panel');
+  assert.ok(drawn('Telugu',620.5),'Post language is centered below the WATCHED IN label');
+  assert.ok(drawn('Telugu',1231.5),'Story language is centered below the WATCHED IN label');
   assert.ok(!h.drawnText.includes('RELEASE DATE'),'No release date overlay');
   assert.ok(!h.drawnText.includes("POORNA'S RATING"),'Master already contains rating header');
   assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Oswald')));
@@ -677,10 +677,39 @@ test('Rich edits support color, font, size, glow, italic and underline on export
 });
 
 
+
+test('WATCHED IN values are centered horizontally and vertically in every approved format',async()=>{
+  const h=harness();
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';
+  await h.element('socialMovie').listeners.change();await settle();
+  const samples=[
+    {platform:'instagram-post',x:589.5,y:620.5,left:463,right:716,top:569,bottom:672},
+    {platform:'facebook-x-post',x:575.5,y:601,left:449,right:702,top:548,bottom:654},
+    {platform:'whatsapp-channel',x:566.5,y:618,left:449,right:684,top:568,bottom:668}
+  ];
+  for(const expected of samples){
+    const before=h.styledDraws.length;
+    h.element('socialPostPlatform').value=expected.platform;
+    h.element('socialPostPlatform').listeners.change();await settle();
+    const ink=h.styledDraws.slice(before).find(item=>item.text==='Telugu'&&item.y<800);
+    assert.ok(ink,expected.platform+' language should render');
+    assert.equal(ink.align,'center',expected.platform+' should use centered text alignment');
+    assert.equal(ink.x,(expected.left+expected.right)/2,expected.platform+' exact horizontal center');
+    assert.equal(ink.y,(expected.top+expected.bottom)/2,expected.platform+' exact vertical center');
+    assert.ok(ink.x-ink.width/2>expected.left+8&&ink.x+ink.width/2<expected.right-8,
+      expected.platform+' should not cross the metadata divider or panel border');
+  }
+  const story=h.styledDraws.find(item=>item.text==='Telugu'&&item.y>1100&&item.y<1300);
+  assert.ok(story,'Story language renders');
+  assert.equal(story.align,'center');
+  assert.equal(story.x,(52+459)/2);
+  assert.equal(story.y,(1187+1276)/2);
+});
 test('Story metadata uses two columns and retains an empty dynamic title ticket',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1211));
+  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1231.5));
   assert.ok(!h.drawnText.some(x=>/RELEASE DATE|26 Aug 2026/.test(x)));
   const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-1186.8)<.01);
   assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
@@ -868,7 +897,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=19'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=20'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
