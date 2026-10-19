@@ -246,7 +246,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     'x-post','whatsapp-channel','whatsapp-status'])
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=18/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=19/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
   assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
@@ -267,6 +267,74 @@ test('Admin routes and approved master image endpoints are present and protected
   assert.match(ADMIN_API,/getSocialPoster\(url\.searchParams\.get\('url'\)\)/);
 });
 
+
+
+test('Facebook and X movie titles are optically centered on their baked red stars',async()=>{
+  // Actual screenshots provided for Oopiri, 24, Brahmotsavam, Gentleman,
+  // Kabali, Janatha Garage, Jyo Achyutananda and Pink measured red star
+  // centers at (515.5,360) and (983.5,360). Their midpoint is x=749.5.
+  const screenshots=['OOPIRI','24','BRAHMOTSAVAM','GENTLEMAN','KABALI',
+    'JANATHA GARAGE','JYO ACHYUTANANDA','PINK'];
+  for(const movieTitle of screenshots){
+    const review={i:7,t:movieTitle,s:'social-regression',rd:'2016-09-09',
+      v:'Good movie, memorable characters.',l:'Telugu',r:3.75,
+      m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'};
+    const h=harness({fetchMock:async url=>({
+      ok:true,json:async()=>url.includes('compact=1')?[review]:
+        url.includes('/api/admin/editorial?')?{drafts:{},presets:{}}:review
+    })});
+    h.callbacks.get('social-studio:open')();await settle();
+    h.element('socialMovie').value='7';
+    await h.element('socialMovie').listeners.change();await settle();
+    const oldCount=h.styledDraws.length;
+    h.element('socialPostPlatform').value='facebook-x-post';
+    h.element('socialPostPlatform').listeners.change();await settle();
+    const ink=h.styledDraws.slice(oldCount).filter(d=>d.color==='#060505'&&
+      d.y>330&&d.y<405&&d.text.trim());
+    assert.ok(ink.length,'Facebook/X should render title: '+movieTitle);
+    assert.ok(ink.every(d=>d.align==='center'),'Title must be centered, '+movieTitle);
+    for(const d of ink){
+      assert.ok(Math.abs(d.x-750)<=1,'Title should anchor at star midpoint x=749.5: '+movieTitle+' x='+d.x);
+      assert.ok(Math.abs(d.y-365.5)<=1,'Optical baseline should be 365.5, not 379.5: '+movieTitle+' y='+d.y);
+      assert.ok(d.x-d.width/2>=565 && d.x+d.width/2<=933,
+        'Title may not overlap the red stars: '+movieTitle);
+    }
+    assert.ok(ink.some(d=>d.text===movieTitle),'Prefer one line: '+movieTitle);
+  }
+});
+
+test('Facebook/X centers even saved left-aligned rich title spans without modifying saved styles',async()=>{
+  const review={i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
+    v:'Fun film.',l:'Telugu',r:4,
+    m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'};
+  const h=harness({fetchMock:async url=>({
+    ok:true,json:async()=>url.includes('compact=1')?[review]:
+      url.includes('/api/admin/editorial?')?{drafts:{},presets:{}}:review
+  })});
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';
+  await h.element('socialMovie').listeners.change();await settle();
+  h.element('socialPostPlatform').value='facebook-x-post';
+  h.element('socialPostPlatform').listeners.change();await settle();
+  const saved=h.window.SocialStudioRichBridge.getDraft();
+  saved.titleStyle.align='left';
+  saved.styles.title=[{start:0,end:3,color:'#060505',font:'Oswald',size:55}];
+  const from=h.styledDraws.length;
+  h.window.SocialStudioRichBridge.refresh();await settle();
+  const pieces=h.styledDraws.slice(from).filter(d=>d.color==='#060505'&&d.y>330&&d.y<405);
+  assert.ok(pieces.length>=2,'Rich text is drawn in separately styled spans');
+  const y=pieces[0].y;
+  assert.ok(pieces.every(d=>Math.abs(d.y-y)<.01),'One rich title row');
+  const left=Math.min(...pieces.map(d=>d.x));
+  const right=Math.max(...pieces.map(d=>d.x+d.width));
+  assert.ok(Math.abs((left+right)/2-750)<=1,'Word-level styling must remain centered at x=750');
+  assert.ok(Math.abs(y-365.5)<=2,'Word-level styling must remain vertically centered');
+  assert.equal(saved.titleStyle.align,'left','Output correction must not rewrite the saved style');
+  // Both Facebook Post and X Post use this same master in the ZIP renderer.
+  assert.match(STUDIO_JS,/'facebook-post':\{label:'Facebook_Post',kind:'post',design:'facebook-x-post'\}/);
+  assert.match(STUDIO_JS,/'x-post':\{label:'X_Post',kind:'post',design:'facebook-x-post'\}/);
+  assert.match(STUDIO_JS,/return renderFrame\(kind\);/);
+});
 
 test('Movie title prefers one centered line before falling back to wrapping',async()=>{
   for(const movieTitle of ['JYO ACHYUTANANDA','GAUTAMIPUTRA SATAKARNI']){
@@ -800,7 +868,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=18'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=19'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
