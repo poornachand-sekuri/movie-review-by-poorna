@@ -273,6 +273,14 @@
                   <div id="socialTitleRich" data-rich-editor="title" contenteditable="true" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Promotional movie title" data-placeholder="Movie title…"></div>
                 </div>
                 <textarea id="socialTitle" rows="2" class="social-hidden-model" aria-hidden="true" tabindex="-1"></textarea>
+                <fieldset class="social-inline-fit" aria-label="Promotional Movie Title layout and text fit">
+                  <legend>Layout &amp; Text Fit</legend>
+                  <div class="social-inline-fit__grid">
+                    <label class="field"><span>Title alignment</span><select id="socialTitleAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
+                    <label class="field"><span>Title letter case</span><select id="socialTitleCase"><option value="uppercase">UPPERCASE</option><option value="original">Original</option></select></label>
+                  </div>
+                  <label class="social-check"><input type="checkbox" id="socialTitleAuto" checked> Automatically fit title to available space</label>
+                </fieldset>
               </div>
               <div class="field social-rich-field">
                 <span>Promotional MY POV (original wording preserved)</span>
@@ -305,6 +313,15 @@
                   <div id="socialPovRich" data-rich-editor="pov" contenteditable="true" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Promotional MY POV" data-placeholder="Your MY POV…"></div>
                 </div>
                 <textarea id="socialPov" rows="5" class="social-hidden-model" aria-hidden="true" tabindex="-1"></textarea>
+                <fieldset class="social-inline-fit" aria-label="Promotional MY POV layout and text fit">
+                  <legend>Layout &amp; Text Fit</legend>
+                  <div class="social-inline-fit__grid">
+                    <label class="field"><span>MY POV alignment</span><select id="socialPovAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
+                    <label class="field"><span>MY POV line spacing</span><select id="socialPovLine"><option value="1.15">Compact</option><option value="1.28" selected>Normal</option><option value="1.4">Relaxed</option></select></label>
+                  </div>
+                  <label class="social-check"><input type="checkbox" id="socialPovAuto" checked> Automatically fit MY POV to available space</label>
+                  <p class="social-inline-fit__hint">If text cannot fit at a readable size, PNG download remains blocked rather than clipping words.</p>
+                </fieldset>
               </div>
               <div class="social-grid2">
                 <label class="field social-language-value"><span>WATCHED IN (this format)</span><input id="socialLanguage" maxlength="60"></label>
@@ -318,18 +335,6 @@
               </div>
               <label class="field"><span>POORNA'S RATING (stars only)</span><input id="socialRating" type="number" min="0" max="5" step="0.25"><small>Five stars with 0.25 fractional fill. No numeric rating on the image.</small></label>
               <p class="social-help">Both formats inherit the same saved style by default. Opt into a Post-only or Story-only override when needed. Changes affect promotional images only, never the original review.</p>
-            </div>
-            <div class="social-group social-fit-controls"><h2>Layout & Text Fit</h2>
-              <p class="social-help">Use the toolbar directly above each text box for font, size, color and effects. No text selected formats the whole box; selected text formats only those words.</p>
-              <div class="social-grid2">
-                <label class="social-check"><input type="checkbox" id="socialTitleAuto" checked> Auto-fit title</label>
-                <label class="social-check"><input type="checkbox" id="socialPovAuto" checked> Auto-fit MY POV</label>
-                <label class="field"><span>Title alignment</span><select id="socialTitleAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
-                <label class="field"><span>MY POV alignment</span><select id="socialPovAlign"><option value="left">Left</option><option value="center">Center</option></select></label>
-                <label class="field"><span>Title letter case</span><select id="socialTitleCase"><option value="uppercase">UPPERCASE</option><option value="original">Original</option></select></label>
-                <label class="field"><span>MY POV line spacing</span><select id="socialPovLine"><option value="1.15">Compact</option><option value="1.28" selected>Normal</option><option value="1.4">Relaxed</option></select></label>
-              </div>
-              <p class="social-help">If styling cannot fit the approved panel at a readable size, downloading is blocked rather than cutting off text.</p>
             </div>
             <div class="social-group"><h2>Approved Platform Masters</h2>
               <p class="social-help">Upload the four PNG files from the approved October 17 master package. Original backgrounds are saved privately to R2. Movie title, language, rating, MY POV and original poster are overlaid dynamically.</p>
@@ -396,7 +401,7 @@
   </div>
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
-  <link rel="stylesheet" href="/admin/social-studio.css?v=8">
+  <link rel="stylesheet" href="/admin/social-studio.css?v=9">
   <script src="/admin/review-editorial.js?v=1" defer></script>
   <script src="/admin/admin.js?v=20261018-editorial-v2" defer></script>
   <script src="/admin/social-studio.js?v=11" defer></script>
