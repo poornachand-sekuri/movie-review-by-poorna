@@ -87,9 +87,9 @@ function harness(options={}) {
     l:'Telugu',rd:'2026-08-26',r:2.25,m:'https://assets.moviereviewbypoorna.com/reviews/toxic/poster.jpg',
     v:'Geetu aimed for a Joker-like mindf*er, but ended up making a JOKER out of everyone involved!!!!'
   };
-  const fetchMock=async url=>({
+  const fetchMock=options.fetchMock|| (async url=>({
     ok:true,json:async()=>url.includes('compact=1')?[{i:7,t:sample.t}]:sample
-  });
+  }));
   const ctx={
     document,window:win,Image:ImageMock,
     fetch:fetchMock,Event:class {constructor(type){this.type=type;}},
@@ -110,6 +110,75 @@ test('Admin routes and approved master image endpoints are present and protected
   assert.match(ADMIN_API,/pathname === '\/api\/admin\/social-master'/);
   assert.match(ADMIN_API,/pathname === '\/api\/admin\/social-poster'/);
   assert.match(ADMIN_API,/getSocialPoster\(url\.searchParams\.get\('url'\)\)/);
+});
+
+
+test('Smart-fit tools are visible, non-destructive, and use approved safe title boxes',async()=>{
+  for(const id of ['socialAutoFitOnLoad','socialRecalculateFit','socialScanAllFits',
+    'socialPrepareFits','socialFitStatus','socialFitReport'])
+    assert.ok(ADMIN_HTML.includes('id="'+id+'"'),id+' must be present in the admin');
+  assert.match(STUDIO_JS,/function safeTextBox\(box,field,kind\)/);
+  assert.match(STUDIO_JS,/safeTextBox\(g\.title,'title',kind\)/);
+  assert.match(STUDIO_JS,/safeTextBox\(g\.pov,'pov',kind\)/);
+  assert.match(STUDIO_JS,/status:messages\.length\?'review':'ready'/);
+  assert.match(STUDIO_JS,/Object\.values\(editorial\?\.drafts\|\|\{\}\)\.some\(Boolean\)/);
+  const h=harness();
+  h.element('socialAutoFitOnLoad').checked=true;
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';
+  await h.element('socialMovie').listeners.change();await settle();
+  const draft=h.window.SocialStudioRichBridge.getDraft();
+  assert.equal(draft.title,'TOXIC: A FAIRY TALE FOR GROWN-UPS');
+  assert.match(draft.pov,/Geetu aimed for a Joker-like/);
+  assert.ok(draft.titleStyle.size<=59&&draft.titleStyle.size>=30,'Safe shared preferred title size');
+  assert.ok(draft.povStyle.size<=48&&draft.povStyle.size>=20,'Safe shared preferred MY POV size');
+  assert.ok(h.element('socialFitStatus').textContent.length>0,'Fit recommendation shown on load');
+  assert.equal(typeof h.element('socialRecalculateFit').listeners.click,'function');
+  await h.element('socialRecalculateFit').listeners.click();await settle();
+  assert.equal(h.window.SocialStudioRichBridge.getDraft().title,draft.title);
+  assert.match(h.element('socialFitStatus').textContent,/Recalculated|review|fit/i);
+});
+
+test('Bulk scan protects saved styling and never silently writes review data',async()=>{
+  const originalTitle='Toxic';
+  let writes=0;
+  const h=harness({fetchMock:async(url,opts)=>{
+    if(opts?.method==='PUT'){writes++;return {ok:true,json:async()=>({saved:true})};}
+    if(url.includes('compact=1'))return {ok:true,json:async()=>[{i:7,t:originalTitle,v:'Brief popcorn review.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/toxic/poster.jpg'}]};
+    if(url.includes('/api/admin/editorial?'))return {ok:true,json:async()=>({drafts:{shared:{title:'SAVED MANUALLY'}},presets:{}})};
+    if(url==='/api/admin/editorial')return {ok:true,json:async()=>({presets:{}})};
+    return {ok:true,json:async()=>({i:7,t:originalTitle,v:'Brief popcorn review.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/toxic/poster.jpg'})};
+  }});
+  h.callbacks.get('social-studio:open')();await settle();
+  await h.element('socialScanAllFits').listeners.click();await settle();
+  assert.equal(writes,0,'Scanning must never perform a write');
+  assert.match(h.element('socialFitStatus').textContent,/1 protected saved styles/);
+  assert.equal(h.element('socialPrepareFits').disabled,true,'Saved styles must never be overwritten');
+});
+
+test('Bulk saving requires an explicit action and uses protected insert-only endpoint',async()=>{
+  const review={i:7,t:'Jyo Achyutananda',v:'Sweet and witty!',l:'Telugu',r:4,m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'};
+  const submitted=[];
+  const h=harness({fetchMock:async(url,opts)=>{
+    if(opts?.method==='PUT'){
+      const body=JSON.parse(opts.body);submitted.push(body);
+      return {ok:true,json:async()=>({saved:true,created:true})};
+    }
+    if(url.includes('compact=1'))return {ok:true,json:async()=>[review]};
+    if(url.includes('/api/admin/editorial?'))return {ok:true,json:async()=>({drafts:{},presets:{}})};
+    if(url==='/api/admin/editorial')return {ok:true,json:async()=>({presets:{}})};
+    return {ok:true,json:async()=>review};
+  }});
+  h.callbacks.get('social-studio:open')();await settle();
+  await h.element('socialScanAllFits').listeners.click();await settle();
+  assert.equal(submitted.length,0);
+  assert.equal(h.element('socialPrepareFits').disabled,false,'Safe fitted recommendations are eligible');
+  await h.element('socialPrepareFits').listeners.click();await settle();
+  assert.equal(submitted.length,1);
+  assert.equal(submitted[0].type,'prepare-social');
+  assert.equal(submitted[0].reviewId,7);
+  assert.equal(submitted[0].draft.title,review.t,'Original movie title must not be changed');
+  assert.equal(submitted[0].draft.pov,review.v,'Original MY POV must not be rewritten');
 });
 
 test('Social Studio initializes, previews movie data, and retains the original verdict', async()=>{
@@ -411,8 +480,8 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('aria-label="Open our official social media accounts"'));
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
-  assert.ok(ADMIN_HTML.includes('social-studio.css?v=9'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=12'));
+  assert.ok(ADMIN_HTML.includes('social-studio.css?v=10'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=13'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
