@@ -48,7 +48,11 @@
   };
   const postOverrides={
     'facebook-x-post':{
-      poster:[48,293,378,592],title:[504,329,478,93],
+      // Facebook and X share this baked master. The red title stars have
+      // centers at (515.5,360) and (983.5,360) in the 1080px export.
+      // Shift only the text region +7px horizontally and -14px vertically:
+      // rendered ink now sits optically midway between the two stars.
+      poster:[48,293,378,592],title:[511,315,478,93],
       pov:[486,745,515,129],language:{cx:592,y:613,max:217},
       rating:{centers:[755.9,817.5,878.5,939.9,1000.6],y:575.8,r:24.5}
     },
@@ -781,7 +785,11 @@
     const pov=draft?.pov || '';
     if(!title.trim()) errors.push('Movie Title is empty.');
     else {
-      const titleOptions=textOptions('title',kind);
+      const preferredTitleStyle=textOptions('title',kind);
+      // Honor the approved center placement on the Facebook/X master even if
+      // an older saved Post draft selected left alignment. Do not modify D1.
+      const titleOptions=kind==='post'&&state.postPlatform==='facebook-x-post'
+        ?{...preferredTitleStyle,align:'center'}:preferredTitleStyle;
       const normalized=draft.titleCase==='uppercase'?title.toUpperCase():title;
       const fit=drawStyled(ctx,normalized,safeTextBox(g.title,'title',kind),titleOptions,3,textMinimum('title',kind),draft.styles.title,true);
       if(!fit.ok) errors.push('Movie Title: '+fit.message);
