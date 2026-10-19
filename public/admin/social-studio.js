@@ -11,7 +11,7 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyXReply: $('socialCopyXReply'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
+    copyCaption: $('socialCopyCaption'),copyXReply: $('socialCopyXReply'),xReplyEditor: $('socialXReplyEditor'),xReplyField: $('socialXReplyField'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
     editorialStatus: $('socialEditorialStatus'), saveMovieStyle: $('socialSaveMovieStyle'), saveDefaults: $('socialSaveDefaults'), applyBoth: $('socialApplyBoth'),
     overrideFormat: $('socialOverrideFormat'), resetOverride: $('socialResetOverride'),
     autoFitOnLoad: $('socialAutoFitOnLoad'), recalculateFit: $('socialRecalculateFit'),
@@ -23,7 +23,7 @@
   const state = {
     initialized: false, review: null, poster: null, format: 'post',
     masters: { 'instagram-post':null, 'facebook-x-post':null, 'whatsapp-channel':null, story:null }, postPlatform:'instagram-post', renders: {},
-    seq: 0, drafts: { post:null, story:null }, captions:{}, presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false,
+    seq: 0, drafts: { post:null, story:null }, captions:{}, xReply:'', presets:null, sharedDraft:null, savedOverrides:{}, editorialLoaded:false,
     reviewCatalog:[], bulkFits:[], scanning:false, bulkSession:null,
     bulkCursor:{}
   };
@@ -130,7 +130,7 @@
     const sequence = ++state.seq;
     state.review = null;
     state.poster = null;
-    inputs.title.value = ''; inputs.pov.value = ''; state.drafts={ post:null,story:null }; state.captions={};
+    inputs.title.value = ''; inputs.pov.value = ''; state.drafts={ post:null,story:null }; state.captions={};state.xReply='';
     if (!id) { updateCaptionEditor(); await refreshAll(); return; }
     inputs.status.textContent = 'Loading selected review and original poster…';
     try {
@@ -166,6 +166,7 @@
       state.editorialLoaded=!!editorial?.presets;
       showEditorialStatus(editorial?.presets?'Reusable styles loaded. Changes are not saved until you save them.':'Default styles loaded. Editorial storage unavailable; check before saving.');
       state.captions=makeCaptions(review);
+      state.xReply=xFollowUp();
       updateCaptionEditor();
       try { const original = await loadPoster(review.m || ''); if (sequence !== state.seq) return; state.poster = original; }
       catch (err) { if (sequence !== state.seq) return; inputs.status.textContent = errorMessage(err); }
@@ -205,9 +206,31 @@
     x:'https://x.com/reviewbypoorna',
     whatsapp:'https://whatsapp.com/channel/0029VaKoQMp2UPBPOlNDg546'
   });
-  const X_REPLY_SEPARATOR='=== X FOLLOW-UP REPLY (POST 2/2) ===';
-  // Extra blank line after EVERY copy line, including cross-platform links.
+  // Clean cinema-editorial spacing shared by Instagram, Facebook and X.
   const spaced=lines=>lines.filter(Boolean).join('\n\n');
+  // For standard X posts URLs become t.co links of 23 weighted characters.
+  // Count remaining non-Latin symbols conservatively to guard the 280 limit.
+  function xWeightedLength(value){
+    const normalized=String(value||'').replace(/https?:\/\/[^\s]+/gu,'x'.repeat(23));
+    let count=0;
+    for(const ch of normalized)count+=ch.codePointAt(0)<0x1100?1:2;
+    return count;
+  }
+  function makeXMain(review){
+    const title=String(review.t||'').trim(),url=trackedUrlFor(review,'x-post');
+    const opening='🎬 '+title+' has reached the Auditorium!';
+    const question='🍿 Worth your popcorn? My full review has the answer!';
+    const callToAction='🎟️ FULL REVIEW: '+url;
+    const choices=[
+      spaced([opening,question,callToAction,'#MovieReviewsByPoorna']),
+      spaced([opening,question,callToAction]),
+      spaced([opening,callToAction,'#MovieReviewsByPoorna']),
+      spaced([opening,callToAction])
+    ];
+    // Keep the full movie title and tracked link; shed optional lines only
+    // when necessary, never cut the title or produce a truncated URL.
+    return choices.find(x=>xWeightedLength(x)<=280)||choices.at(-1);
+  }
   const followEverywhere=()=>[
     '📣 FOLLOW MOVIE REVIEWS BY POORNA EVERYWHERE',
     '📸 Instagram: '+SOCIAL_ACCOUNTS.instagram,
@@ -215,31 +238,20 @@
     '𝕏 X: '+SOCIAL_ACCOUNTS.x,
     '💬 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
   ];
-  // The follow-up reply is deliberately compact enough for an individual X post.
+  // Standalone promotional reply: no machine delimiter or generic filler.
   const xFollowUp=()=>spaced([
-    '🎬 More movie talk, four ways to follow:',
+    "🎞️ THE MOVIE TALK DOESN'T END HERE!",
     '📸 Instagram: '+SOCIAL_ACCOUNTS.instagram,
     'ⓕ Facebook: '+SOCIAL_ACCOUNTS.facebook,
     '𝕏 X: '+SOCIAL_ACCOUNTS.x,
-    '💬 WhatsApp: '+SOCIAL_ACCOUNTS.whatsapp
+    '💬 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp,
+    '🎥 ONE LOVE. MANY SCREENS.'
   ]);
-  function splitXThread(message){
-    const index=message.indexOf(X_REPLY_SEPARATOR);
-    return index<0?{main:message.trim(),reply:''}:{
-      main:message.slice(0,index).trim(),reply:message.slice(index+X_REPLY_SEPARATOR.length).trim()
-    };
-  }
   function makeCaptions(review) {
     const title=String(review.t||'').trim(),link=platform=>trackedUrlFor(review,platform);
     // Images already contain rating/language/MY POV; these messages promote reviews and other channels.
     // Instagram post URLs are plain text rather than tappable links; the clickable path remains bio.
-    const xUrl=link('x-post');
-    let xMain=spaced(['🎬 '+title,'🍿 My verdict is up. What do you think?','🎟️ Full review: '+xUrl]);
-    if(xMain.length>280){
-      const room=Math.max(0,280-spaced(['🎬 ','🍿 Verdict is up!','🎟️ '+xUrl]).length);
-      xMain=spaced(['🎬 '+title.slice(0,room),'🍿 Verdict is up!','🎟️ '+xUrl]);
-    }
-    const xReply=xFollowUp();
+    const xMain=makeXMain(review);
     return {
       'instagram-post':spaced([
         '🎬 '+title+' has reached the Auditorium!',
@@ -268,7 +280,7 @@
         '🎟️ Attach the full review URL using the available native Story link option: '+link('facebook-story'),
         ...followEverywhere()
       ]),
-      'x-post':spaced([xMain,X_REPLY_SEPARATOR,xReply]),
+      'x-post':xMain,
       'whatsapp-channel':spaced([
         '🎬 *'+title+'*',
         '🍿 My verdict is up. What is yours?',
