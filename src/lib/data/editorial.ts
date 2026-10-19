@@ -77,7 +77,7 @@ export async function getEditorialPresets():Promise<Record<EditorialKey,Editoria
 }
 export async function getSocialEditorial(reviewId:number):Promise<{presets:Record<EditorialKey,EditorialStyle>;drafts:Record<string,unknown>}> {
   const [presets,rows]=await Promise.all([getEditorialPresets(),
-    getContentDb().prepare('SELECT format,draft_json FROM social_promotional_drafts WHERE review_id=?1').bind(reviewId).all<{format:string;draft_json:string}>()]);
+    getContentDb().prepare('SELECT format,draft_json FROM social_promotional_drafts WHERE review_id=?1').bind(reviewId).run<{format:string;draft_json:string}>()]);
   const drafts:Record<string,unknown>={};
   for(const row of rows.results)drafts[row.format]=parse(row.draft_json,null);
   return {presets,drafts};
