@@ -269,6 +269,15 @@
     '𝕏 X: '+SOCIAL_ACCOUNTS.x,
     '💬 WhatsApp Channel: '+SOCIAL_ACCOUNTS.whatsapp
   ];
+  const STORY_LINK_FORMATS=new Set(['instagram-story','facebook-story']);
+  function storyLinkText(review){return '🎟️ READ FULL REVIEW';}
+  function storyLinkEntry(review,format,rank){
+    return [
+      String(rank).padStart(3,'0')+' | '+String(review.t||''),
+      'STICKER TEXT: '+storyLinkText(review),
+      'LINK: '+trackedUrlFor(review,format)
+    ].join('\n');
+  }
   function makeCaptions(review) {
     const title=String(review.t||'').trim(),link=platform=>trackedUrlFor(review,platform);
     // Images already contain rating/language/MY POV; these messages promote reviews and other channels.
@@ -285,10 +294,8 @@
         '#MovieReviewsByPoorna #MovieReview'
       ]),
       'instagram-story':spaced([
-        '🎬 INSTAGRAM STORY PUBLISHING NOTE (not a Story caption)',
-        '🎟️ Add a native Link sticker in the reserved safe area: '+link('instagram-story'),
-        '📣 Our other platforms:',
-        ...followEverywhere().slice(1)
+        'STICKER TEXT: '+storyLinkText(review),
+        'LINK: '+link('instagram-story')
       ]),
       'facebook-post':spaced([
         '🎬 '+title+' has reached the Auditorium!',
@@ -298,9 +305,8 @@
         '#MovieReviewsByPoorna #MovieReview'
       ]),
       'facebook-story':spaced([
-        '🎬 FACEBOOK STORY PUBLISHING NOTE (not a Story caption)',
-        '🎟️ Attach the full review URL using the available native Story link option: '+link('facebook-story'),
-        ...followEverywhere()
+        'STICKER TEXT: '+storyLinkText(review),
+        'LINK: '+link('facebook-story')
       ]),
       'x-post':xMain,
       'whatsapp-channel':spaced([
@@ -1206,8 +1212,8 @@
       'Oldest movie release first, most recent release LAST.',
       'Movies with no release date are listed first and flagged as undated.',
       'This ZIP contains only Images/ and Captions/.',
-      'Each numbered image matches the caption of the SAME filename.',
-      'Story files are publishing notes, not text to overlay automatically.',
+      'Post images match same-named per-movie captions. Instagram/Facebook Story links use ONE consolidated file.',
+      'Story sticker text and tracked URL must be added using the native Story link option.',
       ...(format==='x-post'?['X has exactly one post and one caption per movie. No follow-up reply file.']:[]),
       'Any missing artwork is listed below; do not upload an unmatched caption.',
       'Exported order range: '+(from+1)+' - '+to+' of '+total+'.',
@@ -1230,10 +1236,13 @@
       // Its failure reason remains visible in 000_EXPORT_REPORT.txt.
       if(image){
         await writer.add('Images/'+stem+'.png',image);
-        await writer.add('Captions/'+stem+'.txt',(prepared.captionMap[format]||'')+'\n');
+        if(STORY_LINK_FORMATS.has(format)){
+          // Story image links are collected once per ZIP, not as captions.
+          // The record keeps the exact ranked title and review slug.
+        }else await writer.add('Captions/'+stem+'.txt',(prepared.captionMap[format]||'')+'\n');
       }
       records[format].push({rank:String(rank).padStart(3,'0'),title:review.t,
-        release:review.rd||'UNSET',image:!!image,notes:prepared.notes});
+        review,release:review.rd||'UNSET',image:!!image,notes:prepared.notes});
     }
   }
   function zipName(format,today,from,to,batched){
@@ -1326,7 +1335,18 @@
           '. Check the original poster and Social Studio fit settings before retrying.');
       }
       for(const format of formats){
-        await writers[format].add('Captions/000_EXPORT_REPORT.txt',
+        if(STORY_LINK_FORMATS.has(format)){
+          // Exactly ONE text file for all Story images in this ZIP.
+          // It includes the ordered links plus diagnostics in the same file.
+          const entries=records[format].filter(row=>row.image).map(row=>
+            storyLinkEntry(row.review,format,Number(row.rank)));
+          await writers[format].add('Captions/000_STORY_LINKS.txt',
+            'MOVIE REVIEWS BY POORNA — '+BULK_FORMATS[format].label+'\n'+
+            'Attach a native link sticker in the reserved area on each corresponding Story PNG.\n'+
+            'Use the following sticker text and tracked URL. Publish in number order.\n\n'+
+            entries.join('\n\n---\n\n')+'\n\n'+
+            'EXPORT REPORT\n'+bulkReport(records[format],format,from,from+processed,catalog.length)+'\n');
+        }else await writers[format].add('Captions/000_EXPORT_REPORT.txt',
           bulkReport(records[format],format,from,from+processed,catalog.length));
         await writers[format].close();
       }
