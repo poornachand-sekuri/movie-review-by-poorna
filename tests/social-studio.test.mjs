@@ -377,7 +377,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
   assert.match(ADMIN_HTML,/id="socialDownloadMovieZip"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=25/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=26/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/'whatsapp-status':\{label:'WhatsApp_Story',kind:'story',design:'whatsapp-status'\}/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
@@ -1122,7 +1122,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=25'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=26'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
