@@ -11,7 +11,7 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),captionStatus: $('socialCaptionStatus'),
+    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),downloadMovieZip: $('socialDownloadMovieZip'),captionStatus: $('socialCaptionStatus'),
     editorialStatus: $('socialEditorialStatus'), saveMovieStyle: $('socialSaveMovieStyle'), saveDefaults: $('socialSaveDefaults'), applyBoth: $('socialApplyBoth'),
     overrideFormat: $('socialOverrideFormat'), resetOverride: $('socialResetOverride'),
     autoFitOnLoad: $('socialAutoFitOnLoad'), recalculateFit: $('socialRecalculateFit'),
@@ -1248,6 +1248,71 @@
         review,release:review.rd||'UNSET',image:!!image,notes:prepared.notes});
     }
   }
+  // The ZIP content contract is shared by bulk and selected-movie exports.
+  // Only ready movie images receive captions, and Stories have ONE link index.
+  async function closeFormatArchives(formats,writers,records,from,to,total){
+    const emptyFormats=formats.filter(format=>records[format].length &&
+      records[format].every(row=>!row.image));
+    if(emptyFormats.length){
+      const details=emptyFormats.map(format=>{
+        const first=records[format].find(row=>row.notes.length);
+        return BULK_FORMATS[format].label+': '+
+          (first?first.title+' — '+first.notes.join('; '):'No image could be generated');
+      });
+      throw new Error('No PNG images generated for '+emptyFormats.map(format=>
+        BULK_FORMATS[format].label).join(', ')+'. '+details.join(' | ').slice(0,450)+
+        '. Check the original poster and Social Studio fit settings before retrying.');
+    }
+    for(const format of formats){
+      if(STORY_LINK_FORMATS.has(format)){
+        const entries=records[format].filter(row=>row.image).map(row=>
+          storyLinkEntry(row.review,format,Number(row.rank)));
+        await writers[format].add('Captions/000_STORY_LINKS.txt',
+          'MOVIE REVIEWS BY POORNA — '+BULK_FORMATS[format].label+'\n'+
+          'Attach a native link sticker in the reserved area on each corresponding Story PNG.\n'+
+          'Use the following sticker text and tracked URL. Publish in number order.\n\n'+
+          entries.join('\n\n---\n\n')+'\n\n'+
+          'EXPORT REPORT\n'+bulkReport(records[format],format,from,to,total)+'\n');
+      }else await writers[format].add('Captions/000_EXPORT_REPORT.txt',
+        bulkReport(records[format],format,from,to,total));
+      await writers[format].close();
+    }
+  }
+  // This invokes the same rendering and archive functions as Download All.
+  // A selected movie may have unsaved on-screen styling: use persisted
+  // editorial styles consistently with the bulk output, without mutation.
+  async function exportSelectedMovieZip(){
+    const review=state.review,format=inputs.captionPlatform.value;
+    if(!review||state.bulkSession||!BULK_FORMATS[format])return;
+    const zipModule=window.MovieReviewBulkZip;
+    if(!zipModule){inputs.captionStatus.textContent='ZIP packager unavailable. Reload Projector Room.';return;}
+    const cfg=BULK_FORMATS[format];
+    if(!state.masters[cfg.design]){
+      inputs.captionStatus.textContent='Approved '+cfg.design+' master not loaded. Upload it first.';
+      return;
+    }
+    const catalog=sortedBulkReviews();
+    const position=catalog.findIndex(row=>Number(row.i)===Number(review.i));
+    if(position<0){inputs.captionStatus.textContent='Movie missing from release-order catalogue.';return;}
+    inputs.downloadMovieZip.disabled=true;
+    inputs.captionStatus.textContent='Generating '+cfg.label.replaceAll('_',' ')+
+      ' for '+review.t+' using the same export rules as bulk…';
+    try{
+      const sink=zipModule.memorySink(),writer=new zipModule.ZipWriter(sink);
+      const records={[format]:[]};
+      const matching=catalog[position];
+      // Bulk catalogue supplies the same original movie record and release
+      // rank for both per-movie and catalogue-wide exports.
+      await addBulkMovieToArchives({[format]:writer},matching,position+1,[format],records);
+      await closeFormatArchives([format],{[format]:writer},records,position,position+1,catalog.length);
+      writeBlobToDownload(sink.blob(),'Movie_Reviews_By_Poorna_'+cfg.label+'_Movie_'+
+        bulkStem(matching,position+1)+'.zip');
+      inputs.captionStatus.textContent='One '+cfg.label.replaceAll('_',' ')+
+        ' ZIP saved with the identical Images/ and Captions/ contents used by bulk.';
+    }catch(error){
+      inputs.captionStatus.textContent='Selected movie ZIP failed: '+errorMessage(error);
+    }finally{inputs.downloadMovieZip.disabled=false;}
+  }
   function zipName(format,today,from,to,batched){
     return 'Movie_Reviews_By_Poorna_'+BULK_FORMATS[format].label+
       '_'+today+(batched?'_'+String(from+1).padStart(3,'0')+'-'+String(to).padStart(3,'0'):'')+'.zip';
@@ -1323,36 +1388,7 @@
         }
         processed++;
       }
-      // Reject all-image failures rather than deliver a misleading empty
-      // Images/ folder and captions-only WhatsApp (or other format) ZIPs.
-      const emptyFormats=formats.filter(format=>records[format].length &&
-        records[format].every(record=>!record.image));
-      if(emptyFormats.length){
-        const details=emptyFormats.map(format=>{
-          const first=records[format].find(record=>record.notes.length);
-          return BULK_FORMATS[format].label+': '+
-            (first?first.title+' — '+first.notes.join('; '):'No image could be generated');
-        });
-        throw new Error('No PNG images generated for '+emptyFormats.map(format=>
-          BULK_FORMATS[format].label).join(', ')+'. '+details.join(' | ').slice(0,450)+
-          '. Check the original poster and Social Studio fit settings before retrying.');
-      }
-      for(const format of formats){
-        if(STORY_LINK_FORMATS.has(format)){
-          // Exactly ONE text file for all Story images in this ZIP.
-          // It includes the ordered links plus diagnostics in the same file.
-          const entries=records[format].filter(row=>row.image).map(row=>
-            storyLinkEntry(row.review,format,Number(row.rank)));
-          await writers[format].add('Captions/000_STORY_LINKS.txt',
-            'MOVIE REVIEWS BY POORNA — '+BULK_FORMATS[format].label+'\n'+
-            'Attach a native link sticker in the reserved area on each corresponding Story PNG.\n'+
-            'Use the following sticker text and tracked URL. Publish in number order.\n\n'+
-            entries.join('\n\n---\n\n')+'\n\n'+
-            'EXPORT REPORT\n'+bulkReport(records[format],format,from,from+processed,catalog.length)+'\n');
-        }else await writers[format].add('Captions/000_EXPORT_REPORT.txt',
-          bulkReport(records[format],format,from,from+processed,catalog.length));
-        await writers[format].close();
-      }
+      await closeFormatArchives(formats,writers,records,from,from+processed,catalog.length);
       if(folderExport){
         // Seven independent ZIPs were streamed straight into the folder.
       }else if(diskExport){
@@ -1491,6 +1527,7 @@
   });
   inputs.copyLink.addEventListener('click',()=>copyText(inputs.trackedUrl.value,'Tracked URL copied.'));
   inputs.downloadCaptions.addEventListener('click',downloadCaptions);
+  inputs.downloadMovieZip.addEventListener('click',exportSelectedMovieZip);
   inputs.save.addEventListener('click',uploadMasters);
   inputs.dlPost.addEventListener('click',()=>downloadImage('post'));
   inputs.dlStory.addEventListener('click',()=>downloadImage('story'));
