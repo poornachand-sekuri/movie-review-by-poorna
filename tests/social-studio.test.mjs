@@ -171,10 +171,10 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
     await h.bulkButtons[format].listeners.click();await settle();
     const entries=await zipEntries(h.downloadedBlobs.at(-1));
     assert.deepEqual([...entries.keys()].sort(),[
-      'Captions/000_EXPORT_REPORT.txt',
-      'Captions/'+expectedStem+'.txt',
+      format.endsWith('-story')?'Captions/000_STORY_LINKS.txt':'Captions/000_EXPORT_REPORT.txt',
+      ...(format.endsWith('-story')?[]:['Captions/'+expectedStem+'.txt']),
       'Images/'+expectedStem+'.png'
-    ].sort(),format+' ZIP should contain Images/ and Captions/ with matching files');
+    ].sort(),format+' ZIP has only its intended text files');
     if(format==='x-post'){
       const caption=new TextDecoder().decode(entries.get('Captions/'+expectedStem+'.txt'));
       assert.match(caption,/has reached the Auditorium!/);
@@ -183,8 +183,17 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
       assert.doesNotMatch(caption,/=== X FOLLOW-UP|_Reply|POST 2\/2/);
       assert.ok(xWeightedTestLength(caption)<=280,'X ZIP must contain one publishable caption');
     }
-    assert.match(new TextDecoder().decode(entries.get('Captions/'+expectedStem+'.txt')),/JYO ACHYUTANANDA|review/i);
-    assert.match(new TextDecoder().decode(entries.get('Captions/000_EXPORT_REPORT.txt')),/oldest.*last/i);
+    if(format.endsWith('-story')){
+      const storyLinks=new TextDecoder().decode(entries.get('Captions/000_STORY_LINKS.txt'));
+      assert.match(storyLinks,/001 \| JYO ACHYUTANANDA/);
+      assert.match(storyLinks,/STICKER TEXT: 🎟️ READ FULL REVIEW/);
+      assert.match(storyLinks,new RegExp('utm_source='+format.split('-')[0]));
+      assert.match(storyLinks,/EXPORT REPORT/);
+      assert.equal([...entries.keys()].filter(k=>k.endsWith('.txt')).length,1);
+    }else{
+      assert.match(new TextDecoder().decode(entries.get('Captions/'+expectedStem+'.txt')),/JYO ACHYUTANANDA|review/i);
+      assert.match(new TextDecoder().decode(entries.get('Captions/000_EXPORT_REPORT.txt')),/oldest.*last/i);
+    }
   }
   assert.equal(h.downloadedBlobs.length,7,'Each button downloads one distinct ZIP');
   assert.equal(writeCount(),0,'No review or social account writes');
@@ -249,7 +258,10 @@ test('One Download All click bundles seven independently usable ZIPs on fallback
     assert.ok(key,'Missing '+label+' ZIP');
     const nested=await zipEntries(new Blob([archive.get(key)]));
     assert.ok(nested.has('Images/001_2000-01-01_A_Movie_9.png'),label+' image');
-    assert.ok(nested.has('Captions/001_2000-01-01_A_Movie_9.txt'),label+' caption');
+    if(label==='Instagram_Story'||label==='Facebook_Story'){
+      assert.ok(nested.has('Captions/000_STORY_LINKS.txt'),label+' consolidated links');
+      assert.equal([...nested.keys()].filter(k=>k.endsWith('.txt')).length,1);
+    }else assert.ok(nested.has('Captions/001_2000-01-01_A_Movie_9.txt'),label+' caption');
   }
   assert.equal(writeCount(),0);
 });
@@ -287,8 +299,16 @@ test('Download All streams seven standalone ZIP files into a chosen folder when 
       'Images/004_2026-10-18_NEWEST_7.png'
     ],'File upload order must be oldest-to-newest, unknown date first');
     for(const image of paths){
-      const caption=image.replace('Images/','Captions/').replace(/\.png$/,'.txt');
-      assert.ok(entries.has(caption),'Matching caption required for '+image);
+      const isStory=[...entries.keys()].includes('Captions/000_STORY_LINKS.txt');
+      if(isStory){
+        const links=new TextDecoder().decode(entries.get('Captions/000_STORY_LINKS.txt'));
+        assert.ok(links.includes(image.split('/')[1].split('_').slice(2,-1).join('_').replaceAll('_',' ')) ||
+          links.includes('STICKER TEXT:'),'Story links index required');
+        assert.equal([...entries.keys()].filter(k=>k.endsWith('.txt')).length,1);
+      }else{
+        const caption=image.replace('Images/','Captions/').replace(/\.png$/,'.txt');
+        assert.ok(entries.has(caption),'Matching caption required for '+image);
+      }
     }
   }
   assert.equal(writeCount(),0);
@@ -299,7 +319,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     'x-post','whatsapp-channel','whatsapp-status'])
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=23/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=24/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
   assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
@@ -847,12 +867,17 @@ test('All seven platform messages include the four canonical accounts with a bla
     assert.doesNotMatch(caption,/Geetu aimed for a Joker-like/,platform+' should not duplicate the full MY POV');
     assert.match(h.element('socialTrackedUrl').value,/utm_source=/);
     if(platform!=='instagram-post')assert.match(caption,/utm_source=/);
-    for(const link of links)assert.ok(caption.includes(link),platform+' must promote '+link);
+    if(platform==='instagram-story'||platform==='facebook-story'){
+      assert.match(caption,/STICKER TEXT: 🎟️ READ FULL REVIEW/);
+      assert.match(caption,/LINK: https:\/\/moviereviewbypoorna.com\/review\//);
+      assert.doesNotMatch(caption,/FOLLOW MOVIE|Instagram:|Facebook:|WhatsApp Channel:/);
+    }else for(const link of links)assert.ok(caption.includes(link),platform+' must promote '+link);
     const symbols=platform==='x-post'?
       ['📸 IG:','ⓕ FB:','𝕏 X:','💬 WA:']:
       ['📸 Instagram:','ⓕ Facebook:','𝕏 X:','💬 WhatsApp'];
-    for(const symbol of symbols)assert.ok(caption.includes(symbol),
-      platform+' must include '+symbol+' and the real link in the same post');
+    if(platform!=='instagram-story'&&platform!=='facebook-story')
+      for(const symbol of symbols)assert.ok(caption.includes(symbol),
+        platform+' must include '+symbol+' and the real link in the same post');
     assert.ok(!caption.includes('🔵 Facebook')&&!caption.includes('🟢 WhatsApp'),platform+' must not use generic colored dots');
     // The single X post groups links on consecutive lines to fit 280
     // weighted characters; every other platform retains airy blank lines.
@@ -1024,7 +1049,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=23'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=24'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
