@@ -199,6 +199,38 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
   assert.equal(writeCount(),0,'No review or social account writes');
 });
 
+test('Individual movie ZIP uses the identical seven bulk format contracts and image renderers',async()=>{
+  const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
+    v:'A short, punchy movie opinion.',l:'Telugu',r:4.25,
+    m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'}];
+  const {h,writeCount}=bulkFixture(reviews);
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';
+  await h.element('socialMovie').listeners.change();await settle();
+  const button=h.element('socialDownloadMovieZip');
+  const expectedStem='001_2016-09-09_JYO_ACHYUTANANDA_7';
+  for(const format of ['instagram-post','instagram-story','facebook-post','facebook-story',
+    'x-post','whatsapp-channel','whatsapp-status']){
+    await h.bulkButtons[format].listeners.click();await settle();
+    const bulk=await zipEntries(h.downloadedBlobs.at(-1));
+    h.element('socialCaptionPlatform').value=format;
+    h.element('socialCaptionPlatform').listeners.change();
+    await button.listeners.click();await settle();
+    const one=await zipEntries(h.downloadedBlobs.at(-1));
+    assert.deepEqual([...one.keys()].sort(),[...bulk.keys()].sort(),
+      format+' individual and bulk archive paths must match');
+    for(const key of one.keys())assert.deepEqual(one.get(key),bulk.get(key),
+      format+' must share actual image/caption/report bytes for '+key);
+    assert.ok(one.has('Images/'+expectedStem+'.png'));
+    assert.equal([...one.keys()].filter(name=>name.endsWith('.png')).length,1);
+    assert.equal([...one.keys()].filter(name=>name.endsWith('.txt')).length,
+      format.endsWith('-story')?1:2);
+  }
+  assert.equal(writeCount(),0,'Neither mode may mutate saved movie or styling data');
+  assert.equal(button.disabled,false);
+  assert.match(h.element('socialCaptionStatus').textContent,/identical Images\/ and Captions/);
+});
+
 test('WhatsApp Channel and Status must never download captions-only ZIPs when poster decoding fails',async()=>{
   const reviews=[{i:7,t:'BROKEN POSTER',s:'broken-poster',rd:'2026-07-01',
     v:'Test movie.',l:'Telugu',r:3,
@@ -319,7 +351,8 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     'x-post','whatsapp-channel','whatsapp-status'])
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=24/);
+  assert.match(ADMIN_HTML,/id="socialDownloadMovieZip"/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=25/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
   assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
@@ -407,6 +440,19 @@ test('Facebook/X centers even saved left-aligned rich title spans without modify
   assert.match(STUDIO_JS,/'facebook-post':\{label:'Facebook_Post',kind:'post',design:'facebook-x-post'\}/);
   assert.match(STUDIO_JS,/'x-post':\{label:'X_Post',kind:'post',design:'facebook-x-post'\}/);
   assert.match(STUDIO_JS,/return renderFrame\(kind\);/);
+});
+
+test('Approved Story master geometry protects the empty right-hand link area',()=>{
+  const story=STUDIO_JS.match(/story:\{\s*\/\/ Approved 1080×1920[\s\S]*?\n    \}/)?.[0];
+  assert.ok(story,'Story geometry is defined');
+  assert.match(story,/size:\[1080,1920\]/);
+  const poster=story.match(/poster:\[(\d+),(\d+),(\d+),(\d+)\]/).slice(1).map(Number);
+  const pov=story.match(/pov:\[(\d+),(\d+),(\d+),(\d+)\]/).slice(1).map(Number);
+  assert.ok(poster[0]>=245&&poster[0]+poster[2]<=835);
+  assert.ok(poster[1]>=240&&poster[1]+poster[3]<=895);
+  assert.ok(pov[1]+pov[3]+15<1650,'MY POV must not enter link footer');
+  assert.match(story,/rating:\{centers:\[577\.8,665,751,837\.8,921\.6\]/);
+  assert.match(STUDIO_JS,/kind==='story'\?geometry.story/);
 });
 
 test('Movie title prefers one centered line before falling back to wrapping',async()=>{
@@ -669,7 +715,7 @@ test('MY POV overflow blocks PNG exports instead of silently truncating', async(
 
 test('Four approved templates share two export dimensions',()=>{
   assert.match(STUDIO_JS,/post:\s*\{\s*size:\s*\[1080,1080\]/);
-  assert.match(STUDIO_JS,/story:\s*\{\s*size:\s*\[1080,1920\]/);
+  assert.match(STUDIO_JS,/story:\s*\{\s*\/\/ Approved 1080×1920[^\n]*\n\s*\/\/[^\n]*\n\s*\/\/[^\n]*\n\s*size:\s*\[1080,1920\]/);
   assert.match(STUDIO_JS,/for\(let i=0;i<5;i\+\+\)/);
   assert.doesNotMatch(STUDIO_JS,/numericX|value\.toFixed\(2\).*\/5/);
   assert.doesNotMatch(STUDIO_JS,/\.slice\(0,\s*\d+\)\s*\+\s*['"]\.\.\./);
@@ -733,7 +779,7 @@ test('Locked master icons and metadata headers are not redrawn over approved art
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
   const drawn=(value,y)=>h.styledDraws.some(d=>d.text===value && d.y===y);
   assert.ok(drawn('Telugu',620.5),'Post language is centered below the WATCHED IN label');
-  assert.ok(drawn('Telugu',1231.5),'Story language is centered below the WATCHED IN label');
+  assert.ok(drawn('Telugu',1222),'Story language is centered below the WATCHED IN label');
   assert.ok(!h.drawnText.includes('RELEASE DATE'),'No release date overlay');
   assert.ok(!h.drawnText.includes("POORNA'S RATING"),'Master already contains rating header');
   assert.ok(h.styledDraws.some(d=>d.text==='Telugu' && d.font.includes('Oswald')));
@@ -777,19 +823,19 @@ test('WATCHED IN values are centered horizontally and vertically in every approv
   assert.ok(story,'Story language renders');
   assert.equal(story.align,'center');
   assert.equal(story.x,(52+459)/2);
-  assert.equal(story.y,(1187+1276)/2);
+  assert.equal(story.y,(1180+1264)/2);
 });
 test('Story metadata uses two columns and retains an empty dynamic title ticket',async()=>{
   const h=harness();h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1231.5));
+  assert.ok(h.styledDraws.some(x=>x.text==='Telugu'&&x.y===1222));
   assert.ok(!h.drawnText.some(x=>/RELEASE DATE|26 Aug 2026/.test(x)));
   const stars=h.filledRects.filter(r=>r.fillStyle==='#f7010e'&&Math.abs(r.y-1186.8)<.01);
   assert.ok(stars.length>=2,'Five quarter-filled rating stars sit in Story rating panel');
 });
 test('MY POV has top inset and stays inside the new approved red panel',()=>{
   assert.ok(STUDIO_JS.includes('pov:[485,748,517,128]'));
-  assert.ok(STUDIO_JS.includes('pov:[99,1388,870,197]'));
+  assert.ok(STUDIO_JS.includes('pov:[82,1355,916,235]'));
   assert.ok(748+128<891,'Post MY POV has interior bottom clearance');
   assert.ok(1388+197<1612,'Story MY POV has interior bottom clearance');
 });
@@ -991,7 +1037,7 @@ test('Approved poster openings use the existing-site contain and softened full-f
   assert.match(STUDIO_JS,/poster:\[59,299,375,580\]/);
   assert.match(STUDIO_JS,/poster:\[48,293,378,592\]/);
   assert.match(STUDIO_JS,/poster:\[56,283,365,594\]/);
-  assert.match(STUDIO_JS,/poster:\[259,276,562,602\]/);
+  assert.match(STUDIO_JS,/poster:\[250,252,574,626\]/);
   assert.ok(STUDIO_JS.includes('Math.max((w+2*bleed)/image.width,(h+2*bleed)/image.height)'));
   assert.match(STUDIO_JS,/Math\.min\(w\/image\.width,h\/image\.height\)/);
   assert.match(STUDIO_JS,/blur\(14px\) brightness\(\.33\) saturate\(\.75\)/);
@@ -1039,7 +1085,7 @@ test('Poster retains all its original image with a blurred contextual fill',()=>
 test('Rich text is clipped to panel and line heights cannot overlap the header',()=>{
   assert.match(STUDIO_JS,/ctx\.rect\(x,y,width,height\);ctx\.clip\(\)/);
   assert.match(STUDIO_JS,/Math\.max\(1\.25,options\.line\)/);
-  assert.match(STUDIO_JS,/pov:\[99,1388,870,197\]/);
+  assert.match(STUDIO_JS,/pov:\[82,1355,916,235\]/);
 });
 
 test('Social Studio uses branded, accessible icon links for all four official accounts',()=>{
@@ -1050,7 +1096,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=24'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=25'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
@@ -1086,7 +1132,7 @@ test('Poster rectangles have verified clearances from the four approved master b
     {id:'Instagram',x:59,y:299,w:375,h:580,left:51,right:440,top:290,bottom:890},
     {id:'Facebook/X',x:48,y:293,w:378,h:592,left:41,right:430,top:283,bottom:895},
     {id:'WhatsApp Channel',x:56,y:283,w:365,h:594,left:50,right:428,top:273,bottom:887},
-    {id:'Story',x:259,y:276,w:562,h:602,left:250,right:829,top:263,bottom:890}
+    {id:'Story',x:250,y:252,w:574,h:626,left:210,right:835,top:215,bottom:900}
   ];
   for(const b of boxes){
     assert.ok(b.x>=b.left+5,b.id+' left inner clearance');
