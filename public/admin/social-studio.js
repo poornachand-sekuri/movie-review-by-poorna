@@ -43,8 +43,11 @@
       rating:{centers:[760.5,818.4,876.5,934,991.5],y:601.5,r:24}
     },
     story:{
-      size:[1080,1920],poster:[259,276,562,602],title:[162,926,756,103],
-      pov:[99,1388,870,197],language:{left:52,right:459,valueTop:1187,valueBottom:1276,max:290},
+      // Approved 1080×1920 red-curtain master, including the right-hand
+      // EMPTY native link-sticker area baked into the bottom section.
+      // Text/image coordinates never enter or redraw that CTA section.
+      size:[1080,1920],poster:[250,252,574,626],title:[160,920,760,106],
+      pov:[82,1355,916,235],language:{left:52,right:459,valueTop:1180,valueBottom:1264,max:290},
       rating:{centers:[577.8,665,751,837.8,921.6],y:1215.8,r:33}
     }
   };
