@@ -231,6 +231,31 @@ test('Individual movie ZIP uses the identical seven bulk format contracts and im
   assert.match(h.element('socialCaptionStatus').textContent,/identical Images\/ and Captions/);
 });
 
+test('WhatsApp Status has its own CTA and tracked movie URL in both individual and bulk ZIPs',async()=>{
+  const reviews=[{i:7,t:'OOPIRI',s:'oopiri',rd:'2016-03-25',v:'A GREAT movie.',l:'Telugu',r:3,
+    m:'https://assets.moviereviewbypoorna.com/reviews/oopiri/poster.jpg'}];
+  const {h}=bulkFixture(reviews);
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  await h.bulkButtons['whatsapp-status'].listeners.click();await settle();
+  const archive=await zipEntries(h.downloadedBlobs.at(-1));
+  const caption=new TextDecoder().decode(archive.get('Captions/001_2016-03-25_OOPIRI_7.txt'));
+  assert.match(caption,/FULL REVIEW AVAILABLE ON MY PAGE/);
+  assert.match(caption,/utm_source=whatsapp/);
+  assert.doesNotMatch(caption,/INSTAGRAM STORY|Link sticker|FOLLOW MOVIE|Our other platforms/);
+  assert.ok(archive.has('Images/001_2016-03-25_OOPIRI_7.png'));
+  assert.ok(h.drawnText.includes('FULL REVIEW AVAILABLE ON MY PAGE'),'WhatsApp on-image CTA');
+  h.element('socialCaptionPlatform').value='whatsapp-status';
+  h.element('socialCaptionPlatform').listeners.change();
+  await h.element('socialDownloadMovieZip').listeners.click();await settle();
+  const single=await zipEntries(h.downloadedBlobs.at(-1));
+  for(const key of archive.keys())assert.deepEqual(single.get(key),archive.get(key));
+  const facebook=h.drawnText.length;
+  await h.bulkButtons['facebook-story'].listeners.click();await settle();
+  assert.equal(h.drawnText.slice(facebook).includes('FULL REVIEW AVAILABLE ON MY PAGE'),false,
+    'Instagram and Facebook Story must remain untouched');
+});
+
 test('WhatsApp Channel and Status must never download captions-only ZIPs when poster decoding fails',async()=>{
   const reviews=[{i:7,t:'BROKEN POSTER',s:'broken-poster',rd:'2026-07-01',
     v:'Test movie.',l:'Telugu',r:3,
@@ -354,6 +379,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
   assert.match(ADMIN_HTML,/id="socialDownloadMovieZip"/);
   assert.match(ADMIN_HTML,/social-studio\.js\?v=25/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
+  assert.match(STUDIO_JS,/'whatsapp-status':\{label:'WhatsApp_Story',kind:'story',design:'whatsapp-status'\}/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
   assert.match(STUDIO_JS,/function exportBulkFormats\(requestedFormat\)/);
   const exporter=STUDIO_JS.slice(STUDIO_JS.indexOf('  // Seven self-contained format archives'),
