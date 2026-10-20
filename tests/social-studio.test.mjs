@@ -199,6 +199,38 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
   assert.equal(writeCount(),0,'No review or social account writes');
 });
 
+test('Individual movie ZIP uses the identical seven bulk format contracts and image renderers',async()=>{
+  const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
+    v:'A short, punchy movie opinion.',l:'Telugu',r:4.25,
+    m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'}];
+  const {h,writeCount}=bulkFixture(reviews);
+  h.callbacks.get('social-studio:open')();await settle();
+  h.element('socialMovie').value='7';
+  await h.element('socialMovie').listeners.change();await settle();
+  const button=h.element('socialDownloadMovieZip');
+  const expectedStem='001_2016-09-09_JYO_ACHYUTANANDA_7';
+  for(const format of ['instagram-post','instagram-story','facebook-post','facebook-story',
+    'x-post','whatsapp-channel','whatsapp-status']){
+    await h.bulkButtons[format].listeners.click();await settle();
+    const bulk=await zipEntries(h.downloadedBlobs.at(-1));
+    h.element('socialCaptionPlatform').value=format;
+    h.element('socialCaptionPlatform').listeners.change();
+    await button.listeners.click();await settle();
+    const one=await zipEntries(h.downloadedBlobs.at(-1));
+    assert.deepEqual([...one.keys()].sort(),[...bulk.keys()].sort(),
+      format+' individual and bulk archive paths must match');
+    for(const key of one.keys())assert.deepEqual(one.get(key),bulk.get(key),
+      format+' must share actual image/caption/report bytes for '+key);
+    assert.ok(one.has('Images/'+expectedStem+'.png'));
+    assert.equal([...one.keys()].filter(name=>name.endsWith('.png')).length,1);
+    assert.equal([...one.keys()].filter(name=>name.endsWith('.txt')).length,
+      format.endsWith('-story')?1:2);
+  }
+  assert.equal(writeCount(),0,'Neither mode may mutate saved movie or styling data');
+  assert.equal(button.disabled,false);
+  assert.match(h.element('socialCaptionStatus').textContent,/identical Images\/ and Captions/);
+});
+
 test('WhatsApp Channel and Status must never download captions-only ZIPs when poster decoding fails',async()=>{
   const reviews=[{i:7,t:'BROKEN POSTER',s:'broken-poster',rd:'2026-07-01',
     v:'Test movie.',l:'Telugu',r:3,
@@ -319,6 +351,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     'x-post','whatsapp-channel','whatsapp-status'])
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
+  assert.match(ADMIN_HTML,/id="socialDownloadMovieZip"/);
   assert.match(ADMIN_HTML,/social-studio\.js\?v=24/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
@@ -1063,7 +1096,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=24'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=25'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
