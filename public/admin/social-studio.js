@@ -319,9 +319,9 @@
         ...followEverywhere()
       ]),
       'whatsapp-status':spaced([
-        '🎬 WHATSAPP STATUS PUBLISHING NOTE (do not paste as Story text)',
-        '🎟️ Add the review link using the available Status link option, or a separate linked text Status: '+link('whatsapp-status'),
-        ...followEverywhere()
+        '🎬 '+title,
+        'FULL REVIEW AVAILABLE ON MY PAGE',
+        '🎟️ '+link('whatsapp-status')
       ])
     };
   }
@@ -872,6 +872,18 @@
         }
       }
     }
+    if(kind==='story'&&state.postPlatform==='whatsapp-status'){
+      // WhatsApp Status is informational, not an Instagram link sticker.
+      // Replace the interior of the approved Story's bottom CTA, preserving
+      // surrounding decorative border and all other master geometry.
+      ctx.save();
+      ctx.fillStyle='#110304';ctx.fillRect(78,1655,924,151);
+      ctx.fillStyle='#F1F1F1';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='700 40px "Oswald"';
+      ctx.fillText('FULL REVIEW AVAILABLE ON MY PAGE',540,1724);
+      ctx.fillStyle='#F7010E';ctx.fillRect(234,1769,612,3);
+      ctx.restore();
+    }
     return {canvas,errors,notes};
   }
 
@@ -1117,7 +1129,7 @@
     'facebook-story':{label:'Facebook_Story',kind:'story',design:'story'},
     'x-post':{label:'X_Post',kind:'post',design:'facebook-x-post'},
     'whatsapp-channel':{label:'WhatsApp_Channel',kind:'post',design:'whatsapp-channel'},
-    'whatsapp-status':{label:'WhatsApp_Story',kind:'story',design:'story'}
+    'whatsapp-status':{label:'WhatsApp_Story',kind:'story',design:'whatsapp-status'}
   });
   const BULK_FORMAT_KEYS=Object.keys(BULK_FORMATS);
   const BULK_FALLBACK_BATCH=5;
@@ -1188,8 +1200,8 @@
     else if(!poster)notes.push('Artwork skipped: original poster could not load.');
     else{
       await loadDraftFonts(Object.values(drafts));
-      // Only four unique approved designs regardless of whether 1 or 7 ZIPs
-      // are requested; Facebook+X and the three Story formats can reuse PNGs.
+      // Facebook+X share a master; Instagram/Facebook Stories share PNGs.
+      // WhatsApp Status has its own CTA rendering over the same Story backing.
       for(const format of formats){
         const definition=BULK_FORMATS[format];
         const key=definition.kind+'_'+definition.design;
@@ -1287,7 +1299,7 @@
     const zipModule=window.MovieReviewBulkZip;
     if(!zipModule){inputs.captionStatus.textContent='ZIP packager unavailable. Reload Projector Room.';return;}
     const cfg=BULK_FORMATS[format];
-    if(!state.masters[cfg.design]){
+    if(!state.masters[cfg.kind==='story'?'story':cfg.design]){
       inputs.captionStatus.textContent='Approved '+cfg.design+' master not loaded. Upload it first.';
       return;
     }
@@ -1322,7 +1334,7 @@
     if(state.bulkSession||!state.reviewCatalog.length||formats.some(f=>!BULK_FORMATS[f]))return;
     const zipModule=window.MovieReviewBulkZip;
     if(!zipModule){setBulkStatus('ZIP packager unavailable; reload Projector Room.');return;}
-    const missing=[...new Set(formats.map(f=>BULK_FORMATS[f].design))].filter(k=>!state.masters[k]);
+    const missing=[...new Set(formats.map(f=>BULK_FORMATS[f].kind==='story'?'story':BULK_FORMATS[f].design))].filter(k=>!state.masters[k]);
     if(missing.length){
       setBulkStatus('Approved design artwork not loaded: '+missing.join(', ')+'.');
       return;
