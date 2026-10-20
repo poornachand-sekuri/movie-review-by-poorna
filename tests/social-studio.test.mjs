@@ -944,11 +944,15 @@ test('All seven platform messages include the four canonical accounts with a bla
       assert.match(caption,/STICKER TEXT: 🎟️ READ FULL REVIEW/);
       assert.match(caption,/LINK: https:\/\/moviereviewbypoorna.com\/review\//);
       assert.doesNotMatch(caption,/FOLLOW MOVIE|Instagram:|Facebook:|WhatsApp Channel:/);
+    }else if(platform==='whatsapp-status'){
+      assert.match(caption,/FULL REVIEW AVAILABLE ON MY PAGE/);
+      assert.match(caption,/utm_source=whatsapp/);
+      assert.doesNotMatch(caption,/Instagram:|Facebook:|WhatsApp Channel:/);
     }else for(const link of links)assert.ok(caption.includes(link),platform+' must promote '+link);
     const symbols=platform==='x-post'?
       ['📸 IG:','ⓕ FB:','𝕏 X:','💬 WA:']:
       ['📸 Instagram:','ⓕ Facebook:','𝕏 X:','💬 WhatsApp'];
-    if(platform!=='instagram-story'&&platform!=='facebook-story')
+    if(platform!=='instagram-story'&&platform!=='facebook-story'&&platform!=='whatsapp-status')
       for(const symbol of symbols)assert.ok(caption.includes(symbol),
         platform+' must include '+symbol+' and the real link in the same post');
     assert.ok(!caption.includes('🔵 Facebook')&&!caption.includes('🟢 WhatsApp'),platform+' must not use generic colored dots');
