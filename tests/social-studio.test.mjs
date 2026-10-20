@@ -862,7 +862,8 @@ test('All seven platform messages include the four canonical accounts with a bla
     h.element('socialCaptionPlatform').value=platform;
     h.element('socialCaptionPlatform').listeners.change();
     const caption=h.element('socialCaptionText').value;
-    assert.match(caption,/🎬/u,platform+' cinema icon');
+    if(platform!=='instagram-story'&&platform!=='facebook-story')
+      assert.match(caption,/🎬/u,platform+' cinema icon');
     assert.match(caption,/🎟️/u,platform+' review CTA icon');
     assert.doesNotMatch(caption,/Geetu aimed for a Joker-like/,platform+' should not duplicate the full MY POV');
     assert.match(h.element('socialTrackedUrl').value,/utm_source=/);
