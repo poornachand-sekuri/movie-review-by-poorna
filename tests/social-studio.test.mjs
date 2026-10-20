@@ -409,21 +409,17 @@ test('Facebook/X centers even saved left-aligned rich title spans without modify
   assert.match(STUDIO_JS,/return renderFrame\(kind\);/);
 });
 
-test('Approved Story master keeps all dynamic content away from native right-hand link placement',()=>{
-  // The uploaded master has a protected footer beginning around y=1650.
-  // Only Story coordinates change; existing posts use separate geometry.
-  const [story]=STUDIO_JS.match(/story:\\{\\s*\\/\\/ Approved 1080×1920[\\s\\S]*?\\n    \\}/)||[];
-  assert.ok(story,'New Story master-specific geometry must be present');
-  assert.match(story,/size:\\[1080,1920\\]/);
-  const poster=story.match(/poster:\\[(\\d+),(\\d+),(\\d+),(\\d+)\\]/).slice(1).map(Number);
-  const pov=story.match(/pov:\\[(\\d+),(\\d+),(\\d+),(\\d+)\\]/).slice(1).map(Number);
-  assert.ok(poster[0]>=245 && poster[0]+poster[2]<=835);
-  assert.ok(poster[1]>=240 && poster[1]+poster[3]<=895);
-  assert.ok(pov[1]+pov[3]+15<1650,'MY POV cannot touch link-sticker footer');
-  assert.match(story,/rating:\\{centers:\\[577\\.8,665,751,837\\.8,921\\.6\\]/,
-    'Keep rating stars aligned to approved outlines');
-  assert.match(STUDIO_JS,/kind==='story'\\?geometry.story/,
-    'All Story/Status platforms must use the same dynamic geometry');
+test('Approved Story master geometry protects the empty right-hand link area',()=>{
+  const story=STUDIO_JS.match(/story:\{\s*\/\/ Approved 1080×1920[\s\S]*?\n    \}/)?.[0];
+  assert.ok(story,'Story geometry is defined');
+  assert.match(story,/size:\[1080,1920\]/);
+  const poster=story.match(/poster:\[(\d+),(\d+),(\d+),(\d+)\]/).slice(1).map(Number);
+  const pov=story.match(/pov:\[(\d+),(\d+),(\d+),(\d+)\]/).slice(1).map(Number);
+  assert.ok(poster[0]>=245&&poster[0]+poster[2]<=835);
+  assert.ok(poster[1]>=240&&poster[1]+poster[3]<=895);
+  assert.ok(pov[1]+pov[3]+15<1650,'MY POV must not enter link footer');
+  assert.match(story,/rating:\{centers:\[577\.8,665,751,837\.8,921\.6\]/);
+  assert.match(STUDIO_JS,/kind==='story'\?geometry.story/);
 });
 
 test('Movie title prefers one centered line before falling back to wrapping',async()=>{
