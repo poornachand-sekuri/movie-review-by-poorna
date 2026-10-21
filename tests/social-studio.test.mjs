@@ -199,36 +199,45 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
   assert.equal(writeCount(),0,'No review or social account writes');
 });
 
-test('Individual movie ZIP uses the identical seven bulk format contracts and image renderers',async()=>{
+test('Download This Movie ZIP contains all seven platform ZIPs with bulk-identical content',async()=>{
   const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
     v:'A short, punchy movie opinion.',l:'Telugu',r:4.25,
     m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'}];
   const {h,writeCount}=bulkFixture(reviews);
   h.callbacks.get('social-studio:open')();await settle();
-  h.element('socialMovie').value='7';
-  await h.element('socialMovie').listeners.change();await settle();
-  const button=h.element('socialDownloadMovieZip');
-  const expectedStem='001_2016-09-09_JYO_ACHYUTANANDA_7';
-  for(const format of ['instagram-post','instagram-story','facebook-post','facebook-story',
-    'x-post','whatsapp-channel','whatsapp-status']){
+  h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
+  const formats=['instagram-post','instagram-story','facebook-post','facebook-story',
+    'x-post','whatsapp-channel','whatsapp-status'];
+  const expectedStem='001_2016-09-09_JYO_ACHYUTANANDA_7',bulks={};
+  for(const format of formats){
     await h.bulkButtons[format].listeners.click();await settle();
-    const bulk=await zipEntries(h.downloadedBlobs.at(-1));
-    h.element('socialCaptionPlatform').value=format;
-    h.element('socialCaptionPlatform').listeners.change();
-    await button.listeners.click();await settle();
-    const one=await zipEntries(h.downloadedBlobs.at(-1));
-    assert.deepEqual([...one.keys()].sort(),[...bulk.keys()].sort(),
-      format+' individual and bulk archive paths must match');
-    for(const key of one.keys())assert.deepEqual(one.get(key),bulk.get(key),
-      format+' must share actual image/caption/report bytes for '+key);
-    assert.ok(one.has('Images/'+expectedStem+'.png'));
-    assert.equal([...one.keys()].filter(name=>name.endsWith('.png')).length,1);
-    assert.equal([...one.keys()].filter(name=>name.endsWith('.txt')).length,
-      format.endsWith('-story')?1:2);
+    bulks[format]=await zipEntries(h.downloadedBlobs.at(-1));
   }
-  assert.equal(writeCount(),0,'Neither mode may mutate saved movie or styling data');
-  assert.equal(button.disabled,false);
-  assert.match(h.element('socialCaptionStatus').textContent,/identical Images\/ and Captions/);
+  h.element('socialCaptionPlatform').value='instagram-post';
+  h.element('socialCaptionPlatform').listeners.change();
+  await h.element('socialDownloadMovieZip').listeners.click();await settle();
+  const outer=await zipEntries(h.downloadedBlobs.at(-1));
+  assert.equal(outer.size,7,'One download must contain seven complete platform ZIPs');
+  const labels=['Instagram_Post','Instagram_Story','Facebook_Post','Facebook_Story','X_Post','WhatsApp_Channel','WhatsApp_Story'];
+  for(let i=0;i<formats.length;i++){
+    const filename=[...outer.keys()].find(name=>name.includes(labels[i]));
+    assert.ok(filename&&filename.endsWith('.zip'),labels[i]+' ZIP must exist');
+    const individual=await zipEntries(new Blob([outer.get(filename)]));
+    const bulk=bulks[formats[i]];
+    assert.deepEqual([...individual.keys()].sort(),[...bulk.keys()].sort());
+    for(const key of individual.keys())assert.deepEqual(individual.get(key),bulk.get(key),
+      formats[i]+' identical to bulk: '+key);
+    assert.ok(individual.has('Images/'+expectedStem+'.png'));
+  }
+  assert.equal(writeCount(),0,'No movie/editorial mutations');
+  assert.equal(h.element('socialDownloadMovieZip').disabled,false);
+  assert.match(h.element('socialCaptionStatus').textContent,/All seven platform ZIPs saved/);
+  // The secondary action still downloads exactly one chosen platform ZIP.
+  h.element('socialCaptionPlatform').value='x-post';h.element('socialCaptionPlatform').listeners.change();
+  await h.element('socialDownloadPlatformZip').listeners.click();await settle();
+  const onlyX=await zipEntries(h.downloadedBlobs.at(-1));
+  assert.deepEqual([...onlyX.keys()].sort(),[...bulks['x-post'].keys()].sort());
+  assert.match(h.element('socialCaptionStatus').textContent,/Selected platform ZIP saved/);
 });
 
 test('WhatsApp Status has its own CTA and tracked movie URL in both individual and bulk ZIPs',async()=>{
@@ -247,7 +256,7 @@ test('WhatsApp Status has its own CTA and tracked movie URL in both individual a
   assert.ok(h.drawnText.includes('FULL REVIEW AVAILABLE ON MY PAGE'),'WhatsApp on-image CTA');
   h.element('socialCaptionPlatform').value='whatsapp-status';
   h.element('socialCaptionPlatform').listeners.change();
-  await h.element('socialDownloadMovieZip').listeners.click();await settle();
+  await h.element('socialDownloadPlatformZip').listeners.click();await settle();
   const single=await zipEntries(h.downloadedBlobs.at(-1));
   for(const key of archive.keys())assert.deepEqual(single.get(key),archive.get(key));
   const facebook=h.drawnText.length;
@@ -377,7 +386,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
   assert.match(ADMIN_HTML,/id="socialDownloadMovieZip"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=26/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=27/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/'whatsapp-status':\{label:'WhatsApp_Story',kind:'story',design:'whatsapp-status'\}/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
@@ -1126,7 +1135,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=26'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=27'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
