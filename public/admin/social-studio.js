@@ -11,7 +11,7 @@
     dlPost: $('socialDownloadPost'), dlStory: $('socialDownloadStory'),
     editingMode: $('socialEditingMode'), language: $('socialLanguage'), rating: $('socialRating'),
     captionPlatform: $('socialCaptionPlatform'),captionText: $('socialCaptionText'),trackedUrl: $('socialTrackedUrl'),
-    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),downloadMovieZip: $('socialDownloadMovieZip'),captionStatus: $('socialCaptionStatus'),
+    copyCaption: $('socialCopyCaption'),copyLink: $('socialCopyLink'),downloadCaptions: $('socialDownloadCaptions'),downloadMovieZip: $('socialDownloadMovieZip'),downloadPlatformZip: $('socialDownloadPlatformZip'),captionStatus: $('socialCaptionStatus'),
     editorialStatus: $('socialEditorialStatus'), saveMovieStyle: $('socialSaveMovieStyle'), saveDefaults: $('socialSaveDefaults'), applyBoth: $('socialApplyBoth'),
     overrideFormat: $('socialOverrideFormat'), resetOverride: $('socialResetOverride'),
     autoFitOnLoad: $('socialAutoFitOnLoad'), recalculateFit: $('socialRecalculateFit'),
@@ -1293,37 +1293,57 @@
   // This invokes the same rendering and archive functions as Download All.
   // A selected movie may have unsaved on-screen styling: use persisted
   // editorial styles consistently with the bulk output, without mutation.
-  async function exportSelectedMovieZip(){
+  // The selected movie uses the very same per-format ZIP construction as bulk.
+  // Main action packs all seven complete format ZIPs into ONE downloadable file.
+  async function exportSelectedMovieZip(selectedOnly=false){
     const review=state.review,format=inputs.captionPlatform.value;
-    if(!review||state.bulkSession||!BULK_FORMATS[format])return;
+    if(!review||state.bulkSession||(selectedOnly&&!BULK_FORMATS[format]))return;
     const zipModule=window.MovieReviewBulkZip;
     if(!zipModule){inputs.captionStatus.textContent='ZIP packager unavailable. Reload Projector Room.';return;}
-    const cfg=BULK_FORMATS[format];
-    if(!state.masters[cfg.kind==='story'?'story':cfg.design]){
-      inputs.captionStatus.textContent='Approved '+cfg.design+' master not loaded. Upload it first.';
+    const formats=selectedOnly?[format]:BULK_FORMAT_KEYS;
+    const missing=[...new Set(formats.map(k=>
+      BULK_FORMATS[k].kind==='story'?'story':BULK_FORMATS[k].design))]
+      .filter(kind=>!state.masters[kind]);
+    if(missing.length){
+      inputs.captionStatus.textContent='Approved master(s) not loaded: '+missing.join(', ')+'.';
       return;
     }
-    const catalog=sortedBulkReviews();
-    const position=catalog.findIndex(row=>Number(row.i)===Number(review.i));
+    const catalog=sortedBulkReviews(),position=catalog.findIndex(row=>Number(row.i)===Number(review.i));
     if(position<0){inputs.captionStatus.textContent='Movie missing from release-order catalogue.';return;}
     inputs.downloadMovieZip.disabled=true;
-    inputs.captionStatus.textContent='Generating '+cfg.label.replaceAll('_',' ')+
-      ' for '+review.t+' using the same export rules as bulk…';
+    inputs.downloadPlatformZip.disabled=true;
+    inputs.captionStatus.textContent='Preparing '+(selectedOnly?BULK_FORMATS[format].label:'all seven platforms')+
+      ' for '+review.t+'…';
     try{
-      const sink=zipModule.memorySink(),writer=new zipModule.ZipWriter(sink);
-      const records={[format]:[]};
-      const matching=catalog[position];
-      // Bulk catalogue supplies the same original movie record and release
-      // rank for both per-movie and catalogue-wide exports.
-      await addBulkMovieToArchives({[format]:writer},matching,position+1,[format],records);
-      await closeFormatArchives([format],{[format]:writer},records,position,position+1,catalog.length);
-      writeBlobToDownload(sink.blob(),'Movie_Reviews_By_Poorna_'+cfg.label+'_Movie_'+
-        bulkStem(matching,position+1)+'.zip');
-      inputs.captionStatus.textContent='One '+cfg.label.replaceAll('_',' ')+
-        ' ZIP saved with the identical Images/ and Captions/ contents used by bulk.';
+      const matching=catalog[position],sinks={},writers={},
+        records=Object.fromEntries(formats.map(k=>[k,[]]));
+      for(const key of formats){
+        sinks[key]=zipModule.memorySink();
+        writers[key]=new zipModule.ZipWriter(sinks[key]);
+      }
+      await addBulkMovieToArchives(writers,matching,position+1,formats,records);
+      await closeFormatArchives(formats,writers,records,position,position+1,catalog.length);
+      const stem=bulkStem(matching,position+1);
+      if(selectedOnly){
+        writeBlobToDownload(sinks[format].blob(),
+          'Movie_Reviews_By_Poorna_'+BULK_FORMATS[format].label+'_Movie_'+stem+'.zip');
+      }else{
+        const outer=zipModule.memorySink(),archive=new zipModule.ZipWriter(outer);
+        for(const key of formats){
+          await archive.add('Movie_Reviews_By_Poorna_'+BULK_FORMATS[key].label+'_'+stem+'.zip',
+            sinks[key].blob());
+        }
+        await archive.close();
+        writeBlobToDownload(outer.blob(),'Movie_Reviews_By_Poorna_'+stem+'_All_Platforms.zip');
+      }
+      inputs.captionStatus.textContent=(selectedOnly?'Selected platform ZIP':'All seven platform ZIPs')+
+        ' saved for '+review.t+'. Same image and caption format as bulk export.';
     }catch(error){
-      inputs.captionStatus.textContent='Selected movie ZIP failed: '+errorMessage(error);
-    }finally{inputs.downloadMovieZip.disabled=false;}
+      inputs.captionStatus.textContent='Movie ZIP export failed: '+errorMessage(error);
+    }finally{
+      inputs.downloadMovieZip.disabled=false;
+      inputs.downloadPlatformZip.disabled=false;
+    }
   }
   function zipName(format,today,from,to,batched){
     return 'Movie_Reviews_By_Poorna_'+BULK_FORMATS[format].label+
@@ -1539,7 +1559,8 @@
   });
   inputs.copyLink.addEventListener('click',()=>copyText(inputs.trackedUrl.value,'Tracked URL copied.'));
   inputs.downloadCaptions.addEventListener('click',downloadCaptions);
-  inputs.downloadMovieZip.addEventListener('click',exportSelectedMovieZip);
+  inputs.downloadMovieZip.addEventListener('click',()=>exportSelectedMovieZip(false));
+  inputs.downloadPlatformZip.addEventListener('click',()=>exportSelectedMovieZip(true));
   inputs.save.addEventListener('click',uploadMasters);
   inputs.dlPost.addEventListener('click',()=>downloadImage('post'));
   inputs.dlStory.addEventListener('click',()=>downloadImage('story'));
