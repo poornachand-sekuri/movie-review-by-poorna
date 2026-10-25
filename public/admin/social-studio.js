@@ -166,8 +166,8 @@
         const proposal=await recommendFit(base);
         if(sequence!==state.seq)return;
         state.sharedDraft=cloneDraft(proposal.draft);
-        state.drafts.post=cloneDraft(proposal.draft);
-        state.drafts.story=cloneDraft(proposal.draft);
+        state.drafts.post=inheritVerdictMarks(cloneDraft(proposal.draft),review,editorial?.verdictMarks);
+        state.drafts.story=inheritVerdictMarks(cloneDraft(proposal.draft),review,editorial?.verdictMarks);
         showFitStatus(proposal.status==='ready'
           ?'Recommended title, MY POV and language fit prepared for Post and Story. Review the preview, then save if you like.'
           :'Automatic preflight: '+proposal.messages.join(' ')+' Review before saving.');
@@ -490,12 +490,38 @@
   }
   // Reviews' saved MY POV letter-range styling is the source for matching
   // promotional copy. Respect explicit per-platform marks and edited wording.
+  // Import review-colour ranges as *defaults*, never replacing a colour
+  // already explicitly chosen for the same promotional characters.
+  // Keep platform typography, sizes, effects, and independently edited copy.
   function inheritVerdictMarks(draft,review,marks){
-    if(!draft||draft.pov!==review.v||draft.styles?.pov?.length||!Array.isArray(marks))return draft;
+    if(!draft||draft.pov!==review.v||!Array.isArray(marks))return draft;
+    const colors=marks.filter(mark=>COLOR_HEX.test(mark.color||'')&&
+      Number.isInteger(mark.start)&&Number.isInteger(mark.end)&&
+      mark.start>=0&&mark.end>mark.start&&mark.end<=draft.pov.length);
+    if(!colors.length)return draft;
     draft.styles=draft.styles||{title:[],pov:[]};
-    draft.styles.pov=marks.filter(mark=>Number.isInteger(mark.start)&&
-      Number.isInteger(mark.end)&&mark.start>=0&&mark.end>mark.start&&mark.end<=draft.pov.length)
-      .map(mark=>({...mark}));
+    const original=Array.isArray(draft.styles.pov)?draft.styles.pov:[];
+    // Split at all colour and existing-style boundaries. Adjacent styled
+    // characters stay intact; no unrequested font change is introduced.
+    const points=new Set([0,draft.pov.length]);
+    for(const mark of [...original,...colors]){points.add(mark.start);points.add(mark.end);}
+    const bounds=[...points].sort((a,b)=>a-b),out=[];
+    for(let i=1;i<bounds.length;i++){
+      const a=bounds[i-1],z=bounds[i];if(z<=a)continue;
+      const applied=Object.assign({},...original.filter(m=>m.start<=a&&m.end>=z));
+      const inherited=colors.filter(m=>m.start<=a&&m.end>=z).at(-1);
+      if(inherited&&!COLOR_HEX.test(applied.color||''))applied.color=inherited.color;
+      if(Object.keys(applied).some(key=>key!=='start'&&key!=='end'))
+        out.push({...applied,start:a,end:z});
+    }
+    // Collapse identical neighboring styles to prevent overly fragmented
+    // drafts and keep the existing on-site rich text editor responsive.
+    draft.styles.pov=out.reduce((acc,mark)=>{
+      const last=acc.at(-1);
+      if(last&&last.end===mark.start&&JSON.stringify({...last,start:0,end:0})===
+        JSON.stringify({...mark,start:0,end:0})){last.end=mark.end;return acc;}
+      acc.push(mark);return acc;
+    },[]);
     return draft;
   }
   function persistDraft(){
