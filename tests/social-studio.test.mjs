@@ -217,6 +217,16 @@ test('Reviews editor supports character-level size/font/colour, shares POV marks
   assert.match(STUDIO_JS,/draft\.pov!==review\.v/);
 });
 
+test('MY POV colour defaults remain inherited while existing promo colours stay editable',()=>{
+  const html=ADMIN_HTML;
+  assert.equal((html.match(/data-review-color=/g)||[]).length,20);
+  assert.equal((html.match(/data-body-color=/g)||[]).length,20);
+  assert.match(STUDIO_JS,/if\(inherited&&!COLOR_HEX\.test\(applied\.color\|\|''\)\)applied\.color=inherited\.color/);
+  assert.match(STUDIO_JS,/state\.drafts\.post=inheritVerdictMarks\(cloneDraft\(proposal\.draft\)/);
+  assert.match(STUDIO_JS,/post:inheritVerdictMarks\(cloneDraft\(saved\.post\|\|base\)/);
+  assert.match(STUDIO_JS,/story:inheritVerdictMarks\(cloneDraft\(saved\.story\|\|base\)/);
+});
+
 test('Download This Movie ZIP contains all seven platform ZIPs with bulk-identical content',async()=>{
   const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
     v:'A short, punchy movie opinion.',l:'Telugu',r:4.25,
@@ -404,7 +414,7 @@ test('Seven downloadable format buttons and standalone bulk-all button are wired
     assert.ok(ADMIN_HTML.includes('data-bulk-format="'+format+'"'),format+' ZIP button');
   assert.match(ADMIN_HTML,/id="socialBulkAll"/);
   assert.match(ADMIN_HTML,/id="socialDownloadMovieZip"/);
-  assert.match(ADMIN_HTML,/social-studio\.js\?v=27/);
+  assert.match(ADMIN_HTML,/social-studio\.js\?v=28/);
   assert.match(STUDIO_JS,/const BULK_FORMATS=Object\.freeze/);
   assert.match(STUDIO_JS,/'whatsapp-status':\{label:'WhatsApp_Story',kind:'story',design:'whatsapp-status'\}/);
   assert.match(STUDIO_JS,/function sortedBulkReviews\(\)/);
@@ -1153,7 +1163,7 @@ test('Social Studio uses branded, accessible icon links for all four official ac
   assert.ok(ADMIN_HTML.includes('https://x.com/reviewbypoorna'));
   assert.ok(ADMIN_HTML.includes('https://whatsapp.com/channel/'));
   assert.ok(ADMIN_HTML.includes('social-studio.css?v=11'));
-  assert.ok(ADMIN_HTML.includes('social-studio.js?v=27'));
+  assert.ok(ADMIN_HTML.includes('social-studio.js?v=28'));
   assert.ok(ADMIN_HTML.includes('social-rich-editor.js?v=4'));
 
 });
