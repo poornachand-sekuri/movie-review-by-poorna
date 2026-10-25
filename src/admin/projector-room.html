@@ -174,7 +174,7 @@
                       <button type="button" data-verdict-action="bold"><b>B</b></button>
                       <button type="button" data-verdict-action="italic"><i>I</i></button>
                       <button type="button" data-verdict-action="underline"><u>U</u></button>
-                      <input type="number" id="verdictSelectionSize" value="32" min="10" max="100" aria-label="Selected verdict text size" title="Select letters, words or paragraphs first">
+                      <label class="editorial-selection-label">SELECTED SIZE <input type="number" id="verdictSelectionSize" value="32" min="10" max="100" aria-label="Selected verdict text size" title="Select letters, words or paragraphs first"></label>
                       <span class="editorial-colors" aria-label="Quick verdict colours"><button type="button" data-review-color="#F1F1F1" style="color:#F1F1F1;text-shadow:0 0 1px #888" aria-label="Silver">●</button><button type="button" data-review-color="#F7010E" style="color:#F7010E;text-shadow:0 0 1px #888" aria-label="Red">●</button><button type="button" data-review-color="#FFBF47" style="color:#FFBF47;text-shadow:0 0 1px #888" aria-label="Gold">●</button><button type="button" data-review-color="#060505" style="color:#060505;text-shadow:0 0 1px #888" aria-label="Black">●</button></span>
                       <input type="color" id="verdictColor" value="#FFE2B6" aria-label="Custom verdict text colour">
                       <input id="verdictHex" type="text" placeholder="#F1F1F1" maxlength="7" aria-label="Custom verdict HEX colour">
@@ -183,7 +183,7 @@
                     </div>
                     <div id="verdictRich" contenteditable="true" class="editorial-verdict-rich" role="textbox" aria-multiline="true" aria-label="My POV or Popcorn Verdict" data-placeholder="Write your popcorn verdict…"></div>
                     <textarea id="verdict" rows="4" maxlength="260" class="editorial-hidden-source" aria-hidden="true" tabindex="-1"></textarea>
-                    <small><span id="verdictCount">0</span>/260 · Select words to highlight; original wording stays unchanged.</small>
+                    <small><span id="verdictCount">0</span>/260 · Select any letters, words, lines or paragraphs to style them; original wording stays unchanged.</small>
                   </div>
                   <label class="field"><span>Short Excerpt</span><textarea id="excerpt" rows="5" maxlength="700"></textarea><small><span id="excerptCount">0</span>/700</small></label>
                 </section>
@@ -207,7 +207,7 @@
                     <span class="editorial-colors" aria-label="Quick Full Review colours"><button type="button" data-body-color="#F1F1F1" style="color:#F1F1F1;text-shadow:0 0 1px #888">●</button><button type="button" data-body-color="#F7010E" style="color:#F7010E;text-shadow:0 0 1px #888">●</button><button type="button" data-body-color="#FFBF47" style="color:#FFBF47;text-shadow:0 0 1px #888">●</button><button type="button" data-body-color="#060505" style="color:#060505;text-shadow:0 0 1px #888">●</button></span>
                     <input id="bodyColor" type="color" value="#F1EDE8" aria-label="Custom full review colour">
                     <input id="bodyHex" type="text" placeholder="#F1F1F1" maxlength="7" aria-label="Full review HEX colour">
-                    <input id="bodySelectionSize" type="number" min="10" max="100" value="18" aria-label="Selected Full Review text size">
+                    <label class="editorial-selection-label">SELECTED SIZE <input id="bodySelectionSize" type="number" min="10" max="100" value="18" aria-label="Selected Full Review text size"></label>
                     <input id="bodySize" type="number" value="16" min="10" max="30" aria-label="Full review size (px)">
                     <button type="button" id="bodySaveDefault">SAVE DEFAULT</button>
                   </div>
