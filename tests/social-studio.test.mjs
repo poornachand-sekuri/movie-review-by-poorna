@@ -199,6 +199,24 @@ test('Each of seven format-specific ZIPs has ONLY Images/ and Captions/ with mat
   assert.equal(writeCount(),0,'No review or social account writes');
 });
 
+test('Reviews editor supports character-level size/font/colour, shares POV marks with public pages and Studio',()=>{
+  const editor=fs.readFileSync(path.join(ROOT,'public/admin/review-editorial.js'),'utf8');
+  const publicEditorial=fs.readFileSync(path.join(ROOT,'src/lib/data/editorial.ts'),'utf8');
+  const lounge=fs.readFileSync(path.join(ROOT,'src/pages/index.astro'),'utf8');
+  const auditorium=fs.readFileSync(path.join(ROOT,'src/pages/review/[slug].astro'),'utf8');
+  for(const id of ['verdictSelectionSize','bodySelectionSize','verdictHex','bodyHex','data-review-color','data-body-color'])
+    assert.ok(ADMIN_HTML.includes(id),id+' quick typography control exists');
+  assert.match(editor,/apply\(\{size\}\)/);
+  assert.match(editor,/styleBodySelected\('fontSize',size\+'px'\)/);
+  assert.match(editor,/restoreSelection\(start,end\)/);
+  assert.match(publicEditorial,/font-size:\s*'\+Math\.max\(10,Math\.min\(100,style\.size\)\)/);
+  assert.match(lounge,/renderMarkedVerdict/);
+  assert.match(auditorium,/renderMarkedVerdict/);
+  assert.match(STUDIO_JS,/function inheritVerdictMarks\(/);
+  assert.match(STUDIO_JS,/editorial\?\.verdictMarks/);
+  assert.match(STUDIO_JS,/draft\.pov!==review\.v/);
+});
+
 test('Download This Movie ZIP contains all seven platform ZIPs with bulk-identical content',async()=>{
   const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
     v:'A short, punchy movie opinion.',l:'Telugu',r:4.25,
