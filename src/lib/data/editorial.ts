@@ -39,7 +39,7 @@ export function sanitizeStyle(value:unknown,key:EditorialKey):EditorialStyle {
 export function sanitizeMarks(value:unknown,len:number):EditorialMark[] {
   if(!Array.isArray(value))return [];
   const result:EditorialMark[]=[];
-  for(const item of value.slice(0,120)){
+  for(const item of value.slice(0,300)){
     if(!isObj(item))continue;
     const start=Number(item.start),end=Number(item.end);
     if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end<=start||end>len)continue;
