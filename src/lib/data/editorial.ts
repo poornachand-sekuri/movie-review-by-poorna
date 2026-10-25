@@ -143,6 +143,7 @@ export function renderMarkedVerdict(text:string,marks:EditorialMark[]):string {
       style.weight&&WEIGHTS.has(style.weight)?'font-weight:'+style.weight:'',
       style.italic?'font-style:italic':'',style.underline?'text-decoration:underline':'',
       style.font&&EDITORIAL_FONTS.some(x=>x===style.font)?'font-family:"'+style.font+'"':'',
+      typeof style.size==='number'&&Number.isFinite(style.size)?'font-size:'+Math.max(10,Math.min(100,style.size))+'px':'',
     ].filter(Boolean).join(';');
     html+=css?'<span style="'+css+'">'+chunk+'</span>':chunk;
   }
