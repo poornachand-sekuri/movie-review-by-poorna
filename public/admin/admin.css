@@ -15,3 +15,8 @@
 .rating-precision input{width:90px;min-width:0;text-align:center;background:#18130d;border:1px solid #4a3722;color:#f1f1f1;border-radius:6px;padding:8px}
 .rating-precision button{background:#231a11;border:1px solid #68492b;color:#f1f1f1;padding:7px 12px;border-radius:6px;cursor:pointer}
 .rating-precision small{flex-basis:100%;text-align:left;color:#c1a57c}
+
+/* Compact, recognisable palette for both Reviews rich-text toolbars. */
+.editorial-colors--expanded{display:inline-flex;flex-wrap:wrap;align-items:center;gap:5px;max-width:350px;padding:5px;border:1px solid #7775;border-radius:9px}
+.editorial-colors--expanded button{display:inline-block;flex:0 0 22px;width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;padding:0!important;border:1px solid #999!important;border-radius:6px;cursor:pointer;box-shadow:0 0 0 1px #0008}
+.editorial-colors--expanded button:hover,.editorial-colors--expanded button:focus-visible{outline:2px solid #fff;outline-offset:2px;transform:scale(1.08)}
