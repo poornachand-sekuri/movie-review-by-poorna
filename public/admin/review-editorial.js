@@ -42,6 +42,7 @@
       if(style.color&&validHex.test(style.color))span.style.color=style.color;
       if(style.font)span.style.fontFamily='"'+String(style.font).replace(/[^a-z0-9 ]/gi,'')+'"';
       if(style.weight)span.style.fontWeight=style.weight;
+      if(Number.isFinite(style.size))span.style.fontSize=Math.max(10,Math.min(100,style.size))+'px';
       if(style.italic)span.style.fontStyle='italic';
       if(style.underline)span.style.textDecoration='underline';
       fragment.appendChild(span);
@@ -124,7 +125,20 @@
     if(cmd==='italic')apply({italic:!current.italic});
     if(cmd==='underline')apply({underline:!current.underline});
   }));
-  color.addEventListener('change',()=>apply({color:color.value}));
+  color.addEventListener('input',()=>apply({color:color.value}));
+  $('verdictHex').addEventListener('change',()=>{
+    const value=$('verdictHex').value.trim();
+    if(validHex.test(value)){color.value=value;apply({color:value});}
+  });
+  document.querySelectorAll('[data-review-color]').forEach(button=>button.addEventListener('click',()=>{
+    color.value=button.dataset.reviewColor;
+    $('verdictHex').value=color.value;
+    apply({color:color.value});
+  }));
+  $('verdictSelectionSize').addEventListener('change',()=>{
+    const size=Number($('verdictSelectionSize').value);
+    if(Number.isFinite(size)&&size>=10&&size<=100)apply({size});
+  });
   font.addEventListener('change',()=>apply({font:font.value}));
   function setReview(record){
     const ticket=++version;
@@ -190,6 +204,17 @@
     body.dispatchEvent(new Event('input',{bubbles:true}));
   }
   $('bodyFont').addEventListener('change',()=>styleBodySelected('fontFamily','"'+$('bodyFont').value+'"'));
-  $('bodyColor').addEventListener('change',()=>styleBodySelected('color',$('bodyColor').value));
+  $('bodyColor').addEventListener('input',()=>styleBodySelected('color',$('bodyColor').value));
+  $('bodySelectionSize').addEventListener('change',()=>{
+    const size=Number($('bodySelectionSize').value);
+    if(Number.isFinite(size)&&size>=10&&size<=100)styleBodySelected('fontSize',size+'px');
+  });
+  $('bodyHex').addEventListener('change',()=>{
+    const value=$('bodyHex').value.trim();
+    if(validHex.test(value)){$('bodyColor').value=value;styleBodySelected('color',value);}
+  });
+  document.querySelectorAll('[data-body-color]').forEach(button=>button.addEventListener('click',()=>{
+    const value=button.dataset.bodyColor;$('bodyColor').value=value;styleBodySelected('color',value);
+  }));
   window.ReviewEditorial={setReview,setNew,saveMarks,getMarks:()=>clone(marks)};
 })();
