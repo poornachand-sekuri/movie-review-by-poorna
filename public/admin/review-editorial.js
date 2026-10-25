@@ -100,6 +100,29 @@
   });
   editor.addEventListener('mouseup',()=>{savedSelection=selected();});
   editor.addEventListener('keyup',()=>{savedSelection=selected();});
+  // Rebuilds styled spans without discarding the user's selection, so font,
+  // size, colour and emphasis can all be applied to the same exact characters.
+  function restoreSelection(start,end){
+    if(!window.getSelection||!document.createRange||!editor.childNodes)return;
+    const locate=offset=>{
+      let used=0,found=null;
+      const walk=node=>{
+        if(found)return;
+        if(node.nodeType===3){
+          const len=node.textContent.length;
+          if(used+len>=offset){found={node,offset:offset-used};return;}
+          used+=len;return;
+        }
+        for(const child of node.childNodes||[])walk(child);
+      };
+      walk(editor);return found;
+    };
+    const a=locate(start),z=locate(end);
+    if(!a||!z)return;
+    const range=document.createRange();
+    range.setStart(a.node,a.offset);range.setEnd(z.node,z.offset);
+    const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+  }
   function apply(patch,clear=false){
     const value=source.value;if(!value)return;
     const selection=selected()||savedSelection;
@@ -114,7 +137,7 @@
       const style=inside?(clear?{}:{...styleAt(a,b),...patch}):styleAt(a,b);
       if(Object.keys(style).length)out.push({start:a,end:b,...style});
     }
-    marks=out;render();savedSelection=null;
+    marks=out;render();restoreSelection(start,end);savedSelection={start,end};
   }
   document.querySelectorAll('[data-verdict-action]').forEach(button=>button.addEventListener('click',()=>{
     const cmd=button.dataset.verdictAction;
