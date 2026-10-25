@@ -169,18 +169,21 @@
                   <div class="field">
                     <span>My POV / Popcorn Verdict</span>
                     <div class="editorial-review-controls" role="toolbar" aria-label="Popcorn verdict formatting">
-                      <select id="verdictFont" aria-label="Verdict font family"><option>Barlow Condensed</option><option>Inter</option><option>Oswald</option><option>Cinzel</option><option>Anton</option><option>Montserrat</option><option>Poppins</option><option>Playfair Display</option></select>
+                      <select id="verdictFont" aria-label="Verdict font family"><option>Barlow Condensed</option><option>Inter</option><option>Oswald</option><option>Cinzel</option><option>Anton</option><option>Montserrat</option><option>Poppins</option><option>Playfair Display</option><option>Source Serif 4</option><option>Bebas Neue</option><option>Rajdhani</option><option>Merriweather</option></select>
                       <input type="number" id="verdictSize" value="48" min="20" max="48" step="1" aria-label="Verdict maximum font size (px)" title="Preferred public verdict size (px)">
                       <button type="button" data-verdict-action="bold"><b>B</b></button>
                       <button type="button" data-verdict-action="italic"><i>I</i></button>
                       <button type="button" data-verdict-action="underline"><u>U</u></button>
-                      <input type="color" id="verdictColor" value="#FFE2B6" aria-label="Verdict text color">
+                      <label class="editorial-selection-label">SELECTED SIZE <input type="number" id="verdictSelectionSize" value="32" min="10" max="100" aria-label="Selected verdict text size" title="Select letters, words or paragraphs first"></label>
+                      <span class="editorial-colors" aria-label="Quick verdict colours"><button type="button" data-review-color="#F1F1F1" style="color:#F1F1F1;text-shadow:0 0 1px #888" aria-label="Silver">●</button><button type="button" data-review-color="#F7010E" style="color:#F7010E;text-shadow:0 0 1px #888" aria-label="Red">●</button><button type="button" data-review-color="#FFBF47" style="color:#FFBF47;text-shadow:0 0 1px #888" aria-label="Gold">●</button><button type="button" data-review-color="#060505" style="color:#060505;text-shadow:0 0 1px #888" aria-label="Black">●</button></span>
+                      <input type="color" id="verdictColor" value="#FFE2B6" aria-label="Custom verdict text colour">
+                      <input id="verdictHex" type="text" placeholder="#F1F1F1" maxlength="7" aria-label="Custom verdict HEX colour">
                       <button type="button" data-verdict-action="clear">CLEAR STYLE</button>
                       <button type="button" id="verdictSaveDefault">SAVE DEFAULT</button>
                     </div>
                     <div id="verdictRich" contenteditable="true" class="editorial-verdict-rich" role="textbox" aria-multiline="true" aria-label="My POV or Popcorn Verdict" data-placeholder="Write your popcorn verdict…"></div>
                     <textarea id="verdict" rows="4" maxlength="260" class="editorial-hidden-source" aria-hidden="true" tabindex="-1"></textarea>
-                    <small><span id="verdictCount">0</span>/260 · Select words to highlight; original wording stays unchanged.</small>
+                    <small><span id="verdictCount">0</span>/260 · Select any letters, words, lines or paragraphs to style them; original wording stays unchanged.</small>
                   </div>
                   <label class="field"><span>Short Excerpt</span><textarea id="excerpt" rows="5" maxlength="700"></textarea><small><span id="excerptCount">0</span>/700</small></label>
                 </section>
@@ -200,8 +203,11 @@
                   <div class="section-title-row"><h3>Full Review</h3><span class="hint">Displayed inside the Auditorium theater screen.</span></div>
                   <div class="editor-toolbar" aria-label="Review formatting toolbar">
                     <button type="button" data-cmd="bold"><b>B</b></button><button type="button" data-cmd="italic"><i>I</i></button><button type="button" data-cmd="formatBlock" data-value="h2">H2</button><button type="button" data-cmd="insertUnorderedList">• LIST</button><button type="button" data-cmd="insertOrderedList">1. LIST</button><button type="button" id="linkBtn">LINK</button><button type="button" data-cmd="removeFormat">CLEAR FORMAT</button>
-                    <select id="bodyFont" aria-label="Full review font family"><option value="Inter">Inter</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair Display</option><option value="Merriweather">Merriweather</option><option value="Source Serif 4">Source Serif 4</option></select>
-                    <input id="bodyColor" type="color" value="#F1EDE8" aria-label="Review text color">
+                    <select id="bodyFont" aria-label="Full review font family"><option value="Inter">Inter</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair Display</option><option value="Merriweather">Merriweather</option><option value="Source Serif 4">Source Serif 4</option><option value="Oswald">Oswald</option><option value="Cinzel">Cinzel</option><option value="Anton">Anton</option><option value="Barlow Condensed">Barlow Condensed</option><option value="Bebas Neue">Bebas Neue</option><option value="Rajdhani">Rajdhani</option></select>
+                    <span class="editorial-colors" aria-label="Quick Full Review colours"><button type="button" data-body-color="#F1F1F1" style="color:#F1F1F1;text-shadow:0 0 1px #888">●</button><button type="button" data-body-color="#F7010E" style="color:#F7010E;text-shadow:0 0 1px #888">●</button><button type="button" data-body-color="#FFBF47" style="color:#FFBF47;text-shadow:0 0 1px #888">●</button><button type="button" data-body-color="#060505" style="color:#060505;text-shadow:0 0 1px #888">●</button></span>
+                    <input id="bodyColor" type="color" value="#F1EDE8" aria-label="Custom full review colour">
+                    <input id="bodyHex" type="text" placeholder="#F1F1F1" maxlength="7" aria-label="Full review HEX colour">
+                    <label class="editorial-selection-label">SELECTED SIZE <input id="bodySelectionSize" type="number" min="10" max="100" value="18" aria-label="Selected Full Review text size"></label>
                     <input id="bodySize" type="number" value="16" min="10" max="30" aria-label="Full review size (px)">
                     <button type="button" id="bodySaveDefault">SAVE DEFAULT</button>
                   </div>
@@ -430,7 +436,7 @@
 
   <dialog id="confirmDialog" class="confirm-dialog"><form method="dialog"><h3 id="confirmTitle">Confirm action?</h3><p id="confirmText"></p><div><button value="cancel" class="ghost">CANCEL</button><button value="confirm" class="danger">CONFIRM</button></div></form></dialog>
   <link rel="stylesheet" href="/admin/social-studio.css?v=11">
-  <script src="/admin/review-editorial.js?v=1" defer></script>
+  <script src="/admin/review-editorial.js?v=2" defer></script>
   <script src="/admin/admin.js?v=20261019-release-order" defer></script>
   <script src="/admin/social-bulk-zip.js?v=1" defer></script>
   <script src="/admin/social-studio.js?v=27" defer></script>
