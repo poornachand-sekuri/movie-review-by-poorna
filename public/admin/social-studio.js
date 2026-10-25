@@ -159,8 +159,8 @@
       const base=editorial?.drafts?.shared||defaultDraft(review);
       state.sharedDraft=cloneDraft(base);
       state.savedOverrides=editorial?.drafts||{};
-      state.drafts.post=cloneDraft(editorial?.drafts?.post||base);
-      state.drafts.story=cloneDraft(editorial?.drafts?.story||base);
+      state.drafts.post=inheritVerdictMarks(cloneDraft(editorial?.drafts?.post||base),review,editorial?.verdictMarks);
+      state.drafts.story=inheritVerdictMarks(cloneDraft(editorial?.drafts?.story||base),review,editorial?.verdictMarks);
       const protectedStyles=Object.values(editorial?.drafts||{}).some(Boolean);
       if(inputs.autoFitOnLoad?.checked && !protectedStyles){
         const proposal=await recommendFit(base);
@@ -487,6 +487,16 @@
       povStyle:cloneDraft(preset['social.pov']||{ family:'Inter',weight:'600',align:'left',color:'#f1f1f1',size:48,auto:true,line:1.22 }),
       languageStyle:cloneDraft(preset['social.language']||{family:'Oswald',size:38,color:'#f1f1f1',auto:true})
     };
+  }
+  // Reviews' saved MY POV letter-range styling is the source for matching
+  // promotional copy. Respect explicit per-platform marks and edited wording.
+  function inheritVerdictMarks(draft,review,marks){
+    if(!draft||draft.pov!==review.v||draft.styles?.pov?.length||!Array.isArray(marks))return draft;
+    draft.styles=draft.styles||{title:[],pov:[]};
+    draft.styles.pov=marks.filter(mark=>Number.isInteger(mark.start)&&
+      Number.isInteger(mark.end)&&mark.start>=0&&mark.end>mark.start&&mark.end<=draft.pov.length)
+      .map(mark=>({...mark}));
+    return draft;
   }
   function persistDraft(){
     const draft=state.drafts[state.format];
@@ -1191,7 +1201,10 @@
         if(fit.status==='review')notes.push(...fit.messages);
       }catch(error){notes.push('Auto-fit failed: '+errorMessage(error));}
     }
-    const drafts={post:cloneDraft(saved.post||base),story:cloneDraft(saved.story||base)};
+    const drafts={
+      post:inheritVerdictMarks(cloneDraft(saved.post||base),review,editorial?.verdictMarks),
+      story:inheritVerdictMarks(cloneDraft(saved.story||base),review,editorial?.verdictMarks)
+    };
     let poster=null;
     if(!review.m)notes.push('Original poster missing.');
     else try{poster=await loadPoster(review.m);}
