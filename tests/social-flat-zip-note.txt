@@ -1,1 +1,0 @@
-Flat social ZIP regression tests are maintained in tests/social-studio.test.mjs.
