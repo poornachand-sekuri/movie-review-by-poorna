@@ -227,45 +227,29 @@ test('MY POV colour defaults remain inherited while existing promo colours stay 
   assert.match(STUDIO_JS,/story:inheritVerdictMarks\(cloneDraft\(saved\.story\|\|base\)/);
 });
 
-test('Download This Movie ZIP contains all seven platform ZIPs with bulk-identical content',async()=>{
+test('Download This Movie ZIP contains flat platform image/caption pairs',async()=>{
   const reviews=[{i:7,t:'JYO ACHYUTANANDA',s:'jyo-achyutananda',rd:'2016-09-09',
     v:'A short, punchy movie opinion.',l:'Telugu',r:4.25,
     m:'https://assets.moviereviewbypoorna.com/reviews/jyo/poster.jpg'}];
   const {h,writeCount}=bulkFixture(reviews);
   h.callbacks.get('social-studio:open')();await settle();
   h.element('socialMovie').value='7';await h.element('socialMovie').listeners.change();await settle();
-  const formats=['instagram-post','instagram-story','facebook-post','facebook-story',
-    'x-post','whatsapp-channel','whatsapp-status'];
-  const expectedStem='001_2016-09-09_JYO_ACHYUTANANDA_7',bulks={};
-  for(const format of formats){
-    await h.bulkButtons[format].listeners.click();await settle();
-    bulks[format]=await zipEntries(h.downloadedBlobs.at(-1));
-  }
-  h.element('socialCaptionPlatform').value='instagram-post';
-  h.element('socialCaptionPlatform').listeners.change();
   await h.element('socialDownloadMovieZip').listeners.click();await settle();
-  const outer=await zipEntries(h.downloadedBlobs.at(-1));
-  assert.equal(outer.size,7,'One download must contain seven complete platform ZIPs');
-  const labels=['Instagram_Post','Instagram_Story','Facebook_Post','Facebook_Story','X_Post','WhatsApp_Channel','WhatsApp_Story'];
-  for(let i=0;i<formats.length;i++){
-    const filename=[...outer.keys()].find(name=>name.includes(labels[i]));
-    assert.ok(filename&&filename.endsWith('.zip'),labels[i]+' ZIP must exist');
-    const individual=await zipEntries(new Blob([outer.get(filename)]));
-    const bulk=bulks[formats[i]];
-    assert.deepEqual([...individual.keys()].sort(),[...bulk.keys()].sort());
-    for(const key of individual.keys())assert.deepEqual(individual.get(key),bulk.get(key),
-      formats[i]+' identical to bulk: '+key);
-    assert.ok(individual.has('Images/'+expectedStem+'.png'));
+  const files=await zipEntries(h.downloadedBlobs.at(-1));
+  assert.equal(files.size,14);
+  assert.ok([...files.keys()].every(name=>!name.includes('/')&&!name.endsWith('.zip')));
+  for(const label of ['Instagram_Post','Instagram_Story','Facebook_Post','Facebook_Story',
+    'X_Post','WhatsApp_Channel','WhatsApp_Story']){
+    assert.ok([...files.keys()].some(name=>name.includes(label)&&name.endsWith('.png')));
+    assert.ok([...files.keys()].some(name=>name.includes(label)&&name.endsWith('.txt')));
   }
-  assert.equal(writeCount(),0,'No movie/editorial mutations');
-  assert.equal(h.element('socialDownloadMovieZip').disabled,false);
-  assert.match(h.element('socialCaptionStatus').textContent,/All seven platform ZIPs saved/);
-  // The secondary action still downloads exactly one chosen platform ZIP.
+  assert.equal(writeCount(),0);
+  assert.match(h.element('socialCaptionStatus').textContent,/no folders or nested ZIPs/);
   h.element('socialCaptionPlatform').value='x-post';h.element('socialCaptionPlatform').listeners.change();
   await h.element('socialDownloadPlatformZip').listeners.click();await settle();
   const onlyX=await zipEntries(h.downloadedBlobs.at(-1));
-  assert.deepEqual([...onlyX.keys()].sort(),[...bulks['x-post'].keys()].sort());
-  assert.match(h.element('socialCaptionStatus').textContent,/Selected platform ZIP saved/);
+  assert.equal(onlyX.size,2);
+  assert.ok([...onlyX.keys()].every(name=>name.includes('X_Post')));
 });
 
 test('WhatsApp Status has its own CTA and tracked movie URL in both individual and bulk ZIPs',async()=>{
@@ -336,75 +320,38 @@ test('Partial image failures omit orphan captions and retain the reason in the e
   assert.match(h.element('socialBulkStatus').textContent,/1 image\(s\) need review/);
 });
 
-test('One Download All click bundles seven independently usable ZIPs on fallback browsers',async()=>{
+test('Download All fallback creates one ZIP with flat files in movie folders',async()=>{
   const reviews=[{i:9,t:'A Movie',s:'a-movie',rd:'2000-01-01',d:'2000-02-02',
     v:'Enjoyable.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'}];
   const {h,writeCount}=bulkFixture(reviews);
   h.callbacks.get('social-studio:open')();await settle();
   await h.element('socialBulkAll').listeners.click();await settle();
-  assert.equal(h.downloadedBlobs.length,1,'Single outer download avoids blocked multiple downloads');
+  assert.equal(h.downloadedBlobs.length,1);
   const archive=await zipEntries(h.downloadedBlobs[0]);
-  assert.equal(archive.size,7,'Seven nested platform ZIPs');
-  const names=[...archive.keys()];
-  for(const label of ['Instagram_Post','Instagram_Story','Facebook_Post','Facebook_Story',
-    'X_Post','WhatsApp_Channel','WhatsApp_Story']){
-    const key=names.find(name=>name.includes(label));
-    assert.ok(key,'Missing '+label+' ZIP');
-    const nested=await zipEntries(new Blob([archive.get(key)]));
-    assert.ok(nested.has('Images/001_2000-01-01_A_Movie_9.png'),label+' image');
-    if(label==='Instagram_Story'||label==='Facebook_Story'){
-      assert.ok(nested.has('Captions/000_STORY_LINKS.txt'),label+' consolidated links');
-      assert.equal([...nested.keys()].filter(k=>k.endsWith('.txt')).length,1);
-    }else assert.ok(nested.has('Captions/001_2000-01-01_A_Movie_9.txt'),label+' caption');
-  }
+  assert.equal(archive.size,14);
+  assert.ok([...archive.keys()].every(name=>name.startsWith('001_2000-01-01_A_Movie_9/')));
+  assert.ok([...archive.keys()].every(name=>!name.endsWith('.zip')));
   assert.equal(writeCount(),0);
 });
 
-test('Download All streams seven standalone ZIP files into a chosen folder when supported',async()=>{
-  const reviews=[{i:7,t:'NEWEST',s:'newest',rd:'2026-10-18',d:'2026-10-18',
-    v:'Recent.',l:'Telugu',r:4,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'},
-    {i:4,t:'OLDEST',s:'oldest',rd:'2001-01-01',d:'2026-10-19',
-    v:'Classic.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'},
-    {i:6,t:'MIDDLE MOVIE',s:'middle',rd:'2016-05-01',d:'2026-10-17',
-    v:'Good.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'},
-    {i:2,t:'UNKNOWN',s:'unknown',rd:'',d:'2026-10-19',
-    v:'No release info.',l:'Telugu',r:2,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'}
+test('Download All streams one ZIP with movie folders when file picker is supported',async()=>{
+  const reviews=[
+    {i:7,t:'NEWEST',s:'newest',rd:'2026-10-18',d:'2026-10-18',v:'Recent.',l:'Telugu',r:4,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'},
+    {i:4,t:'OLDEST',s:'oldest',rd:'2001-01-01',d:'2026-10-19',v:'Classic.',l:'Telugu',r:3,m:'https://assets.moviereviewbypoorna.com/reviews/test/poster.jpg'}
   ];
   const {h,writeCount}=bulkFixture(reviews);
-  // Enable folder picker explicitly for a small fixture too.
-  const saved=h.savedDirectoryFiles;
-  h.window.showDirectoryPicker=async()=>({
-    async getFileHandle(name){return {async createWritable(){
-      const chunks=[];
-      return {async write(bytes){chunks.push(bytes);},
-        async close(){saved.set(name,new Blob(chunks,{type:'application/zip'}));}};}};}
-  });
+  let saved;
+  h.window.showSaveFilePicker=async()=>({async createWritable(){
+    const chunks=[];
+    return {async write(bytes){chunks.push(bytes);},async close(){saved=new Blob(chunks,{type:'application/zip'});}};
+  }});
   h.callbacks.get('social-studio:open')();await settle();
   await h.element('socialBulkAll').listeners.click();await settle();
-  assert.equal(saved.size,7,'Seven individual ZIPs should be created with one folder selection');
-  assert.equal(h.downloadedBlobs.length,0,'Native folder selection does not trigger seven browser downloads');
-  for(const archive of saved.values()){
-    const entries=await zipEntries(archive);
-    const paths=[...entries.keys()].filter(name=>name.startsWith('Images/'));
-    assert.deepEqual(paths,[
-      'Images/001_date-not-set_UNKNOWN_2.png',
-      'Images/002_2001-01-01_OLDEST_4.png',
-      'Images/003_2016-05-01_MIDDLE_MOVIE_6.png',
-      'Images/004_2026-10-18_NEWEST_7.png'
-    ],'File upload order must be oldest-to-newest, unknown date first');
-    for(const image of paths){
-      const isStory=[...entries.keys()].includes('Captions/000_STORY_LINKS.txt');
-      if(isStory){
-        const links=new TextDecoder().decode(entries.get('Captions/000_STORY_LINKS.txt'));
-        assert.ok(links.includes(image.split('/')[1].split('_').slice(2,-1).join('_').replaceAll('_',' ')) ||
-          links.includes('STICKER TEXT:'),'Story links index required');
-        assert.equal([...entries.keys()].filter(k=>k.endsWith('.txt')).length,1);
-      }else{
-        const caption=image.replace('Images/','Captions/').replace(/\.png$/,'.txt');
-        assert.ok(entries.has(caption),'Matching caption required for '+image);
-      }
-    }
-  }
+  assert.ok(saved);
+  const entries=await zipEntries(saved);
+  assert.equal(entries.size,28);
+  assert.ok([...entries.keys()][0].startsWith('001_2001-01-01_OLDEST_4/'));
+  assert.ok([...entries.keys()].at(-1).startsWith('002_2026-10-18_NEWEST_7/'));
   assert.equal(writeCount(),0);
 });
 
