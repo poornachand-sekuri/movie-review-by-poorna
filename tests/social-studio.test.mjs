@@ -270,7 +270,13 @@ test('WhatsApp Status has its own CTA and tracked movie URL in both individual a
   h.element('socialCaptionPlatform').listeners.change();
   await h.element('socialDownloadPlatformZip').listeners.click();await settle();
   const single=await zipEntries(h.downloadedBlobs.at(-1));
-  for(const key of archive.keys())assert.deepEqual(single.get(key),archive.get(key));
+  assert.equal(single.size,2,'Selected WhatsApp Status has one image and one caption');
+  const image=[...single.keys()].find(name=>name.endsWith('.png'));
+  const note=[...single.keys()].find(name=>name.endsWith('.txt'));
+  assert.ok(image?.includes('WhatsApp_Story'));
+  assert.ok(note?.includes('WhatsApp_Story'));
+  assert.deepEqual(single.get(image),archive.get('Images/001_2016-03-25_OOPIRI_7.png'));
+  assert.equal(new TextDecoder().decode(single.get(note)).trim(),caption.trim());
   const facebook=h.drawnText.length;
   await h.bulkButtons['facebook-story'].listeners.click();await settle();
   assert.equal(h.drawnText.slice(facebook).includes('FULL REVIEW AVAILABLE ON MY PAGE'),false,
