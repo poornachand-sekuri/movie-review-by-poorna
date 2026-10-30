@@ -1393,7 +1393,78 @@
     return 'Movie_Reviews_By_Poorna_'+BULK_FORMATS[format].label+
       '_'+today+(batched?'_'+String(from+1).padStart(3,'0')+'-'+String(to).padStart(3,'0'):'')+'.zip';
   }
+  // Master export: one movie folder per review, flat files within each folder.
+  // Fallback batches protect memory on browsers without streaming file access.
+  async function exportBulkFlat(){
+    if(state.bulkSession||!state.reviewCatalog.length)return;
+    const zipModule=window.MovieReviewBulkZip;
+    if(!zipModule){setBulkStatus('ZIP packager unavailable; reload Projector Room.');return;}
+    const formats=BULK_FORMAT_KEYS;
+    const missing=[...new Set(formats.map(f=>
+      BULK_FORMATS[f].kind==='story'?'story':BULK_FORMATS[f].design))]
+      .filter(k=>!state.masters[k]);
+    if(missing.length){setBulkStatus('Approved design artwork not loaded: '+missing.join(', ')+'.');return;}
+    const catalog=sortedBulkReviews(),canStream=typeof window.showSaveFilePicker==='function';
+    const from=canStream?0:(state.bulkCursor.all||0);
+    const to=canStream?catalog.length:Math.min(from+BULK_FALLBACK_BATCH,catalog.length);
+    const today=new Date().toISOString().slice(0,10);
+    let sink,handle;
+    try{
+      if(canStream){
+        handle=await window.showSaveFilePicker({
+          suggestedName:'Movie_Reviews_By_Poorna_All_Movies_'+today+'.zip',
+          types:[{description:'ZIP archive',accept:{'application/zip':['.zip']}}]
+        });
+        sink=await handle.createWritable();
+      }else sink=zipModule.memorySink();
+    }catch(error){
+      setBulkStatus(error?.name==='AbortError'?'Download cancelled.':errorMessage(error));return;
+    }
+    state.bulkSession={cancelled:false,key:'all'};
+    for(const button of inputs.bulkButtons)button.disabled=true;
+    inputs.bulkAll.disabled=true;inputs.bulkCancel.hidden=false;
+    let completed=0,missingCount=0;
+    try{
+      const writer=new zipModule.ZipWriter(sink);
+      for(let n=from;n<to;n++){
+        if(state.bulkSession.cancelled)break;
+        const review=catalog[n],stem=bulkStem(review,n+1);
+        setBulkStatus('Preparing movie '+(n+1)+'/'+catalog.length+': '+review.t);
+        try{
+          const result=await addMoviePublishingFiles(writer,review,n+1,formats,stem+'/');
+          missingCount+=formats.length-result.count;
+          if(result.count<formats.length)
+            await writer.add(stem+'/000_EXPORT_REPORT.txt',
+              'Generated '+result.count+' of '+formats.length+' platform images.\n'+result.notes.join('\n'));
+        }catch(error){
+          missingCount+=formats.length;
+          await writer.add(stem+'/000_EXPORT_REPORT.txt','Export failed: '+errorMessage(error));
+        }
+        completed++;
+      }
+      if(!completed)throw Error('No movies were exported.');
+      await writer.close();
+      if(!canStream){
+        writeBlobToDownload(sink.blob(),'Movie_Reviews_By_Poorna_All_Movies_'+today+
+          '_'+String(from+1).padStart(3,'0')+'-'+String(from+completed).padStart(3,'0')+'.zip');
+        state.bulkCursor.all=from+completed>=catalog.length?0:from+completed;
+      }
+      const remaining=canStream?0:catalog.length-(from+completed);
+      setBulkStatus('One ZIP saved with '+completed+' movie folders and no nested ZIPs. '+
+        missingCount+' platform images need review. '+
+        (remaining?'Click again for the next '+Math.min(BULK_FALLBACK_BATCH,remaining)+' movies.':'All movies processed.'));
+    }catch(error){
+      setBulkStatus('ZIP export failed: '+errorMessage(error));
+      try{await sink.abort?.();}catch{}
+    }finally{
+      state.bulkSession=null;inputs.bulkCancel.hidden=true;
+      for(const button of inputs.bulkButtons)button.disabled=false;
+      inputs.bulkAll.disabled=false;
+      inputs.bulkAll.textContent='DOWNLOAD ALL MOVIES ZIP'+(state.bulkCursor.all?' · NEXT BATCH':'');
+    }
+  }
   async function exportBulkFormats(requestedFormat){
+    if(!requestedFormat)return exportBulkFlat();
     const formats=requestedFormat?[requestedFormat]:BULK_FORMAT_KEYS;
     if(state.bulkSession||!state.reviewCatalog.length||formats.some(f=>!BULK_FORMATS[f]))return;
     const zipModule=window.MovieReviewBulkZip;
