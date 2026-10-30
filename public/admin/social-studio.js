@@ -1329,11 +1329,26 @@
       await writers[format].close();
     }
   }
-  // This invokes the same rendering and archive functions as Download All.
-  // A selected movie may have unsaved on-screen styling: use persisted
-  // editorial styles consistently with the bulk output, without mutation.
-  // The selected movie uses the very same per-format ZIP construction as bulk.
-  // Main action packs all seven complete format ZIPs into ONE downloadable file.
+  // Flat, human-readable publishing files; no ZIPs within ZIPs.
+  function publishingName(format,stem){
+    return stem+'_'+BULK_FORMATS[format].label;
+  }
+  async function addMoviePublishingFiles(writer,review,rank,formats,prefix=''){
+    const prepared=await buildBulkMovie(review,formats);
+    const stem=bulkStem(review,rank);
+    let count=0;
+    for(let i=0;i<formats.length;i++){
+      const format=formats[i],config=BULK_FORMATS[format];
+      const image=prepared.images[config.kind+'_'+config.design];
+      if(!image)continue;
+      const name=prefix+String(i+1).padStart(2,'0')+'_'+publishingName(format,stem);
+      await writer.add(name+'.png',image);
+      await writer.add(name+(STORY_LINK_FORMATS.has(format)?'_Link.txt':'_Caption.txt'),
+        (prepared.captionMap[format]||'')+'\n');
+      count++;
+    }
+    return {count,notes:prepared.notes};
+  }
   async function exportSelectedMovieZip(selectedOnly=false){
     const review=state.review,format=inputs.captionPlatform.value;
     if(!review||state.bulkSession||(selectedOnly&&!BULK_FORMATS[format]))return;
@@ -1351,32 +1366,22 @@
     if(position<0){inputs.captionStatus.textContent='Movie missing from release-order catalogue.';return;}
     inputs.downloadMovieZip.disabled=true;
     inputs.downloadPlatformZip.disabled=true;
-    inputs.captionStatus.textContent='Preparing '+(selectedOnly?BULK_FORMATS[format].label:'all seven platforms')+
-      ' for '+review.t+'…';
+    inputs.captionStatus.textContent='Preparing '+(selectedOnly?'selected platform':'all seven platforms')+' for '+review.t+'…';
     try{
-      const matching=catalog[position],sinks={},writers={},
-        records=Object.fromEntries(formats.map(k=>[k,[]]));
-      for(const key of formats){
-        sinks[key]=zipModule.memorySink();
-        writers[key]=new zipModule.ZipWriter(sinks[key]);
+      const sink=zipModule.memorySink(),writer=new zipModule.ZipWriter(sink);
+      const matching=catalog[position];
+      const result=await addMoviePublishingFiles(writer,matching,position+1,formats);
+      if(!result.count)throw Error('No artwork generated. '+result.notes.join('; '));
+      if(result.count<formats.length){
+        await writer.add('000_EXPORT_REPORT.txt',
+          'Some platform images could not be generated.\n'+result.notes.join('\n'));
       }
-      await addBulkMovieToArchives(writers,matching,position+1,formats,records);
-      await closeFormatArchives(formats,writers,records,position,position+1,catalog.length);
+      await writer.close();
       const stem=bulkStem(matching,position+1);
-      if(selectedOnly){
-        writeBlobToDownload(sinks[format].blob(),
-          'Movie_Reviews_By_Poorna_'+BULK_FORMATS[format].label+'_Movie_'+stem+'.zip');
-      }else{
-        const outer=zipModule.memorySink(),archive=new zipModule.ZipWriter(outer);
-        for(const key of formats){
-          await archive.add('Movie_Reviews_By_Poorna_'+BULK_FORMATS[key].label+'_'+stem+'.zip',
-            sinks[key].blob());
-        }
-        await archive.close();
-        writeBlobToDownload(outer.blob(),'Movie_Reviews_By_Poorna_'+stem+'_All_Platforms.zip');
-      }
-      inputs.captionStatus.textContent=(selectedOnly?'Selected platform ZIP':'All seven platform ZIPs')+
-        ' saved for '+review.t+'. Same image and caption format as bulk export.';
+      writeBlobToDownload(sink.blob(),'Movie_Reviews_By_Poorna_'+stem+
+        (selectedOnly?'_'+BULK_FORMATS[format].label:'_All_Platforms')+'.zip');
+      inputs.captionStatus.textContent='One simple ZIP saved for '+review.t+
+        ': '+result.count+' image and caption pairs, no folders or nested ZIPs.';
     }catch(error){
       inputs.captionStatus.textContent='Movie ZIP export failed: '+errorMessage(error);
     }finally{
