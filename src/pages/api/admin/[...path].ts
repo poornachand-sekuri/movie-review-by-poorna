@@ -242,7 +242,7 @@ async function handle(request: Request): Promise<Response> {
       return json({error:'Unsupported editorial operation.'},400);
     }
     if (pathname === '/api/admin/analytics' && request.method === 'GET') {
-      return json(await getAdminAnalytics(Number(url.searchParams.get('days') || 30)));
+      return json(await getAdminAnalytics(url.searchParams.get('range') || url.searchParams.get('days') || 'lifetime'));
     }
 
     if (pathname === '/api/admin/reactions/sync' && request.method === 'POST') {

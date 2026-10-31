@@ -30,6 +30,11 @@
     const grid = document.querySelector('#dashboardPanel .dashboard-grid');
     if (grid && !document.getElementById('trafficSourcesBody')) {
       grid.insertAdjacentHTML('beforeend', `
+        <section class="dash-card span-two">
+          <div class="section-title-row"><h2>Social Media Traffic</h2><span class="hint">Attributed site views / unique visitors</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Platform</th><th>Views</th><th>Visitors</th></tr></thead><tbody id="socialTrafficBody"></tbody></table></div>
+          <p class="hint">Based on tracked links and referrers. Direct or unknown visits are not assigned to a platform.</p>
+        </section>
         <section class="dash-card">
           <div class="section-title-row"><h2>Traffic Sources</h2><span class="hint">Views / visitors</span></div>
           <div class="table-wrap"><table><thead><tr><th>Source</th><th>Views</th><th>Visitors</th></tr></thead><tbody id="trafficSourcesBody"></tbody></table></div>
@@ -64,6 +69,17 @@
       sourceBody.innerHTML = rows.length
         ? rows.map((row) => `<tr><td>${esc(sourceLabel(row.source))}</td><td class="number-cell">${num(row.views)}</td><td class="number-cell">${num(row.visitors)}</td></tr>`).join('')
         : '<tr><td colspan="3">No attributed traffic yet.</td></tr>';
+    }
+
+    const socialTrafficBody = document.getElementById('socialTrafficBody');
+    if (socialTrafficBody) {
+      const sources = data.trafficSources || [];
+      const rows = ['instagram', 'facebook', 'x', 'whatsapp'].map((platform) => {
+        const matching = sources.filter((row) => row.source === platform || (platform === 'x' && ['twitter', 't.co'].includes(row.source)));
+        return { platform, views: matching.reduce((sum, row) => sum + Number(row.views || 0), 0),
+          visitors: matching.reduce((sum, row) => sum + Number(row.visitors || 0), 0) };
+      });
+      socialTrafficBody.innerHTML = rows.map((row) => '<tr><td>' + esc(platformLabel(row.platform)) + '</td><td class="number-cell">' + num(row.views) + '</td><td class="number-cell">' + num(row.visitors) + '</td></tr>').join('');
     }
 
     const actionBody = document.getElementById('socialActionsBody');
