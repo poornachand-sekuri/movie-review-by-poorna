@@ -106,7 +106,7 @@ test('dashboard has no idle polling, coalesces return events and fetches the lat
   h.calls[1].resolve(Response.json({ views: 20 })); await tick();
   assert.equal(h.node('#metricViews').textContent, '10', 'old range cannot replace the displayed metrics');
   assert.equal(h.calls.length, 3);
-  assert.equal(h.calls[2].path, '/api/admin/analytics?days=90');
+  assert.equal(h.calls[2].path, '/api/admin/analytics?range=90');
   h.calls[2].resolve(Response.json({ views: 90 })); await tick();
   assert.equal(h.node('#metricViews').textContent, '90');
   h.document.visibilityState = 'hidden';
