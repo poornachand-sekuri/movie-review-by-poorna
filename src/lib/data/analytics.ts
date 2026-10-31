@@ -76,14 +76,26 @@ export async function recordAnalyticsEvent(input: {
   `).bind(visitorKey, eventType, platform, pageType, pageKey, reviewSlug, trafficSource, campaign).run();
 }
 
-export async function getAdminAnalytics(days = 30): Promise<Record<string, unknown>> {
+export async function getAdminAnalytics(days: number | string = 'lifetime'): Promise<Record<string, unknown>> {
   await ensureAnalyticsSchema();
-  const safeDays = Math.max(1, Math.min(365, Math.trunc(Number(days) || 30)));
+  const period = String(days).toLowerCase();
+  const safeDays = period === 'lifetime' ? -1 : period === 'today' ? 0
+    : period === 'week' ? 7 : period === 'month' ? 30 : period === 'year' ? 365
+    : Math.max(1, Math.min(365, Math.trunc(Number(days) || 30)));
   const db = getContentDb();
   const revision = await db.prepare('SELECT version FROM analytics_revision WHERE id = 1').first<{ version: number }>();
   if (!revision) throw new Error('Apply database migration 0008 before using dashboard analytics.');
   const now = Date.now();
-  const cutoff = new Date(now - safeDays * 86400000).toISOString().slice(0, 19).replace('T', ' ');
+  // Calendar periods use India Standard Time; the stored D1 timestamps are UTC.
+  const ist = new Date(now + 330 * 60000);
+  const start = new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate()));
+  if (period === 'week') start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+  if (period === 'month') start.setUTCDate(1);
+  if (period === 'year') { start.setUTCMonth(0); start.setUTCDate(1); }
+  const cutoff = period === 'lifetime' ? '0000-01-01 00:00:00'
+    : ['today','week','month','year'].includes(period)
+      ? new Date(start.getTime() - 330 * 60000).toISOString().slice(0, 19).replace('T', ' ')
+      : new Date(now - safeDays * 86400000).toISOString().slice(0, 19).replace('T', ' ');
   const since = cutoff.slice(0, 10);
   const cached = analyticsCache.get(db);
   if (cached?.version === revision.version && cached.days === safeDays && now >= cached.computedAt && now < cached.expiresAt) {
@@ -203,7 +215,7 @@ export async function getAdminAnalytics(days = 30): Promise<Record<string, unkno
   };
 
   const after = await db.prepare('SELECT version FROM analytics_revision WHERE id = 1').first<{ version: number }>();
-  const oldestExpiry = trafficRow?.oldest_view == null ? Infinity : (Number(trafficRow.oldest_view) + safeDays * 86400 + 1) * 1000;
+  const oldestExpiry = safeDays < 1 ? Infinity : trafficRow?.oldest_view == null ? Infinity : (Number(trafficRow.oldest_view) + safeDays * 86400 + 1) * 1000;
   const expiresAt = Math.min(now + 60000, oldestExpiry);
   if (after?.version === revision.version && expiresAt > Date.now()) {
     analyticsCache.set(db, { version: revision.version, days: safeDays, computedAt: now, expiresAt, value });
