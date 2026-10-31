@@ -86,7 +86,7 @@
         el.syncReactions.disabled = true;
         const days = el.days.value;
         try {
-            const data = await api(`/api/admin/analytics?days=${encodeURIComponent(days)}`);
+            const data = await api(`/api/admin/analytics?range=${encodeURIComponent(days)}`);
             if (days === el.days.value) {
                 renderAnalytics(data);
                 updateCommentBadges(data.commentCounts || {});
